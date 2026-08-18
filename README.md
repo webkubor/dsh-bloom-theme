@@ -18,6 +18,10 @@
 </p>
 
 <p align="center">
+  <b>中文</b> | <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
   把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
   <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />

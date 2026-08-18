@@ -7,8 +7,17 @@ DeepSeek Harness (DSH) 皮肤插件 —— 把 [typora-Bloom-theme](https://gith
 ## 安装
 
 ```bash
+# 从 npm 装（发布后）
+dsh plugin --profile web add @webkubor/dsh-bloom-theme
+
+# 或直接从 GitHub 装
 dsh plugin --profile web add github:webkubor/dsh-bloom-theme
 ```
+
+> **DSH 没有插件市场。** `dsh plugin` 只是把参数转发给 profile 目录里的 pnpm
+> （官方帮助原文：*manage a profile's plugins by forwarding the remaining arguments to pnpm*）。
+> 所以插件的分发渠道就是 npm registry —— 用户靠 npm 搜索 / README 链接发现插件，
+> 设置里的 Plugin Inventory 只列已安装的插件，不提供浏览与安装。
 
 然后在 `~/.dsh/profiles/web/cordis.patch.yml` 里 insert：
 

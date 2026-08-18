@@ -35,10 +35,22 @@
   "homepage": "https://github.com/webkubor/dsh-bloom-theme#readme",
   "keywords": [
     "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
     "theme",
     "skin",
     "bloom",
+    "morandi",
     "oklch"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "files": [
+    "lib",
+    "README.md",
+    "DEV_NOTES.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

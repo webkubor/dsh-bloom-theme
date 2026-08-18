@@ -2,6 +2,7 @@
   "name": "@webkubor/dsh-bloom-theme",
   "version": "0.2.0",
   "description": "DSH 皮肤插件：Bloom 4 主题色（mist / cinnabar / petal / ripple），oklch 色系，用户可切换",
+  "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": {

@@ -15,7 +15,8 @@
   "dsh": {
     "client": {
       "inject": [],
-      "platform": "web"
+      "platform": "web",
+      "immediately": true
     }
   },
   "scripts": {

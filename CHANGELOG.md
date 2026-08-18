@@ -2,6 +2,22 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.3] - 2026-08-18
+
+### 修复
+
+- 变体切换器不再跑到左边侧边栏：`findSwitcherHost()` 的 fallback `[class*="_headerActions"]`
+  会命中侧边栏「工作区」那行的同名容器（`qDHVXG_headerActions`，与顶栏的 `wSkVaW_headerActions`
+  是两套 CSS Module 前缀），且它在 DOM 里排在顶栏之前 —— `querySelector` 先命中它，切换器就被
+  prepend 到侧边栏。新会话页 DSH 会把顶栏整个隐藏（`_headerHidden`，宽度 0），fallback 必然生效，
+  所以「点新会话后切换器跑左边」是稳定复现的。现在限定在 `<header>` 内查找，顶栏隐藏时走浮动兜底
+- 新建会话按钮补 `background`：此前只接管了描边与圆角，底色仍是 DSH 原生的 `oklch(0.28 0.02 240)`
+  （色相 240 的蓝灰）配青色描边，跟任何一个莫兰迪变体都不同色系，浅色模式下那块冷蓝尤其跳，
+  看着像没上主题。现在按 accent 微染，并补 hover 态
+- 侧边栏补层次：`--dsw-specific-sidebar-fill` 的色差从 2%/4%（亮/暗）提到 5%/7% —— 2% 在浅色模式下
+  肉眼分不出侧边栏与主区；另加右侧 hairline 分界、顶部 120px 内的极淡 accent 渐变、底部设置区上方
+  分隔线，让侧边栏成为独立的「面」而不是一列浮在背景上的文字
+
 ## [0.3.2] - 2026-08-18
 
 ### 新增

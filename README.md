@@ -1,23 +1,93 @@
-# @webkubor/dsh-bloom-theme
+<h1 align="center">Bloom for DSH</h1>
 
-DeepSeek Harness (DSH) 皮肤插件 —— 把 [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme) 的莫兰迪质感移植到 DSH。
+<p align="center">
+  <img src="https://img.shields.io/npm/v/@webkubor/dsh-bloom-theme?style=flat-square&color=A873C4" alt="npm" />
+  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="License" />
+  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
+  <img src="https://img.shields.io/badge/DSH-Plugin-5fa8b2?style=flat-square" alt="DSH" />
+  <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
+</p>
 
-4 个变体（雾蓝 / 朱砂 / 花瓣 / 涟漪）× 明暗双主题，顶栏色块一键切换。
+<p align="center">
+  把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a> 的莫兰迪质感搬进 DeepSeek Harness。
+  <br />
+  4 套配色，明暗双主题，顶栏一键切换。
+</p>
 
-## 安装
+<p align="center">
+  <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/petal-dark.png" alt="Bloom for DSH · petal 花瓣" width="880" />
+</p>
+
+## Bloom 是什么
+
+Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整套**莫兰迪质感语言**：
+低饱和的氛围渐变、冷调的发光细线、长距柔和的投影、克制的圆角与间距。
+
+这个插件把那套语言完整移植到 DSH——包括它最容易被忽略的一半：
+
+> 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
+
+详见 [双轨色](#设计原理双轨色)。
+
+## 为什么用 Bloom
+
+| 特性 | 说明 |
+| :-- | :-- |
+| 双轨配色 | 可读轨保对比度，气质轨专供氛围渐变，两轨分工不混用 |
+| 质感层完整 | 氛围渐变、冷光线条、纸感投影、Markdown 排版装饰，而非仅替换色值 |
+| OKLCH 调色 | 感知均匀的色彩空间，明暗切换不跳变 |
+| WCAG AA | 8 个「主色 + 底色」组合全部实测 ≥ 4.5:1 |
+| 零依赖 | 纯客户端注入，不引入任何运行时依赖 |
+| 不抢占原生控件 | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
+
+## 主题一览
+
+4 套配色，每套都有浅色与深色两个版本。
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/mist-dark.png" alt="mist 雾蓝" />
+      <sub><code>mist</code> 雾蓝 · 沉静的蓝灰</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/cinnabar-dark.png" alt="cinnabar 朱砂" />
+      <sub><code>cinnabar</code> 朱砂 · 温暖的陶土红</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/petal-dark.png" alt="petal 花瓣" />
+      <sub><code>petal</code> 花瓣 · 柔和的藕粉</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/ripple-dark.png" alt="ripple 涟漪" />
+      <sub><code>ripple</code> 涟漪 · 清冽的雾青</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/mist-light.png" alt="mist 雾蓝 浅色" />
+      <sub><code>mist</code> 浅色</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/petal-light.png" alt="petal 花瓣 浅色" />
+      <sub><code>petal</code> 浅色</sub>
+    </td>
+  </tr>
+</table>
+
+顶栏下拉一键切换，选择记在 `localStorage`：
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/screenshots/switcher-menu.png" alt="主题切换器" width="760" />
+</p>
+
+## 快速安装
 
 ```bash
-# 从 npm 装（发布后）
 dsh plugin --profile web add @webkubor/dsh-bloom-theme
-
-# 或直接从 GitHub 装
-dsh plugin --profile web add github:webkubor/dsh-bloom-theme
 ```
-
-> **DSH 没有插件市场。** `dsh plugin` 只是把参数转发给 profile 目录里的 pnpm
-> （官方帮助原文：*manage a profile's plugins by forwarding the remaining arguments to pnpm*）。
-> 所以插件的分发渠道就是 npm registry —— 用户靠 npm 搜索 / README 链接发现插件，
-> 设置里的 Plugin Inventory 只列已安装的插件，不提供浏览与安装。
 
 然后在 `~/.dsh/profiles/web/cordis.patch.yml` 里 insert：
 
@@ -27,26 +97,16 @@ dsh plugin --profile web add github:webkubor/dsh-bloom-theme
       name: '@webkubor/dsh-bloom-theme'
 ```
 
-重启 DSH，右上角出现 4 个色块即生效。选择记在 `localStorage`（key: `dsh-bloom-variant`）。
+重启 DSH，顶栏出现主题下拉即生效。
 
-## 变体
+> **DSH 没有插件市场。** `dsh plugin` 只是把参数转发给 profile 目录里的 pnpm
+> （官方帮助原文：*manage a profile's plugins by forwarding the remaining arguments to pnpm*），
+> 设置里的 Plugin Inventory 也只列已安装插件。所以插件的分发渠道就是 npm registry。
+> 也可以直接从源码装：`dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
 
-| 变体 | 中文 | 气质轨 (morandi) | 可读轨 (accent 亮/暗) |
-|---|---|---|---|
-| `mist` | 雾蓝 | `#92a8b3` | `oklch(50%)` / `oklch(72%)` |
-| `cinnabar` | 朱砂 | `#d74b4b` | `oklch(55%)` / `oklch(72%)` |
-| `petal` | 花瓣 | `#e8859b` | `oklch(58%)` / `oklch(75%)` |
-| `ripple` | 涟漪 | `#5fa8b2` | `oklch(51%)` / `oklch(75%)` |
+## 设计原理：双轨色
 
-全部 8 个「主色 + 底色」组合经实测达到 WCAG AA (≥4.5:1)。
-
----
-
-## 设计原理：双轨色（最重要的一条）
-
-**莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。**
-
-原版 typora 主题每个变体有两套色，`root-mist.css` 的注释写得很直白：
+原版 Bloom 每个变体都有两套色，`root-mist.css` 的注释写得很直白：
 
 ```css
 /* --- Morandi Mist (Blue) - Deepened for better contrast --- */
@@ -56,12 +116,35 @@ dsh plugin --profile web add github:webkubor/dsh-bloom-theme
 
 两轨分工不能混：
 
-- **可读轨 `accent`** → 文字、按钮填充、边框描边。它是加深版，直接拿来铺大面积会显得艳、脏。
-- **气质轨 `morandi`** → 只用于 `rgba(morandi, 0.05~0.2)` 的大面积氛围渐变与冷光。原版 14 处 gradient 全部用它，**从不用 accent 铺面**。
+- **可读轨** → 文字、按钮填充、边框描边。它是加深版，直接拿来铺大面积会显得艳、脏。
+- **气质轨** → 只用于 `rgba(morandi, 0.05~0.2)` 的大面积氛围渐变与冷光。原版 14 处
+  gradient 全部用它，**从不用可读轨铺面**。
 
-移植时若只搬 `--accent`（一个常见的想当然），petal 会从藕粉变成荧光洋红 —— 色是对的，莫兰迪感没了。
+移植时若只搬 `--accent`（一个很自然的想当然），`petal` 会从藕粉 `#e8859b` 变成
+荧光洋红 `#e63f9f`——色是对的，莫兰迪感没了。
 
-本插件的 `PALETTE` 每个变体同时保留两轨，`bloomTokens()` 把它们注入为 `--bloom-*` 变量，供质感层统一引用。
+| 变体 | 气质轨 | 可读轨（浅 / 深） | 浅色对比度 |
+| :-- | :-- | :-- | :-- |
+| `mist` | `#92a8b3` | `oklch(50%)` / `oklch(72%)` | 5.28:1 |
+| `cinnabar` | `#d74b4b` | `oklch(55%)` / `oklch(72%)` | 4.87:1 |
+| `petal` | `#e8859b` | `oklch(58%)` / `oklch(75%)` | 4.55:1 |
+| `ripple` | `#5fa8b2` | `oklch(51%)` / `oklch(75%)` | 4.61:1 |
+
+浅色可读轨的 L 值按 WCAG AA 反推校准过——压暗之后反而更贴莫兰迪，
+这正是原作者对 `mist` 做过的事。
+
+## 质感层
+
+只搬色板得到的是「换了色的原界面」。原版 `root-*.css`（色板）89 行，
+`base-light/dark.css`（质感）2968 行——差距全在这里。
+
+| 手法 | 实现 |
+| :-- | :-- |
+| 氛围渐变 | body 四层莫兰迪光晕叠加，`background-attachment: fixed` |
+| 冷光线条 | 侧栏竖线、卡片描边、tabs 下沿、顶部内高光 |
+| 纸感 | 长距柔影三档 + `inset 0 1px 0` 内高光 |
+| Markdown | 标题渐变短横、hr 两端消隐、引用块主色条、代码块冷光描边 |
+| 侧栏 | 顶部氛围淡染、会话项冷光态、选中态主色标记 |
 
 ## 架构
 
@@ -69,83 +152,41 @@ dsh plugin --profile web add github:webkubor/dsh-bloom-theme
 lib/index.js    node 半侧（cordis plugin），空实现 —— 本插件是纯客户端主题
 lib/client.js   浏览器半侧，全部逻辑在这
   ├─ PALETTE          4 变体 × 双轨色板
-  ├─ bloomTokens()    → --bloom-* 自有 token（SSOT，质感层的唯一色源）
+  ├─ bloomTokens()    → --bloom-* 自有 token（质感层的唯一色源 / SSOT）
   ├─ mistLight/Dark() → mist 完整接管 DSH 的 alias + specific 变量体系
-  ├─ variantBlock()   → 其余 3 变体只覆盖主色/背景调，灰阶骨架继承 mist
-  ├─ COMPONENT_CSS    → 质感层：氛围渐变 / 冷光线条 / 纸感 / markdown 排版
-  └─ SWITCHER_CSS     → 顶栏切换器
+  ├─ variantBlock()   → 其余 3 变体只覆盖主色与背景调，灰阶骨架继承 mist
+  ├─ COMPONENT_CSS    → 质感层（一份 CSS，4 变体 × 明暗自动适配）
+  └─ SWITCHER_CSS     → 顶栏下拉切换器
 ```
-
-**为什么质感层是重点**：原版 `root-*.css`（色板）只有 89 行，`base-light/dark.css`（质感）有 2968 行。
-只搬色板得到的是「换了色的原界面」，不是 Bloom。质感层做的事：
-
-| 手法 | 实现 |
-|---|---|
-| 氛围渐变 | body 四层莫兰迪光晕叠加，`background-attachment: fixed` |
-| 冷光线条 | `--bloom-hairline` / `--bloom-glow`，用于侧栏竖线、卡片描边、tabs 下沿 |
-| 纸感 | 长距柔影三档 + 顶部内高光 `inset 0 1px 0` |
-| Markdown | 标题渐变短横、hr 两端消隐、引用块左侧主色条、代码块冷光描边 |
 
 ## 开发
 
 ```bash
-npm run dev      # 监听 lib/ 自动部署到 web profile，按 r 刷新浏览器
+npm run dev      # 监听 lib/ 自动部署到 web profile，保存即刷新浏览器
 npm run deploy   # 手动部署一次
 ```
 
-改完必须刷新页面 —— 皮肤是浏览器端注入的。
+皮肤在浏览器端注入，且 CSS 由 `client.js` 运行时生成——没有「只热更 CSS」这条路，
+必须重新执行脚本，也就必须刷新页面。`npm run dev` 已代劳（按 `a` 可切换，
+或设 `DSH_BLOOM_NO_AUTORELOAD=1` 关闭）。
 
----
+## 踩过的坑
 
-## ⚠️ 踩坑清单
+完整复盘见 **[DEV_NOTES.md](./DEV_NOTES.md)**，含每个坑的现象 → 根因 → 修法 → 教训。
+几条最值得先读的：
 
-犯过的错都记在这，改代码前先读一遍。详细复盘见 [DEV_NOTES.md](./DEV_NOTES.md)。
-
-### 1. client factory 必须返回带 `apply` 的对象
-
-```js
-// ❌ 整个 DSH 启动失败，白屏报 invalid plugin
-factory: () => ({})
-
-// ✅
-factory: () => { const e = {}; e.apply = () => {...}; return e }
-```
-
-报错 `invalid plugin, expect function or object with an "apply" method, received object`
-出现在**浏览器端**，跟 `lib/index.js` 的 ESM 导出格式无关 —— 别去改 index.js 的 export。
-
-### 2. 前景色 token 不能当背景用
-
-DSH 的 `--dsw-alias-markdown-inline-code` 是**背景色**，不是文字色。
-按文字色给值 → 暗色下浅底白字（实测 1.2:1）、亮色下深底深字，两边都坏。
-
-同理，**暗色阴影必须用纯黑** `rgba(0,0,0,.4~.6)`，不能用 `color-mix(前景色)` ——
-暗色的前景色是近白，混出来的「阴影」是一团白雾。
-
-### 3. 选择器脆弱性
-
-DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。hash 随 DSH 构建变，语义名稳定，
-所以一律用 `[class*="_语义名"]` 后缀匹配，并且：
-
-- **限定 `div`** —— 裸 `[class*="_panel"]` 会命中 SVG 元素
-- **注意命中量** —— 裸 `[class*="_card"]` 会命中 30+ 个消息卡；输入框要写
-  `div[class*="_composer"] div[class*="_card"]`
-- `_header` 会同时命中 `headerActions` / `headerUtilities` 等子容器
-
-失配时效果只会退回纯色，属安全降级，不会错位或不可用。
-
-### 4. 改一处要 grep 全文件
-
-同一反模式往往犯不止一次。修 `markdown-inline-code` 时，`variantBlock()` 里还漏了一份
-（导致 ripple/petal 继承 mist 的蓝灰 hue）。改任何 token 前先 grep 确认覆盖了
-`mistLight` / `mistDark` / `variantBlock` 三处。
-
-## 已知未验证项
-
-- `--dsw-alias-toast-bg` / `tooltip-bg` 暂未逐变体覆盖，所有变体沿用 mist 的蓝灰 hue。
-  暗色下取值 `oklch(40%)` 与 `bgD oklch(28%)` 差距偏小，若 DSH 的 toast 文字用
-  `label-primary-inverted` 可能对比度不足 —— 尚未在真实 toast 上验证。
+- **client factory 必须返回带 `apply` 的对象**，返回裸 `{}` 会让整个 DSH 启动白屏。
+  该报错出现在浏览器端，与 `lib/index.js` 的 ESM 导出格式无关。
+- **前景色 token 不能当背景/阴影用**。暗色的前景是近白，拿它 `color-mix` 出的
+  「阴影」会是一团白雾；`markdown-inline-code` 按文字色给值会得到 1.2:1 的浅底白字。
+- **DSH 用 CSS Modules**，类名形如 `wSkVaW_root`。只能用 `[class*="_语义名"]` 匹配，
+  且必须限定 `div`（否则命中 SVG）、必须数命中量（裸 `_card` 会命中 30+ 个消息卡）。
+- **描边只能给有实色背景的那一层**，加在内层透明元素上会形成「框中框」。
 
 ## License
 
-MIT
+[MIT](./LICENSE)
+
+## Author
+
+[@webkubor](https://github.com/webkubor) · 同系列：[Bloom for Typora](https://github.com/webkubor/typora-Bloom-theme)

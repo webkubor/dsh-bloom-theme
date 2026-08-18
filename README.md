@@ -53,31 +53,31 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/mist-dark.png" alt="mist 雾蓝" />
+      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-mist-dark.png" alt="mist 雾蓝" />
       <sub><code>mist</code> 雾蓝 · 沉静的蓝灰</sub>
     </td>
     <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/cinnabar-dark.png" alt="cinnabar 朱砂" />
+      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-cinnabar-dark.png" alt="cinnabar 朱砂" />
       <sub><code>cinnabar</code> 朱砂 · 温暖的陶土红</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/petal-dark.png" alt="petal 花瓣" />
+      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-petal-dark.png" alt="petal 花瓣" />
       <sub><code>petal</code> 花瓣 · 柔和的藕粉</sub>
     </td>
     <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ripple-dark.png" alt="ripple 涟漪" />
+      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-ripple-dark.png" alt="ripple 涟漪" />
       <sub><code>ripple</code> 涟漪 · 清冽的雾青</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/mist-light.png" alt="mist 雾蓝 浅色" />
+      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-mist-light.png" alt="mist 雾蓝 浅色" />
       <sub><code>mist</code> 浅色</sub>
     </td>
     <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/petal-light.png" alt="petal 花瓣 浅色" />
+      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-petal-light.png" alt="petal 花瓣 浅色" />
       <sub><code>petal</code> 浅色</sub>
     </td>
   </tr>
@@ -86,7 +86,7 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 顶栏下拉一键切换，选择记在 `localStorage`：
 
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/switcher-menu.png" alt="主题切换器" width="760" />
+  <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="主题切换器" width="760" />
 </p>
 
 ## 快速安装

@@ -95,7 +95,31 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 dsh plugin --profile web add @webkubor/dsh-bloom-theme
 ```
 
-然后在 `~/.dsh/profiles/web/cordis.patch.yml` 里 insert：
+然后把包名加进 `~/.dsh/profiles/web/package.json` 的 bundles：
+
+```json
+{
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@webkubor/dsh-bloom-theme"
+      ]
+    }
+  }
+}
+```
+
+重启 DSH，顶栏出现主题下拉即生效。
+
+插件自带 `cordis.patch.yml` 并通过 `dsh.bundle` 声明，列进 bundles 后会自动 insert
+进 boot graph，**不需要手动编辑 `cordis.patch.yml`**。
+
+<details>
+<summary>也可以手动 insert（旧方式）</summary>
+
+如果不想改 bundles，在 `~/.dsh/profiles/web/cordis.patch.yml` 里手动 insert 同样可行：
 
 ```yaml
 - insert:
@@ -103,12 +127,9 @@ dsh plugin --profile web add @webkubor/dsh-bloom-theme
       name: '@webkubor/dsh-bloom-theme'
 ```
 
-重启 DSH，顶栏出现主题下拉即生效。
+</details>
 
-> **DSH 没有插件市场。** `dsh plugin` 只是把参数转发给 profile 目录里的 pnpm
-> （官方帮助原文：*manage a profile's plugins by forwarding the remaining arguments to pnpm*），
-> 设置里的 Plugin Inventory 也只列已安装插件。所以插件的分发渠道就是 npm registry。
-> 也可以直接从源码装：`dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
+从源码装：`dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
 
 ## 设计原理：双轨色
 

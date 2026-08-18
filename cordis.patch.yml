@@ -1,0 +1,10 @@
+# 随包分发的 patch —— 由 package.json 的 dsh.bundle.patch 引用。
+#
+# 有了它，`dsh plugin add` 之后插件会被自动 insert 进 profile 的 boot graph，
+# 用户不必再手动编辑 ~/.dsh/profiles/web/cordis.patch.yml。
+# awesome-dsh-plugin 的收录门槛也要求插件声明 dsh.bundle manifest。
+#
+# 本插件是纯客户端主题：不禁用任何官方插件，只把自己插进去。
+- insert:
+    - id: bloom-theme
+      name: "@webkubor/dsh-bloom-theme"

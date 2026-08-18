@@ -1,0 +1,40 @@
+{
+  "name": "@webkubor/dsh-bloom-theme",
+  "version": "0.2.0",
+  "description": "DSH 皮肤插件：Bloom 4 主题色（mist / cinnabar / petal / ripple），oklch 色系，用户可切换",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "deploy": "rsync -av --delete lib/ package.json ~/.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webkubor/dsh-bloom-theme.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webkubor/dsh-bloom-theme/issues"
+  },
+  "homepage": "https://github.com/webkubor/dsh-bloom-theme#readme",
+  "keywords": [
+    "dsh",
+    "theme",
+    "skin",
+    "bloom",
+    "oklch"
+  ],
+  "license": "MIT"
+}

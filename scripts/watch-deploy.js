@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 import readline from 'node:readline'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const DEST = resolve(process.env.HOME, '.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme')
+const DEST = resolve(process.env.HOME, '.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme')
 const GUI_URL = process.env.DSH_BLOOM_GUI_URL ?? 'http://127.0.0.1:3080'
 
 let deploying = false

@@ -1,5 +1,5 @@
 {
-  "name": "@webkubor/dsh-bloom-theme",
+  "name": "@kubor/dsh-bloom-theme",
   "version": "0.3.0",
   "description": "DeepSeek Harness (DSH) 主题插件：Bloom 莫兰迪配色 4 变体（雾蓝/朱砂/花瓣/涟漪），OKLCH 调色，明暗双主题，顶栏一键切换，全部达 WCAG AA",
   "type": "module",
@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme/",
+    "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
     "dev": "node scripts/watch-deploy.js",
     "preview": "npm run deploy && open http://127.0.0.1:3080"
   },

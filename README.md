@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@webkubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@webkubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
+  <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@kubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@kubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
   <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
   <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=5fa8b2" alt="License" />
 </p>
@@ -92,7 +92,7 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 ## 快速安装
 
 ```bash
-dsh plugin --profile web add @webkubor/dsh-bloom-theme
+dsh plugin --profile web add @kubor/dsh-bloom-theme
 ```
 
 然后把包名加进 `~/.dsh/profiles/web/package.json` 的 bundles：
@@ -104,7 +104,7 @@ dsh plugin --profile web add @webkubor/dsh-bloom-theme
       "bundles": [
         "@deepseek-ai/dsh-base",
         "@deepseek-ai/dsh-web-app",
-        "@webkubor/dsh-bloom-theme"
+        "@kubor/dsh-bloom-theme"
       ]
     }
   }
@@ -124,7 +124,7 @@ dsh plugin --profile web add @webkubor/dsh-bloom-theme
 ```yaml
 - insert:
     - id: bloom-theme
-      name: '@webkubor/dsh-bloom-theme'
+      name: '@kubor/dsh-bloom-theme'
 ```
 
 </details>

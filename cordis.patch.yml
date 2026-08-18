@@ -7,4 +7,4 @@
 # 本插件是纯客户端主题：不禁用任何官方插件，只把自己插进去。
 - insert:
     - id: bloom-theme
-      name: "@webkubor/dsh-bloom-theme"
+      name: "@kubor/dsh-bloom-theme"

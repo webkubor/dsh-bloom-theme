@@ -1,7 +1,7 @@
 {
   "name": "@webkubor/dsh-bloom-theme",
-  "version": "0.2.0",
-  "description": "DSH 皮肤插件：Bloom 4 主题色（mist / cinnabar / petal / ripple），oklch 色系，用户可切换",
+  "version": "0.3.0",
+  "description": "DSH 皮肤插件：Bloom 4 主题色（mist / cinnabar / petal / ripple），oklch 色系，完整覆盖 alias + specific 变量体系",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -21,7 +21,9 @@
     }
   },
   "scripts": {
-    "deploy": "rsync -av --delete lib/ package.json ~/.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme/"
+    "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@webkubor/dsh-bloom-theme/",
+    "dev": "node scripts/watch-deploy.js",
+    "preview": "npm run deploy && open http://127.0.0.1:3080"
   },
   "repository": {
     "type": "git",

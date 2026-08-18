@@ -204,6 +204,77 @@ The skin is injected client-side and its CSS is generated at runtime by `client.
 is no "hot-reload the CSS only" path — the script must re-run, which means the page must
 reload. `npm run dev` handles it (press `a` to toggle, or set `DSH_BLOOM_NO_AUTORELOAD=1`).
 
+## FAQ
+
+<details>
+<summary>Installed, but nothing changed</summary>
+
+Make sure the package is listed in `dsh.profile.bundles` in `~/.dsh/profiles/web/package.json`,
+then **restart the DSH service** (reloading the page is not enough):
+
+```bash
+launchctl kickstart -k gui/$(id -u)/ai.deepseek.dsh   # macOS LaunchAgent
+```
+
+The boot graph is resolved at process start; a page reload won't re-read the profile.
+
+</details>
+
+<details>
+<summary>Edited the code, reloaded, still the old style</summary>
+
+The skin is injected client-side and its CSS is generated at runtime by `client.js` — there is
+no "hot-reload the CSS only" path. The script has to re-run, which means the page must reload
+(`Cmd+R`). `npm run dev` does it for you on save.
+
+</details>
+
+<details>
+<summary>DSH white-screens: invalid plugin / loaded without registering</summary>
+
+Two usual causes:
+
+1. **The package was renamed** but stale copies remain under `~/.dsh/profiles/web/`. Clean up
+   `node_modules/<old-scope>/`, `cordis.patch.yml` and `node_modules/.package-map.json`
+   together, then restart the service.
+2. **The client factory returned a bare `{}`.** DSH expects a function or an object with an
+   `apply` method. That error surfaces in the browser and is unrelated to the ESM export style
+   of `lib/index.js`.
+
+</details>
+
+<details>
+<summary>Can I pin one palette and drop the switcher?</summary>
+
+Yes. The switcher only sets `body[data-bloom-variant]` and persists it to `localStorage`.
+Set that attribute yourself in CSS, or trim `VARIANTS` down to a single entry.
+
+</details>
+
+<details>
+<summary>How do I switch to light mode?</summary>
+
+Light/dark follows DSH's own appearance setting (Settings → Appearance). Each of the four
+palettes ships a light and a dark version and adapts automatically — no separate toggle.
+
+</details>
+
+## Known limitations
+
+- **`<think>` tags flash briefly while streaming.** Mid-stream the tag and the content share a
+  single text node; only after the response completes and markdown re-renders do they split
+  into standalone paragraphs the rule can catch. The end state is correct. A real fix belongs
+  in the LLM provider adapter — parsing the thinking into a reasoning field so DSH's native
+  `ReasoningRow` renders it — which is outside a theme's job.
+- **Relies on CSS Modules semantic class names.** DSH class names look like `wSkVaW_root`
+  (`<hash>_<semantic>`); the hash changes between DSH builds while the semantic part is stable,
+  so this plugin matches on `[class*="_semantic"]`. If a DSH release breaks the match, the
+  effect degrades to flat colors — nothing misaligns or breaks.
+- **`--dsw-alias-toast-bg` / `tooltip-bg` are not overridden per palette**, so all four inherit
+  mist's blue-grey hue. In dark mode the value sits close to the background; this has not been
+  verified against a real toast.
+- **Web profile only.** The tui / headless profiles don't render in a browser, so this has no effect.
+
 ## Lessons learned
 
 Full write-ups in **[DEV_NOTES.md](./DEV_NOTES.md)** — each with symptom → root cause → fix → takeaway.

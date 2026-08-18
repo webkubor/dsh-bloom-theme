@@ -201,6 +201,72 @@ npm run deploy   # 手动部署一次
 必须重新执行脚本，也就必须刷新页面。`npm run dev` 已代劳（按 `a` 可切换，
 或设 `DSH_BLOOM_NO_AUTORELOAD=1` 关闭）。
 
+## 常见问题
+
+<details>
+<summary>装好了但界面没变化</summary>
+
+先确认包名已列进 `~/.dsh/profiles/web/package.json` 的 `dsh.profile.bundles`，然后
+**重启 DSH 服务**（不是刷新页面）：
+
+```bash
+launchctl kickstart -k gui/$(id -u)/ai.deepseek.dsh   # macOS LaunchAgent
+```
+
+boot graph 在进程启动时就已确定，仅刷新页面不会重新读取 profile 配置。
+
+</details>
+
+<details>
+<summary>改了代码，刷新页面却没生效</summary>
+
+皮肤在浏览器端注入，且 CSS 由 `client.js` 在运行时生成——没有「只热更 CSS」这条路，
+必须重新执行脚本，也就必须刷新页面（`Cmd+R`）。`npm run dev` 会在保存后自动刷新。
+
+</details>
+
+<details>
+<summary>DSH 启动白屏：invalid plugin / loaded without registering</summary>
+
+两种常见成因：
+
+1. **改过包名**，但 `~/.dsh/profiles/web/` 下仍有旧包名的残留。需要一并清理
+   `node_modules/<旧scope>/`、`cordis.patch.yml` 与 `node_modules/.package-map.json`，
+   然后重启服务。
+2. **client factory 返回了裸 `{}`**。DSH 要求返回函数或带 `apply` 方法的对象。
+   该报错出现在浏览器端，与 `lib/index.js` 的 ESM 导出格式无关。
+
+</details>
+
+<details>
+<summary>能不能只用某一套配色，不要切换器</summary>
+
+可以。切换器只是写 `body[data-bloom-variant]` 并存 `localStorage`，
+你也可以直接在自己的 CSS 里固定该属性，或改 `VARIANTS` 只保留一项。
+
+</details>
+
+<details>
+<summary>浅色主题怎么切</summary>
+
+明暗跟随 DSH 自身的主题设置（设置 → 外观），本插件的四套配色在明暗下各有一版，
+会自动适配，不需要单独切换。
+
+</details>
+
+## 已知限制
+
+- **流式输出过程中 `<think>` 标签会短暂可见。** 输出进行时标签与内容处在同一个文本节点，
+  等输出结束、markdown 重新渲染拆成独立段落后才会被规则捕获。最终状态正确，只是过程中会闪现。
+  要根治需在 LLM provider 适配层把思考内容解析成 reasoning 字段，交给 DSH 原生的
+  `ReasoningRow` 渲染——那不属于主题的职责。
+- **依赖 CSS Modules 的语义类名。** DSH 的类名形如 `wSkVaW_root`（`<hash>_<语义名>`），
+  hash 会随 DSH 构建变化，语义名相对稳定，因此本插件用 `[class*="_语义名"]` 匹配。
+  DSH 改版导致失配时，效果会**退回纯色**——不会错位或不可用，属安全降级。
+- **`--dsw-alias-toast-bg` / `tooltip-bg` 未逐变体覆盖**，所有配色沿用 mist 的蓝灰色相。
+  暗色下取值与背景差距偏小，尚未在真实 toast 上验证过对比度。
+- **仅适配 web profile。** tui / headless profile 不涉及浏览器渲染，本插件不生效。
+
 ## 踩过的坑
 
 完整复盘见 **[DEV_NOTES.md](./DEV_NOTES.md)**，含每个坑的现象 → 根因 → 修法 → 教训。

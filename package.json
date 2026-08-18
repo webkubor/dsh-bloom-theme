@@ -26,7 +26,8 @@
   "scripts": {
     "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
     "dev": "node scripts/watch-deploy.js",
-    "preview": "npm run deploy && open http://127.0.0.1:3080"
+    "preview": "npm run deploy && open http://127.0.0.1:3080",
+    "check": "node scripts/check.mjs"
   },
   "repository": {
     "type": "git",

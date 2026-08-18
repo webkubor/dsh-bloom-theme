@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 本插件零运行时依赖，无需 install
+      - name: 语法检查
+        run: node --check lib/client.js && node --check lib/index.js
+
+      # 打包契约 + 配色对比度 + 前景色 token 反模式
+      - name: 自检
+        run: npm run check
+
+      # 确认发布产物完整：7 个文件，且 cordis.patch.yml 在内
+      # （只声明 dsh.client 或漏掉 patch 文件，装上就不进 boot graph）
+      - name: 校验发布产物
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e "
+            const f = require('./pack.json')[0].files.map(x => x.path)
+            const need = ['package.json', 'cordis.patch.yml', 'lib/client.js', 'lib/index.js', 'README.md', 'LICENSE']
+            const miss = need.filter(n => !f.includes(n))
+            if (miss.length) { console.error('发布产物缺少: ' + miss.join(', ')); process.exit(1) }
+            console.log('发布产物完整 (' + f.length + ' 个文件): ' + f.join(', '))
+          "

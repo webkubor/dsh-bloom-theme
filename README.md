@@ -1,21 +1,27 @@
-<h1 align="center">Bloom for DSH</h1>
-
 <p align="center">
-  <img src="https://img.shields.io/npm/v/@webkubor/dsh-bloom-theme?style=flat-square&color=A873C4" alt="npm" />
-  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="License" />
-  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
-  <img src="https://img.shields.io/badge/DSH-Plugin-5fa8b2?style=flat-square" alt="DSH" />
-  <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
+  <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/banner.svg" alt="Bloom for DSH" width="100%" />
 </p>
 
 <p align="center">
-  把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a> 的莫兰迪质感搬进 DeepSeek Harness。
+  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@webkubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@webkubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
+  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
+  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=5fa8b2" alt="License" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
+  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
+  <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
+  <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=flat-square" alt="OKLCH" />
+  <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=flat-square" alt="zero dependency" />
+</p>
+
+<p align="center">
+  把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
+  <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />
   4 套配色，明暗双主题，顶栏一键切换。
-</p>
-
-<p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/petal-dark.png" alt="Bloom for DSH · petal 花瓣" width="880" />
 </p>
 
 ## Bloom 是什么

@@ -1,0 +1,34 @@
+name: Bug 反馈
+description: 界面异常、装不上、或某个配色不对
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提之前可以先看 [FAQ](../../blob/main/README.md#常见问题)——
+        「装了没反应」和「改了不生效」多半是没重启服务 / 没刷新页面。
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象
+      description: 界面上看到了什么？贴截图最直观（注意去掉会话里的隐私信息）
+    validations: { required: true }
+  - type: input
+    id: variant
+    attributes:
+      label: 配色与明暗
+      placeholder: 例如 petal + 暗色
+    validations: { required: true }
+  - type: input
+    id: versions
+    attributes:
+      label: 版本
+      description: 插件版本 + DSH 版本
+      placeholder: 插件 0.3.2 / dsh 0.1.0-rc.6
+    validations: { required: true }
+  - type: textarea
+    id: console
+    attributes:
+      label: 浏览器控制台报错
+      description: 有的话贴上；启动白屏类问题这个最关键
+      render: text

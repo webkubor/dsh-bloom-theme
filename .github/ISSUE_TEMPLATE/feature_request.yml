@@ -1,0 +1,21 @@
+name: 功能建议
+description: 想要新配色、新的质感处理，或其它改进
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 想要什么
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes:
+      label: 解决什么问题
+      description: 当前是怎么不好用的
+    validations: { required: true }
+  - type: markdown
+    attributes:
+      value: |
+        如果是提新配色：本主题是双轨制，需要一组「气质轨」（低饱和莫兰迪色，供氛围渐变）
+        和一组「可读轨」（加深版，用于文字/按钮，须过 WCAG AA 4.5:1）。
+        详见 [设计原理](../../blob/main/README.md#设计原理双轨色)。

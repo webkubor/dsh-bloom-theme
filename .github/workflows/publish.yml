@@ -20,7 +20,11 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      # 本插件零运行时依赖，无需 install（与 ci.yml 同理）
+      # 必须 install：本插件确实零**运行时**依赖，但下面 `npm run check` 要调
+      # contrast-guard（devDependency）。ci.yml 接入 contrast-guard 时补过这一步、
+      # 这里漏了 —— v0.3.5 发布实测就挂在 `sh: 1: contrast-guard: not found`（exit 127），
+      # 结果 tag 打出去了、npm 没发成。改依赖时两个工作流的安装步骤都要连带检查。
+      - run: npm ci
 
       - name: 语法检查 + 自检 + 产物校验
         run: |

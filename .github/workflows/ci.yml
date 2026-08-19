@@ -16,7 +16,11 @@ jobs:
         with:
           node-version: 22
 
-      # 本插件零运行时依赖，无需 install
+      # 运行时依赖仍为 0；但配色校验用的 contrast-guard 是 devDependency，必须装。
+      # 首版这里写「零依赖无需 install」，接入 contrast-guard 后 CI 立刻报
+      # 「contrast-guard: not found」(exit 127) —— 改依赖时要连带检查 CI 的安装步骤。
+      - run: npm ci
+
       - name: 语法检查
         run: node --check lib/client.js && node --check lib/index.js
 

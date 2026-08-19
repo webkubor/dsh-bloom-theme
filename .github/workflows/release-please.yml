@@ -1,0 +1,36 @@
+name: Release Please
+
+# 自动维护 version / CHANGELOG / tag / GitHub Release。
+# 提交走 Conventional Commits（feat:/fix:/docs:/ci:…）即可触发：
+# - 每个合并到 main 的 commit 会被 release-please 收集到"待发布"清单
+# - 它每周自动开（或更新）一个 Release PR：PR 里更新 package.json 版本号、CHANGELOG.md、
+#   重新生成 release-please-manifest.json
+# - PR 合并后：自动打 tag、创建 GitHub Release（用 CHANGELOG 当 notes）、然后触发 publish.yml 发 npm
+# 想跳版本号或回滚：手动 close 这个 PR 并评论 /autorelease:skip 或 /autorelease:major/minor。
+# 完整协议见 https://github.com/googleapis/release-please/blob/main/docs/cli.md
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          # 让发包 Actions 在 Release PR 合并后自动跑（已被 workflow_run: completed 触发）
+          release-labels: release-please:autorelease:pending
+          # 不在这里直接 publish：发布交给 .github/workflows/publish.yml，
+          # publish.yml 由 tag 推送触发（on: push: tags: ['v*']），职责单一
+          skip-github-release: false

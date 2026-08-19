@@ -1,0 +1,28 @@
+{
+  "$schema": "https://github.com/googleapis/release-please/blob/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "@kubor/dsh-bloom-theme",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false,
+      "draft": false,
+      "prerelease": false,
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "changelog-sections": [
+        { "type": "feat", "section": "✨ Features" },
+        { "type": "fix", "section": "🐛 Bug Fixes" },
+        { "type": "perf", "section": "🚀 Performance" },
+        { "type": "revert", "section": "⏪ Reverts" },
+        { "type": "docs", "section": "📝 Documentation" },
+        { "type": "style", "section": "🎨 Styling" },
+        { "type": "chore(release)", "section": "🚀 Release" },
+        { "type": "ci", "section": "🛠️ CI / Build" }
+      ]
+    }
+  },
+  "release-labels": ["autorelease:pending"],
+  "skip-github-release": false,
+  "include-component-in-tag": false
+}

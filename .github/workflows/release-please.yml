@@ -26,11 +26,12 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # 默认 GITHUB_TOKEN 没有创建/批准 PR 权限（仓库需在 Settings → Actions 勾
+          # "Allow GitHub Actions to create and approve pull requests" 才放行）。
+          # 改用 cs vault 里的 personal PAT（secret://github/personal-pat，够开 PR），
+          # 设为 repo Actions secret `PR_PAT`，workflow 直接用它——不需要在仓库 setting 上勾选项。
+          token: ${{ secrets.PR_PAT }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          # 让发包 Actions 在 Release PR 合并后自动跑（已被 workflow_run: completed 触发）
           release-labels: release-please:autorelease:pending
-          # 不在这里直接 publish：发布交给 .github/workflows/publish.yml，
-          # publish.yml 由 tag 推送触发（on: push: tags: ['v*']），职责单一
           skip-github-release: false

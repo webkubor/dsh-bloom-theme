@@ -2,6 +2,27 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.4...v0.3.5) (2026-08-19)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** 补 npm ci —— 接入 contrast-guard 后 CI 装不到 devDependency ([ced8fe2](https://github.com/webkubor/dsh-bloom-theme/commit/ced8fe2a62db4cc425363d880a3d3879a2c47fc0))
+* **ui:** 表格观感修复 —— 表头/列分隔/空cell降权/作用域收紧，v0.3.5 ([5449ffd](https://github.com/webkubor/dsh-bloom-theme/commit/5449ffdb1b483ae943d90ab16a4affb493bd43be))
+* 目标栏空壳边框与窄表格右侧留白 ([468ce39](https://github.com/webkubor/dsh-bloom-theme/commit/468ce39b8cf410393a687fac23fdb902d7da721d))
+
+
+### 📝 Documentation
+
+* README 加 Bloom 系列导航 ([5e9b750](https://github.com/webkubor/dsh-bloom-theme/commit/5e9b750cfe6935ef5ed27441cb039f5de8213ffd))
+
+
+### 🛠️ CI / Build
+
+* **release:** 接 release-please——自动版本/PR/tag/changelog ([c2cde02](https://github.com/webkubor/dsh-bloom-theme/commit/c2cde02238966b2525133c575ff1f76a2da9519b))
+* **release:** 用 cs PAT 替换默认 GITHUB_TOKEN（release-please 需要开 PR） ([fd3d569](https://github.com/webkubor/dsh-bloom-theme/commit/fd3d569a81bb0113ed59920215698d6dbd528cb2))
+* 推 v* tag 自动发 npm 并建 GitHub Release ([5480826](https://github.com/webkubor/dsh-bloom-theme/commit/5480826b1e4ce41af34a95e047290bfabc62f3a1))
+
 ## [0.3.5] - 2026-08-19
 
 ### 修复

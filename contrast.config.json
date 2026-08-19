@@ -1,0 +1,8 @@
+{
+  "files": ["lib/client.js"],
+  "groups": true,
+  "pairs": [
+    { "fg": "accentL", "bg": "bgL", "min": 4.5, "label": "浅色主色" },
+    { "fg": "accentD", "bg": "bgD", "min": 4.5, "label": "深色主色" }
+  ]
+}

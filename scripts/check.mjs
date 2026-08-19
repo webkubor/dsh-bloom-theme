@@ -58,55 +58,9 @@ idMatch?.[1] === pkg.name
   : bad(`PLUGIN_ID (${idMatch?.[1]}) 与包名 (${pkg.name}) 不一致 —— DSH 会报 "loaded without registering"`)
 
 // ── 2. 配色无障碍 ──────────────────────────────────────────────
-console.log('\n配色对比度（WCAG AA ≥ 4.5:1）')
-
-const oklch2rgb = (L, C, H) => {
-  const h = (H * Math.PI) / 180
-  const a = C * Math.cos(h), b = C * Math.sin(h)
-  const l_ = L + 0.3963377774 * a + 0.2158037573 * b
-  const m_ = L - 0.1055613458 * a - 0.0638541728 * b
-  const s_ = L - 0.0894841775 * a - 1.291485548 * b
-  const [l, m, s] = [l_ ** 3, m_ ** 3, s_ ** 3]
-  const enc = (x) => {
-    x = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(Math.max(x, 0), 1 / 2.4) - 0.055
-    return Math.min(1, Math.max(0, x))
-  }
-  return [
-    enc(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
-    enc(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
-    enc(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
-  ]
-}
-const lum = (rgb) => {
-  const f = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
-  return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2])
-}
-const ratio = (c1, c2) => {
-  const [a, b] = [lum(c1), lum(c2)].sort((x, y) => y - x)
-  return (a + 0.05) / (b + 0.05)
-}
-const parse = (s) => {
-  const m = s.match(/oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)\s*\)/)
-  if (!m) throw new Error('无法解析 oklch: ' + s)
-  return oklch2rgb(parseFloat(m[1]) / 100, parseFloat(m[2]), parseFloat(m[3]))
-}
-
-// 从 client.js 的 PALETTE 直接取值，避免测试与实现各写一份而漂移
-const paletteSrc = client.slice(client.indexOf('const PALETTE = {'), client.indexOf('const VARIANT_LABELS'))
-const variants = [...paletteSrc.matchAll(/^\s{2}(\w+):\s*\{([\s\S]*?)^\s{2}\},/gm)]
-if (variants.length !== 4) bad(`PALETTE 解析到 ${variants.length} 个变体，预期 4 个`)
-
-for (const [, name, body] of variants) {
-  const get = (k) => body.match(new RegExp(k + `:\\s*'([^']+)'`))?.[1]
-  for (const [mode, accentKey, bgKey] of [['亮', 'accentL', 'bgL'], ['暗', 'accentD', 'bgD']]) {
-    const a = get(accentKey), bg = get(bgKey)
-    if (!a || !bg) { bad(`${name} 缺 ${accentKey}/${bgKey}`); continue }
-    const r = ratio(parse(a), parse(bg))
-    r >= 4.5
-      ? ok(`${name.padEnd(9)} ${mode}色 ${r.toFixed(2)}:1`)
-      : bad(`${name} ${mode}色仅 ${r.toFixed(2)}:1，低于 AA 门槛 4.5:1`)
-  }
-}
+// 已交给 contrast-guard（npm run check:contrast / CI 单独一步）。
+// 它按 4 个变体逐组检查 8 组「主色+底色」，不达标时直接反推出该改成多少。
+// 此处不再重复实现 —— 两份算法各写一遍必然漂移。
 
 // ── 3. 前景色 token 反模式 ─────────────────────────────────────
 console.log('\n前景色 token 反模式')

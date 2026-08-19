@@ -27,7 +27,8 @@
     "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
     "dev": "node scripts/watch-deploy.js",
     "preview": "npm run deploy && open http://127.0.0.1:3080",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs && contrast-guard",
+    "check:contrast": "contrast-guard"
   },
   "repository": {
     "type": "git",
@@ -67,6 +68,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "contrast-guard": "^0.1.1"
+    "contrast-guard": "^0.2.0"
   }
 }

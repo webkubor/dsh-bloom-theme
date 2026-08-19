@@ -2,6 +2,22 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.5] - 2026-08-19
+
+### 修复
+
+- **聊天 markdown 表格观感**：旧规则 `th, td { border-color }` 只染色不补形，
+  在莫兰迪主题下表格看着像"被横线分开的文字块"，不像表。重写为 `_tableScroll`
+  容器范围内生效：
+  - 表头加 8% morandi 冷光底 + 字重 600 + hairline-strong 底边
+  - 列分隔：每个 cell 加 hairline 右 border，最后一列去掉
+  - 还原首列 padding-left: 16px（DSH 原生 0 让首行贴边）
+  - 空 cell 透明度 0.35，缺值列（如 P1 状态空）不会让整行看着"半残废"
+  - 容器外框：1px hairline + 10px 圆角 + 2% morandi 微底
+  - hover 行 6% morandi 淡染
+- 规则作用域收紧到 `[class*="_tableScroll"]`，**不再用全局 `th, td`** —
+  之前的全局规则可能误染会话列表（`Y0dWHa_table`）等其它表格
+
 ## [0.3.4] - 2026-08-19
 
 ### 变更

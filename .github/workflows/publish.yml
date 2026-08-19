@@ -1,0 +1,65 @@
+name: Publish
+
+# 推 v* tag 时自动发 npm。与 ci.yml 的关系：CI 每次 push 都跑校验，
+# 这里在发布前再跑一遍同样的三件套 —— 发布是最后一道门，不依赖
+# 「之前某次 CI 应该跑过了」这种假设。
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh release create
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # 本插件零运行时依赖，无需 install（与 ci.yml 同理）
+
+      - name: 语法检查 + 自检 + 产物校验
+        run: |
+          node --check lib/client.js && node --check lib/index.js
+          npm run check
+          npm pack --dry-run --json > pack.json
+          node -e "
+            const f = require('./pack.json')[0].files.map(x => x.path)
+            const need = ['package.json', 'cordis.patch.yml', 'lib/client.js', 'lib/index.js', 'README.md', 'LICENSE']
+            const miss = need.filter(n => !f.includes(n))
+            if (miss.length) { console.error('发布产物缺少: ' + miss.join(', ')); process.exit(1) }
+          "
+
+      # tag 名必须与 package.json version 一致，防止「tag 是 v0.3.5 发的却是 0.3.4」；
+      # 同时探测该版本是否已发过 npm（重推同一 tag 时不报错、不重复发）
+      - name: 校验 tag 与版本一致性并探测 npm
+        id: ver
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VER="$(node -p 'require("./package.json").version')"
+          if [ "$TAG" != "$VER" ]; then
+            echo "tag v$TAG 与 package.json version $VER 不一致"; exit 1
+          fi
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+          if npm view "@kubor/dsh-bloom-theme@$VER" version >/dev/null 2>&1; then
+            echo "published=true"  >> "$GITHUB_OUTPUT"
+            echo "v$VER 已在 npm 上，将跳过 publish"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: npm publish
+        if: steps.ver.outputs.published == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: GitHub Release
+        if: steps.ver.outputs.published == 'false'
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}

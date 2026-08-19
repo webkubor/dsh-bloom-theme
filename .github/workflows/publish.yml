@@ -62,8 +62,17 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: GitHub Release
+      # Release 由 release-please 建（它的配置里 skip-github-release: false），
+      # 这里只在它没建成时补一个，绝不重复建 —— v0.3.5 实测就是两边都建，
+      # 后建的这步撞 `HTTP 422 Release.tag_name already exists` 让整个 Publish 标红，
+      # 而其实 npm 已经发成功了。「已经存在」是正常情况，不该算失败。
+      - name: GitHub Release（缺失时补建）
         if: steps.ver.outputs.published == 'false'
-        run: gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "release $GITHUB_REF_NAME 已由 release-please 建好，跳过"
+          else
+            gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
+          fi
         env:
           GH_TOKEN: ${{ github.token }}

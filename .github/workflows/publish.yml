@@ -66,8 +66,12 @@ jobs:
       # 这里只在它没建成时补一个，绝不重复建 —— v0.3.5 实测就是两边都建，
       # 后建的这步撞 `HTTP 422 Release.tag_name already exists` 让整个 Publish 标红，
       # 而其实 npm 已经发成功了。「已经存在」是正常情况，不该算失败。
+      #
+      # 注意这步**不挂 published == 'false'**：npm 发没发过，跟 Release 建没建成
+      # 是两件独立的事。挂上去反而让补建在最需要它的场景失效 —— npm 已发成功、
+      # 但 Release 没建起来时重推 tag，published 是 true，补建会被整个跳过，
+      # Release 永远补不上。幂等性由下面的 `gh release view` 探测保证，不需要外层门控。
       - name: GitHub Release（缺失时补建）
-        if: steps.ver.outputs.published == 'false'
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             echo "release $GITHUB_REF_NAME 已由 release-please 建好，跳过"

@@ -2,6 +2,14 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.3.6](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.5...v0.3.6) (2026-08-20)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** Release 已存在时跳过，别让重复创建把成功的发布标红 ([ac5ab4e](https://github.com/webkubor/dsh-bloom-theme/commit/ac5ab4ec13add7c7d33b7b4967995a33338dc14b))
+* **ci:** Release 补建步骤去掉 npm 门控 —— 它让补建在最需要时失效 ([0cedef3](https://github.com/webkubor/dsh-bloom-theme/commit/0cedef3893f0e9a2cd0a0abb3dbd2a1240750e33))
+
 ## [0.3.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.4...v0.3.5) (2026-08-19)
 
 

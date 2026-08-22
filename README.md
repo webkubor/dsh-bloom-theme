@@ -42,7 +42,7 @@
   把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
   <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />
-  4 套配色，明暗双主题，顶栏一键切换。
+  4 套配色，明暗双主题，顶栏一键切换；连推理中的等待也会跟着主题呼吸。
 </p>
 
 ## Bloom 是什么
@@ -66,6 +66,7 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 | WCAG AA | 8 个「主色 + 底色」组合全部实测 ≥ 4.5:1 |
 | 零依赖 | 纯客户端注入，不引入任何运行时依赖 |
 | 不抢占原生控件 | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
+| 主题色推理动效 | `Deep diving…` 以当前主题的三色光谱流动，不再固定 DeepSeek 蓝；减少动态效果时自动静止 |
 | 氛围层（v0.4，默认关） | 同色系壁纸 + 磨砂玻璃一键开启；关闭后零残留，回到纯 Bloom |
 | 主题包（v0.4） | 变体 + 氛围配置导出 JSON 分享，导入白名单校验 |
 
@@ -112,6 +113,13 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
   <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="主题切换器" width="760" />
 </p>
 
+### 推理中的等待，也属于主题
+
+`Deep diving…` 不再是固定的 DeepSeek 蓝色 shimmer。Bloom 为每个变体准备了以主色为锚的
+三色光谱，并在文字上缓慢流动：雾蓝是蓝 → 青 → 紫蓝，朱砂是朱砂 → 琥珀 → 玫红，
+花瓣是粉 → 紫 → 珊瑚，涟漪是青 → 湛蓝 → 薄荷。切换主题时动效同步切换；
+`prefers-reduced-motion` 下自动停为静态渐变。
+
 v0.4 起可选开启**氛围层**——壁纸与磨砂玻璃随变体联动（默认关闭，克制审美不妥协）：
 
 <p align="center">
@@ -142,6 +150,9 @@ dsh plugin --profile web add @kubor/dsh-bloom-theme
 
 重启 DSH，顶栏出现主题下拉即生效。
 
+DSH Desktop 使用相同的包与 boot graph：把上面命令和路径中的 `web` 换成 `desktop`，
+然后退出并重新打开原生 Desktop App。
+
 插件自带 `cordis.patch.yml` 并通过 `dsh.bundle` 声明，列进 bundles 后会自动 insert
 进 boot graph，**不需要手动编辑 `cordis.patch.yml`**。
 
@@ -159,6 +170,17 @@ dsh plugin --profile web add @kubor/dsh-bloom-theme
 </details>
 
 从源码装：`dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
+
+## 配置
+
+Bloom 不读取环境变量，也不把偏好发到服务端；所有设置都保存在当前浏览器的 `localStorage`：
+
+| 设置 | 键 | 默认值 | 说明 |
+| :-- | :-- | :-- | :-- |
+| 主题变体 | `dsh-bloom-variant` | `mist` | 顶栏下拉选择；可选 `mist`、`cinnabar`、`petal`、`ripple` |
+| 氛围层 | `dsh-bloom-ambience` | 关闭 | 壁纸、玻璃、压暗度、模糊度与自定义壁纸 URL；可通过主题包导入/导出 |
+
+明暗模式仍由 DSH 自身的「设置 → 外观」控制；Bloom 会为当前变体自动应用对应的亮色或暗色 token。
 
 ## 设计原理：双轨色
 
@@ -335,7 +357,7 @@ boot graph 在进程启动时就已确定，仅刷新页面不会重新读取 pr
   DSH 改版导致失配时，效果会**退回纯色**——不会错位或不可用，属安全降级。
 - **`--dsw-alias-toast-bg` / `tooltip-bg` 未逐变体覆盖**，所有配色沿用 mist 的蓝灰色相。
   暗色下取值与背景差距偏小，尚未在真实 toast 上验证过对比度。
-- **仅适配 web profile。** tui / headless profile 不涉及浏览器渲染，本插件不生效。
+- **适配 web 与 DSH Desktop profile。** tui / headless profile 不涉及浏览器渲染，本插件不生效。
 
 ## 踩过的坑
 

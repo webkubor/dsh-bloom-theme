@@ -26,7 +26,7 @@
   Bringing the Morandi feel of <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a> (a 90★ Typora theme)
   to <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>.
   <br />
-  Four palettes, light &amp; dark, one-click switching from the top bar.
+  Four palettes, light &amp; dark, one-click switching from the top bar — even the waiting state breathes with the theme.
 </p>
 
 ## What Bloom is
@@ -51,6 +51,7 @@ See [the two-track palette](#design-the-two-track-palette).
 | WCAG AA | All 8 accent/background pairs measured at ≥ 4.5:1 |
 | Zero dependencies | Pure client-side injection, nothing added to your runtime |
 | Respects native controls | The switcher mounts into the DSH top bar instead of floating over it |
+| Theme-native reasoning motion | `Deep diving…` flows through a three-color spectrum from the active palette instead of fixed DeepSeek blue; it becomes static under reduced motion |
 | Ambience layer (v0.4, off by default) | Matching Morandi wallpapers + frosted glass, one click to enable; zero residue when off |
 | Theme packs (v0.4) | Export variant + ambience as JSON to share; imports are whitelist-validated |
 
@@ -97,6 +98,14 @@ Switch from the top bar; your choice persists in `localStorage`:
   <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="theme switcher" width="760" />
 </p>
 
+### Waiting belongs to the theme, too
+
+`Deep diving…` is no longer a fixed DeepSeek-blue shimmer. Each Bloom variant supplies a slow
+three-color spectrum anchored in its primary hue: mist moves through blue, cyan, and periwinkle;
+cinnabar through terracotta, amber, and rose; petal through pink, violet, and coral; ripple through
+teal, azure, and mint. Switching the palette switches the motion with it; `prefers-reduced-motion`
+stops it on a static gradient.
+
 Since v0.4 an optional **ambience layer** adds wallpapers and frosted glass that follow
 the active variant (off by default — the restrained look stays the default):
 
@@ -128,6 +137,9 @@ Then add the package to `bundles` in `~/.dsh/profiles/web/package.json`:
 
 Restart DSH — the theme dropdown appears in the top bar.
 
+DSH Desktop uses the same package and boot graph: replace `web` with `desktop` in the command and
+paths above, then quit and reopen the native Desktop app.
+
 The plugin ships its own `cordis.patch.yml` and declares it via `dsh.bundle`, so once listed
 in `bundles` it inserts itself into the boot graph — **no need to hand-edit `cordis.patch.yml`**.
 
@@ -145,6 +157,19 @@ If you'd rather not touch `bundles`, inserting it in `~/.dsh/profiles/web/cordis
 </details>
 
 Install from source: `dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
+
+## Configuration
+
+Bloom reads no environment variables and sends no preferences to a server. Everything stays in the
+current browser's `localStorage`:
+
+| Setting | Key | Default | Notes |
+| :-- | :-- | :-- | :-- |
+| Palette | `dsh-bloom-variant` | `mist` | Chosen from the top-bar dropdown: `mist`, `cinnabar`, `petal`, or `ripple` |
+| Ambience | `dsh-bloom-ambience` | off | Wallpaper, glass, dimming, blur, and a custom wallpaper URL; import/export it with a theme pack |
+
+Light or dark mode still comes from DSH itself (Settings → Appearance). Bloom automatically applies
+the matching light or dark tokens for the selected palette.
 
 ## Design: the two-track palette
 
@@ -320,7 +345,7 @@ palettes ships a light and a dark version and adapts automatically — no separa
 - **`--dsw-alias-toast-bg` / `tooltip-bg` are not overridden per palette**, so all four inherit
   mist's blue-grey hue. In dark mode the value sits close to the background; this has not been
   verified against a real toast.
-- **Web profile only.** The tui / headless profiles don't render in a browser, so this has no effect.
+- **Web and DSH Desktop profiles only.** The tui / headless profiles don't render in a browser, so this has no effect.
 
 ## Lessons learned
 

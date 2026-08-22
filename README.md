@@ -258,6 +258,19 @@ npm run deploy   # 手动部署一次
 必须重新执行脚本，也就必须刷新页面。`npm run dev` 已代劳（按 `a` 可切换，
 或设 `DSH_BLOOM_NO_AUTORELOAD=1` 关闭）。
 
+### 桌面 profile：本地联调与生产切换
+
+桌面 profile 有两种明确模式，避免发布版长期引用开发工作树：
+
+```bash
+npm run desktop:link        # 本地联调：桌面 profile 直接链接当前仓库
+npm run publish:desktop     # 发布 npm 包后，自动切到刚发布的精确版本
+```
+
+也可以在已发布后单独执行 `npm run desktop:production`。该命令会先确认当前
+`package.json` 的版本已存在于 npm；未发布则拒绝切换，避免桌面端退回旧版。
+切换后重载桌面 DSH 页面或重启其进程即可生效。
+
 ## 常见问题
 
 <details>

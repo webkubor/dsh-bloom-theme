@@ -27,6 +27,9 @@
     "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
     "dev": "node scripts/watch-deploy.js",
     "preview": "npm run deploy && open http://127.0.0.1:3080",
+    "desktop:link": "node scripts/desktop-profile.mjs link",
+    "desktop:production": "node scripts/desktop-profile.mjs production",
+    "publish:desktop": "npm publish && npm run desktop:production",
     "check": "node scripts/check.mjs && contrast-guard",
     "check:contrast": "contrast-guard"
   },

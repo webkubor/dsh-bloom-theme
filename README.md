@@ -66,6 +66,8 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 | WCAG AA | 8 个「主色 + 底色」组合全部实测 ≥ 4.5:1 |
 | 零依赖 | 纯客户端注入，不引入任何运行时依赖 |
 | 不抢占原生控件 | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
+| 氛围层（v0.4，默认关） | 同色系壁纸 + 磨砂玻璃一键开启；关闭后零残留，回到纯 Bloom |
+| 主题包（v0.4） | 变体 + 氛围配置导出 JSON 分享，导入白名单校验 |
 
 ## 主题一览
 
@@ -108,6 +110,12 @@ Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整
 
 <p align="center">
   <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="主题切换器" width="760" />
+</p>
+
+v0.4 起可选开启**氛围层**——壁纸与磨砂玻璃随变体联动（默认关闭，克制审美不妥协）：
+
+<p align="center">
+  <img src="assets/showcase/ambience-variants.gif" alt="氛围层：四变体壁纸联动" width="760" />
 </p>
 
 ## 快速安装
@@ -194,6 +202,36 @@ dsh plugin --profile web add @kubor/dsh-bloom-theme
 | Markdown | 标题渐变短横、hr 两端消隐、引用块主色条、代码块冷光描边 |
 | 侧栏 | 顶部氛围淡染、会话项冷光态、选中态主色标记 |
 
+## 氛围层（v0.4，可选）
+
+Bloom 的默认审美是克制的——氛围层因此**默认关闭**，在顶栏下拉的「氛围」区一键开启：
+
+<p align="center">
+  <img src="assets/showcase/ambience-on-off.png" alt="氛围层开/关对比" width="860" />
+</p>
+
+- **配套壁纸**：4 套与变体同色系的莫兰迪壁纸（mist 雾蓝 / cinnabar 陶土 / petal 藕粉 / ripple 雾青），
+  默认**随变体自动切换**；也可固定某套，或填自定义 URL（`http(s)` / `data:`，完全离线可行）。
+- **压暗滑杆**（0–70%）：在壁纸上盖一层纱，正文可读性优先——这是对比度护栏在氛围层的延伸。
+- **磨砂玻璃**：侧栏、气泡、输入卡、菜单变为半透明 + `backdrop-filter` 模糊（4–32px 可调），
+  底色取当前变体的主题 token 混透明度，不是死白死黑。
+- **主题包**：全部配置（变体 + 氛围）导出为一个 JSON 文件，分享给同事一键导入；
+  导入走白名单合并，未知字段丢弃，坏文件安全报错。
+
+四变体 × 明暗在氛围层下的一致表现：
+
+<p align="center">
+  <img src="assets/showcase/ambience-grid.png" alt="四变体氛围层 2x2" width="860" />
+</p>
+
+设置面板就挂在顶栏下拉的下半部，开关、滑杆、主题包导入导出都在这一处：
+
+<p align="center">
+  <img src="assets/showcase/switcher-panel.png" alt="氛围设置面板" width="860" />
+</p>
+
+关闭总开关后，壁纸层 DOM 不渲染、玻璃规则不命中——**回到 v0.3 的纯 Bloom，零残留**。
+
 ## 架构
 
 ```
@@ -204,7 +242,9 @@ lib/client.js   浏览器半侧，全部逻辑在这
   ├─ mistLight/Dark() → mist 完整接管 DSH 的 alias + specific 变量体系
   ├─ variantBlock()   → 其余 3 变体只覆盖主色与背景调，灰阶骨架继承 mist
   ├─ COMPONENT_CSS    → 质感层（一份 CSS，4 变体 × 明暗自动适配）
-  └─ SWITCHER_CSS     → 顶栏下拉切换器
+  ├─ AMBIENCE_CSS     → 氛围层（壁纸 + 磨砂玻璃，body[data-bloom-*] 驱动，默认不生效）
+  ├─ renderAmbience() → 氛围层状态 → DOM 的唯一写入口（SSOT）
+  └─ SWITCHER_CSS     → 顶栏下拉切换器（下半部即「氛围」设置区）
 ```
 
 ## 开发

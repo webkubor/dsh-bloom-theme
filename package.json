@@ -1,7 +1,7 @@
 {
   "name": "@kubor/dsh-bloom-theme",
-  "version": "0.3.6",
-  "description": "DeepSeek Harness (DSH) 主题插件：Bloom 莫兰迪配色 4 变体（雾蓝/朱砂/花瓣/涟漪），OKLCH 调色，明暗双主题，顶栏一键切换，全部达 WCAG AA",
+  "version": "0.4.0",
+  "description": "DeepSeek Harness (DSH) 主题插件：Bloom 莫兰迪配色 4 变体（雾蓝/朱砂/花瓣/涟漪），OKLCH 调色，明暗双主题；v0.4 新增氛围层：同色系壁纸 + 磨砂玻璃（默认关闭），支持主题包导入/导出",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -54,7 +54,9 @@
     "morandi",
     "oklch",
     "accessibility",
-    "wcag"
+    "wcag",
+    "wallpaper",
+    "glassmorphism"
   ],
   "license": "MIT",
   "files": [

@@ -51,6 +51,8 @@ See [the two-track palette](#design-the-two-track-palette).
 | WCAG AA | All 8 accent/background pairs measured at ≥ 4.5:1 |
 | Zero dependencies | Pure client-side injection, nothing added to your runtime |
 | Respects native controls | The switcher mounts into the DSH top bar instead of floating over it |
+| Ambience layer (v0.4, off by default) | Matching Morandi wallpapers + frosted glass, one click to enable; zero residue when off |
+| Theme packs (v0.4) | Export variant + ambience as JSON to share; imports are whitelist-validated |
 
 ## Palettes
 
@@ -93,6 +95,13 @@ Switch from the top bar; your choice persists in `localStorage`:
 
 <p align="center">
   <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="theme switcher" width="760" />
+</p>
+
+Since v0.4 an optional **ambience layer** adds wallpapers and frosted glass that follow
+the active variant (off by default — the restrained look stays the default):
+
+<p align="center">
+  <img src="assets/showcase/ambience-variants.gif" alt="Ambience layer: wallpapers following four variants" width="760" />
 </p>
 
 ## Install
@@ -181,6 +190,41 @@ is the whole point.
 | Markdown | Gradient heading rules, fading `hr`, accent-barred blockquotes, outlined code blocks |
 | Sidebar | Ambient wash, cool hover states, accent marker on the active item |
 
+## Ambience layer (v0.4, optional)
+
+Bloom's default aesthetic is restrained — so the ambience layer ships **off by default**.
+Enable it from the "Ambience" section of the top-bar dropdown:
+
+<p align="center">
+  <img src="assets/showcase/ambience-on-off.png" alt="Ambience layer off vs on" width="860" />
+</p>
+
+- **Matching wallpapers**: four Morandi wallpapers in the same hue family as the palettes
+  (mist / cinnabar / petal / ripple), **following the active variant** by default;
+  pin one, or paste any custom URL (`http(s)` or `data:` — fully offline if you want).
+- **Dim slider** (0–70%): a veil over the wallpaper; readability of the text comes first —
+  the contrast guardrail extended into the ambience layer.
+- **Frosted glass**: sidebar, bubbles, composer card and menus turn translucent with a
+  `backdrop-filter` blur (4–32px), tinted by the current variant's theme tokens.
+- **Theme packs**: export everything (variant + ambience) as one JSON file, share it,
+  import with one click. Imports are whitelist-merged; unknown fields are dropped and
+  malformed files fail safely.
+
+All four palettes × light/dark under the ambience layer:
+
+<p align="center">
+  <img src="assets/showcase/ambience-grid.png" alt="Four palettes under ambience, 2x2" width="860" />
+</p>
+
+The settings panel lives in the lower half of the top-bar dropdown — toggles, sliders,
+and theme-pack import/export all in one place:
+
+<p align="center">
+  <img src="assets/showcase/switcher-panel.png" alt="Ambience settings panel" width="860" />
+</p>
+
+Toggle the layer off and nothing renders — **you are back to the pure v0.3 Bloom, zero residue**.
+
 ## Architecture
 
 ```
@@ -191,7 +235,9 @@ lib/client.js   browser half, all logic lives here
   ├─ mistLight/Dark() → mist fully takes over the DSH alias + specific variable system
   ├─ variantBlock()   → the other 3 override only accent and background; greys inherit mist
   ├─ COMPONENT_CSS    → texture layer (written once, adapts across 4 palettes × light/dark)
-  └─ SWITCHER_CSS     → top-bar dropdown switcher
+  ├─ AMBIENCE_CSS     → ambience layer (wallpaper + frosted glass, driven by body[data-bloom-*])
+  ├─ renderAmbience() → the single write path from ambience state to the DOM (SSOT)
+  └─ SWITCHER_CSS     → top-bar dropdown switcher (the "Ambience" settings live in its lower half)
 ```
 
 ## Development

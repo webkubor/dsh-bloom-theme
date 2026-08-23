@@ -2,6 +2,21 @@
   <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/bloom-banner.png" alt="Bloom for DSH" width="100%" />
 </p>
 
+<!-- bloom-series-nav -->
+
+<table align="center">
+<tr>
+<td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 themes</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>8 palettes · current</sub></td>
+<td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>color guardrail</sub></td>
+</tr>
+</table>
+
+<p align="center">
+  <sub>One Morandi design language — two themes, and the tool that keeps their colors honest.<br/>
+  <i>同一套莫兰迪设计语言：两个宿主的主题，加一个守住它们配色的工具。</i></sub>
+</p>
+
 <p align="center">
   <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@kubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@kubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
@@ -13,6 +28,7 @@
   <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="Awesome DSH Plugin" /></a>
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
   <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
+  <img src="https://img.shields.io/badge/TypeScript-built-3178c6?style=flat-square" alt="TypeScript" />
   <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
   <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=flat-square" alt="OKLCH" />
   <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=flat-square" alt="zero dependency" />
@@ -26,323 +42,148 @@
   Bringing the Morandi feel of <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a> (a 90★ Typora theme)
   to <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>.
   <br />
-  Four palettes, light &amp; dark, one-click switching from the top bar.
+  <b>Glass + Morandi</b>: 8 light/dark palettes, frosted-glass panels, one-click switching from the top bar —
+  even the waiting state breathes with the theme.
 </p>
 
-## What Bloom is
+## The gist
 
-Bloom started as a Typora theme. Its point was never "swap the colors" — it is a complete
-**Morandi design language**: low-saturation ambient gradients, cool-toned hairlines,
-long soft shadows, restrained radii and spacing.
-
-This plugin ports that language to DSH — including the half of it that is easiest to miss:
+A **glass + Morandi** theme for DeepSeek Harness.
+Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
+(semi-transparent + backdrop blur + glass edges); colors are low-saturation Morandi
+(OKLCH, WCAG AA); restrained, consistent micro-interactions; zero runtime deps; TypeScript front-end.
 
 > The Morandi character does not live in `--accent`. It lives in `--accent-rgb`.
 
-See [the two-track palette](#design-the-two-track-palette).
-
-## Why Bloom
-
-| Feature | Notes |
-| :-- | :-- |
-| Two-track palette | One track guarantees contrast, the other carries the mood — never mixed |
-| A real texture layer | Ambient gradients, cool hairlines, paper-like shadows, Markdown detailing — not just recolored variables |
-| OKLCH throughout | Perceptually uniform, so light/dark switching doesn't jump in brightness |
-| WCAG AA | All 8 accent/background pairs measured at ≥ 4.5:1 |
-| Zero dependencies | Pure client-side injection, nothing added to your runtime |
-| Respects native controls | The switcher mounts into the DSH top bar instead of floating over it |
-| Ambience layer (v0.4, off by default) | Matching Morandi wallpapers + frosted glass, one click to enable; zero residue when off |
-| Theme packs (v0.4) | Export variant + ambience as JSON to share; imports are whitelist-validated |
-
-## Palettes
-
-Four palettes, each with a light and a dark version.
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-mist-dark.png" alt="mist" />
-      <sub><code>mist</code> — quiet blue-grey</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-cinnabar-dark.png" alt="cinnabar" />
-      <sub><code>cinnabar</code> — warm terracotta</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-petal-dark.png" alt="petal" />
-      <sub><code>petal</code> — soft lotus pink</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-ripple-dark.png" alt="ripple" />
-      <sub><code>ripple</code> — crisp misty teal</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-mist-light.png" alt="mist light" />
-      <sub><code>mist</code> light</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-petal-light.png" alt="petal light" />
-      <sub><code>petal</code> light</sub>
-    </td>
-  </tr>
-</table>
-
-Switch from the top bar; your choice persists in `localStorage`:
+## Screenshots
 
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="theme switcher" width="760" />
+  <img src="assets/screenshots/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
+  <sub>Sage · light — frosted-glass panels + the selected session row tints with the active theme</sub>
 </p>
 
-Since v0.4 an optional **ambience layer** adds wallpapers and frosted glass that follow
-the active variant (off by default — the restrained look stays the default):
+**8 palettes (light)**: click any one and the whole accent / background / glass / motion hue switches together.
+
+<table align="center">
+<tr>
+<td align="center">☁️ Mist<br/><img src="assets/screenshots/ui-mist-light.png" width="100%"/></td>
+<td align="center">🧧 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
+<td align="center">🌸 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
+<td align="center">🌊 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
+</tr>
+<tr>
+<td align="center">🌿 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
+<td align="center">🧱 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
+<td align="center">🔷 Lapis<br/><img src="assets/screenshots/ui-lapis-light.png" width="100%"/></td>
+<td align="center">🍯 Amber<br/><img src="assets/screenshots/ui-amber-light.png" width="100%"/></td>
+</tr>
+</table>
+
+**Every palette has a dark variant too** (example: Amber · dark):
 
 <p align="center">
-  <img src="assets/showcase/ambience-variants.gif" alt="Ambience layer: wallpapers following four variants" width="760" />
+  <img src="assets/screenshots/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
 </p>
 
 ## Install
 
 ```bash
-dsh plugin --profile web add @kubor/dsh-bloom-theme
+# via the dsh CLI (recommended)
+dsh plugin add @kubor/dsh-bloom-theme
+
+# or global install + enable
+npm i -g @kubor/dsh-bloom-theme
+dsh plugin enable @kubor/dsh-bloom-theme
 ```
 
-Then add the package to `bundles` in `~/.dsh/profiles/web/package.json`:
+Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
+**8 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
+lights up when a newer version is on npm (jump to the Releases page).
 
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "@kubor/dsh-bloom-theme"
-      ]
-    }
-  }
-}
-```
+## Features
 
-Restart DSH — the theme dropdown appears in the top bar.
-
-The plugin ships its own `cordis.patch.yml` and declares it via `dsh.bundle`, so once listed
-in `bundles` it inserts itself into the boot graph — **no need to hand-edit `cordis.patch.yml`**.
-
-<details>
-<summary>Manual insert (alternative)</summary>
-
-If you'd rather not touch `bundles`, inserting it in `~/.dsh/profiles/web/cordis.patch.yml` works too:
-
-```yaml
-- insert:
-    - id: bloom-theme
-      name: '@kubor/dsh-bloom-theme'
-```
-
-</details>
-
-Install from source: `dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
-
-## Design: the two-track palette
-
-Every Bloom palette carries two colors. The original `root-mist.css` says it outright:
-
-```css
-/* --- Morandi Mist (Blue) - Deepened for better contrast --- */
---accent: oklch(50% 0.08 240);   /* readable track: deliberately darkened, to pass contrast */
---accent-rgb: 146, 168, 179;     /* mood track: the actual Morandi color — greyed, desaturated */
-```
-
-The two must not be mixed:
-
-- **Readable track** → text, button fills, borders. It is the darkened version; painting large
-  areas with it looks loud and muddy.
-- **Mood track** → only for wide ambient gradients and glows at `rgba(morandi, 0.05~0.2)`.
-  All 14 gradients in the original use it, and **never** the readable track.
-
-Port only `--accent` — the natural assumption — and `petal` turns from lotus pink `#e8859b`
-into fluorescent magenta `#e63f9f`. The hue is right; the Morandi character is gone.
-
-| Palette | Mood track | Readable track (light / dark) | Light contrast |
-| :-- | :-- | :-- | :-- |
-| `mist` | `#92a8b3` | `oklch(50%)` / `oklch(72%)` | 5.28:1 |
-| `cinnabar` | `#d74b4b` | `oklch(55%)` / `oklch(72%)` | 4.87:1 |
-| `petal` | `#e8859b` | `oklch(58%)` / `oklch(75%)` | 4.55:1 |
-| `ripple` | `#5fa8b2` | `oklch(51%)` / `oklch(75%)` | 4.61:1 |
-
-The light readable track was calibrated by solving backwards from WCAG AA — and darkening it
-actually brings it closer to Morandi, which is exactly what the original author did for `mist`.
-
-## The texture layer
-
-Port the palette alone and you get "the same UI in different colors". In the original,
-`root-*.css` (palette) is 89 lines while `base-light/dark.css` (texture) is 2,968 — that gap
-is the whole point.
-
-| Technique | Implementation |
+| Feature | Description |
 | :-- | :-- |
-| Ambient gradients | Four stacked Morandi glows on `body`, `background-attachment: fixed` |
-| Cool hairlines | Sidebar rule, card outlines, tab underline, inset top highlight |
-| Paper feel | Three shadow tiers plus an `inset 0 1px 0` highlight |
-| Markdown | Gradient heading rules, fading `hr`, accent-barred blockquotes, outlined code blocks |
-| Sidebar | Ambient wash, cool hover states, accent marker on the active item |
+| **Frosted-glass panels (on by default)** | Semi-transparent fill + `backdrop-filter` blur + glass edges (top highlight / translucent stroke / soft outer glow), adaptive opacity per light/dark |
+| **8 Morandi palettes** | Mist / Cinnabar / Petal / Ripple / Sage / Stone / Lapis / Amber, each with light & dark, one-click switch |
+| **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
+| **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |
+| **Theme-colored thinking animation** | `Deep diving…` flows through the current theme's three-color spectrum; auto-still under `prefers-reduced-motion` |
+| **Version / update hints** | Current version at the bottom of the dropdown; `↑ vX` chip when npm is newer; update banner for very stale installs |
+| **OKLCH + WCAG AA** | Perceptually uniform color space, no jumps on light/dark switch; all accent/background pairs measured ≥ 4.5:1 |
+| **Zero deps · CSS-variable driven** | Only CSS variables + a little switch logic; near-zero runtime cost |
+| **Respects native controls** | Switcher mounts into the DSH header utilities area, side-by-side with native buttons |
+| **TypeScript build** | `src/*.ts` → `tsc` → `lib/*.js`; one-command `build / deploy / package / publish` |
 
-## Ambience layer (v0.4, optional)
+## One-click coding stats card (shareable)
 
-Bloom's default aesthetic is restrained — so the ambience layer ships **off by default**.
-Enable it from the "Ambience" section of the top-bar dropdown:
+`/bloom stats` reads your **local git repo** and gives you a shareable dev-stats card —
+fully local, offline, nothing uploaded.
 
-<p align="center">
-  <img src="assets/showcase/ambience-on-off.png" alt="Ambience layer off vs on" width="860" />
-</p>
-
-- **Matching wallpapers**: four Morandi wallpapers in the same hue family as the palettes
-  (mist / cinnabar / petal / ripple), **following the active variant** by default;
-  pin one, or paste any custom URL (`http(s)` or `data:` — fully offline if you want).
-- **Dim slider** (0–70%): a veil over the wallpaper; readability of the text comes first —
-  the contrast guardrail extended into the ambience layer.
-- **Frosted glass**: sidebar, bubbles, composer card and menus turn translucent with a
-  `backdrop-filter` blur (4–32px), tinted by the current variant's theme tokens.
-- **Theme packs**: export everything (variant + ambience) as one JSON file, share it,
-  import with one click. Imports are whitelist-merged; unknown fields are dropped and
-  malformed files fail safely.
-
-All four palettes × light/dark under the ambience layer:
-
-<p align="center">
-  <img src="assets/showcase/ambience-grid.png" alt="Four palettes under ambience, 2x2" width="860" />
-</p>
-
-The settings panel lives in the lower half of the top-bar dropdown — toggles, sliders,
-and theme-pack import/export all in one place:
-
-<p align="center">
-  <img src="assets/showcase/switcher-panel.png" alt="Ambience settings panel" width="860" />
-</p>
-
-Toggle the layer off and nothing renders — **you are back to the pure v0.3 Bloom, zero residue**.
-
-## Architecture
-
-```
-lib/index.js    node half (cordis plugin) — empty; this is a pure client-side theme
-lib/client.js   browser half, all logic lives here
-  ├─ PALETTE          4 palettes × two tracks
-  ├─ bloomTokens()    → --bloom-* tokens (single source of truth for the texture layer)
-  ├─ mistLight/Dark() → mist fully takes over the DSH alias + specific variable system
-  ├─ variantBlock()   → the other 3 override only accent and background; greys inherit mist
-  ├─ COMPONENT_CSS    → texture layer (written once, adapts across 4 palettes × light/dark)
-  ├─ AMBIENCE_CSS     → ambience layer (wallpaper + frosted glass, driven by body[data-bloom-*])
-  ├─ renderAmbience() → the single write path from ambience state to the DOM (SSOT)
-  └─ SWITCHER_CSS     → top-bar dropdown switcher (the "Ambience" settings live in its lower half)
-```
-
-## Development
+**Left of the theme switcher there's a small "💎 Stats" pill**: hover it to preview the card, then hit
+"Download PNG" to share it. Idle, it's just a simple pill.
 
 ```bash
-npm run dev      # watch lib/, deploy to the web profile, auto-reload the browser on save
-npm run deploy   # deploy once
+/bloom stats                          # current project · text summary (loc / files / commits / streak / languages)
+/bloom stats <dir>                    # stats a specific directory
+/bloom stats --card                   # generate a self-contained HTML card (into the project root)
+/bloom stats --card=~/xx.html         # custom card output path
 ```
 
-The skin is injected client-side and its CSS is generated at runtime by `client.js`, so there
-is no "hot-reload the CSS only" path — the script must re-run, which means the page must
-reload. `npm run dev` handles it (press `a` to toggle, or set `DSH_BLOOM_NO_AUTORELOAD=1`).
+<p align="center">
+  <img src="assets/showcase/coding-card-sample.png" alt="Bloom coding stats card" width="100%" />
+  <sub>Example: generated by `/bloom stats --card` (data from local git, no account or cloud needed)</sub>
+</p>
+
+## Design: two-track colors
+
+Bloom's point was never "swap the colors" — it is a complete **Morandi design language**:
+low-saturation ambient gradients, cool-toned hairlines, long soft shadows, restrained radii and spacing.
+
+The easiest thing to get wrong (and most often done wrong) is the **two-track color**:
+
+- **Readable track `--bloom-accent`** — deliberately deepened to pass WCAG; for text / buttons / selected states;
+- **Mood track `--accent-rgb`** — the real Morandi color (low-saturation, grayed); used only for large ambient gradients and cool hairlines.
+
+All 14 gradient usages in the original use the mood track, never the readable track. When you paint a
+large area with the readable color, Petal goes from lotus pink to fluorescent magenta and the Morandi feel dies.
+This plugin ports both tracks intact, and the sibling tool [contrast-guard](https://github.com/webkubor/contrast-guard)
+keeps accent/background contrast honest.
+
+## Develop / build (TypeScript)
+
+```bash
+npm install
+npm run build        # tsc: src/*.ts → lib/*.js
+npm run deploy       # one-click deploy to local DSH (sync-version → build → rsync)
+npm run preview      # deploy + open http://127.0.0.1:3080
+npm run dev          # build + watch (recompile+deploy on src change)
+npm run package      # one-click package (npm pack → .tgz)
+npm run publish      # one-click publish (sync-version → build → npm publish)
+npm run check        # packaging contract + contrast-guard
+```
+
+Source lives in `src/` (TypeScript); DSH loads the compiled `lib/*.js`. `scripts/sync-version.mjs`
+syncs `package.json`'s version into the source `PLUGIN_VERSION` before publish.
 
 ## FAQ
 
-<details>
-<summary>Installed, but nothing changed</summary>
+**Theme not applying?** Hard-refresh once (`Cmd/Ctrl + Shift + R`). If the page says `Failed to load plugins`,
+the client failed to register — re-run `dsh plugin add` or upgrade to the latest version.
 
-Make sure the package is listed in `dsh.profile.bundles` in `~/.dsh/profiles/web/package.json`,
-then **restart the DSH service** (reloading the page is not enough):
+**Can I customize colors?** For now you pick a whole palette via variants; per-color customization is on the roadmap.
 
-```bash
-launchctl kickstart -k gui/$(id -u)/ai.deepseek.dsh   # macOS LaunchAgent
-```
+## Contribute / open source
 
-The boot graph is resolved at process start; a page reload won't re-read the profile.
+- Add a new palette: add one entry to `PALETTE` / `VARIANTS` / `VARIANT_LABELS` in `src/client.ts`
+  — glass, motion, selected state and the contrast guardrail all follow automatically.
+- Run `npm run build && npm run check` and make sure `contrast-guard` passes before opening a PR.
+- Issues, PRs and ideas are all welcome.
 
-</details>
+## Support
 
-<details>
-<summary>Edited the code, reloaded, still the old style</summary>
-
-The skin is injected client-side and its CSS is generated at runtime by `client.js` — there is
-no "hot-reload the CSS only" path. The script has to re-run, which means the page must reload
-(`Cmd+R`). `npm run dev` does it for you on save.
-
-</details>
-
-<details>
-<summary>DSH white-screens: invalid plugin / loaded without registering</summary>
-
-Two usual causes:
-
-1. **The package was renamed** but stale copies remain under `~/.dsh/profiles/web/`. Clean up
-   `node_modules/<old-scope>/`, `cordis.patch.yml` and `node_modules/.package-map.json`
-   together, then restart the service.
-2. **The client factory returned a bare `{}`.** DSH expects a function or an object with an
-   `apply` method. That error surfaces in the browser and is unrelated to the ESM export style
-   of `lib/index.js`.
-
-</details>
-
-<details>
-<summary>Can I pin one palette and drop the switcher?</summary>
-
-Yes. The switcher only sets `body[data-bloom-variant]` and persists it to `localStorage`.
-Set that attribute yourself in CSS, or trim `VARIANTS` down to a single entry.
-
-</details>
-
-<details>
-<summary>How do I switch to light mode?</summary>
-
-Light/dark follows DSH's own appearance setting (Settings → Appearance). Each of the four
-palettes ships a light and a dark version and adapts automatically — no separate toggle.
-
-</details>
-
-## Known limitations
-
-- **`<think>` tags flash briefly while streaming.** Mid-stream the tag and the content share a
-  single text node; only after the response completes and markdown re-renders do they split
-  into standalone paragraphs the rule can catch. The end state is correct. A real fix belongs
-  in the LLM provider adapter — parsing the thinking into a reasoning field so DSH's native
-  `ReasoningRow` renders it — which is outside a theme's job.
-- **Relies on CSS Modules semantic class names.** DSH class names look like `wSkVaW_root`
-  (`<hash>_<semantic>`); the hash changes between DSH builds while the semantic part is stable,
-  so this plugin matches on `[class*="_semantic"]`. If a DSH release breaks the match, the
-  effect degrades to flat colors — nothing misaligns or breaks.
-- **`--dsw-alias-toast-bg` / `tooltip-bg` are not overridden per palette**, so all four inherit
-  mist's blue-grey hue. In dark mode the value sits close to the background; this has not been
-  verified against a real toast.
-- **Web profile only.** The tui / headless profiles don't render in a browser, so this has no effect.
-
-## Lessons learned
-
-Full write-ups in **[DEV_NOTES.md](./DEV_NOTES.md)** — each with symptom → root cause → fix → takeaway.
-The ones worth reading first:
-
-- **A client factory must return an object with an `apply` method.** Returning a bare `{}`
-  white-screens the whole of DSH. That error surfaces in the browser and has nothing to do
-  with the ESM export style of `lib/index.js`.
-- **Foreground tokens can't be used as backgrounds or shadows.** In dark mode the foreground
-  is near-white, so a `color-mix` "shadow" renders as a white haze, and giving
-  `markdown-inline-code` a text color yields a 1.2:1 pale-on-white block.
-- **DSH uses CSS Modules** — class names look like `wSkVaW_root`. Match with
-  `[class*="_semanticName"]`, always scope to `div` (or you'll hit SVG elements), and always
-  count the matches (a bare `_card` hits 30+ message cards).
-- **Only outline the layer that has a solid background.** Outlining an inner transparent
-  element produces a box-in-a-box.
+If Bloom makes your DSH nicer to use, drop a ⭐ or buy me a coffee (sponsor link below and one entry in the panel menu).
 
 ## License
 
-[MIT](./LICENSE)
-
-## Author
-
-[@webkubor](https://github.com/webkubor) · See also: [Bloom for Typora](https://github.com/webkubor/typora-Bloom-theme)
+[MIT](LICENSE) — keep the copyright notice on borrow/modify. Palette inspiration from [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme).

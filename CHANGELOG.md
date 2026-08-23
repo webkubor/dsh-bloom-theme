@@ -2,6 +2,31 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.5.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.4.0...v0.5.0) (2026-08-23)
+
+### 🧭 方向调整
+- **移除壁纸 / 氛围层**：删除「氛围」设置区（壁纸、压暗、模糊、主题包导入导出），
+  改为主打 **玻璃 + 莫兰迪配色** 的单一视觉语言，不再有照片壁纸，面板玻璃改为**默认常开**。
+
+### ✨ 新功能
+- **新增 4 组莫兰迪配色**（源自 typora-Bloom-theme 的成功变体，按原版 accent/bg/surface 直接转 OKLCH）：
+  鼠尾草 Sage（绿，hue 115）、暖石 Stone（暖灰，hue 29）、青金 Lapis（蓝，hue 258）、琥珀 Amber（暖金，hue 70）。
+  变体总数由 4 → **8**，切换器下拉同步扩展。
+- **一键代码统计卡（可秀）**：`/bloom stats` 读取本地 git 仓库，输出可分享的开发统计
+  （行数/文件/提交/连击/语言分布）；`--card` 生成一张自包含 HTML 卡，可截图/打印分享。纯本地、离线、零依赖。
+
+### 🎨 视觉升级（玻璃）
+- 面板玻璃化由新增 `GLASS_CSS` 统一驱动：半透底色（`color-mix(theme token, transparent 52–84%)`）+
+  `backdrop-filter: blur(24px) saturate(...)` + **玻璃边缘**（顶部亮高光 inset + 半透描边 + 柔和深色外辉）。
+  明暗两档透明度：暗色面板更实（保亮字可读），亮色更透（玻璃感更足）。
+- 主体氛围渐变提亮（`--bloom-veil-1/2` 提高透明度档），让玻璃面板有背景可透、有光可折射。
+- 输入卡（composer）单独给最清晰的玻璃档位，focus 时玻璃边缘点亮。
+
+### 🧹 清理
+- 删除 `WALLPAPERS` / `AMB_DEFAULTS` / `AMB_KEY` 及全部 ambience 读写/壁纸/主题包函数；
+  `AMBIENCE_CSS` 重写为 `GLASS_CSS`。主色/背景/环境层 token 布局不变，兼容原有 `body[data-bloom-variant]` 切换。
+- 对比度护栏：16 组明暗主色对全部 ≥ 4.5:1（`contrast-guard` 通过）。
+
 ## [0.4.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.6...v0.4.0) (2026-08-22)
 
 ### ✨ 新功能

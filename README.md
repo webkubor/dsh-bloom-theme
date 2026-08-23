@@ -7,7 +7,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 套主题</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>4 套配色 · 当前</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>8 套配色 · 当前</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>配色护栏</sub></td>
 </tr>
 </table>
@@ -16,7 +16,6 @@
   <sub>同一套莫兰迪设计语言：两个宿主的主题，加一个守住它们配色的工具。<br/>
   <i>One Morandi design language — two themes, and the tool that keeps their colors honest.</i></sub>
 </p>
-
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@kubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
@@ -29,6 +28,7 @@
   <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="Awesome DSH Plugin" /></a>
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
   <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
+  <img src="https://img.shields.io/badge/TypeScript-built-3178c6?style=flat-square" alt="TypeScript" />
   <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
   <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=flat-square" alt="OKLCH" />
   <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=flat-square" alt="zero dependency" />
@@ -42,305 +42,144 @@
   把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
   <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />
-  4 套配色，明暗双主题，顶栏一键切换。
+  <b>玻璃 + 莫兰迪</b>：8 套明暗双主题，磨砂玻璃面板，顶栏一键切换，
+  连 AI 思考的等待也跟主题一起呼吸。
 </p>
 
-## Bloom 是什么
+## 一句话
 
-Bloom 原是一套 Typora 主题，核心不在「换个颜色」，而在一整套**莫兰迪质感语言**：
-低饱和的氛围渐变、冷调的发光细线、长距柔和的投影、克制的圆角与间距。
-
-这个插件把那套语言完整移植到 DSH——包括它最容易被忽略的一半：
+**给 DeepSeek Harness 的「玻璃 + 莫兰迪」主题。**
+8 套配色，明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
+配色是低饱和莫兰迪（OKLCH 调色、WCAG AA），全站统一克制的微动效，零运行时依赖，前端 TypeScript 构建。
 
 > 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
 
-详见 [双轨色](#设计原理双轨色)。
+## 截图
 
-## 为什么用 Bloom
+<p align="center">
+  <img src="assets/screenshots/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
+  <sub>鼠尾草·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
+</p>
+
+**8 套配色（亮色）**：点击任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
+
+<table align="center">
+<tr>
+<td align="center">☁️ 雾蓝 Mist<br/><img src="assets/screenshots/ui-mist-light.png" width="100%"/></td>
+<td align="center">🧧 丹红 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
+<td align="center">🌸 花瓣 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
+<td align="center">🌊 涟漪 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
+</tr>
+<tr>
+<td align="center">🌿 鼠尾草 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
+<td align="center">🧱 暖石 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
+<td align="center">🔷 青金 Lapis<br/><img src="assets/screenshots/ui-lapis-light.png" width="100%"/></td>
+<td align="center">🍯 琥珀 Amber<br/><img src="assets/screenshots/ui-amber-light.png" width="100%"/></td>
+</tr>
+</table>
+
+**每套都有对应暗色**（示例：琥珀·暗色）：
+
+<p align="center">
+  <img src="assets/screenshots/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
+</p>
+
+## 安装
+
+```bash
+# 方式一：通过 dsh CLI 添加（推荐）
+dsh plugin add @kubor/dsh-bloom-theme
+
+# 方式二：全局安装后启用
+npm i -g @kubor/dsh-bloom-theme
+dsh plugin enable @kubor/dsh-bloom-theme
+```
+
+装完刷新页面，顶栏右上角会出现「雾蓝 ▾」主题按钮。点击展开即可在 **8 套配色**间切换，
+下拉底部显示当前版本号；npm 上有更新的版本时会亮一个 `↑ vX` 徽标（点它跳 Release 页）。
+
+## 特性
 
 | 特性 | 说明 |
 | :-- | :-- |
-| 双轨配色 | 可读轨保对比度，气质轨专供氛围渐变，两轨分工不混用 |
-| 质感层完整 | 氛围渐变、冷光线条、纸感投影、Markdown 排版装饰，而非仅替换色值 |
-| OKLCH 调色 | 感知均匀的色彩空间，明暗切换不跳变 |
-| WCAG AA | 8 个「主色 + 底色」组合全部实测 ≥ 4.5:1 |
-| 零依赖 | 纯客户端注入，不引入任何运行时依赖 |
-| 不抢占原生控件 | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
-| 氛围层（v0.4，默认关） | 同色系壁纸 + 磨砂玻璃一键开启；关闭后零残留，回到纯 Bloom |
-| 主题包（v0.4） | 变体 + 氛围配置导出 JSON 分享，导入白名单校验 |
+| **磨砂玻璃面板（默认常开）** | 半透底 + `backdrop-filter` 模糊 + 玻璃边缘（顶部亮高光 / 半透描边 / 柔和外辉），明暗两档透明度自适应 |
+| **8 套莫兰迪配色** | 雾蓝 / 丹红 / 花瓣 / 涟漪 / 鼠尾草 / 暖石 / 青金 / 琥珀，每套明暗双主题，一键切换 |
+| **双轨配色** | 可读轨保对比度（文字/按钮），气质轨专供氛围渐变，两轨分工不混用 |
+| **微交互动效** | 菜单入场、选中态色条滑入、hover / 按压反馈；统一时长与缓动 token，全站一致 |
+| **主题色推理动效** | `Deep diving…` 以当前主题三色光谱流动，不再固定 DeepSeek 蓝；`prefers-reduced-motion` 下自动静止 |
+| **版本 / 更新提示** | 下拉底部显示当前版本；npm 有新版亮「↑ vX」；离版较旧时右下角弹更新横幅 |
+| **OKLCH 调色 + WCAG AA** | 感知均匀色彩空间，明暗切换不跳变；全部明暗主色对实测 ≥ 4.5:1 |
+| **零依赖 · 纯 CSS 变量驱动** | 只注入 CSS 变量 + 少量切换逻辑，几乎零运行时开销 |
+| **不抢占原生控件** | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
+| **TypeScript 构建** | 前端 `src/*.ts` → `tsc` 编译为 `lib/*.js`；`build / deploy / package / publish` 一键脚本 |
 
-## 主题一览
+## 一键代码统计卡（可秀出去）
 
-4 套配色，每套都有浅色与深色两个版本。
+`/bloom stats` 读取**本地 git 仓库**，给你一张能晒出去的开发统计卡——纯本地、离线、不上传。
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-mist-dark.png" alt="mist 雾蓝" />
-      <sub><code>mist</code> 雾蓝 · 沉静的蓝灰</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-cinnabar-dark.png" alt="cinnabar 朱砂" />
-      <sub><code>cinnabar</code> 朱砂 · 温暖的陶土红</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-petal-dark.png" alt="petal 花瓣" />
-      <sub><code>petal</code> 花瓣 · 柔和的藕粉</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-ripple-dark.png" alt="ripple 涟漪" />
-      <sub><code>ripple</code> 涟漪 · 清冽的雾青</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-mist-light.png" alt="mist 雾蓝 浅色" />
-      <sub><code>mist</code> 浅色</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-petal-light.png" alt="petal 花瓣 浅色" />
-      <sub><code>petal</code> 浅色</sub>
-    </td>
-  </tr>
-</table>
-
-顶栏下拉一键切换，选择记在 `localStorage`：
-
-<p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/webkubor/picx-images-hosting@master/projects/dsh-bloom-theme/ui-switcher.png" alt="主题切换器" width="760" />
-</p>
-
-v0.4 起可选开启**氛围层**——壁纸与磨砂玻璃随变体联动（默认关闭，克制审美不妥协）：
-
-<p align="center">
-  <img src="assets/showcase/ambience-variants.gif" alt="氛围层：四变体壁纸联动" width="760" />
-</p>
-
-## 快速安装
+**顶栏配色按钮左侧有一个「💎 统计」小胶囊**：鼠标悬停它，就弹出卡片预览 + 「下载 PNG」按钮，一键导出图片直接分享。不悬停时只是个简单胶囊。
 
 ```bash
-dsh plugin --profile web add @kubor/dsh-bloom-theme
+/bloom stats                          # 当前项目 · 文本摘要（行数/文件/提交/连击/语言）
+/bloom stats <目录>                    # 统计指定目录
+/bloom stats --card                   # 生成自包含 HTML 卡（写入项目根目录）
+/bloom stats --card=~/xx.html         # 指定卡文件输出路径
 ```
 
-然后把包名加进 `~/.dsh/profiles/web/package.json` 的 bundles：
-
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "@kubor/dsh-bloom-theme"
-      ]
-    }
-  }
-}
-```
-
-重启 DSH，顶栏出现主题下拉即生效。
-
-插件自带 `cordis.patch.yml` 并通过 `dsh.bundle` 声明，列进 bundles 后会自动 insert
-进 boot graph，**不需要手动编辑 `cordis.patch.yml`**。
-
-<details>
-<summary>也可以手动 insert（旧方式）</summary>
-
-如果不想改 bundles，在 `~/.dsh/profiles/web/cordis.patch.yml` 里手动 insert 同样可行：
-
-```yaml
-- insert:
-    - id: bloom-theme
-      name: '@kubor/dsh-bloom-theme'
-```
-
-</details>
-
-从源码装：`dsh plugin --profile web add github:webkubor/dsh-bloom-theme`
+<p align="center">
+  <img src="assets/showcase/coding-card-sample.png" alt="Bloom 代码统计卡" width="100%" />
+  <sub>示例：由 `/bloom stats --card` 生成（数据来自本地 git，不依赖任何账号/云）</sub>
+</p>
 
 ## 设计原理：双轨色
 
-原版 Bloom 每个变体都有两套色，`root-mist.css` 的注释写得很直白：
+Bloom 的核心不是「换个颜色」，而是一套**莫兰迪质感语言**：低饱和的氛围渐变、冷调的发光细线、
+长距柔和的投影、克制的圆角与间距。
 
-```css
-/* --- Morandi Mist (Blue) - Deepened for better contrast --- */
---accent: oklch(50% 0.08 240);   /* 可读轨：被刻意加深过，为过对比度 */
---accent-rgb: 146, 168, 179;     /* 气质轨：真正的莫兰迪色，发灰、低饱和 */
-```
+最容易被忽略（也最容易被做崩）的是**双轨色**：
 
-两轨分工不能混：
+- **可读轨 `--bloom-accent`** —— 被刻意加深过，为了过 WCAG，用在文字 / 按钮 / 选中态；
+- **气质轨 `--accent-rgb`** —— 真正的莫兰迪色（低饱和、发灰），只用于大面积氛围渐变、冷光细线。
 
-- **可读轨** → 文字、按钮填充、边框描边。它是加深版，直接拿来铺大面积会显得艳、脏。
-- **气质轨** → 只用于 `rgba(morandi, 0.05~0.2)` 的大面积氛围渐变与冷光。原版 14 处
-  gradient 全部用它，**从不用可读轨铺面**。
+原版 14 处渐变全部用气质轨，从不用可读轨铺面。一旦把可读色拿去刷大面积，
+花瓣就会从藕粉变成荧光洋红——莫兰迪感就没了。这个插件把两轨完整搬过来，
+并在 `contrast-guard`（同系列工具）里用护栏守住「主色 + 底色」的对比度。
 
-移植时若只搬 `--accent`（一个很自然的想当然），`petal` 会从藕粉 `#e8859b` 变成
-荧光洋红 `#e63f9f`——色是对的，莫兰迪感没了。
-
-| 变体 | 气质轨 | 可读轨（浅 / 深） | 浅色对比度 |
-| :-- | :-- | :-- | :-- |
-| `mist` | `#92a8b3` | `oklch(50%)` / `oklch(72%)` | 5.28:1 |
-| `cinnabar` | `#d74b4b` | `oklch(55%)` / `oklch(72%)` | 4.87:1 |
-| `petal` | `#e8859b` | `oklch(58%)` / `oklch(75%)` | 4.55:1 |
-| `ripple` | `#5fa8b2` | `oklch(51%)` / `oklch(75%)` | 4.61:1 |
-
-浅色可读轨的 L 值按 WCAG AA 反推校准过——压暗之后反而更贴莫兰迪，
-这正是原作者对 `mist` 做过的事。
-
-## 质感层
-
-只搬色板得到的是「换了色的原界面」。原版 `root-*.css`（色板）89 行，
-`base-light/dark.css`（质感）2968 行——差距全在这里。
-
-| 手法 | 实现 |
-| :-- | :-- |
-| 氛围渐变 | body 四层莫兰迪光晕叠加，`background-attachment: fixed` |
-| 冷光线条 | 侧栏竖线、卡片描边、tabs 下沿、顶部内高光 |
-| 纸感 | 长距柔影三档 + `inset 0 1px 0` 内高光 |
-| Markdown | 标题渐变短横、hr 两端消隐、引用块主色条、代码块冷光描边 |
-| 侧栏 | 顶部氛围淡染、会话项冷光态、选中态主色标记 |
-
-## 氛围层（v0.4，可选）
-
-Bloom 的默认审美是克制的——氛围层因此**默认关闭**，在顶栏下拉的「氛围」区一键开启：
-
-<p align="center">
-  <img src="assets/showcase/ambience-on-off.png" alt="氛围层开/关对比" width="860" />
-</p>
-
-- **配套壁纸**：4 套与变体同色系的莫兰迪壁纸（mist 雾蓝 / cinnabar 陶土 / petal 藕粉 / ripple 雾青），
-  默认**随变体自动切换**；也可固定某套，或填自定义 URL（`http(s)` / `data:`，完全离线可行）。
-- **压暗滑杆**（0–70%）：在壁纸上盖一层纱，正文可读性优先——这是对比度护栏在氛围层的延伸。
-- **磨砂玻璃**：侧栏、气泡、输入卡、菜单变为半透明 + `backdrop-filter` 模糊（4–32px 可调），
-  底色取当前变体的主题 token 混透明度，不是死白死黑。
-- **主题包**：全部配置（变体 + 氛围）导出为一个 JSON 文件，分享给同事一键导入；
-  导入走白名单合并，未知字段丢弃，坏文件安全报错。
-
-四变体 × 明暗在氛围层下的一致表现：
-
-<p align="center">
-  <img src="assets/showcase/ambience-grid.png" alt="四变体氛围层 2x2" width="860" />
-</p>
-
-设置面板就挂在顶栏下拉的下半部，开关、滑杆、主题包导入导出都在这一处：
-
-<p align="center">
-  <img src="assets/showcase/switcher-panel.png" alt="氛围设置面板" width="860" />
-</p>
-
-关闭总开关后，壁纸层 DOM 不渲染、玻璃规则不命中——**回到 v0.3 的纯 Bloom，零残留**。
-
-## 架构
-
-```
-lib/index.js    node 半侧（cordis plugin），空实现 —— 本插件是纯客户端主题
-lib/client.js   浏览器半侧，全部逻辑在这
-  ├─ PALETTE          4 变体 × 双轨色板
-  ├─ bloomTokens()    → --bloom-* 自有 token（质感层的唯一色源 / SSOT）
-  ├─ mistLight/Dark() → mist 完整接管 DSH 的 alias + specific 变量体系
-  ├─ variantBlock()   → 其余 3 变体只覆盖主色与背景调，灰阶骨架继承 mist
-  ├─ COMPONENT_CSS    → 质感层（一份 CSS，4 变体 × 明暗自动适配）
-  ├─ AMBIENCE_CSS     → 氛围层（壁纸 + 磨砂玻璃，body[data-bloom-*] 驱动，默认不生效）
-  ├─ renderAmbience() → 氛围层状态 → DOM 的唯一写入口（SSOT）
-  └─ SWITCHER_CSS     → 顶栏下拉切换器（下半部即「氛围」设置区）
-```
-
-## 开发
+## 开发 / 构建（TypeScript）
 
 ```bash
-npm run dev      # 监听 lib/ 自动部署到 web profile，保存即刷新浏览器
-npm run deploy   # 手动部署一次
+npm install
+npm run build        # tsc: src/*.ts → lib/*.js
+npm run deploy       # 一键部署到本机 DSH（sync-version → build → rsync）
+npm run preview      # 部署并打开 http://127.0.0.1:3080
+npm run dev          # build + watch（改 src 自动编译+部署）
+npm run package      # 一键打包（npm pack → .tgz）
+npm run publish      # 一键发布（sync-version → build → npm publish）
+npm run check        # 打包契约 + contrast-guard（对比度护栏）
 ```
 
-皮肤在浏览器端注入，且 CSS 由 `client.js` 运行时生成——没有「只热更 CSS」这条路，
-必须重新执行脚本，也就必须刷新页面。`npm run dev` 已代劳（按 `a` 可切换，
-或设 `DSH_BLOOM_NO_AUTORELOAD=1` 关闭）。
+源码在 `src/`（TypeScript），DSH 加载的是编译产物 `lib/*.js`。`scripts/sync-version.mjs`
+会在 commit/发布前把 `package.json` 的版本号同步进源码的 `PLUGIN_VERSION`。
 
 ## 常见问题
 
-<details>
-<summary>装好了但界面没变化</summary>
+**主题没生效？** 先硬刷新一次（`Cmd/Ctrl + Shift + R`）。若页面提示 `Failed to load plugins`，
+说明该版本的 client 没能注册，请确认 `dsh plugin add` 步骤无误，或换用最新版。
 
-先确认包名已列进 `~/.dsh/profiles/web/package.json` 的 `dsh.profile.bundles`，然后
-**重启 DSH 服务**（不是刷新页面）：
+**能自定义颜色吗？** 目前通过「变体」选择整套色系；单色自定义在规划中（见 Roadmap）。
 
-```bash
-launchctl kickstart -k gui/$(id -u)/ai.deepseek.dsh   # macOS LaunchAgent
-```
+## 贡献 / 开源
 
-boot graph 在进程启动时就已确定，仅刷新页面不会重新读取 profile 配置。
+- 加一个新配色：在 `src/client.ts` 的 `PALETTE` / `VARIANTS` / `VARIANT_LABELS` 里加一项即可，
+  其余（玻璃、动效、选中态、对比度护栏）全部自动跟上。
+- 请先跑 `npm run build && npm run check`，确认 `contrast-guard` 全部达标再提 PR。
+- 欢迎提 issue / PR / 好的想法。
 
-</details>
+## 支持
 
-<details>
-<summary>改了代码，刷新页面却没生效</summary>
-
-皮肤在浏览器端注入，且 CSS 由 `client.js` 在运行时生成——没有「只热更 CSS」这条路，
-必须重新执行脚本，也就必须刷新页面（`Cmd+R`）。`npm run dev` 会在保存后自动刷新。
-
-</details>
-
-<details>
-<summary>DSH 启动白屏：invalid plugin / loaded without registering</summary>
-
-两种常见成因：
-
-1. **改过包名**，但 `~/.dsh/profiles/web/` 下仍有旧包名的残留。需要一并清理
-   `node_modules/<旧scope>/`、`cordis.patch.yml` 与 `node_modules/.package-map.json`，
-   然后重启服务。
-2. **client factory 返回了裸 `{}`**。DSH 要求返回函数或带 `apply` 方法的对象。
-   该报错出现在浏览器端，与 `lib/index.js` 的 ESM 导出格式无关。
-
-</details>
-
-<details>
-<summary>能不能只用某一套配色，不要切换器</summary>
-
-可以。切换器只是写 `body[data-bloom-variant]` 并存 `localStorage`，
-你也可以直接在自己的 CSS 里固定该属性，或改 `VARIANTS` 只保留一项。
-
-</details>
-
-<details>
-<summary>浅色主题怎么切</summary>
-
-明暗跟随 DSH 自身的主题设置（设置 → 外观），本插件的四套配色在明暗下各有一版，
-会自动适配，不需要单独切换。
-
-</details>
-
-## 已知限制
-
-- **流式输出过程中 `<think>` 标签会短暂可见。** 输出进行时标签与内容处在同一个文本节点，
-  等输出结束、markdown 重新渲染拆成独立段落后才会被规则捕获。最终状态正确，只是过程中会闪现。
-  要根治需在 LLM provider 适配层把思考内容解析成 reasoning 字段，交给 DSH 原生的
-  `ReasoningRow` 渲染——那不属于主题的职责。
-- **依赖 CSS Modules 的语义类名。** DSH 的类名形如 `wSkVaW_root`（`<hash>_<语义名>`），
-  hash 会随 DSH 构建变化，语义名相对稳定，因此本插件用 `[class*="_语义名"]` 匹配。
-  DSH 改版导致失配时，效果会**退回纯色**——不会错位或不可用，属安全降级。
-- **`--dsw-alias-toast-bg` / `tooltip-bg` 未逐变体覆盖**，所有配色沿用 mist 的蓝灰色相。
-  暗色下取值与背景差距偏小，尚未在真实 toast 上验证过对比度。
-- **仅适配 web profile。** tui / headless profile 不涉及浏览器渲染，本插件不生效。
-
-## 踩过的坑
-
-完整复盘见 **[DEV_NOTES.md](./DEV_NOTES.md)**，含每个坑的现象 → 根因 → 修法 → 教训。
-几条最值得先读的：
-
-- **client factory 必须返回带 `apply` 的对象**，返回裸 `{}` 会让整个 DSH 启动白屏。
-  该报错出现在浏览器端，与 `lib/index.js` 的 ESM 导出格式无关。
-- **前景色 token 不能当背景/阴影用**。暗色的前景是近白，拿它 `color-mix` 出的
-  「阴影」会是一团白雾；`markdown-inline-code` 按文字色给值会得到 1.2:1 的浅底白字。
-- **DSH 用 CSS Modules**，类名形如 `wSkVaW_root`。只能用 `[class*="_语义名"]` 匹配，
-  且必须限定 `div`（否则命中 SVG）、必须数命中量（裸 `_card` 会命中 30+ 个消息卡）。
-- **描边只能给有实色背景的那一层**，加在内层透明元素上会形成「框中框」。
+如果 Bloom 让你的 DSH 用起来更舒服，欢迎留下一颗 ⭐，或请我喝杯咖啡（赞助入口在下面的
+[Sponsor](https://github.com/sponsors/webkubor) / 面板菜单里也有一处）。
 
 ## License
 
-[MIT](./LICENSE)
-
-## Author
-
-[@webkubor](https://github.com/webkubor) · 同系列：[Bloom for Typora](https://github.com/webkubor/typora-Bloom-theme)
+[MIT](LICENSE) — 借用 / 修改请保留版权声明。配色参考自 [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)。

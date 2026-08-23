@@ -1,7 +1,7 @@
 {
   "name": "@kubor/dsh-bloom-theme",
-  "version": "0.4.0",
-  "description": "DeepSeek Harness (DSH) 主题插件：Bloom 莫兰迪配色 4 变体（雾蓝/朱砂/花瓣/涟漪），OKLCH 调色，明暗双主题；v0.4 新增氛围层：同色系壁纸 + 磨砂玻璃（默认关闭），支持主题包导入/导出",
+  "version": "0.5.0",
+  "description": "DeepSeek Harness (DSH) 主题插件：玻璃 + 莫兰迪配色，8 变体（雾蓝/朱砂/花瓣/涟漪/鼠尾草/暖石/青金/琥珀），OKLCH 调色，明暗双主题；v0.5 移除壁纸/氛围层，磨砂玻璃改为默认常开（半透面板 + backdrop 模糊 + 玻璃边缘）",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -24,11 +24,17 @@
     }
   },
   "scripts": {
-    "deploy": "rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
-    "dev": "node scripts/watch-deploy.js",
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -p tsconfig.json --watch",
+    "sync-version": "node scripts/sync-version.mjs",
+    "deploy": "node scripts/sync-version.mjs && npm run build && rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
+    "dev": "node scripts/sync-version.mjs && npm run build && (npm run build:watch &) && node scripts/watch-deploy.js",
     "preview": "npm run deploy && open http://127.0.0.1:3080",
+    "package": "npm run build && npm pack",
+    "publish": "node scripts/sync-version.mjs && npm run build && npm publish",
     "check": "node scripts/check.mjs && contrast-guard",
-    "check:contrast": "contrast-guard"
+    "check:contrast": "contrast-guard",
+    "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check"
   },
   "repository": {
     "type": "git",
@@ -62,6 +68,8 @@
   "files": [
     "cordis.patch.yml",
     "lib",
+    "src",
+    "tsconfig.json",
     "README.md",
     "DEV_NOTES.md",
     "LICENSE"
@@ -70,6 +78,8 @@
     "access": "public"
   },
   "devDependencies": {
-    "contrast-guard": "^0.2.0"
+    "@types/node": "^26.2.0",
+    "contrast-guard": "^0.2.0",
+    "typescript": "^7.0.2"
   }
 }

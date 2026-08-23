@@ -18,6 +18,7 @@ import { execSync, exec } from 'node:child_process'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import readline from 'node:readline'
+import { syncVersion } from './sync-version.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DEST = resolve(process.env.HOME, '.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme')
@@ -34,6 +35,9 @@ function deploy({ reload = true } = {}) {
   if (deploying) { pending = true; return }
   deploying = true
   try {
+    // package.json 版本号先同步进 client.js（PLUGIN_VERSION），再 rsync ——
+    // 发版后本地 watch 到 version 变更时自动跟上，避免「新版发布、提示还是旧号」
+    try { syncVersion() } catch {}
     execSync(
       `rsync -av --delete lib/ "${DEST}/lib/" && rsync -av package.json "${DEST}/"`,
       { cwd: root, stdio: 'pipe' },

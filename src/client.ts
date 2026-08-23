@@ -1,4 +1,3 @@
-"use strict";
 /**
  * dsh-bloom-theme —— 浏览器半侧。
  *
@@ -26,19 +25,22 @@
  *   必须两层都接管，否则气泡、侧栏、输入区会回落到 DSH 默认的蓝灰调，
  *   跟 Bloom 色板打架——这正是「换了色还是丑」的根源。
  */
-const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber'];
-const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber'];
-const STORAGE_KEY = 'dsh-bloom-variant';
-const PLUGIN_ID = '@kubor/dsh-bloom-theme';
+
+const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
+const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
+const STORAGE_KEY = 'dsh-bloom-variant'
+const PLUGIN_ID = '@kubor/dsh-bloom-theme'
 /** 当前装的版本 —— 由 scripts/sync-version.mjs 从 package.json 自动同步，勿手改 */
-const PLUGIN_VERSION = '0.5.0';
+const PLUGIN_VERSION = '0.5.0'
 /** npm 上最新版本（异步拉取，null=未知/失败） */
-let latestVersion = null;
+let latestVersion = null
+
 /**
  * 主视觉（v0.5.0）：玻璃 + 莫兰迪配色 —— 不再有壁纸/氛围层。
  * 面板玻璃化全部由 GLASS_CSS 驱动（半透底 + backdrop blur + 玻璃边缘），
  * 背景是 body 的莫兰迪氛围渐变；方案见文件头部说明 & GLASS_CSS 注释。
  */
+
 /**
  * Bloom 色板 —— 双轨制（这是从 typora-Bloom-theme 继承来的关键设计，别退回单轨）。
  *
@@ -56,101 +58,104 @@ let latestVersion = null;
  *   petal 64%→58% (3.55:1 → 达标)   ripple 62%→51% (3.02:1 → 达标)
  */
 const PALETTE = {
-    mist: {
-        accentL: 'oklch(50% 0.08 240)', accentD: 'oklch(72% 0.12 240)',
-        morandi: '146, 168, 179',
-        bgL: 'oklch(96% 0.01 240)', bgD: 'oklch(28% 0.02 240)',
-        txL: 'oklch(25% 0.02 240)', txD: 'oklch(96% 0.01 240)',
-        sfL: 'oklch(94% 0.01 240)', sfD: 'oklch(34% 0.02 240)',
-        sf2L: 'oklch(91% 0.01 240)', sf2D: 'oklch(40% 0.02 240)',
-        motionL: ['oklch(50% 0.08 240)', 'oklch(50% 0.10 210)', 'oklch(50% 0.09 275)'],
-        motionD: ['oklch(72% 0.12 240)', 'oklch(74% 0.13 210)', 'oklch(74% 0.11 275)'],
-    },
-    cinnabar: {
-        accentL: 'oklch(55% 0.18 25)', accentD: 'oklch(72% 0.12 25)',
-        morandi: '215, 75, 75',
-        bgL: 'oklch(97% 0.005 25)', bgD: 'oklch(28% 0.02 25)',
-        txL: 'oklch(25% 0.02 25)', txD: 'oklch(96% 0.01 25)',
-        sfL: 'oklch(95% 0.005 25)', sfD: 'oklch(34% 0.02 25)',
-        sf2L: 'oklch(92% 0.005 25)', sf2D: 'oklch(40% 0.02 25)',
-        motionL: ['oklch(55% 0.18 25)', 'oklch(55% 0.16 65)', 'oklch(55% 0.15 350)'],
-        motionD: ['oklch(72% 0.12 25)', 'oklch(74% 0.14 65)', 'oklch(73% 0.13 350)'],
-    },
-    petal: {
-        accentL: 'oklch(58% 0.22 350)', accentD: 'oklch(75% 0.18 350)',
-        morandi: '232, 133, 155',
-        bgL: 'oklch(98% 0.01 350)', bgD: 'oklch(28% 0.02 350)',
-        txL: 'oklch(25% 0.02 354)', txD: 'oklch(98% 0.01 350)',
-        sfL: 'oklch(96% 0.015 350)', sfD: 'oklch(34% 0.02 350)',
-        sf2L: 'oklch(94% 0.015 350)', sf2D: 'oklch(40% 0.02 350)',
-        motionL: ['oklch(58% 0.22 350)', 'oklch(58% 0.17 310)', 'oklch(58% 0.17 20)'],
-        motionD: ['oklch(75% 0.18 350)', 'oklch(75% 0.14 310)', 'oklch(76% 0.14 20)'],
-    },
-    ripple: {
-        accentL: 'oklch(51% 0.12 195)', accentD: 'oklch(75% 0.12 195)',
-        morandi: '95, 168, 178',
-        bgL: 'oklch(96% 0.01 195)', bgD: 'oklch(20% 0.02 195)',
-        txL: 'oklch(25% 0.02 195)', txD: 'oklch(96% 0.01 195)',
-        sfL: 'oklch(94% 0.01 195)', sfD: 'oklch(28% 0.02 195)',
-        sf2L: 'oklch(92% 0.01 195)', sf2D: 'oklch(38% 0.02 195)',
-        motionL: ['oklch(51% 0.12 195)', 'oklch(51% 0.13 225)', 'oklch(51% 0.11 165)'],
-        motionD: ['oklch(75% 0.12 195)', 'oklch(76% 0.14 225)', 'oklch(77% 0.12 165)'],
-    },
-    /* v0.5.0 新增（源自 typora-Bloom-theme 成功变体）：
-       色值由 Typora dist/*.css 的 accent/bg/surface/text 直接转 oklch，hue 对齐原版 */
-    sage: {
-        accentL: 'oklch(54.1% 0.111 115)', accentD: 'oklch(71.9% 0.120 115)',
-        morandi: '138, 154, 91',
-        bgL: 'oklch(97% 0.011 112)', bgD: 'oklch(20% 0.019 113)',
-        txL: 'oklch(25% 0.02 116)', txD: 'oklch(96% 0.011 118)',
-        sfL: 'oklch(94.9% 0.009 113)', sfD: 'oklch(27.9% 0.02 116)',
-        sf2L: 'oklch(91.9% 0.009 113)', sf2D: 'oklch(34% 0.03 116)',
-        motionL: ['oklch(54.1% 0.111 115)', 'oklch(54.1% 0.12 83)', 'oklch(54.1% 0.10 152)'],
-        motionD: ['oklch(71.9% 0.120 115)', 'oklch(71.9% 0.13 83)', 'oklch(71.9% 0.11 152)'],
-    },
-    stone: {
-        accentL: 'oklch(49.9% 0.06 29)', accentD: 'oklch(75% 0.12 30)',
-        morandi: '180, 160, 155',
-        bgL: 'oklch(95.9% 0.01 25)', bgD: 'oklch(20.1% 0.019 30)',
-        txL: 'oklch(25% 0.02 29)', txD: 'oklch(95.9% 0.01 25)',
-        sfL: 'oklch(94.1% 0.01 33)', sfD: 'oklch(27.9% 0.02 28)',
-        sf2L: 'oklch(91% 0.01 33)', sf2D: 'oklch(33.9% 0.03 28)',
-        motionL: ['oklch(49.9% 0.06 29)', 'oklch(49.9% 0.075 0)', 'oklch(49.9% 0.07 60)'],
-        motionD: ['oklch(75% 0.12 30)', 'oklch(75% 0.13 0)', 'oklch(75% 0.11 62)'],
-    },
-    lapis: {
-        accentL: 'oklch(50% 0.13 258)', accentD: 'oklch(74% 0.10 255)',
-        morandi: '47, 98, 172',
-        bgL: 'oklch(97.4% 0.006 240)', bgD: 'oklch(23.1% 0.019 249)',
-        txL: 'oklch(23% 0.02 249)', txD: 'oklch(96.1% 0.008 237)',
-        sfL: 'oklch(95.6% 0.008 242)', sfD: 'oklch(30.1% 0.022 251)',
-        sf2L: 'oklch(92.4% 0.013 244)', sf2D: 'oklch(35.9% 0.025 251)',
-        motionL: ['oklch(50% 0.13 258)', 'oklch(50% 0.12 226)', 'oklch(50% 0.11 295)'],
-        motionD: ['oklch(74% 0.10 255)', 'oklch(74% 0.11 225)', 'oklch(74% 0.10 292)'],
-    },
-    amber: {
-        accentL: 'oklch(55.5% 0.12 70)', accentD: 'oklch(75.9% 0.11 70)',
-        morandi: '159, 100, 1',
-        bgL: 'oklch(97.5% 0.008 74)', bgD: 'oklch(21.9% 0.021 56)',
-        txL: 'oklch(24% 0.02 74)', txD: 'oklch(96.1% 0.012 75)',
-        sfL: 'oklch(95.6% 0.01 82)', sfD: 'oklch(29.1% 0.023 61)',
-        sf2L: 'oklch(93% 0.014 78)', sf2D: 'oklch(35.2% 0.025 59)',
-        motionL: ['oklch(55.5% 0.12 70)', 'oklch(55.5% 0.11 38)', 'oklch(55.5% 0.12 100)'],
-        motionD: ['oklch(75.9% 0.11 70)', 'oklch(75.9% 0.12 38)', 'oklch(75.9% 0.11 100)'],
-    },
-};
+  mist: {
+    accentL: 'oklch(50% 0.08 240)',  accentD: 'oklch(72% 0.12 240)',
+    morandi: '146, 168, 179',
+    bgL: 'oklch(96% 0.01 240)',      bgD: 'oklch(28% 0.02 240)',
+    txL: 'oklch(25% 0.02 240)',      txD: 'oklch(96% 0.01 240)',
+    sfL: 'oklch(94% 0.01 240)',      sfD: 'oklch(34% 0.02 240)',
+    sf2L: 'oklch(91% 0.01 240)',     sf2D: 'oklch(40% 0.02 240)',
+    motionL: ['oklch(50% 0.08 240)', 'oklch(50% 0.10 210)', 'oklch(50% 0.09 275)'],
+    motionD: ['oklch(72% 0.12 240)', 'oklch(74% 0.13 210)', 'oklch(74% 0.11 275)'],
+  },
+  cinnabar: {
+    accentL: 'oklch(55% 0.18 25)',   accentD: 'oklch(72% 0.12 25)',
+    morandi: '215, 75, 75',
+    bgL: 'oklch(97% 0.005 25)',      bgD: 'oklch(28% 0.02 25)',
+    txL: 'oklch(25% 0.02 25)',       txD: 'oklch(96% 0.01 25)',
+    sfL: 'oklch(95% 0.005 25)',      sfD: 'oklch(34% 0.02 25)',
+    sf2L: 'oklch(92% 0.005 25)',     sf2D: 'oklch(40% 0.02 25)',
+    motionL: ['oklch(55% 0.18 25)', 'oklch(55% 0.16 65)', 'oklch(55% 0.15 350)'],
+    motionD: ['oklch(72% 0.12 25)', 'oklch(74% 0.14 65)', 'oklch(73% 0.13 350)'],
+  },
+  petal: {
+    accentL: 'oklch(58% 0.22 350)',  accentD: 'oklch(75% 0.18 350)',
+    morandi: '232, 133, 155',
+    bgL: 'oklch(98% 0.01 350)',      bgD: 'oklch(28% 0.02 350)',
+    txL: 'oklch(25% 0.02 354)',      txD: 'oklch(98% 0.01 350)',
+    sfL: 'oklch(96% 0.015 350)',     sfD: 'oklch(34% 0.02 350)',
+    sf2L: 'oklch(94% 0.015 350)',    sf2D: 'oklch(40% 0.02 350)',
+    motionL: ['oklch(58% 0.22 350)', 'oklch(58% 0.17 310)', 'oklch(58% 0.17 20)'],
+    motionD: ['oklch(75% 0.18 350)', 'oklch(75% 0.14 310)', 'oklch(76% 0.14 20)'],
+  },
+  ripple: {
+    accentL: 'oklch(51% 0.12 195)',  accentD: 'oklch(75% 0.12 195)',
+    morandi: '95, 168, 178',
+    bgL: 'oklch(96% 0.01 195)',      bgD: 'oklch(20% 0.02 195)',
+    txL: 'oklch(25% 0.02 195)',      txD: 'oklch(96% 0.01 195)',
+    sfL: 'oklch(94% 0.01 195)',      sfD: 'oklch(28% 0.02 195)',
+    sf2L: 'oklch(92% 0.01 195)',     sf2D: 'oklch(38% 0.02 195)',
+    motionL: ['oklch(51% 0.12 195)', 'oklch(51% 0.13 225)', 'oklch(51% 0.11 165)'],
+    motionD: ['oklch(75% 0.12 195)', 'oklch(76% 0.14 225)', 'oklch(77% 0.12 165)'],
+  },
+  /* v0.5.0 新增（源自 typora-Bloom-theme 成功变体）：
+     色值由 Typora dist/*.css 的 accent/bg/surface/text 直接转 oklch，hue 对齐原版 */
+  sage: {
+    accentL: 'oklch(54.1% 0.111 115)',  accentD: 'oklch(71.9% 0.120 115)',
+    morandi: '138, 154, 91',
+    bgL: 'oklch(97% 0.011 112)',      bgD: 'oklch(20% 0.019 113)',
+    txL: 'oklch(25% 0.02 116)',       txD: 'oklch(96% 0.011 118)',
+    sfL: 'oklch(94.9% 0.009 113)',    sfD: 'oklch(27.9% 0.02 116)',
+    sf2L: 'oklch(91.9% 0.009 113)',   sf2D: 'oklch(34% 0.03 116)',
+    motionL: ['oklch(54.1% 0.111 115)', 'oklch(54.1% 0.12 83)', 'oklch(54.1% 0.10 152)'],
+    motionD: ['oklch(71.9% 0.120 115)', 'oklch(71.9% 0.13 83)', 'oklch(71.9% 0.11 152)'],
+  },
+  stone: {
+    accentL: 'oklch(49.9% 0.06 29)',   accentD: 'oklch(75% 0.12 30)',
+    morandi: '180, 160, 155',
+    bgL: 'oklch(95.9% 0.01 25)',      bgD: 'oklch(20.1% 0.019 30)',
+    txL: 'oklch(25% 0.02 29)',        txD: 'oklch(95.9% 0.01 25)',
+    sfL: 'oklch(94.1% 0.01 33)',      sfD: 'oklch(27.9% 0.02 28)',
+    sf2L: 'oklch(91% 0.01 33)',       sf2D: 'oklch(33.9% 0.03 28)',
+    motionL: ['oklch(49.9% 0.06 29)', 'oklch(49.9% 0.075 0)', 'oklch(49.9% 0.07 60)'],
+    motionD: ['oklch(75% 0.12 30)', 'oklch(75% 0.13 0)', 'oklch(75% 0.11 62)'],
+  },
+  lapis: {
+    accentL: 'oklch(50% 0.13 258)',   accentD: 'oklch(74% 0.10 255)',
+    morandi: '47, 98, 172',
+    bgL: 'oklch(97.4% 0.006 240)',    bgD: 'oklch(23.1% 0.019 249)',
+    txL: 'oklch(23% 0.02 249)',       txD: 'oklch(96.1% 0.008 237)',
+    sfL: 'oklch(95.6% 0.008 242)',    sfD: 'oklch(30.1% 0.022 251)',
+    sf2L: 'oklch(92.4% 0.013 244)',   sf2D: 'oklch(35.9% 0.025 251)',
+    motionL: ['oklch(50% 0.13 258)', 'oklch(50% 0.12 226)', 'oklch(50% 0.11 295)'],
+    motionD: ['oklch(74% 0.10 255)', 'oklch(74% 0.11 225)', 'oklch(74% 0.10 292)'],
+  },
+  amber: {
+    accentL: 'oklch(55.5% 0.12 70)',  accentD: 'oklch(75.9% 0.11 70)',
+    morandi: '159, 100, 1',
+    bgL: 'oklch(97.5% 0.008 74)',     bgD: 'oklch(21.9% 0.021 56)',
+    txL: 'oklch(24% 0.02 74)',        txD: 'oklch(96.1% 0.012 75)',
+    sfL: 'oklch(95.6% 0.01 82)',      sfD: 'oklch(29.1% 0.023 61)',
+    sf2L: 'oklch(93% 0.014 78)',      sf2D: 'oklch(35.2% 0.025 59)',
+    motionL: ['oklch(55.5% 0.12 70)', 'oklch(55.5% 0.11 38)', 'oklch(55.5% 0.12 100)'],
+    motionD: ['oklch(75.9% 0.11 70)', 'oklch(75.9% 0.12 38)', 'oklch(75.9% 0.11 100)'],
+  },
+}
+
 const VARIANT_LABELS = {
-    mist: { zh: '雾蓝', en: 'Mist' },
-    cinnabar: { zh: '朱砂', en: 'Cinnabar' },
-    petal: { zh: '花瓣', en: 'Petal' },
-    ripple: { zh: '涟漪', en: 'Ripple' },
-    sage: { zh: '鼠尾草', en: 'Sage' },
-    stone: { zh: '暖石', en: 'Stone' },
-    lapis: { zh: '青金', en: 'Lapis' },
-    amber: { zh: '琥珀', en: 'Amber' },
-};
+  mist:     { zh: '雾蓝', en: 'Mist' },
+  cinnabar: { zh: '朱砂', en: 'Cinnabar' },
+  petal:    { zh: '花瓣', en: 'Petal' },
+  ripple:   { zh: '涟漪', en: 'Ripple' },
+  sage:     { zh: '鼠尾草', en: 'Sage' },
+  stone:    { zh: '暖石', en: 'Stone' },
+  lapis:    { zh: '青金', en: 'Lapis' },
+  amber:    { zh: '琥珀', en: 'Amber' },
+}
+
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */
-const mix = (c, p) => `color-mix(in oklch, ${c}, transparent ${p}%)`;
+const mix = (c, p) => `color-mix(in oklch, ${c}, transparent ${p}%)`
+
 /**
  * Bloom 自有 token —— 三个变体块共用，是所有「质感」CSS 的唯一色源(SSOT)。
  * 有了这层，COMPONENT_CSS 只需写一份、全部引用 var(--bloom-*)，
@@ -162,10 +167,10 @@ const mix = (c, p) => `color-mix(in oklch, ${c}, transparent ${p}%)`;
  * --bloom-glow      冷光辉：描边外侧的微弱扩散，深色下尤其出高级感
  */
 function bloomTokens(p, dark) {
-    const tx = dark ? p.txD : p.txL;
-    const m = p.morandi;
-    const motion = dark ? p.motionD : p.motionL;
-    return `
+  const tx = dark ? p.txD : p.txL
+  const m = p.morandi
+  const motion = dark ? p.motionD : p.motionL
+  return `
   --bloom-morandi: ${m};
   --bloom-accent: ${dark ? p.accentD : p.accentL};
   --bloom-motion-1: ${motion[0]};
@@ -185,15 +190,16 @@ function bloomTokens(p, dark) {
   --bloom-veil-1: rgba(${m}, ${dark ? 0.26 : 0.18});
   --bloom-veil-2: rgba(${m}, ${dark ? 0.18 : 0.12});
   --bloom-code-bg: rgba(${m}, ${dark ? 0.16 : 0.13});
-  --bloom-code-fg: ${dark ? p.txD : p.txL};`;
+  --bloom-code-fg: ${dark ? p.txD : p.txL};`
 }
+
 /**
  * mist 亮色：完整接管 alias 语义 + specific 组件。
  * 这是骨架 —— 其它变体只覆盖「主色 + 背景调」相关的行。
  */
 function mistLight(p) {
-    const { accentL: aL, bgL, txL, sfL, sf2L } = p;
-    return `
+  const { accentL: aL, bgL, txL, sfL, sf2L } = p
+  return `
 /* ─── Bloom · mist 雾蓝 亮色（默认 + body[data-bloom-variant=mist]）─────────── */
 body, body[data-bloom-variant="mist"] {${bloomTokens(p, false)}
   --dsw-alias-bg-base: ${bgL};
@@ -288,12 +294,13 @@ body, body[data-bloom-variant="mist"] {${bloomTokens(p, false)}
   --dsw-specific-sidebar-nav-item-hover: ${mix(txL, 95)};
   --dsw-specific-tip: ${mix(aL, 90)};
 }
-`;
+`
 }
+
 /** mist 暗色：完整接管（暗色下文字是亮灰、表面是深灰、主色提亮） */
 function mistDark(p) {
-    const { accentD: aD, bgD, txD, sfD, sf2D } = p;
-    return `
+  const { accentD: aD, bgD, txD, sfD, sf2D } = p
+  return `
 /* ─── Bloom · mist 暗色 ─────────────────────────────────────────── */
 body[data-ds-dark-theme], body[data-ds-dark-theme][data-bloom-variant="mist"] {${bloomTokens(p, true)}
   --dsw-alias-bg-base: ${bgD};
@@ -386,23 +393,24 @@ body[data-ds-dark-theme], body[data-ds-dark-theme][data-bloom-variant="mist"] {$
   --dsw-specific-sidebar-nav-item-hover: ${mix(txD, 95)};
   --dsw-specific-tip: ${mix(aD, 84)};
 }
-`;
+`
 }
+
 /**
  * 非 mist 变体：只覆盖「主色 + 背景调」相关的行（含 specific 组件），
  * 灰阶骨架、状态色、markdown 色继承 mist —— 变体之间保持同构，只换气质。
  */
 function variantBlock(v, dark) {
-    const p = PALETTE[v];
-    const a = dark ? p.accentD : p.accentL;
-    const bg = dark ? p.bgD : p.bgL;
-    const tx = dark ? p.txD : p.txL;
-    const sf = dark ? p.sfD : p.sfL;
-    const sf2 = dark ? p.sf2D : p.sf2L;
-    const sel = dark
-        ? `body[data-ds-dark-theme][data-bloom-variant="${v}"]`
-        : `body[data-bloom-variant="${v}"]`;
-    return `
+  const p = PALETTE[v]
+  const a = dark ? p.accentD : p.accentL
+  const bg = dark ? p.bgD : p.bgL
+  const tx = dark ? p.txD : p.txL
+  const sf = dark ? p.sfD : p.sfL
+  const sf2 = dark ? p.sf2D : p.sf2L
+  const sel = dark
+    ? `body[data-ds-dark-theme][data-bloom-variant="${v}"]`
+    : `body[data-bloom-variant="${v}"]`
+  return `
 /* ─── Bloom · ${v}${dark ? ' 暗色' : ''}（仅覆盖主色 + 背景调，骨架继承 mist）─────────── */
 ${sel} {${bloomTokens(p, dark)}
   --dsw-alias-bg-base: ${bg};
@@ -471,16 +479,18 @@ ${sel} {${bloomTokens(p, dark)}
   --dsw-specific-sidebar-nav-item-hover: ${mix(tx, dark ? 95 : 95)};
   --dsw-specific-tip: ${mix(a, dark ? 84 : 90)};
 }
-`;
+`
 }
+
 /** 生成 4 变体 + 亮/暗的完整 CSS。 */
 function buildBloomCSS() {
-    const blocks = [mistLight(PALETTE.mist), mistDark(PALETTE.mist)];
-    for (const v of OTHER_VARIANTS) {
-        blocks.push(variantBlock(v, false), variantBlock(v, true));
-    }
-    return blocks.join('\n');
+  const blocks = [mistLight(PALETTE.mist), mistDark(PALETTE.mist)]
+  for (const v of OTHER_VARIANTS) {
+    blocks.push(variantBlock(v, false), variantBlock(v, true))
+  }
+  return blocks.join('\n')
 }
+
 /**
  * 质感层 —— 这是「Bloom 好看」的真正来源，不是色值。
  *
@@ -985,7 +995,8 @@ div[class*="_composer"] div[class*="_card"]:hover {
     transition: none !important;
   }
 }
-`;
+`
+
 /**
  * 氛围层 CSS（v0.4.0）—— 壁纸 + 磨砂玻璃，全部由 body 的 data-* 属性驱动，
  * 默认不生效（data 属性不写就不渲染），关掉即完全回到 v0.3 的纯 Bloom。
@@ -1114,9 +1125,12 @@ body[data-ds-dark-theme] [class*="_tableScroll"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 56%) !important;
 }
 .md-code-block pre, .md-code-block code { background: transparent !important; }
-`;
+`
+
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
-const dotStyle = (v) => `background:linear-gradient(135deg, rgb(${PALETTE[v].morandi}) 0%, ${PALETTE[v].accentL} 100%)`;
+const dotStyle = (v) =>
+  `background:linear-gradient(135deg, rgb(${PALETTE[v].morandi}) 0%, ${PALETTE[v].accentL} 100%)`
+
 /**
  * 顶栏切换器：下拉式（收起只占一个按钮宽度）。
  *
@@ -1128,16 +1142,16 @@ const dotStyle = (v) => `background:linear-gradient(135deg, rgb(${PALETTE[v].mor
  *         玻璃为主视觉、默认常开，见 GLASS_CSS。
  */
 function buildSwitcherHTML(currentVariant) {
-    const options = VARIANTS.map((v) => {
-        const on = v === currentVariant;
-        return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
-            ` aria-selected="${on}" data-active="${on}">` +
-            `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
-            `<span class="dsh-bloom-option__name">${VARIANT_LABELS[v].zh}</span>` +
-            `<span class="dsh-bloom-option__en">${VARIANT_LABELS[v].en}</span>` +
-            `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`;
-    }).join('');
-    return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
+  const options = VARIANTS.map((v) => {
+    const on = v === currentVariant
+    return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
+      ` aria-selected="${on}" data-active="${on}">` +
+      `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
+      `<span class="dsh-bloom-option__name">${VARIANT_LABELS[v].zh}</span>` +
+      `<span class="dsh-bloom-option__en">${VARIANT_LABELS[v].en}</span>` +
+      `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
+  }).join('')
+  return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
   <button type="button" class="dsh-bloom-trigger" aria-haspopup="listbox" aria-expanded="false" title="Bloom 主题 · v${PLUGIN_VERSION}">
     <span class="dsh-bloom-dot" style="${dotStyle(currentVariant)}"></span>
     <span class="dsh-bloom-trigger__name">${VARIANT_LABELS[currentVariant].zh}</span>
@@ -1154,8 +1168,9 @@ function buildSwitcherHTML(currentVariant) {
       <span class="dsh-bloom-version__update" hidden></span>
     </div>
   </div>
-</div>`;
+</div>`
 }
+
 const SWITCHER_CSS = `
 .dsh-bloom-switcher {
   position: relative;
@@ -1326,7 +1341,8 @@ const SWITCHER_CSS = `
   .dsh-bloom-trigger__name { display: none; }
   .dsh-bloom-trigger { padding: 0 7px; gap: 4px; }
 }
-`;
+`
+
 /**
  * 收拾裸露的 <think> 标签。
  *
@@ -1339,95 +1355,83 @@ const SWITCHER_CSS = `
  * 所以只标记、不改任何文本内容 —— 隐藏它们不会丢字。
  * 只加 data-* 属性，不动 DOM 结构，React 重渲染最多是属性丢失，observer 会补回来。
  */
-const THINK_OPEN = '<think>';
-const THINK_CLOSE = '</think>';
+const THINK_OPEN = '<think>'
+const THINK_CLOSE = '</think>'
+
 function markThinkTags() {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const tags = [];
-    let n;
-    while ((n = walker.nextNode())) {
-        const t = (n.nodeValue || '').trim();
-        if (t !== THINK_OPEN && t !== THINK_CLOSE)
-            continue;
-        const el = n.parentElement;
-        if (!el || el.dataset.bloomThink)
-            continue;
-        el.dataset.bloomThink = t === THINK_OPEN ? 'open' : 'close';
-        tags.push(el);
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+  const tags = []
+  let n
+  while ((n = walker.nextNode())) {
+    const t = (n.nodeValue || '').trim()
+    if (t !== THINK_OPEN && t !== THINK_CLOSE) continue
+    const el = n.parentElement
+    if (!el || el.dataset.bloomThink) continue
+    el.dataset.bloomThink = t === THINK_OPEN ? 'open' : 'close'
+    tags.push(el)
+  }
+  if (!tags.length) return
+  // 配对：把开闭标签之间的兄弟节点标成思考内容（降权显示，不隐藏 —— 信息不丢）
+  for (const el of tags) {
+    if (el.dataset.bloomThink !== 'open') continue
+    for (let sib = el.nextElementSibling; sib; sib = sib.nextElementSibling) {
+      if (sib.dataset.bloomThink === 'close') break
+      if (sib.dataset.bloomThink === 'open') break // 未配对，停手
+      sib.dataset.bloomThinkBody = 'true'
     }
-    if (!tags.length)
-        return;
-    // 配对：把开闭标签之间的兄弟节点标成思考内容（降权显示，不隐藏 —— 信息不丢）
-    for (const el of tags) {
-        if (el.dataset.bloomThink !== 'open')
-            continue;
-        for (let sib = el.nextElementSibling; sib; sib = sib.nextElementSibling) {
-            if (sib.dataset.bloomThink === 'close')
-                break;
-            if (sib.dataset.bloomThink === 'open')
-                break; // 未配对，停手
-            sib.dataset.bloomThinkBody = 'true';
-        }
-    }
+  }
 }
+
 function watchThinkTags() {
-    if (window.__dshBloomThinkObserver__)
-        return;
-    let timer = null;
-    const schedule = () => {
-        // 流式输出会高频触发，节流到 300ms
-        if (timer)
-            return;
-        timer = setTimeout(() => { timer = null; markThinkTags(); }, 300);
-    };
-    const obs = new MutationObserver(schedule);
-    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
-    window.__dshBloomThinkObserver__ = obs;
-    markThinkTags();
+  if (window.__dshBloomThinkObserver__) return
+  let timer = null
+  const schedule = () => {
+    // 流式输出会高频触发，节流到 300ms
+    if (timer) return
+    timer = setTimeout(() => { timer = null; markThinkTags() }, 300)
+  }
+  const obs = new MutationObserver(schedule)
+  obs.observe(document.body, { childList: true, subtree: true, characterData: true })
+  window.__dshBloomThinkObserver__ = obs
+  markThinkTags()
 }
+
 /* v0.5.0：氛围层（壁纸 / 玻璃开关 / 主题包）整体移除，玻璃改为默认常开。 */
+
 function applyVariant(variant) {
-    if (!VARIANTS.includes(variant))
-        variant = 'mist';
-    document.body.dataset.bloomVariant = variant;
-    try {
-        window.localStorage.setItem(STORAGE_KEY, variant);
-    }
-    catch { }
-    const root = document.querySelector('.dsh-bloom-switcher');
-    if (!root)
-        return;
-    root.querySelectorAll('.dsh-bloom-option').forEach((el) => {
-        const on = el.dataset.variant === variant;
-        el.setAttribute('data-active', String(on));
-        el.setAttribute('aria-selected', String(on));
-    });
-    const name = root.querySelector('.dsh-bloom-trigger__name');
-    if (name)
-        name.textContent = VARIANT_LABELS[variant].zh;
-    const dot = root.querySelector('.dsh-bloom-trigger .dsh-bloom-dot');
-    if (dot)
-        dot.setAttribute('style', dotStyle(variant));
+  if (!VARIANTS.includes(variant)) variant = 'mist'
+  document.body.dataset.bloomVariant = variant
+  try { window.localStorage.setItem(STORAGE_KEY, variant) } catch {}
+  const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
+  if (!root) return
+  root.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((el) => {
+    const on = el.dataset.variant === variant
+    el.setAttribute('data-active', String(on))
+    el.setAttribute('aria-selected', String(on))
+  })
+  const name = root.querySelector<HTMLElement>('.dsh-bloom-trigger__name')
+  if (name) name.textContent = VARIANT_LABELS[variant].zh
+  const dot = root.querySelector<HTMLElement>('.dsh-bloom-trigger .dsh-bloom-dot')
+  if (dot) dot.setAttribute('style', dotStyle(variant))
 }
+
 function readVariant() {
-    try {
-        const v = window.localStorage.getItem(STORAGE_KEY);
-        return VARIANTS.includes(v) ? v : 'mist';
-    }
-    catch {
-        return 'mist';
-    }
+  try {
+    const v = window.localStorage.getItem(STORAGE_KEY)
+    return VARIANTS.includes(v) ? v : 'mist'
+  } catch { return 'mist' }
 }
+
 function injectCSS(css, idSuffix) {
-    const tagId = PLUGIN_ID + '/' + idSuffix;
-    if (document.querySelector('style[data-plugin-css="' + tagId + '"]'))
-        return;
-    const tag = document.createElement('style');
-    tag.dataset.plugin = PLUGIN_ID;
-    tag.dataset.pluginCss = tagId;
-    tag.textContent = css;
-    document.head.appendChild(tag);
+  const tagId = PLUGIN_ID + '/' + idSuffix
+  if (document.querySelector<HTMLElement>('style[data-plugin-css="' + tagId + '"]')) return
+  const tag = document.createElement('style')
+  tag.dataset.plugin = PLUGIN_ID
+  tag.dataset.pluginCss = tagId
+  tag.textContent = css
+  document.head.appendChild(tag)
 }
+
 /**
  * 挂载点：优先塞进 DSH 顶栏的工具区，跟 Session log 等原生控件并排。
  *
@@ -1436,405 +1440,385 @@ function injectCSS(css, idSuffix) {
  * 找不到宿主时退回浮动，但位置移到 header 下方（见 [data-floating] 样式）。
  */
 function findSwitcherHost() {
-    // 必须限定在真顶栏（<header>）内部再找。
-    //
-    // 侧边栏「工作区」那一行也有个 [class*="_headerActions"] 容器（另一套 CSS Module
-    // 前缀，实测 qDHVXG_headerActions vs 顶栏的 wSkVaW_headerActions），而它在 DOM 里
-    // 排在顶栏之前 —— 不限定作用域时 document.querySelector 会先命中它，切换器就被
-    // prepend 到左边侧边栏去了。新建会话时顶栏子树重建、_headerUtilities 短暂消失，
-    // fallback 生效，于是「右上角的切换器跑到左边」。
-    const header = document.querySelector('header[class*="_header"]') || document.querySelector('header');
-    if (!header)
-        return null;
-    return header.querySelector('[class*="_headerUtilities"]')
-        || header.querySelector('[class*="_headerActions"]')
-        || null;
+  // 必须限定在真顶栏（<header>）内部再找。
+  //
+  // 侧边栏「工作区」那一行也有个 [class*="_headerActions"] 容器（另一套 CSS Module
+  // 前缀，实测 qDHVXG_headerActions vs 顶栏的 wSkVaW_headerActions），而它在 DOM 里
+  // 排在顶栏之前 —— 不限定作用域时 document.querySelector 会先命中它，切换器就被
+  // prepend 到左边侧边栏去了。新建会话时顶栏子树重建、_headerUtilities 短暂消失，
+  // fallback 生效，于是「右上角的切换器跑到左边」。
+  const header = document.querySelector<HTMLElement>('header[class*="_header"]') || document.querySelector<HTMLElement>('header')
+  if (!header) return null
+  return header.querySelector<HTMLElement>('[class*="_headerUtilities"]')
+    || header.querySelector<HTMLElement>('[class*="_headerActions"]')
+    || null
 }
-function closeMenu(root) {
-    const menu = root.querySelector('.dsh-bloom-menu');
-    const trigger = root.querySelector('.dsh-bloom-trigger');
-    if (menu)
-        menu.hidden = true;
-    if (trigger)
-        trigger.setAttribute('aria-expanded', 'false');
+
+function closeMenu(root: HTMLElement) {
+  const menu = root.querySelector<HTMLElement>('.dsh-bloom-menu')
+  const trigger = root.querySelector<HTMLElement>('.dsh-bloom-trigger')
+  if (menu) menu.hidden = true
+  if (trigger) trigger.setAttribute('aria-expanded', 'false')
 }
+
 function buildSwitcherEl(initialVariant) {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = buildSwitcherHTML(initialVariant);
-    const el = wrapper.firstElementChild;
-    const openMenu = () => {
-        const menu = el.querySelector('.dsh-bloom-menu');
-        const trigger = el.querySelector('.dsh-bloom-trigger');
-        menu.hidden = false;
-        trigger.setAttribute('aria-expanded', 'true');
-        // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
-        const active = menu.querySelector('.dsh-bloom-option[data-active="true"]')
-            || menu.querySelector('.dsh-bloom-option');
-        active?.focus();
-    };
-    el.addEventListener('click', (e) => {
-        const trigger = e.target.closest('.dsh-bloom-trigger');
-        if (trigger) {
-            const menu = el.querySelector('.dsh-bloom-menu');
-            if (menu.hidden)
-                openMenu();
-            else
-                closeMenu(el);
-            return;
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = buildSwitcherHTML(initialVariant)
+  const el = wrapper.firstElementChild as HTMLElement
+
+  const openMenu = () => {
+    const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+    const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
+    menu.hidden = false
+    trigger.setAttribute('aria-expanded', 'true')
+    // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
+    const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
+      || menu.querySelector<HTMLElement>('.dsh-bloom-option')
+    active?.focus()
+  }
+
+  el.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')
+    if (trigger) {
+      const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+      if (menu.hidden) openMenu()
+      else closeMenu(el)
+      return
+    }
+    const opt = (e.target as HTMLElement).closest('.dsh-bloom-option') as HTMLElement | null
+    if (opt) {
+      applyVariant(opt.dataset.variant)
+      closeMenu(el)
+      el.querySelector<HTMLElement>('.dsh-bloom-trigger')?.focus()
+      return
+    }
+  })
+
+  el.addEventListener('keydown', (e: KeyboardEvent) => {
+    const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+    const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
+    const options = [...menu.querySelectorAll<HTMLElement>('.dsh-bloom-option')]
+    const idx = options.indexOf(document.activeElement as HTMLElement)
+
+    // 氛围区的文本框/滑杆里，键盘交给输入框本身（只保留 Escape 收起）
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (e.key === 'Escape') { closeMenu(el); trigger?.focus() }
+      return
+    }
+
+    // trigger 上的键盘交互：↓/Enter/Space 打开菜单
+    if (document.activeElement === trigger && menu.hidden) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        openMenu()
+      }
+      return
+    }
+
+    if (menu.hidden) return
+
+    switch (e.key) {
+      case 'Escape':
+        closeMenu(el)
+        trigger?.focus()
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        options[(idx + 1) % options.length]?.focus()
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        options[(idx - 1 + options.length) % options.length]?.focus()
+        break
+      case 'Home':
+        e.preventDefault()
+        options[0]?.focus()
+        break
+      case 'End':
+        e.preventDefault()
+        options[options.length - 1]?.focus()
+        break
+      case 'Enter':
+      case ' ':
+        if (idx >= 0) {
+          e.preventDefault()
+          applyVariant(options[idx].dataset.variant)
+          closeMenu(el)
+          trigger?.focus()
         }
-        const opt = e.target.closest('.dsh-bloom-option');
-        if (opt) {
-            applyVariant(opt.dataset.variant);
-            closeMenu(el);
-            el.querySelector('.dsh-bloom-trigger')?.focus();
-            return;
-        }
-    });
-    el.addEventListener('keydown', (e) => {
-        const menu = el.querySelector('.dsh-bloom-menu');
-        const trigger = el.querySelector('.dsh-bloom-trigger');
-        const options = [...menu.querySelectorAll('.dsh-bloom-option')];
-        const idx = options.indexOf(document.activeElement);
-        // 氛围区的文本框/滑杆里，键盘交给输入框本身（只保留 Escape 收起）
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-            if (e.key === 'Escape') {
-                closeMenu(el);
-                trigger?.focus();
-            }
-            return;
-        }
-        // trigger 上的键盘交互：↓/Enter/Space 打开菜单
-        if (document.activeElement === trigger && menu.hidden) {
-            if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openMenu();
-            }
-            return;
-        }
-        if (menu.hidden)
-            return;
-        switch (e.key) {
-            case 'Escape':
-                closeMenu(el);
-                trigger?.focus();
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                options[(idx + 1) % options.length]?.focus();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                options[(idx - 1 + options.length) % options.length]?.focus();
-                break;
-            case 'Home':
-                e.preventDefault();
-                options[0]?.focus();
-                break;
-            case 'End':
-                e.preventDefault();
-                options[options.length - 1]?.focus();
-                break;
-            case 'Enter':
-            case ' ':
-                if (idx >= 0) {
-                    e.preventDefault();
-                    applyVariant(options[idx].dataset.variant);
-                    closeMenu(el);
-                    trigger?.focus();
-                }
-                break;
-            case 'Tab':
-                // Tab 离开菜单时关闭，避免焦点困在隐藏菜单里
-                closeMenu(el);
-                break;
-        }
-    });
-    // 选项做成可聚焦（listbox 语义要求 option 可接收焦点）
-    el.querySelectorAll('.dsh-bloom-option').forEach((opt) => {
-        opt.setAttribute('tabindex', '-1');
-    });
-    // 点击外部关闭。挂 document 上，用 el.contains 判断而不是 blur ——
-    // blur 会在点菜单项时先触发，导致选不中。
-    document.addEventListener('click', (e) => {
-        if (!el.contains(e.target))
-            closeMenu(el);
-    });
-    return el;
+        break
+      case 'Tab':
+        // Tab 离开菜单时关闭，避免焦点困在隐藏菜单里
+        closeMenu(el)
+        break
+    }
+  })
+
+  // 选项做成可聚焦（listbox 语义要求 option 可接收焦点）
+  el.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((opt) => {
+    opt.setAttribute('tabindex', '-1')
+  })
+
+  // 点击外部关闭。挂 document 上，用 el.contains 判断而不是 blur ——
+  // blur 会在点菜单项时先触发，导致选不中。
+  document.addEventListener('click', (e) => {
+    if (!el.contains(e.target as Node)) closeMenu(el)
+  })
+  return el
 }
+
 /* ═══ 版本 / 更新检测 ═══════════════════════════════════════════ */
 /** 从 npm registry 拉最新版，仅作版本对比（离线/网络失败静默，只显示当前版）。 */
 async function checkUpdate() {
-    try {
-        const r = await fetch('https://registry.npmjs.org/@kubor/dsh-bloom-theme/latest', { cache: 'no-store' });
-        if (!r.ok)
-            return;
-        const d = await r.json();
-        latestVersion = (d && d.version) || null;
-    }
-    catch { /* 忽略：显示当前版即可 */ }
-    refreshUpdateBadge();
+  try {
+    const r = await fetch('https://registry.npmjs.org/@kubor/dsh-bloom-theme/latest', { cache: 'no-store' })
+    if (!r.ok) return
+    const d = await r.json()
+    latestVersion = (d && d.version) || null
+  } catch { /* 忽略：显示当前版即可 */ }
+  refreshUpdateBadge()
 }
 /** 简单版本大小比较：a>b→1, a<b→-1, 相等→0（处理 leading v / 缺段）。 */
 function cmpVersion(a, b) {
-    const pa = String(a).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
-    const pb = String(b).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
-    for (let i = 0; i < 3; i++) {
-        const na = pa[i] || 0, nb = pb[i] || 0;
-        if (na > nb)
-            return 1;
-        if (na < nb)
-            return -1;
-    }
-    return 0;
+  const pa = String(a).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0)
+  const pb = String(b).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0)
+  for (let i = 0; i < 3; i++) {
+    const na = pa[i] || 0, nb = pb[i] || 0
+    if (na > nb) return 1
+    if (na < nb) return -1
+  }
+  return 0
 }
 /** 把「↑ 可更新」徽标刷进已渲染的版本区（只在 最新>当前 时亮，切换器重挂后也会被 injectSwitcher 调用）。 */
 function refreshUpdateBadge() {
-    if (!latestVersion || cmpVersion(latestVersion, PLUGIN_VERSION) <= 0)
-        return;
-    const el = document.querySelector('.dsh-bloom-version__update');
-    if (!el)
-        return;
-    el.hidden = false;
-    el.setAttribute('title', '可更新到 v' + latestVersion);
-    el.textContent = '↑ v' + latestVersion;
+  if (!latestVersion || cmpVersion(latestVersion, PLUGIN_VERSION) <= 0) return
+  const el = document.querySelector<HTMLElement>('.dsh-bloom-version__update')
+  if (!el) return
+  el.hidden = false
+  el.setAttribute('title', '可更新到 v' + latestVersion)
+  el.textContent = '↑ v' + latestVersion
 }
+
 /* ═══ 代码统计卡（悬停预览 + 一键导出 PNG）══════════════════════════
    交互（导师按你的要求重做）：触发点放在配色按钮**左侧**，平时是一个简洁小胶囊；
    鼠标悬停它才浮出卡片预览，移开即收起。数据来自 `/bloom stats --card`，纯浏览器端、
    零依赖（DSH 的 client↔node 实时桥是 TypertRemoteService，vanilla 主题不引入）。 */
-const LANG_COLOR = {
-    TypeScript: '#4b7ea8', JavaScript: '#c9a86a', CSS: '#8f79c4', Markdown: '#7f8c8d',
-    JSON: '#9aa06a', YAML: '#a8a0c4', HTML: '#c9777f', Python: '#5a9a8c', Go: '#4e9ab5',
-    Vue: '#5aac8a', Shell: '#5a8a7f', SQL: '#6f8ab0', 'C/C++': '#8a9a8a', Rust: '#b57a48', Java: '#c57658',
-};
-function roundRectPath(c, x, y, w, h, r) {
-    c.beginPath();
-    c.moveTo(x + r, y);
-    c.arcTo(x + w, y, x + w, y + h, r);
-    c.arcTo(x + w, y + h, x, y, r);
-    c.arcTo(x, y + h, x, y, r);
-    c.arcTo(x, y, x + w, y, r);
-    c.closePath();
+
+const LANG_COLOR: Record<string, string> = {
+  TypeScript: '#4b7ea8', JavaScript: '#c9a86a', CSS: '#8f79c4', Markdown: '#7f8c8d',
+  JSON: '#9aa06a', YAML: '#a8a0c4', HTML: '#c9777f', Python: '#5a9a8c', Go: '#4e9ab5',
+  Vue: '#5aac8a', Shell: '#5a8a7f', SQL: '#6f8ab0', 'C/C++': '#8a9a8a', Rust: '#b57a48', Java: '#c57658',
 }
+
+function roundRectPath(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  c.beginPath()
+  c.moveTo(x + r, y)
+  c.arcTo(x + w, y, x + w, y + h, r)
+  c.arcTo(x + w, y + h, x, y, r)
+  c.arcTo(x, y + h, x, y, r)
+  c.arcTo(x, y, x + w, y, r)
+  c.closePath()
+}
+
 /** 从当前主题 body 读 CSS 变量（变量挂在 body/变体上，documentElement 读不到，要读 body）。 */
-function cssVar(name) {
-    return getComputedStyle(document.body).getPropertyValue(name).trim();
+function cssVar(name: string): string {
+  return getComputedStyle(document.body).getPropertyValue(name).trim()
 }
+
 /** 在 canvas 上画出统计卡（720×460，2x 高清；**跟随当前主题**：accent / bg / 文字全部从主题 token 取）。 */
-function drawStatsCard(canvas, s) {
-    const W = 720, H = 460;
-    const c = canvas.getContext('2d');
-    const scale = 2;
-    canvas.width = W * scale;
-    canvas.height = H * scale;
-    c.scale(scale, scale);
-    // 主题 token
-    const vBg = cssVar('--dsw-alias-bg-layer-1') || '#fff';
-    const vBg2 = cssVar('--dsw-alias-bg-layer-2') || vBg;
-    const vTx = cssVar('--dsw-alias-label-primary') || '#222';
-    const vTx2 = cssVar('--dsw-alias-label-secondary') || '#666';
-    const vTx3 = cssVar('--dsw-alias-label-tertiary') || '#888';
-    const vCap = cssVar('--dsw-alias-label-caption') || '#999';
-    const vAccent = cssVar('--bloom-accent') || '#34698c';
-    const vHairline = cssVar('--bloom-hairline') || 'rgba(146,168,179,.35)';
-    const vHairStrong = cssVar('--bloom-hairline-strong') || vHairline;
-    // 页面底色：主题 bg-layer-1 渐变（明→暗稍微过渡），加一坨 accent halo
-    const bg = c.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, vBg);
-    bg.addColorStop(1, vBg2);
-    c.fillStyle = bg;
-    c.fillRect(0, 0, W, H);
-    const halo = c.createRadialGradient(W * .2, 0, 10, W * .2, 0, W);
-    halo.addColorStop(0, vAccent);
-    halo.addColorStop(0.4, 'rgba(0,0,0,0)');
-    c.globalAlpha = 0.15;
-    c.fillStyle = halo;
-    c.fillRect(0, 0, W, H);
-    c.globalAlpha = 1;
-    // 卡片本体：半透明 bg-layer-1（明暗自适应），hairline 描边，柔和外辉
-    roundRectPath(c, 30, 26, W - 60, H - 52, 26);
-    c.save();
-    c.shadowColor = 'rgba(0,0,0,.22)';
-    c.shadowBlur = 44;
-    c.shadowOffsetY = 18;
-    c.fillStyle = vBg;
-    c.globalAlpha = 0.88;
-    c.fill();
-    c.restore();
-    c.globalAlpha = 1;
-    roundRectPath(c, 30, 26, W - 60, H - 52, 26);
-    c.strokeStyle = vHairline;
-    c.lineWidth = 1;
-    c.stroke();
-    // 顶部内高光（玻璃）
-    roundRectPath(c, 31, 27, W - 62, (H - 52) / 2, 25);
-    const sheen = c.createLinearGradient(0, 27, 0, 27 + (H - 52) / 2);
-    sheen.addColorStop(0, 'rgba(255,255,255,.18)');
-    sheen.addColorStop(1, 'rgba(255,255,255,0)');
-    c.fillStyle = sheen;
-    c.fill();
-    const left = 56, top = 66;
-    // 标题（accent）
-    c.fillStyle = vAccent;
-    c.font = '700 27px -apple-system, "PingFang SC", system-ui, sans-serif';
-    c.fillText('🌊 Bloom · 代码统计', left, top);
-    // 角标
-    const badge = s.activeToday ? '今日活跃' : 'coding';
-    c.font = '600 13px -apple-system, sans-serif';
-    const bw = c.measureText(badge).width + 26;
-    roundRectPath(c, W - 60 - bw - 34, top - 20, bw, 24, 12);
-    c.fillStyle = vAccent;
-    c.globalAlpha = 0.18;
-    c.fill();
-    c.globalAlpha = 1;
-    c.fillStyle = vAccent;
-    c.fillText(badge, W - 60 - bw - 34 + 13, top - 3);
-    // 项目行
-    c.fillStyle = vTx2;
-    c.font = '400 15px ui-monospace, "SF Mono", Menlo, monospace';
-    c.fillText(`📦 ${s.project}` + (s.lastCommitted ? `　·　最近提交 ${s.lastCommitted}` : ''), left, top + 40);
-    c.strokeStyle = vHairline;
-    c.lineWidth = 1;
-    c.beginPath();
-    c.moveTo(left, top + 58);
-    c.lineTo(W - 60 - 26, top + 58);
-    c.stroke();
-    // 统计块：半透明 bg-layer-2 + hairline
-    const nums = [
-        [String(s.loc ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, ','), '代码行'],
-        [String(s.files ?? 0), '文件'],
-        [String(s.commits ?? 0), '提交'],
-        [`${s.streak ?? 0}天`, '连击'],
-    ];
-    const gx = 10, gw = (W - 112 - gx * 3) / 4;
-    nums.forEach(([val, label], i) => {
-        const x = left + i * (gw + gx), y = top + 78;
-        roundRectPath(c, x, y, gw, 70, 14);
-        c.fillStyle = vBg2;
-        c.globalAlpha = 0.55;
-        c.fill();
-        c.globalAlpha = 1;
-        c.strokeStyle = vHairline;
-        c.lineWidth = 1;
-        c.stroke();
-        c.fillStyle = vTx;
-        c.font = '700 27px -apple-system, sans-serif';
-        c.textBaseline = 'alphabetic';
-        c.fillText(val, x + 16, y + 42);
-        c.fillStyle = vCap;
-        c.font = '400 13px -apple-system, sans-serif';
-        c.fillText(label, x + 16, y + 60);
-    });
-    // 语言分布
-    const langs = Object.entries(s.languages || {}).sort((a, b) => b[1] - a[1]).slice(0, 4);
-    const total = s.loc || 1;
-    if (langs.length) {
-        c.fillStyle = vTx3;
-        c.font = '600 13px -apple-system, sans-serif';
-        c.fillText('语言分布', left, top + 190);
-        let y = top + 218;
-        for (const [name, n] of langs) {
-            const pct = Math.round((n / total) * 100);
-            c.fillStyle = vTx;
-            c.font = '500 14px -apple-system, sans-serif';
-            c.fillText(String(name), left, y);
-            const bx = left + 88, bh = 14, by = y - 12, bwt = W - 112 - 88 - 40;
-            roundRectPath(c, bx, by, bwt, bh, 7);
-            c.fillStyle = vHairline;
-            c.fill();
-            const col = LANG_COLOR[name] || vAccent;
-            roundRectPath(c, bx, by, Math.max(7, bwt * pct / 100), bh, 7);
-            c.fillStyle = col;
-            c.fill();
-            c.fillStyle = vCap;
-            c.font = '400 13px -apple-system, sans-serif';
-            c.fillText(pct + '%', bx + bwt + 8, y);
-            y += 26;
-        }
+function drawStatsCard(canvas: HTMLCanvasElement, s: any) {
+  const W = 720, H = 460
+  const c = canvas.getContext('2d')!
+  const scale = 2
+  canvas.width = W * scale; canvas.height = H * scale
+  c.scale(scale, scale)
+
+  // 主题 token
+  const vBg = cssVar('--dsw-alias-bg-layer-1') || '#fff'
+  const vBg2 = cssVar('--dsw-alias-bg-layer-2') || vBg
+  const vTx = cssVar('--dsw-alias-label-primary') || '#222'
+  const vTx2 = cssVar('--dsw-alias-label-secondary') || '#666'
+  const vTx3 = cssVar('--dsw-alias-label-tertiary') || '#888'
+  const vCap = cssVar('--dsw-alias-label-caption') || '#999'
+  const vAccent = cssVar('--bloom-accent') || '#34698c'
+  const vHairline = cssVar('--bloom-hairline') || 'rgba(146,168,179,.35)'
+  const vHairStrong = cssVar('--bloom-hairline-strong') || vHairline
+
+  // 页面底色：主题 bg-layer-1 渐变（明→暗稍微过渡），加一坨 accent halo
+  const bg = c.createLinearGradient(0, 0, W, H)
+  bg.addColorStop(0, vBg)
+  bg.addColorStop(1, vBg2)
+  c.fillStyle = bg; c.fillRect(0, 0, W, H)
+  const halo = c.createRadialGradient(W * .2, 0, 10, W * .2, 0, W)
+  halo.addColorStop(0, vAccent); halo.addColorStop(0.4, 'rgba(0,0,0,0)')
+  c.globalAlpha = 0.15
+  c.fillStyle = halo; c.fillRect(0, 0, W, H)
+  c.globalAlpha = 1
+
+  // 卡片本体：半透明 bg-layer-1（明暗自适应），hairline 描边，柔和外辉
+  roundRectPath(c, 30, 26, W - 60, H - 52, 26)
+  c.save()
+  c.shadowColor = 'rgba(0,0,0,.22)'; c.shadowBlur = 44; c.shadowOffsetY = 18
+  c.fillStyle = vBg; c.globalAlpha = 0.88; c.fill(); c.restore()
+  c.globalAlpha = 1
+  roundRectPath(c, 30, 26, W - 60, H - 52, 26)
+  c.strokeStyle = vHairline; c.lineWidth = 1; c.stroke()
+  // 顶部内高光（玻璃）
+  roundRectPath(c, 31, 27, W - 62, (H - 52) / 2, 25)
+  const sheen = c.createLinearGradient(0, 27, 0, 27 + (H - 52) / 2)
+  sheen.addColorStop(0, 'rgba(255,255,255,.18)')
+  sheen.addColorStop(1, 'rgba(255,255,255,0)')
+  c.fillStyle = sheen; c.fill()
+
+  const left = 56, top = 66
+  // 标题（accent）
+  c.fillStyle = vAccent
+  c.font = '700 27px -apple-system, "PingFang SC", system-ui, sans-serif'
+  c.fillText('🌊 Bloom · 代码统计', left, top)
+  // 角标
+  const badge = s.activeToday ? '今日活跃' : 'coding'
+  c.font = '600 13px -apple-system, sans-serif'
+  const bw = c.measureText(badge).width + 26
+  roundRectPath(c, W - 60 - bw - 34, top - 20, bw, 24, 12)
+  c.fillStyle = vAccent; c.globalAlpha = 0.18; c.fill(); c.globalAlpha = 1
+  c.fillStyle = vAccent
+  c.fillText(badge, W - 60 - bw - 34 + 13, top - 3)
+
+  // 项目行
+  c.fillStyle = vTx2
+  c.font = '400 15px ui-monospace, "SF Mono", Menlo, monospace'
+  c.fillText(`📦 ${s.project}` + (s.lastCommitted ? `　·　最近提交 ${s.lastCommitted}` : ''), left, top + 40)
+  c.strokeStyle = vHairline; c.lineWidth = 1
+  c.beginPath(); c.moveTo(left, top + 58); c.lineTo(W - 60 - 26, top + 58); c.stroke()
+
+  // 统计块：半透明 bg-layer-2 + hairline
+  const nums: Array<[string, string]> = [
+    [String(s.loc ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, ','), '代码行'],
+    [String(s.files ?? 0), '文件'],
+    [String(s.commits ?? 0), '提交'],
+    [`${s.streak ?? 0}天`, '连击'],
+  ]
+  const gx = 10, gw = (W - 112 - gx * 3) / 4
+  nums.forEach(([val, label], i) => {
+    const x = left + i * (gw + gx), y = top + 78
+    roundRectPath(c, x, y, gw, 70, 14)
+    c.fillStyle = vBg2; c.globalAlpha = 0.55; c.fill(); c.globalAlpha = 1
+    c.strokeStyle = vHairline; c.lineWidth = 1; c.stroke()
+    c.fillStyle = vTx
+    c.font = '700 27px -apple-system, sans-serif'; c.textBaseline = 'alphabetic'
+    c.fillText(val, x + 16, y + 42)
+    c.fillStyle = vCap; c.font = '400 13px -apple-system, sans-serif'
+    c.fillText(label, x + 16, y + 60)
+  })
+
+  // 语言分布
+  const langs = Object.entries(s.languages || {}).sort((a: any, b: any) => b[1] - a[1]).slice(0, 4)
+  const total = s.loc || 1
+  if (langs.length) {
+    c.fillStyle = vTx3; c.font = '600 13px -apple-system, sans-serif'
+    c.fillText('语言分布', left, top + 190)
+    let y = top + 218
+    for (const [name, n] of langs) {
+      const pct = Math.round(((n as number) / total) * 100)
+      c.fillStyle = vTx; c.font = '500 14px -apple-system, sans-serif'
+      c.fillText(String(name), left, y)
+      const bx = left + 88, bh = 14, by = y - 12, bwt = W - 112 - 88 - 40
+      roundRectPath(c, bx, by, bwt, bh, 7)
+      c.fillStyle = vHairline; c.fill()
+      const col = LANG_COLOR[name] || vAccent
+      roundRectPath(c, bx, by, Math.max(7, bwt * pct / 100), bh, 7)
+      c.fillStyle = col; c.fill()
+      c.fillStyle = vCap; c.font = '400 13px -apple-system, sans-serif'
+      c.fillText(pct + '%', bx + bwt + 8, y)
+      y += 26
     }
-    // footer
-    c.fillStyle = vTx3;
-    c.font = '400 14px -apple-system, sans-serif';
-    c.fillText('Made with Bloom for DSH', left, H - 52);
-    c.fillStyle = vAccent;
-    c.font = '700 14px -apple-system, sans-serif';
-    c.fillText('⭐ 支持开源', W - 60 - 26 - 90, H - 52);
+  }
+
+  // footer
+  c.fillStyle = vTx3; c.font = '400 14px -apple-system, sans-serif'
+  c.fillText('Made with Bloom for DSH', left, H - 52)
+  c.fillStyle = vAccent; c.font = '700 14px -apple-system, sans-serif'
+  c.fillText('⭐ 支持开源', W - 60 - 26 - 90, H - 52)
 }
+
 /** 渲染 stats 到 canvas 并转 PNG dataURL（预览 & 导出共用同一张）。 */
-function renderCardDataURL(s) {
-    const canvas = document.createElement('canvas');
-    drawStatsCard(canvas, s);
-    return canvas.toDataURL('image/png');
+function renderCardDataURL(s: any): string {
+  const canvas = document.createElement('canvas')
+  drawStatsCard(canvas, s)
+  return canvas.toDataURL('image/png')
 }
+
 /** 一键下载 PNG。 */
-function exportStatsPNG(s) {
-    const canvas = document.createElement('canvas');
-    drawStatsCard(canvas, s);
-    canvas.toBlob((blob) => {
-        if (!blob)
-            return;
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `bloom-stats-${(s.project || 'card').replace(/[^\w-]/g, '_')}.png`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    }, 'image/png');
+function exportStatsPNG(s: any) {
+  const canvas = document.createElement('canvas')
+  drawStatsCard(canvas, s)
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `bloom-stats-${(s.project || 'card').replace(/[^\w-]/g, '_')}.png`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  }, 'image/png')
 }
-const STATS_SAMPLE = {
-    project: 'dsh-bloom-theme', loc: 3864, files: 45, commits: 47, streak: 1,
-    activeToday: true, lastCommitted: '32 小时前',
-    languages: { TypeScript: 2148, Markdown: 910, JSON: 545, YAML: 235 },
-};
-let statsHideTimer;
-let currentStats = STATS_SAMPLE;
+
+const STATS_SAMPLE: any = {
+  project: 'dsh-bloom-theme', loc: 3864, files: 45, commits: 47, streak: 1,
+  activeToday: true, lastCommitted: '32 小时前',
+  languages: { TypeScript: 2148, Markdown: 910, JSON: 545, YAML: 235 },
+}
+
+let statsHideTimer: ReturnType<typeof setTimeout> | undefined
+let currentStats: any = STATS_SAMPLE
+
 /** 悬停浮层：在触发点附近弹出卡片预览 + 下载按钮；数据优先 fetch /bloom-stats.json。 */
-function showStatsCard(anchor) {
-    let pop = document.getElementById('dsh-bloom-stats-pop');
-    if (!pop) {
-        pop = document.createElement('div');
-        pop.id = 'dsh-bloom-stats-pop';
-        pop.innerHTML = `
+function showStatsCard(anchor: HTMLElement) {
+  let pop = document.getElementById('dsh-bloom-stats-pop')
+  if (!pop) {
+    pop = document.createElement('div')
+    pop.id = 'dsh-bloom-stats-pop'
+    pop.innerHTML = `
       <div class="card">
         <div class="head"><span>💎 代码统计</span><span class="sub">本地 git</span></div>
         <img alt="Bloom 代码统计卡"/>
         <button data-act="download" title="下载 PNG">下载 PNG</button>
-      </div>`;
-        document.body.appendChild(pop);
-        pop.addEventListener('click', (e) => {
-            if (e.target.closest('[data-act="download"]'))
-                exportStatsPNG(currentStats);
-        });
-        // 悬停到浮层不闪关；离开浮层才收起
-        pop.addEventListener('mouseenter', () => { clearTimeout(statsHideTimer); });
-        pop.addEventListener('mouseleave', () => { hideStatsCard(); });
-    }
-    // 定位到触发点下方偏右（右上角区域）
-    const r = anchor.getBoundingClientRect();
-    const pwidth = 400;
-    const x = Math.max(12, r.right - pwidth - 8);
-    const y = r.bottom + 10;
-    pop.style.left = x + 'px';
-    pop.style.top = y + 'px';
-    pop.style.display = 'block';
-    const img = pop.querySelector('img');
-    const load = () => {
-        fetch('/bloom-stats.json', { cache: 'no-store' })
-            .then((res) => res.ok ? res.json() : Promise.reject())
-            .then((d) => { currentStats = d; })
-            .catch(() => { currentStats = STATS_SAMPLE; })
-            .finally(() => { img.src = renderCardDataURL(currentStats); });
-    };
-    load();
+      </div>`
+    document.body.appendChild(pop)
+    pop.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('[data-act="download"]')) exportStatsPNG(currentStats)
+    })
+    // 悬停到浮层不闪关；离开浮层才收起
+    pop.addEventListener('mouseenter', () => { clearTimeout(statsHideTimer) })
+    pop.addEventListener('mouseleave', () => { hideStatsCard() })
+  }
+  // 定位到触发点下方偏右（右上角区域）
+  const r = anchor.getBoundingClientRect()
+  const pwidth = 400
+  const x = Math.max(12, r.right - pwidth - 8)
+  const y = r.bottom + 10
+  pop.style.left = x + 'px'
+  pop.style.top = y + 'px'
+  pop.style.display = 'block'
+
+  const img = pop.querySelector('img')!
+  const load = () => {
+    fetch('/bloom-stats.json', { cache: 'no-store' })
+      .then((res) => res.ok ? res.json() : Promise.reject())
+      .then((d) => { currentStats = d as any })
+      .catch(() => { currentStats = STATS_SAMPLE })
+      .finally(() => { img.src = renderCardDataURL(currentStats) })
+  }
+  load()
 }
 /** 收起悬停浮层（带一点延迟，避免移到浮层上时闪烁关闭）。 */
 function hideStatsCard() {
-    clearTimeout(statsHideTimer);
-    statsHideTimer = setTimeout(() => {
-        const pop = document.getElementById('dsh-bloom-stats-pop');
-        if (pop)
-            pop.style.display = 'none';
-    }, 160);
+  clearTimeout(statsHideTimer)
+  statsHideTimer = setTimeout(() => {
+    const pop = document.getElementById('dsh-bloom-stats-pop')
+    if (pop) pop.style.display = 'none'
+  }, 160)
 }
+
 /* 触发点：配色按钮左侧的小胶囊 + 悬停预览。 */
 const STATS_TRIGGER_CSS = `
 .dsh-bloom-stats-trigger{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;margin-right:2px;
@@ -1867,227 +1851,225 @@ const STATS_TRIGGER_CSS = `
   color:var(--dsw-alias-label-primary);cursor:pointer;transition:background .15s var(--bloom-ease)}
 #dsh-bloom-stats-pop button:hover{background:color-mix(in oklch,var(--bloom-accent,#34698c),transparent 75%)}
 @media (prefers-reduced-motion: reduce){#dsh-bloom-stats-pop,.dsh-bloom-stats-trigger{transition:none!important}}
-`;
+`
+
 /** 在配色切换器左侧插入统计胶囊（幂等、host/浮空都支持），并绑定悬停预览。 */
-function injectStatsTrigger(host, switcher) {
-    let btn = document.querySelector('.dsh-bloom-stats-trigger');
-    if (!btn) {
-        btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'dsh-bloom-stats-trigger';
-        btn.setAttribute('aria-haspopup', 'true');
-        btn.innerHTML = '<span class="ic">💎</span><span>统计</span>';
-        btn.addEventListener('mouseenter', () => {
-            btn.dataset.open = 'true';
-            showStatsCard(btn);
-        });
-        btn.addEventListener('mouseleave', () => {
-            btn.dataset.open = 'false';
-            hideStatsCard();
-        });
-        // 悬停到浮层不闪关
-        const pop = () => document.getElementById('dsh-bloom-stats-pop');
-        document.addEventListener('mouseover', (e) => {
-            const p = pop();
-            if (p && p.contains(e.target))
-                clearTimeout(statsHideTimer);
-        });
-    }
-    const inHost = !!host && host.contains(switcher);
-    const parent = inHost ? host : document.body;
-    // 始终把胶囊放到切换器左侧（同父）
-    if (btn.parentElement !== parent || btn.nextElementSibling !== switcher) {
-        parent.insertBefore(btn, switcher);
-    }
-    if (inHost) {
-        btn.style.position = '';
-        btn.style.top = '';
-        btn.style.right = '';
-        btn.style.zIndex = '';
-    }
-    else {
-        // 浮空：固定定位到切换器左侧
-        setTimeout(() => {
-            if (!btn)
-                return;
-            const sw = switcher.getBoundingClientRect();
-            btn.style.position = 'fixed';
-            btn.style.top = sw.top + 'px';
-            btn.style.right = (window.innerWidth - sw.left + 6) + 'px';
-            btn.style.zIndex = '9999';
-        }, 0);
-    }
-    return btn;
+function injectStatsTrigger(host: HTMLElement | null, switcher: HTMLElement) {
+  let btn = document.querySelector<HTMLElement>('.dsh-bloom-stats-trigger')
+  if (!btn) {
+    btn = document.createElement('button')
+    ;(btn as HTMLButtonElement).type = 'button'
+    btn.className = 'dsh-bloom-stats-trigger'
+    btn.setAttribute('aria-haspopup', 'true')
+    btn.innerHTML = '<span class="ic">💎</span><span>统计</span>'
+    btn.addEventListener('mouseenter', () => {
+      btn!.dataset.open = 'true'
+      showStatsCard(btn!)
+    })
+    btn.addEventListener('mouseleave', () => {
+      btn!.dataset.open = 'false'
+      hideStatsCard()
+    })
+    // 悬停到浮层不闪关
+    const pop = () => document.getElementById('dsh-bloom-stats-pop')
+    document.addEventListener('mouseover', (e) => {
+      const p = pop()
+      if (p && p.contains(e.target as Node)) clearTimeout(statsHideTimer)
+    })
+  }
+  const inHost = !!host && host.contains(switcher)
+  const parent = inHost ? (host as HTMLElement) : document.body
+  // 始终把胶囊放到切换器左侧（同父）
+  if (btn.parentElement !== parent || btn.nextElementSibling !== switcher) {
+    parent.insertBefore(btn, switcher)
+  }
+  if (inHost) {
+    btn.style.position = ''; btn.style.top = ''; btn.style.right = ''; btn.style.zIndex = ''
+  } else {
+    // 浮空：固定定位到切换器左侧
+    setTimeout(() => {
+      if (!btn) return
+      const sw = switcher.getBoundingClientRect()
+      btn.style.position = 'fixed'
+      btn.style.top = sw.top + 'px'
+      btn.style.right = (window.innerWidth - sw.left + 6) + 'px'
+      btn.style.zIndex = '9999'
+    }, 0)
+  }
+  return btn
 }
+
 function injectSwitcher(initialVariant) {
-    injectCSS(SWITCHER_CSS, 'switcher.css');
-    injectCSS(STATS_TRIGGER_CSS, 'stats-trigger.css');
-    refreshUpdateBadge();
-    const existing = document.querySelector('.dsh-bloom-switcher');
-    const host = findSwitcherHost();
-    if (existing) {
-        // 已存在但宿主出现了（首屏时 header 还没渲染），迁进去
-        if (host && !host.contains(existing)) {
-            existing.dataset.floating = 'false';
-            host.prepend(existing);
-            injectStatsTrigger(host, existing);
-        }
-        else {
-            injectStatsTrigger(host, existing);
-        }
-        return;
+  injectCSS(SWITCHER_CSS, 'switcher.css')
+  injectCSS(STATS_TRIGGER_CSS, 'stats-trigger.css')
+  refreshUpdateBadge()
+  const existing = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
+  const host = findSwitcherHost()
+  if (existing) {
+    // 已存在但宿主出现了（首屏时 header 还没渲染），迁进去
+    if (host && !host.contains(existing)) {
+      existing.dataset.floating = 'false'
+      host.prepend(existing)
+      injectStatsTrigger(host, existing)
+    } else {
+      injectStatsTrigger(host, existing)
     }
-    const el = buildSwitcherEl(initialVariant);
-    if (host) {
-        el.dataset.floating = 'false';
-        host.prepend(el);
-        injectStatsTrigger(host, el);
-    }
-    else {
-        el.dataset.floating = 'true';
-        document.body.appendChild(el);
-        injectStatsTrigger(null, el);
-    }
+    return
+  }
+  const el = buildSwitcherEl(initialVariant)
+  if (host) {
+    el.dataset.floating = 'false'
+    host.prepend(el)
+    injectStatsTrigger(host, el)
+  } else {
+    el.dataset.floating = 'true'
+    document.body.appendChild(el)
+    injectStatsTrigger(null, el)
+  }
 }
+
 /**
  * DSH 是 SPA，切会话/改布局会重建 header 子树，把切换器一起删掉。
  * 这里监听并重挂 —— 否则切一次会话主题按钮就没了。
  */
 function watchSwitcher(variant) {
-    if (window.__dshBloomObserver__)
-        return;
-    const reattach = () => {
-        if (!document.body)
-            return;
-        document.body.dataset.bloomVariant = document.body.dataset.bloomVariant || variant;
-        injectSwitcher(readVariant());
-    };
-    const obs = new MutationObserver(() => {
-        const el = document.querySelector('.dsh-bloom-switcher');
-        const host = findSwitcherHost();
-        // 节点没了，或宿主已就绪但切换器还浮着 → 重挂
-        if (!el || (host && !host.contains(el)))
-            reattach();
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-    window.__dshBloomObserver__ = obs;
+  if (window.__dshBloomObserver__) return
+  const reattach = () => {
+    if (!document.body) return
+    document.body.dataset.bloomVariant = document.body.dataset.bloomVariant || variant
+    injectSwitcher(readVariant())
+  }
+  const obs = new MutationObserver(() => {
+    const el = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
+    const host = findSwitcherHost()
+    // 节点没了，或宿主已就绪但切换器还浮着 → 重挂
+    if (!el || (host && !host.contains(el))) reattach()
+  })
+  obs.observe(document.body, { childList: true, subtree: true })
+  window.__dshBloomObserver__ = obs
 }
+
 /** 顶层立即注入 —— 不依赖 factory materialize（dsh-client-modules 的 lazy CJS 在
  *  没有 import 的情况下 factory 不会被调用，CSS/switcher 永远不跑）。所以：
  * script 一加载就跑（同时给 factory 留 fallback）。 */
-;
-(function () {
-    if (typeof document === 'undefined')
-        return;
-    const variant = readVariant();
-    injectCSS(buildBloomCSS(), 'bloom.css');
-    injectCSS(COMPONENT_CSS, 'components.css');
-    injectCSS(GLASS_CSS, 'glass.css');
-    const boot = () => {
-        document.body.dataset.bloomVariant = variant;
-        injectSwitcher(variant);
-        // header 通常晚于脚本渲染 —— 交给 observer 在宿主就绪后迁进去
-        watchSwitcher(variant);
-        watchThinkTags();
-        checkUpdate();
-    };
-    if (document.body)
-        boot();
-    else
-        document.addEventListener('DOMContentLoaded', boot);
-})();
-(function installAutoReload() {
-    if (typeof window === 'undefined' || typeof document === 'undefined')
-        return;
-    // 仅本地开发；线上用户用 bloom 不该被自动 reload 打断。
-    const host = location.hostname;
-    if (host !== '127.0.0.1' && host !== 'localhost')
-        return;
-    // 一键关
-    if (location.search.includes('noreload=1'))
-        return;
-    // DSH 走 module loader 注入，页面上通常没有带包名的 <script src> —— 不去扫 script。
-    // 而且 DSH 的 web 服务 HEAD 不返回 etag / content-length，所以直接 GET 自己插件的
-    // 官方 URL（${origin}/plugins/<包名>/client.js），对整个 body 算指纹比对：
-    // 变了 = 你部署了新版，location.reload()。这套不依赖 import.meta / script 扫描，
-    // vanilla 和 ESM 都安全。~85KB / 3s 在本地无所谓；线上不启用（localhost 才生效）。
-    const myUrl = `${location.origin}/plugins/${PLUGIN_ID}/client.js`;
-    let initialKey = null;
-    // 极简 FNV-1a 32-bit，避免引 crypto / 异步 SubtleCrypto
-    const fnv1a = (s) => {
-        let h = 2166136261 >>> 0;
-        for (let i = 0; i < s.length; i++) {
-            h = (h ^ s.charCodeAt(i)) * 16777619 >>> 0;
-        }
-        return h.toString(36);
-    };
-    const check = async () => {
-        try {
-            const r = await fetch(`${myUrl}?t=${Date.now()}`, { cache: 'no-store' });
-            if (!r.ok)
-                return;
-            const text = await r.text();
-            const key = fnv1a(text) + ':' + text.length;
-            if (initialKey === null) {
-                initialKey = key;
-                return;
-            }
-            if (key !== initialKey)
-                location.reload();
-        }
-        catch (_) { /* 网络抖动忽略 */ }
-    };
-    check(); // 首次记录基线
-    setInterval(check, 3000); // 3 秒一次
-})();
-(function installUpdateCheck() {
-    if (typeof window === 'undefined' || typeof fetch !== 'function')
-        return;
-    const REGISTRY = 'https://registry.npmjs.org/' + PLUGIN_ID + '/latest';
-    const CHECK_TTL_MS = 24 * 60 * 60 * 1000;
-    const LS_LAST = 'dsh-bloom-update-check'; // { at, latest } 上次检查
-    const LS_DISMISSED = 'dsh-bloom-update-dismissed'; // 已关闭的版本号
-    const UPDATE_CMD = 'dsh plugin --profile web up ' + PLUGIN_ID + '@latest';
-    const RELEASES_URL = 'https://github.com/webkubor/dsh-bloom-theme/releases';
-    const zh = (navigator.language || '').toLowerCase().startsWith('zh');
-    /** a > b ？（major.minor.patch 数值比；release > prerelease；预发布串比字符串，够用） */
-    function isNewer(a, b) {
-        const [va, pa] = a.split('-'), [vb, pb] = b.split('-');
-        const na = va.split('.').map(Number), nb = vb.split('.').map(Number);
-        for (let i = 0; i < 3; i++) {
-            if ((na[i] || 0) !== (nb[i] || 0))
-                return (na[i] || 0) > (nb[i] || 0);
-        }
-        if (!pa && pb)
-            return true;
-        if (pa && !pb)
-            return false;
-        if (pa && pb)
-            return pa > pb;
-        return false;
+;(function() {
+  if (typeof document === 'undefined') return
+  const variant = readVariant()
+  injectCSS(buildBloomCSS(), 'bloom.css')
+  injectCSS(COMPONENT_CSS, 'components.css')
+  injectCSS(GLASS_CSS, 'glass.css')
+  const boot = () => {
+    document.body.dataset.bloomVariant = variant
+    injectSwitcher(variant)
+    // header 通常晚于脚本渲染 —— 交给 observer 在宿主就绪后迁进去
+    watchSwitcher(variant)
+    watchThinkTags()
+    checkUpdate()
+  }
+  if (document.body) boot()
+  else document.addEventListener('DOMContentLoaded', boot)
+})()
+
+/** 开发期自动刷新 —— 仅在本地 localhost 启用，线上用户不受影响。
+ *
+ * 解决痛点：bloom 插件的 client.js 一旦加载进浏览器就常驻 JS 上下文，
+ * 我本地 rsync 部署后页面不会自动拿新代码，必须 hard reload 才能验证。
+ *
+ * 实现：找到加载本插件的 <script> 标签，HEAD 请求同一 URL，对比
+ * Last-Modified / ETag —— 不一致就 location.reload()。?noreload=1 关掉。
+ *
+ * 不放在 watchSwitcher 里：切换器是可选组件；reload 是纯文件监控，跟切换器无关。
+ */
+;(function installAutoReload() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  // 仅本地开发；线上用户用 bloom 不该被自动 reload 打断。
+  const host = location.hostname
+  if (host !== '127.0.0.1' && host !== 'localhost') return
+  // 一键关
+  if (location.search.includes('noreload=1')) return
+
+  // DSH 走 module loader 注入，页面上通常没有带包名的 <script src> —— 不去扫 script。
+  // 而且 DSH 的 web 服务 HEAD 不返回 etag / content-length，所以直接 GET 自己插件的
+  // 官方 URL（${origin}/plugins/<包名>/client.js），对整个 body 算指纹比对：
+  // 变了 = 你部署了新版，location.reload()。这套不依赖 import.meta / script 扫描，
+  // vanilla 和 ESM 都安全。~85KB / 3s 在本地无所谓；线上不启用（localhost 才生效）。
+  const myUrl = `${location.origin}/plugins/${PLUGIN_ID}/client.js`
+  let initialKey: string | null = null
+
+  // 极简 FNV-1a 32-bit，避免引 crypto / 异步 SubtleCrypto
+  const fnv1a = (s: string) => {
+    let h = 2166136261 >>> 0
+    for (let i = 0; i < s.length; i++) { h = (h ^ s.charCodeAt(i)) * 16777619 >>> 0 }
+    return h.toString(36)
+  }
+
+  const check = async () => {
+    try {
+      const r = await fetch(`${myUrl}?t=${Date.now()}`, { cache: 'no-store' })
+      if (!r.ok) return
+      const text = await r.text()
+      const key = fnv1a(text) + ':' + text.length
+      if (initialKey === null) { initialKey = key; return }
+      if (key !== initialKey) location.reload()
+    } catch (_) { /* 网络抖动忽略 */ }
+  }
+  check()                                            // 首次记录基线
+  setInterval(check, 3000)                           // 3 秒一次
+})()
+
+/** ── 更新检测：npm 有新版本时提醒老用户 ─────────────────────────────────────
+ *
+ * 背景：主题插件装在 ~/.dsh/profiles/web/node_modules 里，用户不会主动升级；
+ * 发了新版（新变体/修 bug）老用户无感知。这里做被动提醒。
+ *
+ * 机制（全部浏览器端，零 node 侧依赖）：
+ *   1. 「当前版本」来自 PLUGIN_VERSION 常量（scripts/sync-version.mjs 随发版自动同步）
+ *   2. 「最新版本」查 https://registry.npmjs.org/@kubor/dsh-bloom-theme/latest
+ *      取响应里的 version 字段。⚠️ 必须用这个端点：npm registry 只有完整
+ *      manifest 端点带 CORS 头（access-control-allow-origin: *），精简的
+ *      /-/package/<id>/dist-tags 端点不带，浏览器会拦 —— 实测过别改回去。
+ *   3. 24h 节流：结果缓存在 localStorage，一天最多查一次（远端浏览器无持久化时降级为每次查）
+ *   4. 用户关掉的版本不再弹（新版本号出现后重新弹一次）
+ *   5. 一切失败静默：断网/CORS 被拦/registry 抽风都不影响主题本身
+ */
+;(function installUpdateCheck() {
+  if (typeof window === 'undefined' || typeof fetch !== 'function') return
+
+  const REGISTRY = 'https://registry.npmjs.org/' + PLUGIN_ID + '/latest'
+  const CHECK_TTL_MS = 24 * 60 * 60 * 1000
+  const LS_LAST = 'dsh-bloom-update-check'      // { at, latest } 上次检查
+  const LS_DISMISSED = 'dsh-bloom-update-dismissed' // 已关闭的版本号
+  const UPDATE_CMD = 'dsh plugin --profile web up ' + PLUGIN_ID + '@latest'
+  const RELEASES_URL = 'https://github.com/webkubor/dsh-bloom-theme/releases'
+  const zh = (navigator.language || '').toLowerCase().startsWith('zh')
+
+  /** a > b ？（major.minor.patch 数值比；release > prerelease；预发布串比字符串，够用） */
+  function isNewer(a, b) {
+    const [va, pa] = a.split('-'), [vb, pb] = b.split('-')
+    const na = va.split('.').map(Number), nb = vb.split('.').map(Number)
+    for (let i = 0; i < 3; i++) {
+      if ((na[i] || 0) !== (nb[i] || 0)) return (na[i] || 0) > (nb[i] || 0)
     }
-    const ls = {
-        get(k) { try {
-            return window.localStorage.getItem(k);
-        }
-        catch {
-            return null;
-        } },
-        set(k, v) { try {
-            window.localStorage.setItem(k, v);
-        }
-        catch { } },
-    };
-    function showBanner(latest) {
-        if (document.getElementById('dsh-bloom-update-banner'))
-            return;
-        const dismissed = ls.get(LS_DISMISSED);
-        if (dismissed === latest)
-            return;
-        const el = document.createElement('div');
-        el.id = 'dsh-bloom-update-banner';
-        el.setAttribute('role', 'status');
-        el.innerHTML = `
+    if (!pa && pb) return true
+    if (pa && !pb) return false
+    if (pa && pb) return pa > pb
+    return false
+  }
+
+  const ls = {
+    get(k) { try { return window.localStorage.getItem(k) } catch { return null } },
+    set(k, v) { try { window.localStorage.setItem(k, v) } catch {} },
+  }
+
+  function showBanner(latest) {
+    if (document.getElementById('dsh-bloom-update-banner')) return
+    const dismissed = ls.get(LS_DISMISSED)
+    if (dismissed === latest) return
+
+    const el = document.createElement('div')
+    el.id = 'dsh-bloom-update-banner'
+    el.setAttribute('role', 'status')
+    el.innerHTML = `
       <style>
         #dsh-bloom-update-banner{position:fixed;right:20px;bottom:20px;z-index:2147483000;
           max-width:340px;padding:14px 16px;border-radius:14px;
@@ -2122,49 +2104,50 @@ function watchSwitcher(variant) {
       <div class="bloom-upd-actions">
         <button data-primary data-act="copy">${zh ? '复制更新命令' : 'Copy command'}</button>
         <button data-act="open">${zh ? '更新日志' : 'Changelog'}</button>
-      </div>`;
-        el.querySelector('.bloom-upd-x').addEventListener('click', () => {
-            ls.set(LS_DISMISSED, latest);
-            el.remove();
-        });
-        el.querySelector('[data-act="copy"]').addEventListener('click', (e) => {
-            const btn = e.currentTarget;
-            navigator.clipboard?.writeText(UPDATE_CMD).then(() => {
-                btn.textContent = zh ? '✓ 已复制' : '✓ Copied';
-                setTimeout(() => (btn.textContent = zh ? '复制更新命令' : 'Copy command'), 1600);
-            }).catch(() => { });
-        });
-        el.querySelector('[data-act="open"]').addEventListener('click', () => {
-            window.open(RELEASES_URL + '/tag/v' + latest, '_blank', 'noopener');
-        });
-        document.body.appendChild(el);
-    }
-    function check() {
-        // 24h 节流：上次查过且结论是「已是最新」，直接跳过网络请求
-        try {
-            const last = JSON.parse(ls.get(LS_LAST) || 'null');
-            if (last && Date.now() - last.at < CHECK_TTL_MS && last.latest === PLUGIN_VERSION)
-                return;
-        }
-        catch { }
-        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
-        const timer = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null;
-        fetch(REGISTRY, { cache: 'no-store', signal: ctrl?.signal })
-            .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
-            .then((manifest) => {
-            const latest = manifest && manifest.version;
-            if (typeof latest !== 'string')
-                return;
-            ls.set(LS_LAST, JSON.stringify({ at: Date.now(), latest }));
-            if (isNewer(latest, PLUGIN_VERSION))
-                showBanner(latest);
-        })
-            .catch(() => { }) // 断网 / 超时 / 被拦 —— 静默，绝不影响主题
-            .finally(() => timer && clearTimeout(timer));
-    }
-    // 不抢首屏：等 DSH 壳渲染完再查
-    setTimeout(check, 4000);
-})();
+      </div>`
+    el.querySelector<HTMLElement>('.bloom-upd-x').addEventListener('click', () => {
+      ls.set(LS_DISMISSED, latest)
+      el.remove()
+    })
+    el.querySelector<HTMLElement>('[data-act="copy"]').addEventListener('click', (e) => {
+      const btn = e.currentTarget as HTMLElement
+      navigator.clipboard?.writeText(UPDATE_CMD).then(() => {
+        btn.textContent = zh ? '✓ 已复制' : '✓ Copied'
+        setTimeout(() => (btn.textContent = zh ? '复制更新命令' : 'Copy command'), 1600)
+      }).catch(() => {})
+    })
+    el.querySelector<HTMLElement>('[data-act="open"]').addEventListener('click', () => {
+      window.open(RELEASES_URL + '/tag/v' + latest, '_blank', 'noopener')
+    })
+    document.body.appendChild(el)
+  }
+
+  function check() {
+    // 24h 节流：上次查过且结论是「已是最新」，直接跳过网络请求
+    try {
+      const last = JSON.parse(ls.get(LS_LAST) || 'null')
+      if (last && Date.now() - last.at < CHECK_TTL_MS && last.latest === PLUGIN_VERSION) return
+    } catch {}
+
+    const ctrl = typeof AbortController === 'function' ? new AbortController() : null
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null
+
+    fetch(REGISTRY, { cache: 'no-store', signal: ctrl?.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+      .then((manifest) => {
+        const latest = manifest && manifest.version
+        if (typeof latest !== 'string') return
+        ls.set(LS_LAST, JSON.stringify({ at: Date.now(), latest }))
+        if (isNewer(latest, PLUGIN_VERSION)) showBanner(latest)
+      })
+      .catch(() => {}) // 断网 / 超时 / 被拦 —— 静默，绝不影响主题
+      .finally(() => timer && clearTimeout(timer))
+  }
+
+  // 不抢首屏：等 DSH 壳渲染完再查
+  setTimeout(check, 4000)
+})()
+
 /**
  * 向 DSH 的 client loader 注册。
  *
@@ -2175,29 +2158,30 @@ function watchSwitcher(variant) {
  * 参照实现见 @oil-oil/dsh-vision/lib/client.js 末尾（exports.apply = apply）。
  */
 window.__ModuleLoader__.load({
-    id: PLUGIN_ID,
-    factory: () => {
-        const exports = {};
-        Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-        exports.apply = function apply() {
-            // 顶层 IIFE 已注入；此处兜底：cordis materialize 时再确认一次。
-            if (typeof document === 'undefined')
-                return;
-            const variant = readVariant();
-            if (!document.querySelector('style[data-plugin-css="' + PLUGIN_ID + '/bloom.css"]')) {
-                injectCSS(buildBloomCSS(), 'bloom.css');
-            }
-            if (!document.querySelector('style[data-plugin-css="' + PLUGIN_ID + '/components.css"]')) {
-                injectCSS(COMPONENT_CSS, 'components.css');
-            }
-            if (!document.querySelector('style[data-plugin-css="' + PLUGIN_ID + '/glass.css"]')) {
-                injectCSS(GLASS_CSS, 'glass.css');
-            }
-            document.body.dataset.bloomVariant = variant;
-            injectSwitcher(variant);
-            watchSwitcher(variant);
-            watchThinkTags();
-        };
-        return exports;
-    },
-});
+  id: PLUGIN_ID,
+  factory: () => {
+    const exports: Record<string, unknown> = {}
+    Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
+
+    exports.apply = function apply() {
+      // 顶层 IIFE 已注入；此处兜底：cordis materialize 时再确认一次。
+      if (typeof document === 'undefined') return
+      const variant = readVariant()
+      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/bloom.css"]')) {
+        injectCSS(buildBloomCSS(), 'bloom.css')
+      }
+      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/components.css"]')) {
+        injectCSS(COMPONENT_CSS, 'components.css')
+      }
+      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/glass.css"]')) {
+        injectCSS(GLASS_CSS, 'glass.css')
+      }
+      document.body.dataset.bloomVariant = variant
+      injectSwitcher(variant)
+      watchSwitcher(variant)
+      watchThinkTags()
+    }
+
+    return exports
+  },
+})

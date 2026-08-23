@@ -1778,11 +1778,8 @@ function showStatsCard(anchor: HTMLElement) {
     pop = document.createElement('div')
     pop.id = 'dsh-bloom-stats-pop'
     pop.innerHTML = `
-      <div class="card">
-        <div class="head"><span>💎 代码统计</span><span class="sub">本地 git</span></div>
-        <img alt="Bloom 代码统计卡"/>
-        <button data-act="download" title="下载 PNG">下载 PNG</button>
-      </div>`
+      <img alt="Bloom 代码统计卡" class="card"/>
+      <button data-act="download" title="下载 PNG" class="dl">↓ 下载 PNG</button>`
     document.body.appendChild(pop)
     pop.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('[data-act="download"]')) exportStatsPNG(currentStats)
@@ -1830,26 +1827,17 @@ const STATS_TRIGGER_CSS = `
 .dsh-bloom-stats-trigger .ic{font-size:13px}
 .dsh-bloom-stats-trigger[data-open="true"]{border-color:color-mix(in oklch,var(--bloom-accent,#34698c) 55%,transparent);
   box-shadow:0 0 0 3px color-mix(in oklch,var(--bloom-accent,#34698c),transparent 78%)}
-#dsh-bloom-stats-pop{position:fixed;z-index:2147483600;display:none;font:14px/1.4 -apple-system,'PingFang SC',sans-serif}
-#dsh-bloom-stats-pop .card{width:400px;padding:12px 14px 14px;border-radius:18px;
-  background-color:color-mix(in oklch,var(--dsw-alias-bg-layer-1,#fff),transparent 25%) !important;
-  backdrop-filter:blur(20px) saturate(1.1);-webkit-backdrop-filter:blur(20px) saturate(1.1);
+#dsh-bloom-stats-pop{position:fixed;z-index:2147483600;display:none;width:400px;
+  font:14px/1.4 -apple-system,'PingFang SC',sans-serif}
+#dsh-bloom-stats-pop .card{display:block;width:100%;border-radius:14px;
   border:1px solid var(--bloom-hairline,rgba(146,168,179,.35));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
-    inset 0 -1px 0 rgba(255,255,255,.05),
-    var(--bloom-shadow,0 10px 30px rgba(0,0,0,.18)),
-    0 24px 70px -30px rgba(0,0,0,.35)}
-#dsh-bloom-stats-pop .head{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px}
-#dsh-bloom-stats-pop .head span{font-weight:600;color:var(--dsw-alias-label-primary)}
-#dsh-bloom-stats-pop .head .sub{font-weight:400;font-size:11px;color:var(--dsw-alias-label-tertiary)}
-#dsh-bloom-stats-pop img{display:block;width:100%;border-radius:12px;
-  border:1px solid var(--bloom-hairline,rgba(146,168,179,.35));
-  box-shadow:0 0 0 1px var(--bloom-hairline-strong,rgba(146,168,179,.15)) inset}
-#dsh-bloom-stats-pop button{margin-top:10px;width:100%;font:600 13px/1 -apple-system,sans-serif;padding:9px 0;
-  border-radius:10px;border:1px solid var(--bloom-hairline-strong,rgba(146,168,179,.55));
-  background:color-mix(in oklch,var(--bloom-accent,#34698c),transparent 88%);
-  color:var(--dsw-alias-label-primary);cursor:pointer;transition:background .15s var(--bloom-ease)}
-#dsh-bloom-stats-pop button:hover{background:color-mix(in oklch,var(--bloom-accent,#34698c),transparent 75%)}
+  box-shadow:0 16px 48px -20px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12)}
+#dsh-bloom-stats-pop .dl{margin-top:8px;width:100%;font:600 12px/1 -apple-system,sans-serif;padding:7px 0;
+  border-radius:8px;border:1px solid var(--bloom-hairline,rgba(146,168,179,.25));
+  background:transparent;color:var(--dsw-alias-label-secondary,#666);cursor:pointer;
+  transition:background .15s var(--bloom-ease),color .15s var(--bloom-ease)}
+#dsh-bloom-stats-pop .dl:hover{background:color-mix(in oklch,var(--bloom-accent,#34698c) 14%,transparent);
+  color:var(--dsw-alias-label-primary);border-color:var(--bloom-hairline-strong,rgba(146,168,179,.45))}
 @media (prefers-reduced-motion: reduce){#dsh-bloom-stats-pop,.dsh-bloom-stats-trigger{transition:none!important}}
 `
 

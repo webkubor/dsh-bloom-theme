@@ -127,8 +127,9 @@ dsh plugin enable @kubor/dsh-bloom-theme
 ```
 
 <p align="center">
-  <img src="assets/showcase/coding-card-sample.png" alt="Bloom 代码统计卡" width="100%" />
-  <sub>示例：由 `/bloom stats --card` 生成（数据来自本地 git，不依赖任何账号/云）</sub>
+  <img src="assets/showcase/stats-card-sage.png" alt="Bloom 代码统计卡 · 鼠尾草·暗色" width="49%" />
+  <img src="assets/showcase/stats-card-amber.png" alt="Bloom 代码统计卡 · 琥珀·亮色" width="49%" />
+  <sub>代码统计卡跟随当前主题：accent / 背景 / 文字全从主题 token 取（sage 暗色 / amber 亮色 两示例）。由 `/bloom stats --card` 生成。</sub>
 </p>
 
 ## 设计原理：双轨色

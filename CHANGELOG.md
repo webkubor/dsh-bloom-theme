@@ -2,6 +2,28 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.6.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.5.0...v0.6.0) (2026-08-23)
+
+### ✨ 新功能
+- **8 套莫兰迪配色**（原有 4 + 新增 4：鼠尾草 Sage / 暖石 Stone / 青金 Lapis / 琥珀 Amber），全部用 OKLCH 调色，亮暗自适应一键切换
+- **磨砂玻璃面板默认常开**：侧栏/气泡/输入卡/菜单/选择器全部半透 + backdrop 模糊 + 玻璃边缘高光，明暗两档透明度自适应
+- **微交互动效系统**：菜单入场、选中色条滑入、hover / 按压反馈；全站统一时长/缓动 token（`--bloom-dur-*` / `--bloom-ease`），尊重 `prefers-reduced-motion`
+- **版本/更新指示**：下拉底部显示当前版本（`Bloom v0.5.0` → `v0.6.0`），npm 有新版亮「↑ vX」徽标跳转 Release 页
+- **一键代码统计卡（可秀）**：`/bloom stats` 读取本地 git 仓库，输出可分享的开发统计（行数/文件/提交/连击/语言分布）；`--card` 生成自包含 HTML 卡；顶栏配色按钮左侧的「💎 统计」胶囊悬停预览 + 一键下载 PNG（**卡片跟随当前主题**，accent / 背景 / 文字全从主题 token 取）
+
+### 🛠 工程化
+- **前端转 TypeScript**：`src/*.ts`（client/index/stats/globals） → `tsc` → `lib/*.js`；`tsconfig.json`；`@types/node`
+- **一键脚本**：`npm run build` / `deploy` / `preview` / `dev` / `package` / `publish` / `check`
+- **Auto-reload 修复**：客户端 `GET` 自己插件 URL 算 FNV-1a 指纹对比，部署后页面 3 秒内自动刷新（DSH 的 web 服务 HEAD 不返回 etag，所以用 body 指纹）
+- **`scripts/sync-version.mjs`** 同步进 `src/client.ts`（不再改编译产物）
+
+### 🎨 文档
+- README 重写成产品页：banner / 徽章 / 8 变体矩阵 / 安装 / 特性表 / 一键脚本 / 编码统计卡
+- 重新生成 8 变体 × 明暗 = 16 张截图（`assets/screenshots/`）
+
+### 🧹 清理
+- 移除壁纸 / 氛围层相关遗留截图（`ambience-*`, `switcher-panel.png`）
+
 ## [0.5.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.4.0...v0.5.0) (2026-08-23)
 
 ### 🧭 方向调整

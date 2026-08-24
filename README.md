@@ -111,26 +111,7 @@ dsh plugin enable @kubor/dsh-bloom-theme
 | **OKLCH 调色 + WCAG AA** | 感知均匀色彩空间，明暗切换不跳变；全部明暗主色对实测 ≥ 4.5:1 |
 | **零依赖 · 纯 CSS 变量驱动** | 只注入 CSS 变量 + 少量切换逻辑，几乎零运行时开销 |
 | **不抢占原生控件** | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
-| **TypeScript 构建** | 前端 `src/*.ts` → `tsc` 编译为 `lib/*.js`；`build / deploy / package / publish` 一键脚本 |
-
-## 一键代码统计卡（可秀出去）
-
-`/bloom stats` 读取**本地 git 仓库**，给你一张能晒出去的开发统计卡——纯本地、离线、不上传。
-
-**顶栏配色按钮左侧有一个「💎 统计」小胶囊**：鼠标悬停它，就弹出卡片预览 + 「下载 PNG」按钮，一键导出图片直接分享。不悬停时只是个简单胶囊。
-
-```bash
-/bloom stats                          # 当前项目 · 文本摘要（行数/文件/提交/连击/语言）
-/bloom stats <目录>                    # 统计指定目录
-/bloom stats --card                   # 生成自包含 HTML 卡（写入项目根目录）
-/bloom stats --card=~/xx.html         # 指定卡文件输出路径
-```
-
-<p align="center">
-  <img src="assets/showcase/stats-card-sage.png" alt="Bloom 代码统计卡 · 鼠尾草·暗色" width="49%" />
-  <img src="assets/showcase/stats-card-amber.png" alt="Bloom 代码统计卡 · 琥珀·亮色" width="49%" />
-  <sub>代码统计卡跟随当前主题：accent / 背景 / 文字全从主题 token 取（sage 暗色 / amber 亮色 两示例）。由 `/bloom stats --card` 生成。</sub>
-</p>
+| **TypeScript 构建** | 前端 `src/*.ts` → `tsc` 编译为 `lib/*.js`；`build / deploy / package / check` 一键脚本 |
 
 ## 设计原理：双轨色
 

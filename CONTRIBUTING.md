@@ -19,14 +19,24 @@ npm run dev      # 监听 lib/，保存即部署到 web profile 并自动刷新�
 npm run check
 ```
 
-这会校验三件事，都是踩过坑才加的：
+这会校验六组，全是踩过坑才加的 —— 前三组是「改坏了会报错」，后三组是「改**偏**了会报错」，
+后者才是本项目真正反复失血的地方：
 
 1. **打包契约** —— `dsh.bundle.patch`、包名与 `cordis.patch.yml` 一致、`files` 白名单、
    以及 `client.js` 里 `PLUGIN_ID` 与包名一致（不一致会让 DSH 报
    `loaded without registering`）
-2. **配色对比度** —— 直接从 `PALETTE` 解析色值算 WCAG，8 组必须 ≥ 4.5:1
+2. **scripts 命名** —— script 名不得与 npm 生命周期钩子同名。曾有个
+   `"publish": "... && npm publish"`，而 `publish` 本身就是钩子，发包成功后
+   npm 自动触发它、又发一次 → 撞 403，让每次 CI 发布都假失败
 3. **前景色 token 反模式** —— `markdown-inline-code` 不得写成裸色值（它是背景色），
    暗色阴影必须纯黑
+4. **版本真源** —— `package.json` / `.release-please-manifest.json` /
+   `PLUGIN_VERSION` 三处必须一致，手工 bump 直接 fail
+5. **选择器稳定性** —— 剥掉注释后扫源码，任何 `<hash>_<名>` 硬编码 fail
+6. **范围边界（棘轮）** —— `/bloom` 子命令 + 顶层 CSS 常量两份白名单，新增即 fail
+
+配色对比度另由 `contrast-guard` 检查（`npm run check` 已串联），更深的视觉层
+见下方「视觉审计」。
 
 ## 改配色时注意
 
@@ -69,6 +79,26 @@ DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。has
 3. 跑一遍**视觉审计**（下一节），`verdict: PASS`
 4. 用 Conventional Commits 提交、推 main —— **到此结束**
 
+之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
+写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release。
+
+### ⛔ 不要做这些
+
+| 别做 | 为什么 |
+|---|---|
+| `npm version` / 手改 `package.json` 版本号 | release-please 按 commit 自己算版本，手改会和它的账本（`.release-please-manifest.json`）打架 |
+| `npm publish`（本地） | 发布只应由 tag 触发，本地发会让 npm 上出现 git 里不存在的版本 |
+| 手写 `chore: release vX.Y.Z` commit | 它不打 tag、不触发 publish，只会让 git 版本领先 npm |
+| 手写 `CHANGELOG.md` 条目 | release-please 按 commit 重新生成，手写条目会与它的输出重复 |
+
+这四条不是洁癖 —— 2026-08-24 实际出现过**版本四头分裂**：npm 上 `0.6.0`、
+git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时 Release PR
+的 changelog 把 `0.3.x` 时代的 commit 又全列了一遍。根因就是这份文档以前写的是手工
+流程、而 CI 装的是 release-please，**同一个仓库里存在两套发布协议**。
+
+现在 `npm run check` 会校验版本三处副本（`package.json` / manifest /
+`src/client.ts` 的 `PLUGIN_VERSION`）一致，手工 bump 会直接被拦下。
+
 ### 视觉审计（改动配色 / token / 玻璃层时必跑）
 
 `npm run check` 是纯 node 的，算不了 `color-mix()` / `oklch()` 的最终 sRGB 值，
@@ -101,26 +131,6 @@ npm run deploy   # 先部署到 web profile
 上一个变体的残留值（实测「新会话」按钮 1.02:1、切换器名字 1.86:1，真实切换下
 都不存在）。要切就走设置面板 + 刷新。属性切换只可用于纯 token 层（`auditTokens`）。
 
-之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
-写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release。
-
-### ⛔ 不要做这些
-
-| 别做 | 为什么 |
-|---|---|
-| `npm version` / 手改 `package.json` 版本号 | release-please 按 commit 自己算版本，手改会和它的账本（`.release-please-manifest.json`）打架 |
-| `npm publish`（本地） | 发布只应由 tag 触发，本地发会让 npm 上出现 git 里不存在的版本 |
-| 手写 `chore: release vX.Y.Z` commit | 它不打 tag、不触发 publish，只会让 git 版本领先 npm |
-| 手写 `CHANGELOG.md` 条目 | release-please 按 commit 重新生成，手写条目会与它的输出重复 |
-
-这四条不是洁癖 —— 2026-08-24 实际出现过**版本四头分裂**：npm 上 `0.6.0`、
-git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时 Release PR
-的 changelog 把 `0.3.x` 时代的 commit 又全列了一遍。根因就是这份文档以前写的是手工
-流程、而 CI 装的是 release-please，**同一个仓库里存在两套发布协议**。
-
-现在 `npm run check` 会校验版本三处副本（`package.json` / manifest /
-`src/client.ts` 的 `PLUGIN_VERSION`）一致，手工 bump 会直接被拦下。
-
 ### 需要跳版本或跳过发布
 
 不要手改文件，用 release-please 的协议：close 那个 Release PR 并评论
@@ -130,15 +140,27 @@ git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时
 
 定位（README「一句话」）：**给 DSH 的「玻璃 + 莫兰迪」主题** = 配色 + 质感 + 切换器。
 
-这个仓库反复失血的地方不是 bug，是**范围往外长**：0.4.0 加了壁纸/氛围层、
-0.5.0 又全删；stats 统计卡与 DSH 升级检查跟主题无关，但已经发出去了，故**冻结**
-（保留现状，不再扩展）。
+这个仓库反复失血的地方不是 bug，是**范围往外长**，而且每次都以删除收场：
+
+| 越界功能 | 结局 |
+|---|---|
+| 0.4.0 壁纸 / 氛围层 | 0.5.0 全删 |
+| 0.5.0 代码统计卡（`/bloom stats` + 顶栏胶囊 + PNG 导出，约 500 行） | 0.8.0 全删 |
+
+统计卡那次尤其值得记住：它撑了三个版本，而**浏览器端展示的一直是假数据** ——
+顶栏卡片想读 `/bloom-stats.json`，但从来没有任何代码提供过这个端点（实测 404），
+于是永远 fallback 到硬编码的 `STATS_SAMPLE`，任何用户看到的都是本仓库的示例
+数字（3864 行 / 45 文件，项目名固定 `dsh-bloom-theme`）。
+
+根本矛盾是**浏览器端拿不到本地 git 数据**，而主题不该为此引入 client↔node 实时桥。
+也就是说：这个功能在「主题插件」这个载体里就是做不成的，当初硬塞进来时就已经
+注定要靠假数据顶着。**越界的功能往往不只是不该在这儿，而是在这儿根本做不对。**
 
 新功能进来前先问一句「它属于配色 / 质感 / 切换器吗」。不属于就该是独立插件。
 `npm run check` 用两份白名单把这条做成了棘轮：
 
-- `/bloom` 子命令白名单（当前只有 `stats`）
-- 顶层 CSS 常量白名单（`COMPONENT_CSS` / `GLASS_CSS` / `SWITCHER_CSS` / `STATS_TRIGGER_CSS`）
+- `/bloom` 子命令白名单（**当前为空** —— 主题不提供任何命令）
+- 顶层 CSS 常量白名单（`COMPONENT_CSS` / `GLASS_CSS` / `SWITCHER_CSS`）
 
 新增会直接 fail。确实要扩，就改白名单**并**同步 README 的「一句话」—— 让范围扩张
 成为一次显式的、写下来的决策，而不是悄悄多出 500 行。

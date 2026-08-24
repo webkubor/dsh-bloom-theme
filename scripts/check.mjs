@@ -157,11 +157,15 @@ console.log('\n范围边界')
 // 定位（README「一句话」）：给 DSH 的「玻璃 + 莫兰迪」主题 = 配色 + 质感 + 切换器。
 // 下面两份白名单是**棘轮**：只能减、不能加。想加新功能时先问一句
 // 「它属于配色/质感/切换器吗」—— 不属于就该是独立插件，而不是塞进主题。
-// 历史教训：0.4.0 加壁纸氛围层 → 0.5.0 全删；stats 卡与 DSH 升级检查已冻结。
-const ALLOWED_SUBCOMMANDS = ['stats']
-const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS', 'STATS_TRIGGER_CSS']
+// 历史教训：0.4.0 加壁纸氛围层 → 0.5.0 全删；stats 卡撑了三个版本、展示的全是
+// 硬编码假数据（它要读的 /bloom-stats.json 端点根本不存在），0.8.0 整块删除。
+const ALLOWED_SUBCOMMANDS = []   // 空 —— 主题不提供任何 /bloom 子命令（stats 已于 2026-08-24 移除）
+const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS']
 
+// 同样先剥注释：说明「这里曾注册过 /bloom stats、为什么删掉」是合法且有价值的
 const indexSrc = read('src/index.ts')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/(?<!:)\/\/.*$/gm, '')
 const subcommands = [...indexSrc.matchAll(/\/bloom\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1])
 const strayCmds = [...new Set(subcommands)].filter((c) => !ALLOWED_SUBCOMMANDS.includes(c))
 strayCmds.length === 0

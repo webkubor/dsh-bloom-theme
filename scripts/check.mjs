@@ -193,6 +193,17 @@ uniqHardcoded.length === 0
         `      需要收紧作用域时用 :has() 按 DOM 结构特征匹配。`,
     )
 
+// CSS 常量是模板字符串，注释里写反引号会**提前终止模板** —— tsc 报的是
+// 「',' expected」这种毫不相干的语法错，定位很费时间（实测踩过）。
+const backtickBugs = []
+for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
+  const inner = f.code.replace(/^[\s\S]*?= `/, '').replace(/`[\s\S]*$/, '')
+  if (inner.includes('`')) backtickBugs.push(f.path)
+}
+backtickBugs.length === 0
+  ? ok('CSS 模板字符串内无裸反引号')
+  : bad(`这些 CSS 模板里有裸反引号，会提前终止模板：${backtickBugs.join(', ')}`)
+
 // ── 5. 范围边界（棘轮）─────────────────────────────────────────
 console.log('\n范围边界')
 

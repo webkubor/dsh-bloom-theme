@@ -160,21 +160,47 @@ export function sharedDswTokens(p, dark) {
   const ok = dark ? 'oklch(72% 0.12 150)' : 'oklch(45% 0.14 150)'
   const err = dark ? 'oklch(72% 0.16 25)' : 'oklch(45% 0.16 25)'
   const warn = dark ? 'oklch(80% 0.12 75)' : 'oklch(45% 0.11 75)'
-  const t = (c, pct) => `color-mix(in oklch, ${c}, transparent ${pct}%)`
+  /**
+   * ⚠️ secondary 与 tertiary 的语义**完全不同**，别按名字想当然。
+   *
+   * 实测 DSH 原生值（禁用 Bloom 样式后读 computed）：
+   *   state-error-primary    #f25a5a
+   *   state-error-secondary  #f25a5a   ← 和 primary **一模一样**，全饱和
+   *   state-success-tertiary rgb(35,60,44)  ← 这才是暗淡背景色
+   *
+   * 也就是说 `-secondary` 是**全饱和状态色本身**（DSH 拿它当 color-mix 的色源），
+   * `-tertiary` 才是背景档。Bloom 起初把两档都当成「淡背景」，写了
+   * color-mix(c, transparent 82%)，于是：
+   *
+   *   .assistantVioletBright { color: color-mix(in srgb,
+   *      var(--dsw-alias-brand-primary-…) 60%, var(--dsw-alias-state-error-secondary)) }
+   *
+   * 轨迹视图的 ASSISTANT 标签被混成半透明，对比度 3.39 → 2.89，**比 DSH 原生还差**。
+   * 改成拿 bg 预混后 alpha 恢复 1，但色值被暗背景拖黑，2.89 → 2.70，更差 ——
+   * 两次都错在把 secondary 当背景。现在 secondary 直接给全饱和值，对齐 DSH 语义。
+   *
+   * tertiary 保持 bg 预混（它确实是背景），但比例从 90% 降到 78%：原生
+   * success-tertiary 有明显绿调，混 90% bg 只剩 rgb(33,36,20) 几乎无色相。
+   *
+   * Bloom 自己不消费这几个 token（只定义），所以改它们只影响 DSH 组件的渲染。
+   */
+  const t = (c, pct) => `color-mix(in oklch, ${c}, ${bg} ${pct}%)`
   return `
   /* 状态色（语义色相固定，明暗分档，两档都过 WCAG AA） */
   --dsw-alias-state-success-primary: ${ok};
-  --dsw-alias-state-success-secondary: ${t(ok, dark ? 82 : 88)};
-  --dsw-alias-state-success-tertiary: ${t(ok, dark ? 90 : 94)};
+  --dsw-alias-state-success-secondary: ${ok};
+  --dsw-alias-state-success-tertiary: ${t(ok, dark ? 78 : 88)};
   --dsw-alias-state-error-primary: ${err};
-  --dsw-alias-state-error-secondary: ${t(err, dark ? 82 : 88)};
+  --dsw-alias-state-error-secondary: ${err};
   --dsw-alias-state-warn-primary: ${warn};
-  --dsw-alias-state-warn-secondary: ${t(warn, dark ? 82 : 88)};
-  --dsw-alias-state-warn-tertiary: ${t(warn, dark ? 90 : 94)};
+  --dsw-alias-state-warn-secondary: ${warn};
+  --dsw-alias-state-warn-tertiary: ${t(warn, dark ? 78 : 88)};
   --dsw-alias-state-warn-label: ${dark ? 'oklch(88% 0.1 75)' : 'oklch(40% 0.09 75)'};
-  --dsw-alias-interactive-bg-hover-danger: ${t(err, dark ? 86 : 90)};
+  /* interactive-bg-* 是明确的**背景**语义，保持 transparent 混 —— 它要叠在各种
+     底色上（行 hover、按钮 hover），预混 bg 反而会在非 bg 底色上露出色块。 */
+  --dsw-alias-interactive-bg-hover-danger: ${mix(err, dark ? 86 : 90)};
   /* business = 主题 accent（bloomTokens 里已接管，这里给 tertiary 配套） */
-  --dsw-alias-state-business-tertiary: ${mix(dark ? p.accentD : p.accentL, dark ? 86 : 92)};
+  --dsw-alias-state-business-tertiary: ${t(dark ? p.accentD : p.accentL, dark ? 78 : 88)};
   /* 反色 / 浮层 —— 跟着变体的 bg / tx 走，不再是硬编码蓝灰 */
   --dsw-alias-border-inverted: ${mix(bg, dark ? 85 : 85)};
   --dsw-alias-border-inverted2: ${mix(bg, dark ? 70 : 70)};

@@ -211,6 +211,17 @@ body[data-ds-dark-theme] [class*="_selector"] {
 
    ── 唯一的例外是下面这条，它改的是颜色而不是布局 ── */
 
+/* DSH 拿**前景色 token 当边框色**用的地方（第二例）。设置面板 Agent 预设的
+   选中卡片写的是 border-color: var(--dsw-alias-label-primary) —— 那是正文文字色，
+   Bloom 在暗色下给它 oklch(0.96 …) 近白，于是选中卡围了一圈刺眼白边。
+   选中态本该是主题色。hover 态同样拿 label-dimmed 当边框，一并换成发丝线。 */
+[class*="_cardActive"] {
+  border-color: var(--bloom-accent) !important;
+}
+[class*="_card"]:hover:not([class*="_cardActive"]) {
+  border-color: var(--bloom-hairline-strong) !important;
+}
+
 /* 「浅色 / 深色 / 跟随系统」选中态的边框：DSH 用 --dsw-static-neutral-bluish-400
    （#adb2b8）画它。那是 static 层的中性灰阶 —— 绕过了 alias 层，主题的
    --dsw-alias-border-* 改不到它，于是在莫兰迪暗底上留下一圈刺眼的灰白边

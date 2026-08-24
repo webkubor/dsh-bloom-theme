@@ -38,6 +38,9 @@
  *   · `outline-color` 要先看 `outline-style !== 'none'`，否则拿到的是不渲染的值。
  *   · 色板类组件（[class*="_swatch"]）的背景就是被展示的颜色本身，属于内容
  *     而非主题样式，已在静态色检查里排除。
+ *   · `color` 透明的元素要跳过：DSH 的 composer 是「透明 textarea + 镜像层渲染」
+ *     （为 @提及着色），textarea 自身 color 是 rgba(0,0,0,0)，真正画字的是
+ *     _mirror / _backdrop 层。不跳过就会每次报一条 ratio 1.0 的假阳性。
  */
 ;(function () {
   const cv = document.createElement('canvas')
@@ -108,7 +111,11 @@
         .map((n) => n.textContent.trim()).join('')
       if (txt.length >= 2) {
         const fg = toRgb(s.color)
-        if (fg) {
+        // color 透明 = 文字刻意不可见，不是可读性问题。DSH 的 composer 就是
+        // 「透明 textarea + 镜像层渲染」（为了 @提及着色）：uV2eYG_input 的
+        // color 是 rgba(0,0,0,0)，真正画字的是 _mirror / _backdrop 层（实测 16.13:1）。
+        // 不排除的话每次扫描都会报一条 ratio 1.0 的假阳性。
+        if (fg && fg.a >= 0.05) {
           const bg = effBg(el)
           const cr = ratio(over(fg, bg), bg)
           const size = parseFloat(s.fontSize)
@@ -245,18 +252,68 @@
     return { ok: bad.length === 0, cases, failed: bad }
   }
 
+  /**
+   * 给运行时 findings 补一条**原生基线**：禁用 Bloom 注入的样式后重测同一元素。
+   *
+   * 为什么必须有这步：判据不能只是「是否过 AA」。DSH 自己就有够不上 AA 的配色
+   * （轨迹视图的 ASSISTANT 标签，原生 3.39:1 —— 它把 60% 品牌蓝混 40% 错误红
+   * 当文字色），主题**不该接管宿主的语义色**（kind 区分色改了就失去区分意义）。
+   * 拿「达标」当判据的话，这类 DSH 自带问题会永久刷屏，把真正属于 Bloom 的问题
+   * 淹掉 —— 而 Bloom 的责任边界很清楚：**不让它比原生更差**。
+   *
+   * 实际用处：同一个 ASSISTANT 标签，Bloom 曾把它从 3.39 弄到 2.89（半透明色进了
+   * DSH 的 color-mix），修完是 4.36。三个数字里只有 2.89 是 bug，光看「< 4.5」
+   * 三次都报警、且无法分辨。
+   */
+  function withNativeBaseline(findings, remeasure) {
+    if (!findings.length) return findings
+    const mine = [...document.querySelectorAll('style[data-plugin-css^="@kubor"]')]
+    const before = findings.map((f) => f.el)
+    mine.forEach((s) => { s.disabled = true })
+    const native = before.map((sel) => remeasure(sel))
+    mine.forEach((s) => { s.disabled = false })
+    return findings.map((f, i) => {
+      const n = native[i]
+      const verdict = n == null ? 'unknown'
+        : f.ratio < n - 0.05 ? 'BLOOM-WORSE'
+        : n < 4.5 ? 'dsh-inherent'
+        : 'bloom-ok'
+      return { ...f, nativeRatio: n, verdict }
+    })
+  }
+
+  /** 按 class 片段重测某元素的文字对比度（供基线对比用） */
+  function remeasureContrast(clsFragment) {
+    const el = [...document.querySelectorAll('*')].find(
+      (e) => (String(e.className) || e.tagName).slice(0, 34) === clsFragment,
+    )
+    if (!el) return null
+    const fg = toRgb(getComputedStyle(el).color)
+    if (!fg) return null
+    const bg = effBg(el)
+    return +ratio(over(fg, bg), bg).toFixed(2)
+  }
+
   window.__bloomAudit = function () {
     const sanity = sanityCheck()
     if (!sanity.ok) return { TRUSTWORTHY: false, sanity, note: '扫描器自检未通过，下面的结果不可信' }
     const tokens = auditTokens()
     const rendered = auditRendered()
-    const totalFails = tokens.failCount + rendered.lowContrast.length + rendered.brightBorder.length + rendered.staticColor.length
+    rendered.lowContrast = withNativeBaseline(rendered.lowContrast, remeasureContrast)
+
+    // 只有「Bloom 让它更差」才算需要修的问题；DSH 自带的不达标单独统计
+    const ourFault = rendered.lowContrast.filter((f) => f.verdict === 'BLOOM-WORSE')
+    const dshInherent = rendered.lowContrast.filter((f) => f.verdict === 'dsh-inherent')
+    const totalFails = tokens.failCount + ourFault.length + rendered.brightBorder.length + rendered.staticColor.length
     return {
       TRUSTWORTHY: true,
-      verdict: totalFails === 0 ? 'PASS' : 'FAIL (' + totalFails + ' 项)',
+      verdict: totalFails === 0 ? 'PASS' : 'FAIL (' + totalFails + ' 项归因于 Bloom)',
       sanity: 'ok',
+      note: dshInherent.length
+        ? `另有 ${dshInherent.length} 项 DSH 原生就不达标（Bloom 未使其变差，不算失败）`
+        : undefined,
       tokenLayer: tokens,
-      renderedLayer: rendered,
+      renderedLayer: { ...rendered, ourFault, dshInherent },
     }
   }
   window.__bloomAudit.auditTokens = auditTokens

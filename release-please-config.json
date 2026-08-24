@@ -24,7 +24,9 @@
         { "type": "docs", "section": "📝 Documentation" },
         { "type": "style", "section": "🎨 Styling" },
         { "type": "chore(release)", "section": "🚀 Release" },
-        { "type": "ci", "section": "🛠️ CI / Build" }
+        { "type": "ci", "section": "🛠️ CI / Build" },
+        { "type": "build", "section": "🛠️ CI / Build" },
+        { "type": "refactor", "section": "🧱 重构" }
       ]
     }
   },

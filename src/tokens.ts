@@ -50,6 +50,11 @@ export function bloomTokens(p, dark) {
      注意只接管 alias 层 —— --dsw-static-deepseek-400 是 DSH 的品牌标识色,
      不属于主题可覆盖范围。 */
   --dsw-alias-state-business-primary: ${dark ? p.accentD : p.accentL};
+  /* 玻璃模糊半径 —— glass.ts 里 10 处 backdrop-filter 都读它。
+     之前只写了 var(--bloom-glass-blur, 24px) 却从未定义,fallback 一直生效所以
+     视觉没问题,但这个变量是**死的**:想统一调玻璃质感根本改不到。定义出来之后
+     它才真的是一个可调参数(暗色略薄一点,深色面板本就更"实"、不需要那么重的糊)。 */
+  --bloom-glass-blur: ${dark ? '22px' : '24px'};
   --bloom-hairline: rgba(${m}, ${dark ? 0.3 : 0.3});
   --bloom-hairline-strong: rgba(${m}, ${dark ? 0.55 : 0.5});
   --bloom-glow: rgba(${m}, ${dark ? 0.34 : 0.2});

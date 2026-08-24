@@ -196,6 +196,36 @@ if (extraFiles.length === 0) {
     : bad(`extra-files 指向的文件缺标记或不存在：${broken.join(', ')} —— release PR 不会 bump 它`)
 }
 
+// ── 3.8 --bloom-* 变量引用必须都有定义 ─────────────────────────
+console.log('\n自有 CSS 变量引用')
+
+// 这次踩的坑：更新横幅写了 var(--bloom-glass-bg, rgba(255,255,255,0.72)) 和
+// var(--bloom-tx, inherit) —— 这两个变量**从来没定义过**，于是背景 fallback 成
+// 一个「亮色」假设的浅白底、文字 fallback 成 inherit（暗色主题的近白），
+// 浅白底 + 近白字实测只有 1.62:1，「（当前 x.y.z）」叠了 opacity 后 1.38:1。
+//
+// 关键是它躲在 client.ts 的内联 <style> 里，既不在 src/css/ 也不是顶层 CSS 常量，
+// CSS 白名单和视觉审计都扫不到；而横幅只在「有新版可用」时出现，跑审计时通常
+// 已是最新版，所以它烂了很久没人发现。
+//
+// --bloom-* 是我们自己的命名空间，可以穷举 —— 引用了没定义的一律 fail。
+// （--dsw-alias-* 由 DSH 定义，无法穷举，不在此列。）
+{
+  // 用剥注释后的源码 —— 注释里复述「原先写的是 var(--bloom-tx)」是合法的
+  const defined = new Set(
+    [...SRC_CODE.matchAll(/^\s*(--bloom-[a-z0-9-]+)\s*:/gm)].map((m) => m[1]),
+  )
+  const referenced = [...SRC_CODE.matchAll(/var\(\s*(--bloom-[a-z0-9-]+)/g)].map((m) => m[1])
+  const undef = [...new Set(referenced)].filter((v) => !defined.has(v))
+  undef.length === 0
+    ? ok(`${new Set(referenced).size} 个 --bloom-* 引用全部有定义（共定义 ${defined.size} 个）`)
+    : bad(
+        `引用了未定义的自有变量：${undef.join(', ')}\n` +
+          `    → 它们会静默 fallback 到第二参数，颜色完全脱离主题控制。\n` +
+          `      要么在 tokens.ts 里定义，要么改用已有 token。`,
+      )
+}
+
 // ── 4. 选择器稳定性：禁止硬编码 DSH hash 类名 ──────────────────
 console.log('\n选择器稳定性')
 

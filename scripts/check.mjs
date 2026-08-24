@@ -86,6 +86,25 @@ darkShadow?.[1]?.includes('rgba(0,0,0')
   ? ok('暗色阴影使用纯黑')
   : bad('暗色阴影未使用纯黑 —— 用前景色 mix 会渲染成白雾')
 
+// ── 1.5 scripts 不得撞 npm 生命周期钩子 ────────────────────────
+console.log('\nscripts 命名')
+
+// npm 会在特定时机**自动**执行同名 script。踩过的坑：package.json 里定义了
+// `"publish": "... && npm publish"`，而 `publish` 本身就是 npm 的生命周期钩子 ——
+// CI 跑 `npm publish` 成功后，npm 自动触发这个 script，里面又 `npm publish` 一次，
+// 第二次撞 `403 You cannot publish over the previously published versions`。
+// 结果：包其实发成功了，Publish workflow 却永远标红（v0.7.0 实际发生）。
+// `prepublishOnly` / `prepare` / `prepack` 是有意使用的钩子，不在禁用名单里。
+const HOOK_NAMES = ['publish', 'prepublish', 'postpublish', 'install', 'preinstall', 'postinstall',
+  'version', 'preversion', 'postversion', 'uninstall', 'preuninstall', 'postuninstall']
+const clashes = Object.keys(pkg.scripts || {}).filter((n) => HOOK_NAMES.includes(n))
+clashes.length === 0
+  ? ok(`无 script 撞 npm 生命周期钩子（${Object.keys(pkg.scripts || {}).length} 个 script）`)
+  : bad(
+      `这些 script 名与 npm 生命周期钩子同名，会被自动触发：${clashes.join(', ')}\n` +
+        `    → 改个名字（如 release:npm）。同名 script 里再调用同名命令会无限递归/撞 403。`,
+    )
+
 // ── 3.5 版本真源唯一性 ─────────────────────────────────────────
 console.log('\n版本真源')
 

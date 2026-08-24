@@ -13,6 +13,22 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.7.0...v0.8.0) (2026-08-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* 移除 `/bloom stats` 命令与顶栏「💎 统计」胶囊。该功能的展示层 从未真正工作过(始终显示硬编码示例数据),不提供替代品。需要代码统计请用专门的 工具(如 tokei / cloc / scc)。
+
+### ✨ Features
+
+* 移除代码统计卡 —— 它展示的一直是硬编码假数据 ([3c35468](https://github.com/webkubor/dsh-bloom-theme/commit/3c35468208d0a7f4da0410806684c2814739949c))
+
+
+### 🐛 Bug Fixes
+
+* **ci:** 删掉撞 npm 生命周期钩子的 publish script —— v0.7.0 发布标红的原因 ([784e73d](https://github.com/webkubor/dsh-bloom-theme/commit/784e73df09caf03622dfa3d8d0cf958fe6711f38))
+
 ## [0.7.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.6.0...v0.7.0) (2026-08-24)
 
 

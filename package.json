@@ -32,6 +32,9 @@
     "preview": "npm run deploy && open http://127.0.0.1:3080",
     "package": "npm run build && npm pack",
     "publish": "node scripts/sync-version.mjs && npm run build && npm publish",
+    "desktop:link": "node scripts/desktop-profile.mjs link",
+    "desktop:production": "node scripts/desktop-profile.mjs production",
+    "publish:desktop": "npm publish && npm run desktop:production",
     "check": "node scripts/check.mjs && contrast-guard",
     "check:contrast": "contrast-guard",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check"

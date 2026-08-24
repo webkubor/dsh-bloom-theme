@@ -69,6 +69,30 @@
 
 ## [0.4.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.6...v0.4.0) (2026-08-22)
 
+
+### ✨ Features
+
+* **a11y:** 变体切换器补完整键盘操作，窄屏隐藏中文名 ([528a908](https://github.com/webkubor/dsh-bloom-theme/commit/528a908bbcc2c75b0085163c42b0b76a6fa34f29))
+* add desktop theme profile switch ([6d51acb](https://github.com/webkubor/dsh-bloom-theme/commit/6d51acbc5ed8f5cc7e698e7c0ccc63cd5c508ffb))
+* add palette-native reasoning spectrum ([37a75f6](https://github.com/webkubor/dsh-bloom-theme/commit/37a75f64ef17a33f1b05eb58fb5fd4e08dfc0968))
+* **ambience:** v0.4.0 氛围层——壁纸 + 磨砂玻璃 + 主题包导入导出 ([3c4a950](https://github.com/webkubor/dsh-bloom-theme/commit/3c4a950703889c032a78776ec0e2a75b66819380))
+
+
+### 🐛 Bug Fixes
+
+* **ambience:** 点壁纸缩略图/填自定义 URL 自动开启氛围层 ([16a6d7b](https://github.com/webkubor/dsh-bloom-theme/commit/16a6d7b371e62d1d22a806ecf7950478176bab1d))
+* **ambience:** 重做氛围设置面板视觉——宽菜单 + toggle 开关 + 4宫格缩略图 ([0894644](https://github.com/webkubor/dsh-bloom-theme/commit/08946442603d5cb26a30df171ae52c81b31afea5))
+
+
+### 📝 Documentation
+
+* **assets:** 补齐 cinnabar/ripple 浅色截图，4 变体 light/dark 8 张图全 ([96e12f2](https://github.com/webkubor/dsh-bloom-theme/commit/96e12f2384bd6708a2c25d2a13a30aae01a9d567))
+* README 挂上 awesome-dsh-plugin 收录徽章 ([9bec711](https://github.com/webkubor/dsh-bloom-theme/commit/9bec711e20723643766c5ff27632b27ad5bdd9d0))
+* 推广帖 TL;DR 后补收录背书与下载数 ([0af47b4](https://github.com/webkubor/dsh-bloom-theme/commit/0af47b43797210b65650b4a46f132acd9205e8aa))
+* 推广讨论帖草稿入版本控制，Accessibility 节补实测对比度表 ([76e8a94](https://github.com/webkubor/dsh-bloom-theme/commit/76e8a94ed4577ecc7e1b3b15b112eaaa9c9ec530))
+
+## [0.4.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.6...v0.4.0) (2026-08-22)
+
 ### ✨ 新功能
 
 - **氛围层（默认关闭）**：顶栏下拉新增「氛围」区，一键开启与当前变体同色系的莫兰迪壁纸

@@ -118,7 +118,31 @@ DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。has
 1. 改完 `npm run deploy`，在真实 DSH 里验证
 2. `npm run check` 通过
 3. 跑一遍**视觉审计**（下一节），`verdict: PASS`
-4. 用 Conventional Commits 提交、推 main —— **到此结束**
+4. 用 Conventional Commits 提交、推 main
+5. 合并 release PR 之前跑 `npm run preflight` —— **到此结束**
+
+### `npm run check` 与 `npm run preflight` 的分工
+
+| | 范围 | 何时跑 |
+|---|---|---|
+| `check` | 纯静态、无副作用、**不联网** | pre-commit + CI，每次提交 |
+| `preflight` | 读 git 状态、**要联网** | 发版前手动，合 release PR 之前 |
+
+preflight 查 check 照不到的那一类 —— 它们都得对照**外部真源**才能发现，而这个仓库
+每一条都真实出过事：
+
+1. **版本真源** —— 本地三处 + npm registry + git tag 五方一致。曾出现四头分裂
+   （npm `0.6.0` / git `0.6.1` / 工作区 `0.6.2` / release PR 想发 `0.7.0`），
+   以及 `v0.6.0` tag 指向 `0.4.0` 的 commit、Publish workflow 因此挂掉。
+2. **git 状态** —— 在 main、工作区干净、与 origin 同步、无已合并的僵尸分支、
+   无残留 worktree。
+3. **展示资源** —— 8 变体 × 明暗 = 16 张截图齐全，README 引用的本地图不断链。
+4. **awesome-dsh-plugin 收录同步** —— 拉线上的条目和 `data/screenshots.json` 比对：
+   描述里的变体数是否还准、市场截图是否注册过。这条抓到过真问题：条目长期写着
+   「four variants」（实际早就 8 个），且一张截图都没注册，
+   [dsh-market](https://github.com/dsh-market/dsh-market) 详情页只能从 README 瞎抽。
+
+离线时联网项自动跳过并标注，不会因为没网就报假失败。
 
 之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
 写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release。

@@ -13,6 +13,30 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.0...v0.8.1) (2026-08-24)
+
+
+### 🐛 Bug Fixes
+
+* **theme:** 状态色 secondary 语义误解 + 选中卡白边;审计判据改为「是否比原生差」 ([278706b](https://github.com/webkubor/dsh-bloom-theme/commit/278706b4b44cc50b2c2f9855a87148ef610cc519))
+
+
+### 📝 Documentation
+
+* **assets:** 重截 17 张展示图 —— 配色改动后旧图已不准 ([4603fe8](https://github.com/webkubor/dsh-bloom-theme/commit/4603fe830e27ec420213f3e161d7db96f623fdb8))
+
+
+### 🛠️ CI / Build
+
+* **preflight:** 收录检查识别在途 PR,不被第三方合并节奏阻塞 ([7312793](https://github.com/webkubor/dsh-bloom-theme/commit/7312793f9651d547950cb9d287338a56b035c8aa))
+* **preflight:** 新增发版前检查 —— 版本五方一致 / git 状态 / 收录同步 ([4a83f0e](https://github.com/webkubor/dsh-bloom-theme/commit/4a83f0e65d264543b7e9c8adde866a3f1be78f94))
+* **release:** changelog 补 refactor / build 分节 ([bd1d07f](https://github.com/webkubor/dsh-bloom-theme/commit/bd1d07fbd56ed29327234437402c4985fe2ff02f))
+
+
+### 🧱 重构
+
+* client.ts 2308 行拆成 10 个模块,浏览器侧产物改 esbuild 打包 ([24be367](https://github.com/webkubor/dsh-bloom-theme/commit/24be3679490ffaa585f4fcdc2afd9b7100cb943b))
+
 ## [0.8.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.7.0...v0.8.0) (2026-08-24)
 
 

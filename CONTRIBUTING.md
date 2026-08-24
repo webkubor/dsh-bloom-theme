@@ -201,6 +201,27 @@ npm run deploy   # 先部署到 web profile
 不要手改文件，用 release-please 的协议：close 那个 Release PR 并评论
 `/autorelease:skip`，或 `/autorelease:major` / `/autorelease:minor`。
 
+## 对外数字一律现拿，不手写
+
+推广帖草稿曾把数据写死 —— 「344 downloads as of 2026-08-19」、只列 4 个变体的
+对比度表 —— 于是 8 变体上线后，那份**公开可见**的草稿一直在讲过时的事。
+
+```bash
+npm run stats            # 打印 markdown 片段：对比度表 + 下载量 + star
+npm run stats -- --json  # 结构化输出
+```
+
+三个来源都是真源，脚本不自己重算：
+
+- **对比度** —— `contrast-guard --json`，从 `lib/client.js` 解析实际发布的 OKLCH 值。
+  ⚠️ 绝不要在别处再实现一遍 oklch→sRGB→WCAG。`stats-table.mjs` 第一版就犯过：
+  自己换算出 `mist light = 5.29`，contrast-guard 是 `5.28`。差 0.01 无害，
+  但两套算法本身就是隐患（`check.mjs` 早写过「两份算法各写一遍必然漂移」）。
+- **下载量** —— `api.npmjs.org/downloads/point/last-month`
+- **star** —— GitHub API
+
+发帖 / 更新 README 数字前跑一遍，把输出贴进去。
+
 ## 范围边界：什么该进这个仓库
 
 定位（README「一句话」）：**给 DSH 的「玻璃 + 莫兰迪」主题** = 配色 + 质感 + 切换器。

@@ -37,7 +37,8 @@
     "check:contrast": "contrast-guard",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",
-    "preflight": "node scripts/preflight.mjs"
+    "preflight": "node scripts/preflight.mjs",
+    "stats": "node scripts/stats-table.mjs"
   },
   "repository": {
     "type": "git",

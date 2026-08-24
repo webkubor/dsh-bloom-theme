@@ -145,7 +145,13 @@ preflight 查 check 照不到的那一类 —— 它们都得对照**外部真�
 离线时联网项自动跳过并标注，不会因为没网就报假失败。
 
 之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
-写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release。
+写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release
+→ `scripts/enrich-release.mjs` 把每个 commit 的 body 折叠追加到 Release notes。
+
+最后那步是因为 release-please 的 changelog **只取 commit 的 subject 行**
+（conventional-changelog 的规范如此，body 一律丢掉）。而本项目的 commit body 才是
+有价值的部分 —— 现象、根因、实测数字。所以**正文照旧要好好写**，它不会白写：
+Release 页面顶部是简洁列表，底部有可展开的详细说明。
 
 ### ⛔ 不要做这些
 

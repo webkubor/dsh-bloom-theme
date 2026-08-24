@@ -80,3 +80,15 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
+
+      # release-please 的 changelog 只取 commit 的 subject 行 —— 那是
+      # conventional-changelog 的规范，body 一律丢掉。而本项目的 commit body 才是
+      # 有价值的部分（现象 → 根因 → 修法 → 实测数字）。于是 Release 页面上只剩
+      # 一行标题，点进 commit 才知道背后是怎么回事。
+      # 这一步把区间内每个 commit 的 body 折叠追加到 notes 末尾：
+      # 顶部仍是简洁列表（适合扫读），底部可展开（适合想知道为什么的人）。
+      # 幂等 —— 重跑不会重复追加。
+      - name: Release notes 补详细说明
+        run: node scripts/enrich-release.mjs "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}

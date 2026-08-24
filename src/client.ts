@@ -30,8 +30,10 @@ const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis
 const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
 const STORAGE_KEY = 'dsh-bloom-variant'
 const PLUGIN_ID = '@kubor/dsh-bloom-theme'
-/** 当前装的版本 —— 由 scripts/sync-version.mjs 从 package.json 自动同步，勿手改 */
-const PLUGIN_VERSION = '0.6.1'
+/** 当前装的版本 —— 由 release-please 在 release PR 里连同 package.json 一起 bump
+ *  （靠行尾的 x-release-please-version 标记，见 release-please-config.json 的
+ *  extra-files）。本地 dev 另有 scripts/sync-version.mjs 做兜底同步。勿手改。 */
+const PLUGIN_VERSION = '0.6.1' // x-release-please-version
 /** npm 上最新版本（异步拉取，null=未知/失败） */
 let latestVersion = null
 
@@ -1019,9 +1021,8 @@ div[class*="_composer"] div[class*="_card"]:hover {
  * 全部用 color-mix(theme token, transparent) 而不是死白/死黑，色相跟着变体走。
  */
 const GLASS_CSS = `
-/* ═══ 面级面板（侧栏 / 顶栏 tabs / 排队条）═══════════════════════
+/* ═══ 面级面板（顶栏 tabs / 排队条）═══════════════════════════════
    面积大，档位「略实」；顶部亮高光 + 深色外辉让它像一块立起来的玻璃。 */
-[class*="_sidebarCol"],
 div[class*="_tabs"],
 div[class*="_dock"]:has(> [class*="_preview"]) {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 82%) !important;
@@ -1032,7 +1033,6 @@ div[class*="_dock"]:has(> [class*="_preview"]) {
     inset 0 0 0 1px rgba(255,255,255,0.10),
     0 14px 44px -16px rgba(0,0,0,0.22);
 }
-body[data-ds-dark-theme] [class*="_sidebarCol"],
 body[data-ds-dark-theme] div[class*="_tabs"],
 body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 64%) !important;
@@ -1040,6 +1040,73 @@ body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 0 0 1px rgba(255,255,255,0.05),
     0 16px 48px -18px rgba(0,0,0,0.5);
+}
+
+/* ═══ 侧栏玻璃：backdrop-filter 必须走 ::before，绝不能加在 _sidebarCol 自身 ═══
+   ⚠️ 这是本项目踩过的最贵的坑，改这块前先读完。
+
+   backdrop-filter（和 transform / filter / perspective / contain / will-change 一样）
+   会让元素成为**其 position:fixed 后代的 containing block**。而 DSH 的**设置面板
+   挂在侧栏子树里**（_sidebarCol > … > _footArea > _settingsArea > _overlay），
+   它的 overlay 是 fixed + inset:0，本来相对视口铺满、panel 800px 居中。
+
+   一旦 _sidebarCol 自己带 backdrop-filter，那个 fixed 就改为相对 280px 宽的侧栏定位：
+   遮罩缩到侧栏那一条，panel 被挤成 279px，detail 区 flex 收缩到 18px ——
+   于是中文变成逐字竖排。这个「DSH 的 layout bug」从来不是 DSH 的，是我们自己造的，
+   而且为它写了 60 行 modal 改造 CSS、来回改了三轮（详见 DEV_NOTES 2026-08-24）。
+
+   伪元素的 backdrop-filter 只作用于伪元素自己，不改变父元素的 containing block
+   资格，所以玻璃观感一致、fixed 后代不受影响。
+
+   ⚠️ 第二个坑（修第一个坑时当场踩的）：**不要给侧栏加 isolation: isolate。**
+   它确实不创建 containing block，但会创建 **stacking context** —— overlay 的
+   z-index:1000 会被困在侧栏内部，而侧栏自身是 z-index:auto，于是设置面板被
+   主聊天区的 composer 画在了上面。两个属性伤的是两件不同的事：
+     backdrop-filter → containing block（伤 fixed 的**定位基准**）
+     isolation        → stacking context（伤 fixed 的**层叠顺序**）
+   所以这里只用 position:relative + z-index:-1：伪元素落在 root 层叠上下文里、
+   body 氛围渐变之上、所有正常流内容之下，玻璃该模糊的背景一点没变。
+
+   判据（以后加玻璃时对每个目标问一遍）：
+   「这个元素的子树里有 position:fixed 的东西吗？」有 → 玻璃必须走 ::before，
+   且不得引入 isolation / transform / filter / contain / will-change。 */
+[class*="_sidebarCol"] {
+  position: relative;
+  background-color: transparent !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 0 0 1px rgba(255,255,255,0.10),
+    0 14px 44px -16px rgba(0,0,0,0.22);
+}
+[class*="_sidebarCol"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 82%);
+  backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
+}
+body[data-ds-dark-theme] [class*="_sidebarCol"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 16px 48px -18px rgba(0,0,0,0.5);
+}
+body[data-ds-dark-theme] [class*="_sidebarCol"]::before {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 64%);
+}
+
+/* v0.6.2: 「对话 / 轨迹」tab 字号上限保护 —— 用户在窄屏 / 浏览器 zoom>100% 下
+   反馈 tab 视觉上被放大、撑得过宽。DSH 原生 tab 是 wSkVaW_tab（默认 13px），
+   这里兜底 clamp 到 14px，避免任何状态下字号异常撑开。 */
+div[class*="_tabs"] button[class*="_tab"],
+div[class*="_tabs"] [class*="_tab"] {
+  font-size: clamp(13px, 0.9vw, 14px) !important;
+  font-weight: 500 !important;
+  letter-spacing: normal !important;
+  white-space: nowrap !important;
 }
 
 /* ═══ 输入卡片（主角）—— 最清晰的一块玻璃，focus 时玻璃边缘点亮 ═══ */
@@ -1117,9 +1184,19 @@ body[data-ds-dark-theme] [class*="_selector"] {
     0 24px 64px -20px rgba(0,0,0,0.6);
 }
 
-/* 注：v0.6.0 早期曾尝试修复 DSH 设置面板的「逐字换行」layout 问题（把 _panel _section
-   _row _desc 全链 flex-basis: 100%），但那覆盖了 DSH 原生 layout（用户确认应该保留
-   原生形态，哪怕它有竖排 bug）。删掉这块，避免 Bloom 越权修改 DSH 组件布局。*/
+/* ═══ 设置面板：无需任何覆盖 ═══
+   这里曾经有 60 行把「279px 窄 drawer」改造成居中 modal 的 CSS，前后改了三轮
+   （v0.6.0 修 → v0.6.1 以「不覆盖 DSH 原生 layout」回滚并记为「去官方提 issue」
+   → 又改回来）。三轮都白做，因为**前提是错的**：
+
+   实测（2026-08-24，摘掉 Bloom 样式后量的）DSH 原生设置面板本来就是
+   800×800 的居中 modal，x=464=(1728-800)/2 精确居中，中文描述 383~398px 正常横排。
+   **DSH 没有这个 bug。** 那个「窄 drawer + 中文逐字竖排」是 Bloom 自己造成的回归 ——
+   见上方 _sidebarCol 的 ::before 注释：侧栏的 backdrop-filter 把设置面板 overlay
+   的 fixed containing block 从视口换成了 280px 的侧栏。
+
+   修根因（玻璃移到伪元素）之后，这里一行 CSS 都不需要。*/
+
 .md-code-block,
 [class*="_tableScroll"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 70%) !important;
@@ -1452,6 +1529,13 @@ const SWITCHER_CSS = `
   .dsh-bloom-trigger__name { display: none; }
   .dsh-bloom-trigger { padding: 0 7px; gap: 4px; }
 }
+/* v0.6.1 patch: 更窄的屏（< 1024px）右上角三按钮已经过挤（💎 统计 + Bloom + Session log）。
+  彻底隐藏 stats trigger，让 Bloom trigger + Session log 各自有呼吸空间。
+  stats 卡片本身 hover 才显示，宽屏下用户已习惯 hover；窄屏下用 menu 顶部的 Bloom v0.6.0
+  版本行也能看到当前版本号。 */
+@media (max-width: 1024px) {
+  .dsh-bloom-stats-trigger { display: none !important; }
+}
 `
 
 /**
@@ -1580,6 +1664,9 @@ function buildSwitcherEl(initialVariant) {
   const openMenu = () => {
     const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
     const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
+    // v0.6.1 patch: 互斥——Bloom 下拉打开时立即关闭 stats 浮层（同步，
+    // 不走 160ms 延时），避免两个浮层在用户视觉里同时出现互相遮挡
+    hideStatsCard()
     menu.hidden = false
     trigger.setAttribute('aria-expanded', 'true')
     // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪

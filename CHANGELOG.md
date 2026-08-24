@@ -2,6 +2,24 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.6.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.6.0...v0.6.1) (2026-08-24)
+
+### 🐛 Bug Fixes
+- **模型选择器背景更深不透明**（`[class*="_menu"]` 暗色版 `transparent 22% → 12%`，78% → 88% 不透明；亮色版 `30% → 20%`）。修前青金/冷色调 + 亮色聊天内容能整段透出（「字竖排的 layout bug」「transparent 52% → 22%」等调试信息都看得见）；修后跟 Bloom 自己的下拉（88%）一致。
+- **Bloom 下拉菜单 z-index 提到 99999**（之前 10000），避免被 DSH 原生顶栏「对话 / 轨迹」tabs（更高 z-index））截断 8 变体下拉的下半部分。在 800px 以下窄屏下能复现这个 bug。
+
+### ✨ 新功能
+- **DSH 升级检查区块**（Bloom 下拉底部，「Bloom v0.6.0」行下方）：
+  - 「DSH 当前 rev」从 `window.__DSH_BOOT__.rev` 读 git commit hash 截短 7 位
+  - 「最新」从 npm registry `https://registry.npmjs.org/@deepseek-ai/dsh/latest` 拉，`sessionStorage` 缓存 6h
+  - 「✓ 已是最新」/ 「↑ 有新版可用」chip 状态
+  - 「↻ 检查」按钮强制 fetch
+  - 「复制升级命令」按钮一键复制 `npm i -g @deepseek-ai/dsh@latest`（含 `navigator.clipboard.writeText` + textarea 降级）
+- **「↓ 下载 PNG」按钮玻璃化**（`#dsh-bloom-stats-pop .dl`）：从 `background: transparent` 改成半透 + `backdrop-filter: blur(14px)` + 玻璃边缘 `inset 0 1px 0` + 主题色 hover 光晕；`padding: 7px 0 → 9px 12px` 让「↓ 下载 PNG」居中。
+
+### 🎨 视觉打磨
+- 之前 v0.6.0 早期曾尝试修复 DSH 设置面板 detail 区逐字竖排（`flex-basis: 100%` 全链覆盖），后回滚——遵守「不覆盖 DSH 原生 layout」原则；该 bug 应去 https://github.com/deepseek-ai/deepseek-harness 提 issue 让官方修。
+
 ## [0.6.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.5.0...v0.6.0) (2026-08-23)
 
 ### ✨ 新功能

@@ -13,7 +13,14 @@ jobs:
     permissions:
       contents: write   # gh release create
     steps:
+      # fetch-depth: 0 —— enrich-release.mjs 要 `git describe --tags` 找上一个 tag
+      # 来定区间。默认的 shallow clone(depth=1)只有一个 commit,describe 直接失败,
+      # 区间退化成「只有 release commit」,而那条被脚本过滤掉 → 静默什么都不补。
+      # v0.8.4 就是这么漏的:步骤跑了、退出码 0、notes 一个字没加。
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: actions/setup-node@v4
         with:

@@ -32,8 +32,21 @@ function tryRun(cmd) { try { return run(cmd) } catch { return null } }
 
 // 上一个 tag —— 区间起点
 const prev = tryRun(`git describe --tags --abbrev=0 ${tag}^ 2>/dev/null`)
+// 拿不到上一个 tag 有两种可能，必须区分：
+//   · 真的是首个 release —— 正常，全量收
+//   · git 历史不全（CI 的 shallow clone）—— 此时区间会退化成「只有 release commit」，
+//     那条又被下面过滤掉，于是静默什么都不补、退出码还是 0。
+//     v0.8.4 就是这么漏的，所以这里宁可硬失败也不静默。
+const tagCount = (tryRun('git tag -l') || '').split('\n').filter(Boolean).length
+if (!prev && tagCount > 1) {
+  console.error(
+    `✗ 有 ${tagCount} 个 tag 却找不到 ${tag} 的上一个 —— git 历史不全。\n` +
+      `  CI 里给 actions/checkout 加 fetch-depth: 0 与 fetch-tags: true。`,
+  )
+  process.exit(1)
+}
 const range = prev ? `${prev}..${tag}` : tag
-console.error(`区间：${range}`)
+console.error(`区间：${range}${prev ? '' : '（首个 release，全量收）'}`)
 
 // 取区间内的 commit（跳过 release-please 自己的 release commit）
 const sep = ''

@@ -1,0 +1,6 @@
+{
+  // 全量类型检查（不产出文件）。build 会先跑它，再分别产出 lib/index.js 与 lib/client.js。
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["src/**/*.ts"]
+}

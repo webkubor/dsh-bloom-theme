@@ -24,8 +24,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "build:watch": "tsc -p tsconfig.json --watch",
+    "build": "npm run typecheck && tsc -p tsconfig.json && node scripts/bundle.mjs",
+    "build:watch": "node scripts/bundle.mjs --watch",
     "sync-version": "node scripts/sync-version.mjs",
     "deploy": "node scripts/sync-version.mjs && npm run build && rsync -av --delete lib/ ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme/",
     "dev": "node scripts/sync-version.mjs && npm run build && (npm run build:watch &) && node scripts/watch-deploy.js",
@@ -35,7 +35,8 @@
     "desktop:production": "node scripts/desktop-profile.mjs production",
     "check": "node scripts/check.mjs && contrast-guard",
     "check:contrast": "contrast-guard",
-    "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check"
+    "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json"
   },
   "repository": {
     "type": "git",
@@ -81,6 +82,7 @@
   "devDependencies": {
     "@types/node": "^26.2.0",
     "contrast-guard": "^0.2.0",
+    "esbuild": "^0.28.2",
     "typescript": "^7.0.2"
   }
 }

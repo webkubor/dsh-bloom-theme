@@ -20,12 +20,41 @@
  *
  * 用法：npm run check（CI 与本地同一份）
  */
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const read = (p) => readFileSync(resolve(root, p), 'utf8')
+
+/**
+ * 递归读 src/ 下所有 .ts，返回 [{ path, code }]。
+ *
+ * 为什么不读 lib/：那是 **产物**，形态由打包器决定。这些闸门原本从
+ * lib/client.js 正则匹配 `const PLUGIN_ID = '...'`，改用 esbuild 打包后产物变成
+ * `var PLUGIN_ID = "..."`，两道闸门当场误报；而 CSS 常量白名单扫的是单个
+ * src/client.ts，CSS 拆到 src/css/ 之后它扫到 0 个常量 —— **静默失效**，
+ * 比误报更危险。源码才是唯一真源，且形态不随构建方式变化。
+ */
+function readSrc() {
+  const out = []
+  const walk = (dir) => {
+    for (const e of readdirSync(resolve(root, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`
+      if (e.isDirectory()) walk(rel)
+      else if (e.name.endsWith('.ts')) out.push({ path: rel, code: read(rel) })
+    }
+  }
+  walk('src')
+  return out
+}
+/** 剥掉注释后的源码（注释里举反例/记历史是合法的） */
+const stripComments = (code) =>
+  code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '')
+
+const SRC = readSrc()
+const SRC_ALL = SRC.map((f) => f.code).join('\n')
+const SRC_CODE = SRC.map((f) => stripComments(f.code)).join('\n')
 
 let failed = 0
 const ok = (m) => console.log(`  [32m✓[0m ${m}`)
@@ -58,9 +87,8 @@ pkg.publishConfig?.access === 'public'
   ? ok('publishConfig.access = public')
   : bad('scoped 包缺 publishConfig.access=public，发布会失败')
 
-// 包名与 client.js 里的 PLUGIN_ID 必须一致，否则 loader 注册对不上
-const client = read('lib/client.js')
-const idMatch = client.match(/const PLUGIN_ID = '([^']+)'/)
+// 包名与源码里的 PLUGIN_ID 必须一致，否则 loader 注册对不上
+const idMatch = SRC_ALL.match(/const PLUGIN_ID = '([^']+)'/)
 idMatch?.[1] === pkg.name
   ? ok(`PLUGIN_ID 与包名一致（${pkg.name}）`)
   : bad(`PLUGIN_ID (${idMatch?.[1]}) 与包名 (${pkg.name}) 不一致 —— DSH 会报 "loaded without registering"`)
@@ -74,14 +102,14 @@ idMatch?.[1] === pkg.name
 console.log('\n前景色 token 反模式')
 
 // inline-code 是背景色变量：给裸 oklch 值几乎必然是按文字色给的，暗色下会翻车
-const inlineCode = [...client.matchAll(/--dsw-alias-markdown-inline-code:\s*([^;]+);/g)].map((m) => m[1].trim())
+const inlineCode = [...SRC_ALL.matchAll(/--dsw-alias-markdown-inline-code:\s*([^;]+);/g)].map((m) => m[1].trim())
 const badInline = inlineCode.filter((v) => /^oklch\(/.test(v))
 badInline.length === 0
   ? ok(`markdown-inline-code 全部走变量（${inlineCode.length} 处）`)
   : bad(`markdown-inline-code 有 ${badInline.length} 处写成裸色值：${badInline.join(', ')} —— 它是背景色，按文字色给值会得到极低对比度`)
 
 // 暗色阴影必须是纯黑，不能用前景色 mix
-const darkShadow = client.match(/--bloom-shadow:[^;]*\$\{dark \? '([^']+)'/)
+const darkShadow = SRC_ALL.match(/--bloom-shadow:[^;]*\$\{dark \? '([^']+)'/)
 darkShadow?.[1]?.includes('rgba(0,0,0')
   ? ok('暗色阴影使用纯黑')
   : bad('暗色阴影未使用纯黑 —— 用前景色 mix 会渲染成白雾')
@@ -115,7 +143,7 @@ console.log('\n版本真源')
 // release-please 靠 extra-files + 行尾 x-release-please-version 标记同时 bump
 // package.json 与 src/client.ts，所以 release PR 的 CI 也能过这道闸门。
 const manifestVer = JSON.parse(read('.release-please-manifest.json'))['.']
-const pluginVer = read('src/client.ts').match(/const PLUGIN_VERSION = '([^']+)'/)?.[1]
+const pluginVer = SRC_ALL.match(/const PLUGIN_VERSION = '([^']+)'/)?.[1]
 
 manifestVer === pkg.version
   ? ok(`release-please manifest 与 package.json 一致（${pkg.version}）`)
@@ -128,17 +156,31 @@ pluginVer === pkg.version
         `    → 跑 npm run sync-version，或检查 src/client.ts 行尾的 x-release-please-version 标记是否被删。`,
     )
 
+// release-please 的 extra-files 指向的文件必须真的存在、且带 x-release-please-version
+// 标记，否则 release PR 只 bump package.json、源码里的版本号原地不动 —— 而这种漂移
+// 只有发版后在页面上才看得出来。2026-08-24 把 client.ts 拆成 10 个模块、
+// PLUGIN_VERSION 搬到 meta.ts 时就漂了一次。
+const rpCfg = JSON.parse(read('release-please-config.json'))
+const extraFiles = (rpCfg.packages?.['.']?.['extra-files'] || []).map((f) => (typeof f === 'string' ? f : f.path))
+if (extraFiles.length === 0) {
+  bad('release-please 未配置 extra-files —— 源码里的 PLUGIN_VERSION 不会被 bump')
+} else {
+  const broken = extraFiles.filter((f) => {
+    try { return !read(f).includes('x-release-please-version') } catch { return true }
+  })
+  broken.length === 0
+    ? ok(`release-please extra-files 均带 x-release-please-version 标记（${extraFiles.join(', ')}）`)
+    : bad(`extra-files 指向的文件缺标记或不存在：${broken.join(', ')} —— release PR 不会 bump 它`)
+}
+
 // ── 4. 选择器稳定性：禁止硬编码 DSH hash 类名 ──────────────────
 console.log('\n选择器稳定性')
 
 // 源码是唯一真源（lib/ 是产物）。DSH 类名形如 wSkVaW_root / VOzbGW_overlay：
 // 6~8 位 base64-ish hash + 下划线 + 语义名。语义名稳定、hash 不稳定。
-const src = read('src/client.ts')
-// 先剥注释再扫：注释里举反例（「不要写 .VOzbGW_overlay」）是合法且有价值的，
-// 模板字符串里的 CSS 注释同理不生效。`(?<!:)` 避免把 https:// 当行注释。
-const srcCode = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '')
+// 扫全部源码（已剥注释）—— 注释里举反例（「不要写 .VOzbGW_overlay」）是合法的
 const hardcoded = [
-  ...srcCode.matchAll(/(^|[\s,>+~({])\.([A-Za-z0-9]{6,8})_([a-zA-Z][a-zA-Z0-9]*)/gm),
+  ...SRC_CODE.matchAll(/(^|[\s,>+~({])\.([A-Za-z0-9]{6,8})_([a-zA-Z][a-zA-Z0-9]*)/gm),
 ].map((m) => `.${m[2]}_${m[3]}`)
 // 自有类名一律 dsh-bloom- 前缀（含连字符，不会命中上面的 hash 形态），
 // 所以命中的必然是 DSH 内部类名。
@@ -162,11 +204,8 @@ console.log('\n范围边界')
 const ALLOWED_SUBCOMMANDS = []   // 空 —— 主题不提供任何 /bloom 子命令（stats 已于 2026-08-24 移除）
 const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS']
 
-// 同样先剥注释：说明「这里曾注册过 /bloom stats、为什么删掉」是合法且有价值的
-const indexSrc = read('src/index.ts')
-  .replace(/\/\*[\s\S]*?\*\//g, '')
-  .replace(/(?<!:)\/\/.*$/gm, '')
-const subcommands = [...indexSrc.matchAll(/\/bloom\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1])
+// 用剥注释后的源码：说明「这里曾注册过 /bloom stats、为什么删掉」是合法且有价值的
+const subcommands = [...SRC_CODE.matchAll(/\/bloom\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1])
 const strayCmds = [...new Set(subcommands)].filter((c) => !ALLOWED_SUBCOMMANDS.includes(c))
 strayCmds.length === 0
   ? ok(`/bloom 子命令未越界（白名单：${ALLOWED_SUBCOMMANDS.join(', ')}）`)
@@ -176,9 +215,12 @@ strayCmds.length === 0
         `      README「一句话」里同步扩定位 —— 让范围扩张成为一次显式决策。`,
     )
 
-const cssBlocks = [...src.matchAll(/^const ([A-Z][A-Z0-9_]*CSS) = `/gm)].map((m) => m[1])
+const cssBlocks = [...SRC_ALL.matchAll(/^(?:export )?const ([A-Z][A-Z0-9_]*CSS) = `/gm)].map((m) => m[1])
 const strayCss = cssBlocks.filter((c) => !ALLOWED_CSS_BLOCKS.includes(c))
-strayCss.length === 0
+// 扫到 0 个必然是这道闸门自己坏了（选择器与源码结构脱节），不能当成「通过」
+cssBlocks.length === 0
+  ? bad('没扫到任何顶层 CSS 常量 —— 这道闸门失效了，检查 readSrc/正则是否与当前源码结构脱节')
+  : strayCss.length === 0
   ? ok(`顶层 CSS 常量未越界（${cssBlocks.length} 个，全在白名单内）`)
   : bad(
       `新增了白名单外的顶层 CSS 常量：${strayCss.join(', ')}\n` +

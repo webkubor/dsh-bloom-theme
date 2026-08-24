@@ -15,5 +15,9 @@
     "sourceMap": false,
     "newLine": "lf"
   },
-  "include": ["src/**/*.ts"]
+  // 只编译 node 半侧 —— 它必须是 ESM，由 cordis loader 按 ESM 读取。
+  // 浏览器半侧走 scripts/bundle.mjs（esbuild → 单文件 IIFE），原因见该脚本注释：
+  // DSH 的插件 client.js 是 classic script，容不下 import/export。
+  // 全量类型检查在 tsconfig.check.json（npm run typecheck）。
+  "include": ["src/index.ts", "src/globals.d.ts"]
 }

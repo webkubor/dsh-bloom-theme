@@ -13,6 +13,47 @@ npm run dev      # 监听 lib/，保存即部署到 web profile 并自动刷新�
 改完必须刷新页面——皮肤在浏览器端注入，且 CSS 由 `client.js` 运行时生成，
 没有「只热更 CSS」这条路。`npm run dev` 已代劳（按 `a` 可关掉自动刷新）。
 
+## 源码结构与构建
+
+`src/` 是 10 个模块，按依赖分层（箭头 = import 方向）：
+
+```
+meta.ts        插件 ID / 版本号 / localStorage key —— 最底层，不 import 任何东西
+palette.ts     8 套配色的色板与标签 + mix()  —— 纯数据，无依赖
+   ↓
+tokens.ts      色板 → CSS 变量（borderStack / labelStack / sharedDswTokens / 三个变体块）
+css/           component.ts · glass.ts · switcher.ts —— 纯 CSS 字符串常量，零插值
+dom.ts         样式注入 / 变体读写 / 宿主查找 / <think> 收拾
+version.ts     Bloom 自己的 npm 最新版 + DSH 宿主 rev 检查
+   ↓
+switcher.ts    顶栏切换器（含 applyVariant —— 它更新切换器 DOM，属这里的职责）
+   ↓
+client.ts      入口：三个立即执行块 + window.__ModuleLoader__.load()
+```
+
+**构建是双轨的，两侧的模块格式要求正好相反：**
+
+| 产物 | 谁编译 | 格式 | 为什么 |
+|---|---|---|---|
+| `lib/index.js`（node 侧） | `tsc` | **ESM** | cordis 的 plugin loader 按 ESM 读它 |
+| `lib/client.js`（浏览器侧） | `esbuild`（`scripts/bundle.mjs`） | **IIFE 单文件** | DSH 的插件 client.js 是当 **classic script** 执行的，出现 `import`/`export` 直接语法错误 |
+
+所以浏览器侧源码可以随意拆模块，**产物必须 bundle 回一个自包含文件**。
+`scripts/bundle.mjs` 打完包会自检产物里没有顶层 `import`/`export`/`require`，
+且确实含 `window.__ModuleLoader__` —— 少了后者 DSH 根本不会注册这个插件。
+
+```bash
+npm run typecheck   # tsc --noEmit，全量类型检查（含所有模块）
+npm run build       # typecheck → tsc 出 index.js → esbuild 出 client.js
+```
+
+⚠️ **改动这个结构时记得连带检查三处配置**，它们都按路径找 `PLUGIN_VERSION`：
+`scripts/sync-version.mjs`（已改为扫 `src/` 不硬编码文件名）、
+`release-please-config.json` 的 `extra-files`、以及 `npm run check` 的版本真源组。
+拆分那次这三处漂了两处 —— 而 `sync-version` 挂在 `npm run deploy` 的 `&&` 链首位，
+它一 exit 1，**整个 deploy 静默中断**，部署点留着上一版产物、页面显示旧版本号，
+看起来像是主题坏了。`npm run check` 现在有一条闸门专门盯 `extra-files` 的有效性。
+
 ## 提交前
 
 ```bash

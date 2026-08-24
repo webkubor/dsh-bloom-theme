@@ -132,6 +132,13 @@ head('awesome-dsh-plugin 收录同步')
 {
   const ENTRY = 'https://raw.githubusercontent.com/awesome-dsh-plugin/awesome-dsh-plugin/main/data/plugins/webkubor__dsh-bloom-theme.yml'
   const SHOTS = 'https://raw.githubusercontent.com/awesome-dsh-plugin/awesome-dsh-plugin/main/data/screenshots.json'
+  // 收录信息由第三方仓库合并,不该阻塞我们自己的发版 —— 有在途 PR 就记为 pending
+  const UP = 'awesome-dsh-plugin/awesome-dsh-plugin'
+  const pendingPr = online
+    ? sh(`gh pr list --repo ${UP} --author @me --state open --json number,files --jq '[.[] | select(.files[].path | test("dsh-bloom-theme|screenshots.json"))] | .[0].number' 2>/dev/null`)
+    : null
+  const pending = pendingPr && pendingPr !== 'null' ? pendingPr : null
+
   if (!online) { skip('离线，跳过收录核对'); }
   else {
     const entry = sh(`curl -sf -m 8 "${ENTRY}"`)
@@ -142,6 +149,8 @@ head('awesome-dsh-plugin 收录同步')
       const claimsEight = /\beight\b|八款|八个/i.test(entry)
       claimsEight && !claimsFour
         ? ok('条目描述的变体数与实际（8）一致')
+        : pending
+        ? skip(`条目描述还过时（写着 four），但更正 PR #${pending} 在途，等上游合并`)
         : bad(`条目描述的变体数过时（${claimsFour ? '写着 four' : '未声明八款'}）—— 实际已有 8 个变体，去提 PR 更正`)
     }
     const shotsJson = sh(`curl -sf -m 8 "${SHOTS}"`)
@@ -151,6 +160,8 @@ head('awesome-dsh-plugin 收录同步')
       try { registered = JSON.parse(shotsJson)['https://github.com/webkubor/dsh-bloom-theme'] || [] } catch {}
       registered.length > 0
         ? ok(`已注册 ${registered.length} 张市场截图（dsh-market 详情页用）`)
+        : pending
+        ? skip(`市场截图还没注册，但 PR #${pending} 在途，等上游合并`)
         : bad('一张市场截图都没注册 —— dsh-market 详情页只能从 README 瞎抽，顺序和选图都不可控')
     }
   }

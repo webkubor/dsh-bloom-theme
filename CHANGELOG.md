@@ -90,22 +90,6 @@
 * README 挂上 awesome-dsh-plugin 收录徽章 ([9bec711](https://github.com/webkubor/dsh-bloom-theme/commit/9bec711e20723643766c5ff27632b27ad5bdd9d0))
 * 推广帖 TL;DR 后补收录背书与下载数 ([0af47b4](https://github.com/webkubor/dsh-bloom-theme/commit/0af47b43797210b65650b4a46f132acd9205e8aa))
 * 推广讨论帖草稿入版本控制，Accessibility 节补实测对比度表 ([76e8a94](https://github.com/webkubor/dsh-bloom-theme/commit/76e8a94ed4577ecc7e1b3b15b112eaaa9c9ec530))
-
-## [0.4.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.6...v0.4.0) (2026-08-22)
-
-### ✨ 新功能
-
-- **氛围层（默认关闭）**：顶栏下拉新增「氛围」区，一键开启与当前变体同色系的莫兰迪壁纸
-  （4 套 AI 生成的配套壁纸，随变体自动切换，也可固定某套或填自定义 URL / data: URL），
-  附带压暗滑杆（保证正文可读）与磨砂玻璃面板（侧栏/气泡/输入卡/菜单半透明 +
-  `backdrop-filter`，模糊强度 4–32px 可调）。关闭后完全回到 v0.3 的纯 Bloom，零残留。
-- **主题包导入/导出**：变体 + 氛围层全部配置一键导出为 JSON（`bloom-<variant>-theme.json`），
-  导入走白名单合并校验，未知字段丢弃，坏文件安全报错。
-
-### 📝 Documentation
-
-- README（中/英）新增「氛围层」章节与设置面板说明，架构图补 `AMBIENCE_CSS` / `renderAmbience()`。
-
 ## [0.3.6](https://github.com/webkubor/dsh-bloom-theme/compare/v0.3.5...v0.3.6) (2026-08-20)
 
 

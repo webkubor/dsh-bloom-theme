@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.3...v0.8.4) (2026-08-24)
+
+
+### 🛠️ CI / Build
+
+* **release:** Release notes 自动补 commit body —— 原来只剩一行标题 ([5f80d17](https://github.com/webkubor/dsh-bloom-theme/commit/5f80d170fb373e283f4969d172cc7be4c4af16c2))
+
 ## [0.8.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.2...v0.8.3) (2026-08-24)
 
 

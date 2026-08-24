@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.6](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.5...v0.8.6) (2026-08-24)
+
+
+### 🛠️ CI / Build
+
+* **preflight:** 检查 minimumReleaseAge 豁免 —— 发了 6 个版本本机一个都装不上 ([d2be33f](https://github.com/webkubor/dsh-bloom-theme/commit/d2be33f899dec4c6b96f4d54ff6c60fe66cc8c3c))
+
 ## [0.8.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.4...v0.8.5) (2026-08-24)
 
 

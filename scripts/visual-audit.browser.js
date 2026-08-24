@@ -16,6 +16,8 @@
  *   3. 未被主题接管的 DSH 静态色 —— static 层绕过 alias 层，主题的
  *      --dsw-alias-* 改不到它。品牌蓝 #679efe 曾让 8 套配色的 tab 选中色
  *      永远是蓝的；#adb2b8 曾是设置面板那圈刺眼灰白边。
+ *   4. 自有控件的布局 —— 设计为单行的小控件折行或溢出。颜色审计查不到这类：
+ *      「复制升级命令」6 字塞进 73px 的按钮折成两行，line-height:1 让两行贴在一起。
  *
  * ── 用法 ──
  *
@@ -168,6 +170,41 @@
       }
     }
 
+    // ④ Bloom 自有控件的布局 —— 设计为单行的小控件不该折行或溢出。
+    //    这类问题颜色审计完全查不到：「复制升级命令」6 字塞进 73px 的按钮里折成两行，
+    //    而 line-height:1 让两行字直接贴在一起，看起来就是一团。
+    //    只查白名单里「明确设计为单行」的控件，避免把菜单/提示这些多行元素误报。
+    const SINGLE_LINE = ['.dsh-bloom-trigger', '.dsh-bloom-option', '.dsh-bloom-dsh-btn',
+                         '.dsh-bloom-dsh-state', '.dsh-bloom-version']
+    const layout = []
+    const range = document.createRange()
+    for (const sel of SINGLE_LINE) {
+      for (const el of document.querySelectorAll(sel)) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 4 || r.height < 4) continue
+        const s = getComputedStyle(el)
+
+        // 折行判据：拿 Range 数**直接文本节点**实际占了几行。
+        // 不能用「高度 > 字号 + padding」——.dsh-bloom-trigger 在 CSS 里显式写了
+        // height: 32px，那是设计值不是折行，用高度判会误报（第一版就误报了它）。
+        // 只看直接文本节点，也顺带避开 trigger 内部那几个 inline 子元素
+        // （dot / name / chevron 各自一个 rect，整体测会以为跨了 3 行）。
+        let wrappedLines = 0
+        for (const node of el.childNodes) {
+          if (node.nodeType !== 3 || !node.textContent.trim()) continue
+          range.selectNode(node)
+          const lines = range.getClientRects().length
+          if (lines > 1) wrappedLines = Math.max(wrappedLines, lines)
+        }
+        const overflow = el.scrollWidth > el.clientWidth + 1
+        if (wrappedLines > 1 || overflow) {
+          layout.push({ el: sel, text: (el.textContent || '').trim().slice(0, 14),
+            lines: wrappedLines || 1, overflow, width: Math.round(r.width),
+            whiteSpace: s.whiteSpace })
+        }
+      }
+    }
+
     return {
       mode: dark ? 'dark' : 'light',
       variant: document.body.getAttribute('data-bloom-variant'),
@@ -175,6 +212,7 @@
       lowContrast: lowContrast.sort((a, b) => a.ratio - b.ratio),
       brightBorder,
       staticColor,
+      layout,
     }
   }
 
@@ -304,7 +342,8 @@
     // 只有「Bloom 让它更差」才算需要修的问题；DSH 自带的不达标单独统计
     const ourFault = rendered.lowContrast.filter((f) => f.verdict === 'BLOOM-WORSE')
     const dshInherent = rendered.lowContrast.filter((f) => f.verdict === 'dsh-inherent')
-    const totalFails = tokens.failCount + ourFault.length + rendered.brightBorder.length + rendered.staticColor.length
+    const totalFails = tokens.failCount + ourFault.length + rendered.brightBorder.length
+      + rendered.staticColor.length + rendered.layout.length
     return {
       TRUSTWORTHY: true,
       verdict: totalFails === 0 ? 'PASS' : 'FAIL (' + totalFails + ' 项归因于 Bloom)',

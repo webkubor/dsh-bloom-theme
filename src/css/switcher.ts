@@ -224,8 +224,15 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-state[data-state="err"] {
   gap: 4px;
   margin-top: 4px;
 }
+/* 下拉只有 180px 宽,actions 区实际可用 150px。两个按钮原本都 flex:1 平分 73px,
+   而「复制升级命令」6 字 × 10.5px + 左右 padding ≈ 79px —— 装不下就折成两行,
+   加上 line-height:1 两行字直接贴在一起。修法三件套:
+     · 文案缩到「复制命令」(完整说明进 title)
+     · white-space: nowrap 兜底 —— 以后换文案/换字号也不会再折行
+     · 宽度按内容分配:次要按钮取内容宽,主按钮吃掉剩余空间 */
 .dsh-bloom-dsh-btn {
-  flex: 1;
+  flex: 0 0 auto;
+  white-space: nowrap;
   padding: 4px 8px;
   font: 600 10.5px/1 -apple-system, sans-serif;
   border-radius: 6px;
@@ -245,6 +252,7 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-state[data-state="err"] {
    accent×bg 组合本来就由 contrast-guard 守着 ≥4.5,这条路天然达标。
    它也确实是主操作,视觉上该比「↻ 检查」重。 */
 .dsh-bloom-dsh-btn--primary {
+  flex: 1 1 auto;
   background: var(--bloom-accent, #c47b4a);
   border-color: var(--bloom-accent, #c47b4a);
   color: var(--dsw-alias-label-primary-foreground, #fff);

@@ -13,6 +13,34 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.7.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.6.0...v0.7.0) (2026-08-24)
+
+
+### ✨ Features
+
+* 「↓ 下载 PNG」按钮玻璃化（#dsh-bloom-stats-pop .dl） ([f487ad6](https://github.com/webkubor/dsh-bloom-theme/commit/f487ad6a9c8d68340e6dec236485f7d40518280a))
+* Bloom 下拉底部 DSH 升级检查区块 ([f487ad6](https://github.com/webkubor/dsh-bloom-theme/commit/f487ad6a9c8d68340e6dec236485f7d40518280a))
+
+
+### 🐛 Bug Fixes
+
+* **a11y:** 22 个 token 在 7 个变体回落 DSH 原生值 + 对比度全量补齐 ([fbd2f8a](https://github.com/webkubor/dsh-bloom-theme/commit/fbd2f8ac55c72785143ef615a8d88e911879e772))
+* **glass:** 侧栏玻璃改走 ::before,修掉自己造成的设置面板布局回归 ([987094d](https://github.com/webkubor/dsh-bloom-theme/commit/987094d11b07ea801fb7dfa7203a2f211af7c8e8))
+* **menu:** Bloom 下拉 z-index 10000 → 99999 ([f487ad6](https://github.com/webkubor/dsh-bloom-theme/commit/f487ad6a9c8d68340e6dec236485f7d40518280a))
+* **menu:** 模型选择器背景更深不透明 ([f487ad6](https://github.com/webkubor/dsh-bloom-theme/commit/f487ad6a9c8d68340e6dec236485f7d40518280a))
+* **theme:** 白边、tab 色块与蓝色选中态 —— 五处主题没接管到的地方 ([c5cc0e3](https://github.com/webkubor/dsh-bloom-theme/commit/c5cc0e36460d674a3c75594da2208c94893176be))
+
+
+### 📝 Documentation
+
+* **changelog:** 删掉手写的 0.6.1 段落 —— 死链且结论有错 ([fbd0ddf](https://github.com/webkubor/dsh-bloom-theme/commit/fbd0ddf57b7a5d7d3f2ae0a97cffe3b36e96570c))
+* 发版流程收归 release-please,补 08-24 根因复盘 ([0f5ff97](https://github.com/webkubor/dsh-bloom-theme/commit/0f5ff97e2ef266a29e3327f5146f5713136638c7))
+
+
+### 🛠️ CI / Build
+
+* **check:** 版本真源 / 选择器稳定性 / 范围边界三组闸门 ([5c00744](https://github.com/webkubor/dsh-bloom-theme/commit/5c007443ca42ed1ec65dc2c8dcc0956162cb403e))
+
 ## [0.6.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.5.0...v0.6.0) (2026-08-23)
 
 ### ✨ 新功能

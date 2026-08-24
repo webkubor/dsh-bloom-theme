@@ -15,4 +15,4 @@ export const PLUGIN_ID = '@kubor/dsh-bloom-theme'
 /** 当前装的版本 —— 由 release-please 在 release PR 里连同 package.json 一起 bump
  *  （靠行尾的 x-release-please-version 标记，见 release-please-config.json 的
  *  extra-files）。本地 dev 另有 scripts/sync-version.mjs 做兜底同步。勿手改。 */
-export const PLUGIN_VERSION = '0.8.7' // x-release-please-version
+export const PLUGIN_VERSION = '0.8.8' // x-release-please-version

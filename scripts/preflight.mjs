@@ -192,6 +192,27 @@ head('本地 DSH profile 装的版本')
     const satisfied = m && cur && declared.startsWith('^') && m[1] === '0'
       ? m[1] === cur[1] && m[2] === cur[2]     // 0.x：caret 锁次版本号
       : installed === pkg.version               // 其余情况以实装版本为准
+    // pnpm 11 默认 minimumReleaseAge = 24h（防供应链劫持：不装刚发布的版本）。
+    // 本包的作者就是本机用户，风险为零，所以 profile 的 pnpm-workspace.yaml 里
+    // 应当豁免它 —— 而且必须写成**不带版本号**的形式。
+    // 踩过的坑：原先写的是 '@kubor/dsh-bloom-theme@0.3.4'，只豁免那一个版本，
+    // 于是每发一次新版都重新被挡：实测 0.8.0~0.8.5（发布 1.5~3.7h）全部被拦，
+    // pnpm 静默回退到 26h 前的 0.4.0，profile 声明也因此长期停在 ^0.3.4。
+    // link:/file: 声明是本地软链，不经 registry，minimumReleaseAge 与它无关
+    const isLocalLink = /^(link|file):/.test(declared)
+    const wsPath = `${home}/.dsh/profiles/${prof}/pnpm-workspace.yaml`
+    if (!isLocalLink && existsSync(wsPath)) {
+      const ws = readFileSync(wsPath, 'utf8')
+      const exact = new RegExp(`['"]${pkg.name.replace('/', '\\/')}@[\\d.]`).test(ws)
+      const whole = new RegExp(`['"]${pkg.name.replace('/', '\\/')}['"]`).test(ws)
+      if (exact && !whole) {
+        bad(`${prof}: minimumReleaseAgeExclude 写成了带版本号的形式 —— 只豁免那一个版本，`
+          + `下次发版又会被 24h 的 minimumReleaseAge 挡回旧版。去掉 @x.y.z 即可`)
+      } else if (!whole) {
+        skip(`${prof}: 未豁免 minimumReleaseAge，刚发布的版本 24h 内装不上`)
+      }
+    }
+
     if (installed === pkg.version && satisfied) ok(`${prof}: 声明 ${declared}，实装 ${installed}`)
     else if (installed === pkg.version) bad(`${prof}: 实装 ${installed} 是对的，但声明 ${declared} 不匹配 —— 下次 pnpm install 会把它打回去`)
     else bad(`${prof}: 声明 ${declared} / 实装 ${installed}，当前版本是 ${pkg.version}`)

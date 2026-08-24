@@ -109,10 +109,18 @@ export function renderDshUpdate() {
     btnRefresh.dataset.bloomBound = '1'
     btnRefresh.addEventListener('click', async (ev) => {
       ev.stopPropagation()
+      // 就地反馈：按钮自己变「检查中」。原先只改上方的 state 文字 —— 而点击时
+      // 视线在按钮上，改别处等于没反馈。「检查中」刻意用 3 字与「↻ 检查」同宽，
+      // 避免按钮宽度跳动挤压旁边的主按钮。
+      const label = btnRefresh.textContent
+      btnRefresh.textContent = '检查中'
+      btnRefresh.disabled = true
       stEl.textContent = '检查中…'
       stEl.removeAttribute('data-state')
-      btnRefresh.disabled = true
-      try { await checkDshLatest(true) } finally { btnRefresh.disabled = false }
+      try { await checkDshLatest(true) } finally {
+        btnRefresh.disabled = false
+        btnRefresh.textContent = label
+      }
     })
   }
   if (btnCopy && !btnCopy.dataset.bloomBound) {
@@ -135,9 +143,24 @@ export function renderDshUpdate() {
         try { ok = document.execCommand('copy') } catch {}
         ta.remove()
       }
+      // 就地反馈：按钮自己变「✓ 已复制」并染成成功色 —— 用户点的是按钮，
+      // 反馈就该出现在按钮上。下方那行 hint 仍保留（它带完整命令，便于手动执行），
+      // 但不再是唯一的反馈渠道。
+      // 「✓ 已复制」与「复制命令」都是 4 个字符宽，替换时布局不跳。
+      const label = btnCopy.dataset.bloomLabel || btnCopy.textContent
+      btnCopy.dataset.bloomLabel = label
+      btnCopy.textContent = ok ? '✓ 已复制' : '✗ 复制失败'
+      btnCopy.classList.add(ok ? 'is-done' : 'is-fail')
+      clearTimeout(+(btnCopy.dataset.bloomTimer || 0))
+      const t = setTimeout(() => {
+        btnCopy.textContent = label
+        btnCopy.classList.remove('is-done', 'is-fail')
+        hintEl.hidden = true
+      }, 1800)
+      btnCopy.dataset.bloomTimer = String(t)
+
       hintEl.hidden = false
       hintEl.textContent = ok ? `✓ 已复制：${cmd}` : `复制失败，请手动执行：${cmd}`
-      setTimeout(() => { hintEl.hidden = true }, 2400)
     })
   }
 }

@@ -261,14 +261,46 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-state[data-state="err"] {
   background: color-mix(in oklch, var(--bloom-accent, #c47b4a), black 10%);
   color: var(--dsw-alias-label-primary-foreground, #fff);
 }
+/* 复制成功/失败的就地反馈态。点击的是按钮,反馈就出现在按钮上 ——
+   原先只在下方另起一行 10px 小字,而点击时视线在按钮上,极易整个错过。 */
+.dsh-bloom-dsh-btn.is-done {
+  background: oklch(45% 0.13 150);
+  border-color: oklch(45% 0.13 150);
+  color: #fff;
+}
+.dsh-bloom-dsh-btn.is-fail {
+  background: oklch(45% 0.16 25);
+  border-color: oklch(45% 0.16 25);
+  color: #fff;
+}
+body[data-ds-dark-theme] .dsh-bloom-dsh-btn.is-done {
+  background: oklch(72% 0.14 150);
+  border-color: oklch(72% 0.14 150);
+  color: oklch(18% 0.02 150);
+}
+body[data-ds-dark-theme] .dsh-bloom-dsh-btn.is-fail {
+  background: oklch(72% 0.16 25);
+  border-color: oklch(72% 0.16 25);
+  color: oklch(18% 0.02 25);
+}
+/* 按压反馈 —— 之前点下去毫无变化,连「点到了」都要靠猜 */
+.dsh-bloom-dsh-btn:active { transform: scale(0.97); }
+.dsh-bloom-dsh-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* hint 的绿必须明暗分档:oklch(60%) 是「中间亮度」,实测在暗色菜单底上只有
+   3.3:1(而且是 10px 字)。这与 state chip 那次是同一个硬编码色值,当时漏了这处。 */
 .dsh-bloom-dsh-hint {
   margin-top: 4px;
   padding: 4px 6px;
   border-radius: 5px;
-  background: color-mix(in oklch, oklch(60% 0.12 150), transparent 90%);
-  color: oklch(60% 0.12 150);
+  background: color-mix(in oklch, oklch(45% 0.13 150), transparent 90%);
+  color: oklch(45% 0.13 150);
   font-size: 10px;
   text-align: center;
+}
+body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
+  background: color-mix(in oklch, oklch(78% 0.14 150), transparent 88%);
+  color: oklch(78% 0.14 150);
 }
 
 @media (prefers-reduced-motion: reduce) {

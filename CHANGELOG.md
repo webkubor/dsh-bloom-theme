@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.4...v0.8.5) (2026-08-24)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** enrich-release 在 CI 里静默失效 —— shallow clone 拿不到上一个 tag ([95947f9](https://github.com/webkubor/dsh-bloom-theme/commit/95947f9a4e1f24fc8e7a46d03d15594eeca7c63c))
+
 ## [0.8.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.3...v0.8.4) (2026-08-24)
 
 

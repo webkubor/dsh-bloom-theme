@@ -1,6 +1,6 @@
 {
   "name": "@kubor/dsh-bloom-theme",
-  "version": "0.6.1",
+  "version": "0.6.0",
   "description": "Bloom for DSH — 玻璃+莫兰迪主题。8 套 OKLCH 配色（雾蓝/丹红/花瓣/涟漪/鼠尾草/暖石/青金/琥珀），明暗自适应；磨砂玻璃面板默认常开；微动效 + 版本/更新指示 + 一键代码统计卡（/bloom stats）。零依赖、TypeScript、WCAG AA。",
   "type": "module",
   "main": "lib/index.js",

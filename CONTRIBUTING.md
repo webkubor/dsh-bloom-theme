@@ -66,7 +66,40 @@ DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。has
 
 1. 改完 `npm run deploy`，在真实 DSH 里验证
 2. `npm run check` 通过
-3. 用 Conventional Commits 提交、推 main —— **到此结束**
+3. 跑一遍**视觉审计**（下一节），`verdict: PASS`
+4. 用 Conventional Commits 提交、推 main —— **到此结束**
+
+### 视觉审计（改动配色 / token / 玻璃层时必跑）
+
+`npm run check` 是纯 node 的，算不了 `color-mix()` / `oklch()` 的最终 sRGB 值，
+也看不到「半透明面板叠在氛围渐变之后」的实际对比度 —— 那些只有 CSS 引擎能回答。
+所以有一个浏览器端脚本补这一层：
+
+```bash
+npm run deploy   # 先部署到 web profile
+# 然后在 ego-browser 里打开 http://127.0.0.1:3080，注入并运行：
+#   scripts/visual-audit.browser.js  →  window.__bloomAudit()
+```
+
+它查三件事，全都是本项目真实出过血的地方：
+
+| 检查 | 覆盖 | 修过的坑 |
+|---|---|---|
+| 文字对比度 | 8 变体 × 明暗 = 16 组 × 9 个文字色 token = 144 项，外加当前 DOM 全量扫描 | 亮色 `label-tertiary` 3.46:1、暗色 `label-dimmed` 8/8 变体不及格、状态色亮色档 success 2.0:1 / warn 1.7:1 |
+| 暗底高亮边框 | 真实渲染的 border / outline | 「前景色 token 当边框用」已复发三次（inline-code / bloom-shadow / border 阶梯） |
+| 未接管的 DSH 静态色 | static 层绕过 alias 层的具体色值 | `#679efe` 曾让 8 套配色的 tab 选中色永远是蓝的；`#adb2b8` 曾是设置面板那圈刺眼灰白边 |
+
+外加两条结构断言：`state-business-primary` 必须已接管为 accent（曾在 mist 下失效，
+因为 mist 块留了旧定义），`label` 四档必须单调递减（曾塌成一档）。
+
+**先看 `TRUSTWORTHY` 和 `sanity`。** 脚本有自检 —— 它得先算对几个已知答案
+（白字/深底 ≈17:1、oklch 近白必须解析成近白）才输出结论。自检不过时它报的
+「0 问题」没有任何意义：这套扫描器的前两版就因为用 rgb 正则解析 `oklch(...)`
+而把所有对比度算成 ≈1.0，一次报出 54 条假阳性、一次把真问题全漏掉。
+
+**运行时层不要用属性强切来切变体/明暗。** DSH 部分组件的背景不跟着重算，会量到
+上一个变体的残留值（实测「新会话」按钮 1.02:1、切换器名字 1.86:1，真实切换下
+都不存在）。要切就走设置面板 + 刷新。属性切换只可用于纯 token 层（`auditTokens`）。
 
 之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
 写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release。

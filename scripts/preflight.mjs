@@ -167,6 +167,38 @@ head('awesome-dsh-plugin 收录同步')
   }
 }
 
+// ── 5. 本地 DSH profile 是否真装着当前版本 ─────────────────────
+head('本地 DSH profile 装的版本')
+{
+  const home = process.env.HOME
+  const profiles = ['web', 'desktop']
+  let any = false
+  for (const prof of profiles) {
+    const pkgPath = `${home}/.dsh/profiles/${prof}/package.json`
+    const modPath = `${home}/.dsh/profiles/${prof}/node_modules/${pkg.name}/package.json`
+    if (!existsSync(pkgPath)) continue
+    any = true
+    let declared, installed
+    try { declared = JSON.parse(readFileSync(pkgPath, 'utf8')).dependencies?.[pkg.name] } catch {}
+    try { installed = JSON.parse(readFileSync(modPath, 'utf8')).version } catch {}
+    if (!declared) { skip(`${prof} profile 没声明本插件`); continue }
+
+    // caret 对 0.x 的语义是 >=0.x.y <0.(x+1).0 —— ^0.3.4 **不**匹配 0.8.1。
+    // 这个坑真实发生过：web profile 长期声明 ^0.3.4，而 npm run deploy 用 rsync
+    // 直接覆盖文件、绕过了依赖声明，所以开发时一直「看着是最新的」；直到某次
+    // pnpm install 按声明把插件打回 0.3.4（4 变体、无玻璃），才暴露出来。
+    const m = /^[\^~]?(\d+)\.(\d+)\./.exec(declared)
+    const cur = /^(\d+)\.(\d+)\./.exec(pkg.version)
+    const satisfied = m && cur && declared.startsWith('^') && m[1] === '0'
+      ? m[1] === cur[1] && m[2] === cur[2]     // 0.x：caret 锁次版本号
+      : installed === pkg.version               // 其余情况以实装版本为准
+    if (installed === pkg.version && satisfied) ok(`${prof}: 声明 ${declared}，实装 ${installed}`)
+    else if (installed === pkg.version) bad(`${prof}: 实装 ${installed} 是对的，但声明 ${declared} 不匹配 —— 下次 pnpm install 会把它打回去`)
+    else bad(`${prof}: 声明 ${declared} / 实装 ${installed}，当前版本是 ${pkg.version}`)
+  }
+  if (!any) skip('本机没有 ~/.dsh/profiles，跳过')
+}
+
 // ── 结果 ────────────────────────────────────────────────────────
 console.log()
 if (failed) {

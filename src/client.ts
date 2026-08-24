@@ -125,15 +125,28 @@ import { checkUpdate } from './version.js'
   const CHECK_TTL_MS = 24 * 60 * 60 * 1000
   const LS_LAST = 'dsh-bloom-update-check'      // { at, latest } 上次检查
   const LS_DISMISSED = 'dsh-bloom-update-dismissed' // 已关闭的版本号
-  /* 用 add 而不是 up —— 这条命令是给用户复制去执行的，必须真的管用。
-     实测（0.8.6 发布 2 分钟后，在真实 profile 上跑）：
-       up  <pkg>@latest  → 「Already up to date」，停在 0.8.5   ✗
-       up -L <pkg>       → 同样停在 0.8.5                       ✗
-       add <pkg>@latest  → 升到 0.8.6，声明也更新为 ^0.8.6      ✓
-     `up` 不会重新去 registry 解析最新版（即便 registry / npm view / pnpm view
-     三处都已显示 0.8.6），`add @latest` 才会。横幅提示一条装不上新版的命令，
-     比不提示更糟。 */
-  const UPDATE_CMD = 'dsh plugin --profile web add ' + PLUGIN_ID + '@latest'
+  /**
+   * 升级命令 —— **必须带具体版本号，不能用 @latest**。
+   *
+   * 这条命令是给用户复制去执行的，装不上新版比不提示更糟。逐个实测过
+   * （都在真实 profile 上跑，版本刚发布几分钟）：
+   *
+   *   up  <pkg>@latest      「Already up to date」，原地不动          ✗
+   *   up -L <pkg>           同样原地不动                              ✗
+   *   add <pkg>@latest      时好时坏 —— 取决于 lockfile 当时的状态    ✗
+   *   add <pkg>@0.8.7       每次都真的装上（downloaded 1, added 1）   ✓
+   *
+   * 排查时排除了三个方向：不是 registry 传播延迟（直连 / npm view / pnpm view
+   * 三处 dist-tags 都已是新版）、不是 packument 缓存（缓存目录压根不存在，
+   * 删了也没变化）、也不是 minimumReleaseAge（显式版本号能装上同一个版本）。
+   * 真正的原因是 pnpm 优先复用 lockfile 里已有的解析结果：
+   * lock 里记着 `specifier: ^0.8.6 / version: 0.8.6`，`@latest` 就被判定为
+   * 「已满足」而跳过。
+   *
+   * 带上具体版本号一次绕开全部：不依赖 pnpm 怎么解析 latest、不受 lock 影响，
+   * 而且对用户更明确 —— 命令里写的版本号和横幅标题里那个是同一个。
+   */
+  const updateCmd = (v) => 'dsh plugin --profile web add ' + PLUGIN_ID + '@' + v
   const RELEASES_URL = 'https://github.com/webkubor/dsh-bloom-theme/releases'
   const zh = (navigator.language || '').toLowerCase().startsWith('zh')
 
@@ -214,7 +227,7 @@ import { checkUpdate } from './version.js'
       <div class="bloom-upd-x" title="${zh ? '关闭（此版本不再提醒）' : 'Dismiss'}">×</div>
       <div>🌸 <strong>${zh ? 'Bloom 主题有新版本' : 'Bloom theme update'}</strong>
         ${latest} ${zh ? '可用' : 'available'}<span class="bloom-upd-cur">（${zh ? '当前' : 'current'} ${PLUGIN_VERSION}）</span></div>
-      <code>${UPDATE_CMD}</code>
+      <code>${updateCmd(latest)}</code>
       <div class="bloom-upd-actions">
         <button data-primary data-act="copy">${zh ? '复制更新命令' : 'Copy command'}</button>
         <button data-act="open">${zh ? '更新日志' : 'Changelog'}</button>
@@ -225,7 +238,7 @@ import { checkUpdate } from './version.js'
     })
     el.querySelector<HTMLElement>('[data-act="copy"]').addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLElement
-      navigator.clipboard?.writeText(UPDATE_CMD).then(() => {
+      navigator.clipboard?.writeText(updateCmd(latest)).then(() => {
         btn.textContent = zh ? '✓ 已复制' : '✓ Copied'
         setTimeout(() => (btn.textContent = zh ? '复制更新命令' : 'Copy command'), 1600)
       }).catch(() => {})

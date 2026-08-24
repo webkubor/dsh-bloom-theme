@@ -113,7 +113,7 @@ lights up when a newer version is on npm (jump to the Releases page).
 | **OKLCH + WCAG AA** | Perceptually uniform color space, no jumps on light/dark switch; all accent/background pairs measured ≥ 4.5:1 |
 | **Zero deps · CSS-variable driven** | Only CSS variables + a little switch logic; near-zero runtime cost |
 | **Respects native controls** | Switcher mounts into the DSH header utilities area, side-by-side with native buttons |
-| **TypeScript build** | `src/*.ts` → `tsc` → `lib/*.js`; one-command `build / deploy / package / publish` |
+| **TypeScript build** | `src/` 10 modules → `tsc` (ESM) for node + `esbuild` (single-file IIFE) for browser; one-command `build / deploy / check / preflight` |
 
 ## Design: two-track colors
 
@@ -134,17 +134,33 @@ keeps accent/background contrast honest.
 
 ```bash
 npm install
-npm run build        # tsc: src/*.ts → lib/*.js
+npm run typecheck    # tsc --noEmit, full type check
+npm run build        # typecheck → tsc emits lib/index.js → esbuild emits lib/client.js
 npm run deploy       # one-click deploy to local DSH (sync-version → build → rsync)
 npm run preview      # deploy + open http://127.0.0.1:3080
 npm run dev          # build + watch (recompile+deploy on src change)
 npm run package      # one-click package (npm pack → .tgz)
-npm run publish      # one-click publish (sync-version → build → npm publish)
-npm run check        # packaging contract + contrast-guard
+npm run check        # 6 static gates + contrast-guard (runs on every commit)
+npm run preflight    # pre-release: version consistency / git state / listing sync
 ```
 
-Source lives in `src/` (TypeScript); DSH loads the compiled `lib/*.js`. `scripts/sync-version.mjs`
-syncs `package.json`'s version into the source `PLUGIN_VERSION` before publish.
+`src/` is 10 modules (`meta` · `palette` · `tokens` · `css/` · `dom` · `version` ·
+`switcher` · `client`); DSH loads the artifacts in `lib/`.
+
+**The build is dual-track** — the two halves want opposite module formats:
+
+| Artifact | Compiler | Format | Why |
+|---|---|---|---|
+| `lib/index.js` (node side) | `tsc` | **ESM** | cordis' plugin loader reads it as ESM |
+| `lib/client.js` (browser side) | `esbuild` | **single-file IIFE** | DSH runs plugin client.js as a *classic script* — a top-level `import`/`export` is a syntax error |
+
+So the browser-side source can be split freely, but the artifact must bundle back
+into one self-contained file.
+
+The version number is bumped by release-please inside the release PR, alongside
+`package.json` (via the `x-release-please-version` marker at the end of the line in
+`src/meta.ts`). `scripts/sync-version.mjs` is only a local-dev fallback and is not
+part of the publish path. See [CONTRIBUTING](./CONTRIBUTING.md).
 
 ## FAQ
 

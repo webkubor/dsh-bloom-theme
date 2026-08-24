@@ -111,7 +111,7 @@ dsh plugin enable @kubor/dsh-bloom-theme
 | **OKLCH 调色 + WCAG AA** | 感知均匀色彩空间，明暗切换不跳变；全部明暗主色对实测 ≥ 4.5:1 |
 | **零依赖 · 纯 CSS 变量驱动** | 只注入 CSS 变量 + 少量切换逻辑，几乎零运行时开销 |
 | **不抢占原生控件** | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
-| **TypeScript 构建** | 前端 `src/*.ts` → `tsc` 编译为 `lib/*.js`；`build / deploy / package / check` 一键脚本 |
+| **TypeScript 构建** | `src/` 10 个模块 → node 侧 `tsc`（ESM）+ 浏览器侧 `esbuild`（IIFE 单文件）；`build / deploy / check / preflight` 一键脚本 |
 
 ## 设计原理：双轨色
 
@@ -131,17 +131,31 @@ Bloom 的核心不是「换个颜色」，而是一套**莫兰迪质感语言**�
 
 ```bash
 npm install
-npm run build        # tsc: src/*.ts → lib/*.js
+npm run typecheck    # tsc --noEmit，全量类型检查
+npm run build        # typecheck → tsc 出 lib/index.js → esbuild 出 lib/client.js
 npm run deploy       # 一键部署到本机 DSH（sync-version → build → rsync）
 npm run preview      # 部署并打开 http://127.0.0.1:3080
 npm run dev          # build + watch（改 src 自动编译+部署）
 npm run package      # 一键打包（npm pack → .tgz）
-npm run publish      # 一键发布（sync-version → build → npm publish）
-npm run check        # 打包契约 + contrast-guard（对比度护栏）
+npm run check        # 6 组静态闸门 + contrast-guard（每次提交都跑）
+npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收录同步
 ```
 
-源码在 `src/`（TypeScript），DSH 加载的是编译产物 `lib/*.js`。`scripts/sync-version.mjs`
-会在 commit/发布前把 `package.json` 的版本号同步进源码的 `PLUGIN_VERSION`。
+源码 `src/` 是 10 个模块（`meta` · `palette` · `tokens` · `css/` · `dom` · `version` ·
+`switcher` · `client`），DSH 加载的是 `lib/` 里的产物。
+
+**构建是双轨的**，两侧对模块格式的要求正好相反：
+
+| 产物 | 谁编译 | 格式 | 为什么 |
+|---|---|---|---|
+| `lib/index.js`（node 侧） | `tsc` | **ESM** | cordis 的 plugin loader 按 ESM 读它 |
+| `lib/client.js`（浏览器侧） | `esbuild` | **IIFE 单文件** | DSH 的插件 client.js 是当 classic script 执行的，出现 `import`/`export` 直接语法错误 |
+
+所以浏览器侧源码可以随意拆模块，产物必须 bundle 回一个自包含文件。
+
+版本号由 release-please 在 release PR 里连同 `package.json` 一起 bump（靠
+`src/meta.ts` 行尾的 `x-release-please-version` 标记）；`scripts/sync-version.mjs`
+只是本地 dev 的兜底同步，不在发布路径上。改动详见 [CONTRIBUTING](./CONTRIBUTING.md)。
 
 ## 常见问题
 

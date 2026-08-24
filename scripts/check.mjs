@@ -98,6 +98,29 @@ idMatch?.[1] === pkg.name
 // 它按 4 个变体逐组检查 8 组「主色+底色」，不达标时直接反推出该改成多少。
 // 此处不再重复实现 —— 两份算法各写一遍必然漂移。
 
+// ── 2.5 文档里教的命令必须真实存在 ─────────────────────────────
+console.log('\n文档命令有效性')
+
+// README 教用户跑 `npm run publish` 跑了很久 —— 而那个 script 因为撞 npm 生命周期
+// 钩子早就删了，照着文档做会直接报错。文档与代码脱节没有任何东西会报警，
+// 除非把它变成一条断言。
+{
+  const scripts = new Set(Object.keys(pkg.scripts || {}))
+  const docs = ['README.md', 'README.en.md', 'CONTRIBUTING.md']
+  const stale = []
+  for (const f of docs) {
+    let text
+    try { text = read(f) } catch { continue }
+    for (const m of text.matchAll(/npm run ([a-z][a-z0-9:-]*)/g)) {
+      if (!scripts.has(m[1])) stale.push(`${f} → npm run ${m[1]}`)
+    }
+  }
+  const uniq = [...new Set(stale)]
+  uniq.length === 0
+    ? ok(`文档提到的 npm 脚本全部存在（${scripts.size} 个脚本）`)
+    : bad(`文档教了不存在的命令：${uniq.join(', ')} —— 照着做会报错`)
+}
+
 // ── 3. 前景色 token 反模式 ─────────────────────────────────────
 console.log('\n前景色 token 反模式')
 

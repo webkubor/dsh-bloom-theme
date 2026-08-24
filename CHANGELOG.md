@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.2...v0.8.3) (2026-08-24)
+
+
+### 🐛 Bug Fixes
+
+* **switcher:** 复制/检查按钮改就地反馈 —— 原来点了像没反应 ([b6ae5ad](https://github.com/webkubor/dsh-bloom-theme/commit/b6ae5adf3186aeb41dae14cbdbac3a20cb33553e))
+
 ## [0.8.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.1...v0.8.2) (2026-08-24)
 
 

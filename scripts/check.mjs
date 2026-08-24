@@ -9,6 +9,14 @@
  *      petal / ripple 的亮色主色曾是 3.55:1 / 3.02:1，改色值极易再次破线。
  *   3. 前景色 token 反模式：inline-code 之类的背景色变量不得写成裸色值
  *      暗色下前景近白，当背景用会得到 1.2:1 的白底白字。
+ *   4. 选择器稳定性：禁止硬编码 DSH 的 <hash>_<语义名> 类名
+ *      hash 随 DSH 每次构建变化，写死会在升级后**静默失效**（无报错无告警）。
+ *   5. 范围边界（棘轮）：/bloom 子命令与顶层 CSS 常量都是白名单
+ *      本项目定位是「配色 + 质感 + 切换器」，越界功能已冻结，新增一律先撞这道闸门。
+ *
+ * 前 3 条是「改坏了会报错」，后 2 条是「改偏了会报错」—— 后者是本项目真正
+ * 反复失血的地方（详见 DEV_NOTES「约束写了但没有闸门」）。规则只写在文档里
+ * 等于没写：CONTRIBUTING 早就规定了选择器写法，仍然出现了 .VOzbGW_overlay。
  *
  * 用法：npm run check（CI 与本地同一份）
  */
@@ -77,6 +85,82 @@ const darkShadow = client.match(/--bloom-shadow:[^;]*\$\{dark \? '([^']+)'/)
 darkShadow?.[1]?.includes('rgba(0,0,0')
   ? ok('暗色阴影使用纯黑')
   : bad('暗色阴影未使用纯黑 —— 用前景色 mix 会渲染成白雾')
+
+// ── 3.5 版本真源唯一性 ─────────────────────────────────────────
+console.log('\n版本真源')
+
+// 版本号有三处副本：package.json（npm）、.release-please-manifest.json（release-please
+// 的账本）、src/client.ts 的 PLUGIN_VERSION（浏览器端读不到 package.json，只能内置）。
+// 三处必须一致，否则会出现「npm 上 0.6.0 / git 里 0.6.1 / UI 显示 0.6.2」这种
+// 四头分裂（2026-08-24 实际发生过，根因见 DEV_NOTES）。
+// release-please 靠 extra-files + 行尾 x-release-please-version 标记同时 bump
+// package.json 与 src/client.ts，所以 release PR 的 CI 也能过这道闸门。
+const manifestVer = JSON.parse(read('.release-please-manifest.json'))['.']
+const pluginVer = read('src/client.ts').match(/const PLUGIN_VERSION = '([^']+)'/)?.[1]
+
+manifestVer === pkg.version
+  ? ok(`release-please manifest 与 package.json 一致（${pkg.version}）`)
+  : bad(`manifest (${manifestVer}) ≠ package.json (${pkg.version}) —— 别手工改版本号，交给 release-please`)
+
+pluginVer === pkg.version
+  ? ok(`PLUGIN_VERSION 与 package.json 一致（${pkg.version}）`)
+  : bad(
+      `PLUGIN_VERSION (${pluginVer}) ≠ package.json (${pkg.version})\n` +
+        `    → 跑 npm run sync-version，或检查 src/client.ts 行尾的 x-release-please-version 标记是否被删。`,
+    )
+
+// ── 4. 选择器稳定性：禁止硬编码 DSH hash 类名 ──────────────────
+console.log('\n选择器稳定性')
+
+// 源码是唯一真源（lib/ 是产物）。DSH 类名形如 wSkVaW_root / VOzbGW_overlay：
+// 6~8 位 base64-ish hash + 下划线 + 语义名。语义名稳定、hash 不稳定。
+const src = read('src/client.ts')
+// 先剥注释再扫：注释里举反例（「不要写 .VOzbGW_overlay」）是合法且有价值的，
+// 模板字符串里的 CSS 注释同理不生效。`(?<!:)` 避免把 https:// 当行注释。
+const srcCode = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '')
+const hardcoded = [
+  ...srcCode.matchAll(/(^|[\s,>+~({])\.([A-Za-z0-9]{6,8})_([a-zA-Z][a-zA-Z0-9]*)/gm),
+].map((m) => `.${m[2]}_${m[3]}`)
+// 自有类名一律 dsh-bloom- 前缀（含连字符，不会命中上面的 hash 形态），
+// 所以命中的必然是 DSH 内部类名。
+const uniqHardcoded = [...new Set(hardcoded)]
+uniqHardcoded.length === 0
+  ? ok('无硬编码 DSH hash 类名（全部走 [class*="_语义名"]）')
+  : bad(
+      `硬编码了 ${uniqHardcoded.length} 个 DSH hash 类名：${uniqHardcoded.join(', ')}\n` +
+        `    → hash 随 DSH 构建变化，升级后样式静默失效。改用 [class*="_语义名"]，\n` +
+        `      需要收紧作用域时用 :has() 按 DOM 结构特征匹配。`,
+    )
+
+// ── 5. 范围边界（棘轮）─────────────────────────────────────────
+console.log('\n范围边界')
+
+// 定位（README「一句话」）：给 DSH 的「玻璃 + 莫兰迪」主题 = 配色 + 质感 + 切换器。
+// 下面两份白名单是**棘轮**：只能减、不能加。想加新功能时先问一句
+// 「它属于配色/质感/切换器吗」—— 不属于就该是独立插件，而不是塞进主题。
+// 历史教训：0.4.0 加壁纸氛围层 → 0.5.0 全删；stats 卡与 DSH 升级检查已冻结。
+const ALLOWED_SUBCOMMANDS = ['stats']
+const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS', 'STATS_TRIGGER_CSS']
+
+const indexSrc = read('src/index.ts')
+const subcommands = [...indexSrc.matchAll(/\/bloom\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1])
+const strayCmds = [...new Set(subcommands)].filter((c) => !ALLOWED_SUBCOMMANDS.includes(c))
+strayCmds.length === 0
+  ? ok(`/bloom 子命令未越界（白名单：${ALLOWED_SUBCOMMANDS.join(', ')}）`)
+  : bad(
+      `/bloom 新增了白名单外的子命令：${strayCmds.join(', ')}\n` +
+        `    → 主题插件只做配色/质感/切换器。确实要加，先改 ALLOWED_SUBCOMMANDS 并在\n` +
+        `      README「一句话」里同步扩定位 —— 让范围扩张成为一次显式决策。`,
+    )
+
+const cssBlocks = [...src.matchAll(/^const ([A-Z][A-Z0-9_]*CSS) = `/gm)].map((m) => m[1])
+const strayCss = cssBlocks.filter((c) => !ALLOWED_CSS_BLOCKS.includes(c))
+strayCss.length === 0
+  ? ok(`顶层 CSS 常量未越界（${cssBlocks.length} 个，全在白名单内）`)
+  : bad(
+      `新增了白名单外的顶层 CSS 常量：${strayCss.join(', ')}\n` +
+        `    → 同上：新视觉模块要么归入现有四块，要么显式扩 ALLOWED_CSS_BLOCKS。`,
+    )
 
 // ── 结果 ───────────────────────────────────────────────────────
 console.log()

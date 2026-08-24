@@ -6,6 +6,12 @@
       "package-name": "@kubor/dsh-bloom-theme",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": false,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "src/client.ts"
+        }
+      ],
       "draft": false,
       "prerelease": false,
       "include-component-in-tag": false,

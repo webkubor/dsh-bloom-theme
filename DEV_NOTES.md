@@ -4,6 +4,149 @@
 
 ---
 
+## 2026-08-24 · 约束写了但没有闸门（本仓最大的坑）
+
+### 现象
+
+项目「走偏」，而且是三处同时偏：
+
+1. **版本四头分裂** —— npm 上 `0.6.0`、git main `0.6.1`、工作区 `0.6.2`、
+   release-please PR 想发 `0.7.0`；且那个 Release PR 的 changelog 把 `0.3.x`
+   时代的 commit 又全列了一遍。
+2. **设置面板中文竖排来回改三轮** —— v0.6.0 修好 → v0.6.1 回滚（理由：不覆盖
+   DSH 原生 layout，「该去官方提 issue」）→ 工作区又改回来，而且这次硬编码了
+   `.VOzbGW_overlay` 这种带构建 hash 的类名。**而这个 bug 根本不是 DSH 的**
+   —— 见下面单独一节。
+3. **范围不断外扩** —— 一个配色主题里长出了 `/bloom stats` 代码统计卡、PNG 下载、
+   DSH 版本升级检查。0.4.0 加壁纸氛围层、0.5.0 全删，是同一个病的上一轮发作。
+
+### 根因
+
+**规则不是没写，是写了没有执行闸门 —— 于是违反规则是零成本的。**
+
+- `CONTRIBUTING.md` 早就明写「hash 随 DSH 构建变化……**一律用 `[class*="_语义名"]`**」，
+  但 `npm run check` 不检查它 → 照样写出了 `.VOzbGW_overlay`。
+- 更糟的是文档自己就有两套协议：`CONTRIBUTING.md` 的「发版流程」写手工
+  `npm version` + `npm publish` + 手写 CHANGELOG，而 `.github/workflows/` 里装的是
+  release-please 自动流程。**照文档做就撞坏 CI，照 CI 做就违反文档。**
+  那些手工 `chore: release v0.6.x` commit 不是失误，是照着文档做的。
+- 设置面板那条原则（「去官方提 issue」）指向一条**不存在的出路**：
+  `deepseek-ai/deepseek-harness` 的 issues 是**关闭**的。规则的退路不可执行时，
+  它的实际效果就是「bug 永不修 + 每次抱怨摇摆一轮」。
+
+### 修法
+
+把每条规则都变成 `npm run check` 里的一行断言（项目原有 3 条 → 现 5 组）：
+
+| 规则 | 闸门 |
+|---|---|
+| 版本真源唯一 | `package.json` / manifest / `PLUGIN_VERSION` 三处必须一致，手工 bump 直接 fail |
+| 选择器必须稳定 | 剥掉注释后扫 `src/client.ts`，任何 `<hash>_<名>` 硬编码 fail |
+| 范围不得外扩 | `/bloom` 子命令 + 顶层 CSS 常量两份白名单，新增即 fail（棘轮） |
+
+配套的三处真源收敛：
+
+- **版本**：`release-please-config.json` 加 `extra-files` + `src/client.ts` 行尾
+  `// x-release-please-version` 标记 → release-please 一次 bump 两个文件，
+  `sync-version.mjs` 退化为本地 dev 兜底，不再是发布路径的一环。
+- **发版协议**：`CONTRIBUTING.md`「发版流程」重写为「人只写 commit」，并列出
+  四条明确的「不要做」（`npm version` / 本地 `npm publish` / 手写 release commit /
+  手写 CHANGELOG 条目）。
+- **layout 原则**：见下一节 —— 真正的规则不是「能不能覆盖」，而是「先证明不是
+  自己造成的」。
+
+### 教训
+
+1. **写在文档里的规则等于没写，除非它能让 CI 变红。** 判据很简单：
+   「违反这条规则，会有什么东西报错？」答不出来，这条规则就还没落地。
+2. **一件事只能有一个真源。** 两套发布协议、两处版本号、两份 layout 原则，
+   每一处双写都在等着发作。合并时优先删掉手工那一套 —— 自动化那套至少不会忘。
+3. **规则的退路必须真实存在。** 「去上游提 issue」在 issues 关闭的仓库上不是原则，
+   是把问题挂起。定原则前先验证那条出路通不通。
+
+---
+
+## 2026-08-24 · 「DSH 的 layout bug」是 Bloom 自己造的（改了三轮才发现）
+
+### 现象
+
+DSH 设置面板：遮罩只盖住左侧一条，面板被压成 279px，中文描述逐字竖排。
+看起来像 DSH 的 drawer 布局缺陷。前后修了三轮，最后一轮写了 60 行
+「drawer → 中央 modal」改造 CSS。
+
+### 走过的弯路
+
+三轮全都在**改造症状**，没人验证过前提：
+
+1. v0.6.0：`flex-basis: 100%` 全链覆盖 → 竖排好了
+2. v0.6.1：回滚，理由「不覆盖 DSH 原生 layout」，出路记为「去官方提 issue」
+3. 工作区：又改回来，`position: fixed` + `translate(-50%,-50%)` 做居中 modal，
+   还硬编码了 `.VOzbGW_overlay`
+
+第 3 轮的注释里甚至写着「不这样做时 DSH 的 mask 会把 panel 推到屏幕外
+（实测 x=-613）」—— **x=-613 就是根因留下的指纹**，但当时把它当成了 DSH 的怪癖。
+
+### 根因
+
+**Bloom 自己给 `_sidebarCol` 加的 `backdrop-filter` 污染了 fixed 的定位基准。**
+
+`backdrop-filter` 会让元素成为其 `position: fixed` 后代的 **containing block**。
+而 DSH 的设置面板挂在侧栏子树里：
+
+```
+_sidebarCol  ← Bloom 在这加了 backdrop-filter: blur(24px)
+  └─ … ─ _footArea ─ _settingsArea
+       └─ _overlay   ← position: fixed; inset: 0（本该相对视口铺满）
+            ├─ _mask
+            └─ _panel
+```
+
+于是那个 `fixed` 从「相对视口」变成「相对 280px 宽的侧栏」：遮罩缩成一条，
+panel 被挤到 279px，detail 区 `flex: 0 1 auto` 收缩到 18px → 中文逐字竖排。
+
+### 决定性实验
+
+摘掉那一个属性，全部症状消失：
+
+```js
+side.style.setProperty('backdrop-filter', 'none', 'important')
+// overlay.x: -1086 → 0    panel.x: -613 → 473（= (1728-800)/2，精确居中）
+```
+
+再把 Bloom 的相关规则一起禁掉，量到 **DSH 原生形态：800×800 居中 modal，
+中文描述 383~398px 正常横排**。DSH 从来没有这个 bug。
+
+### 修法
+
+- 侧栏玻璃移到 `::before`（伪元素的 `backdrop-filter` 只作用于自己，
+  不改变父元素的 containing block 资格），视觉零变化
+- **删掉全部 60 行 modal 改造 CSS** —— 根因一修，原生就是居中 modal，一行都不需要
+
+顺带踩到第二个坑：给侧栏加 `isolation: isolate` 想约束 `z-index: -1` 的伪元素，
+结果它创建了 **stacking context**，overlay 的 `z-index: 1000` 被困在侧栏内部，
+设置面板被主区的 composer 盖住。两个属性伤的是两件不同的事：
+
+| 属性 | 创建什么 | 伤 fixed 的 |
+|---|---|---|
+| `backdrop-filter` / `filter` / `transform` / `perspective` / `contain` / `will-change` | containing block | **定位基准** |
+| `isolation: isolate` | stacking context | **层叠顺序** |
+
+最终只用 `position: relative` + `z-index: -1`。
+
+### 教训
+
+1. **修「宿主的 bug」之前，先摘掉自己的样式量一遍原生形态。** 一次
+   `getBoundingClientRect()` 对比就能省下三轮返工和 60 行 CSS。
+   这个项目注入 61 处 `!important` + 117 处 `[class*=]`，任何「DSH 的怪癖」
+   都得先过一遍「是不是我们自己干的」。
+2. **加玻璃/动效前先问：这个元素的子树里有 `position: fixed` 吗？** 有 → 玻璃
+   走 `::before`，且别顺手加 `isolation`。判据已写进 CONTRIBUTING。
+3. **注释里的异常数字要当线索追，不要当环境常识记下来。** 「实测 x=-613」被
+   当作 DSH 的既定行为写进注释，实际上它是根因的指纹 —— 一句
+   「-613 是哪来的」就能提前三轮结束这件事。
+
+---
+
 ## 2026-08-18 · 移植了色板，没移植质感
 
 ### 现象

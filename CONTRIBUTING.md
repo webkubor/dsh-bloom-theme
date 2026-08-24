@@ -62,7 +62,96 @@ DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。has
 
 ## 发版流程
 
+**版本号与 CHANGELOG 由 release-please 独占。人只写 commit。**
+
 1. 改完 `npm run deploy`，在真实 DSH 里验证
 2. `npm run check` 通过
-3. `npm version patch|minor` → `npm publish` → `git push` → 建 GitHub Release
-4. 更新 `CHANGELOG.md`
+3. 用 Conventional Commits 提交、推 main —— **到此结束**
+
+之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
+写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release。
+
+### ⛔ 不要做这些
+
+| 别做 | 为什么 |
+|---|---|
+| `npm version` / 手改 `package.json` 版本号 | release-please 按 commit 自己算版本，手改会和它的账本（`.release-please-manifest.json`）打架 |
+| `npm publish`（本地） | 发布只应由 tag 触发，本地发会让 npm 上出现 git 里不存在的版本 |
+| 手写 `chore: release vX.Y.Z` commit | 它不打 tag、不触发 publish，只会让 git 版本领先 npm |
+| 手写 `CHANGELOG.md` 条目 | release-please 按 commit 重新生成，手写条目会与它的输出重复 |
+
+这四条不是洁癖 —— 2026-08-24 实际出现过**版本四头分裂**：npm 上 `0.6.0`、
+git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时 Release PR
+的 changelog 把 `0.3.x` 时代的 commit 又全列了一遍。根因就是这份文档以前写的是手工
+流程、而 CI 装的是 release-please，**同一个仓库里存在两套发布协议**。
+
+现在 `npm run check` 会校验版本三处副本（`package.json` / manifest /
+`src/client.ts` 的 `PLUGIN_VERSION`）一致，手工 bump 会直接被拦下。
+
+### 需要跳版本或跳过发布
+
+不要手改文件，用 release-please 的协议：close 那个 Release PR 并评论
+`/autorelease:skip`，或 `/autorelease:major` / `/autorelease:minor`。
+
+## 范围边界：什么该进这个仓库
+
+定位（README「一句话」）：**给 DSH 的「玻璃 + 莫兰迪」主题** = 配色 + 质感 + 切换器。
+
+这个仓库反复失血的地方不是 bug，是**范围往外长**：0.4.0 加了壁纸/氛围层、
+0.5.0 又全删；stats 统计卡与 DSH 升级检查跟主题无关，但已经发出去了，故**冻结**
+（保留现状，不再扩展）。
+
+新功能进来前先问一句「它属于配色 / 质感 / 切换器吗」。不属于就该是独立插件。
+`npm run check` 用两份白名单把这条做成了棘轮：
+
+- `/bloom` 子命令白名单（当前只有 `stats`）
+- 顶层 CSS 常量白名单（`COMPONENT_CSS` / `GLASS_CSS` / `SWITCHER_CSS` / `STATS_TRIGGER_CSS`）
+
+新增会直接 fail。确实要扩，就改白名单**并**同步 README 的「一句话」—— 让范围扩张
+成为一次显式的、写下来的决策，而不是悄悄多出 500 行。
+
+## 怀疑 DSH 有 layout bug 时：先证明不是自己造成的
+
+**这是本项目最贵的一课。** 设置面板「279px 窄 drawer + 中文逐字竖排」被当成 DSH 的
+bug 修了三轮（v0.6.0 修 → v0.6.1 回滚并记为「去官方提 issue」→ 又改回来，
+一共 60 行 modal 改造 CSS）。
+
+真相：**DSH 原生设置面板本来就是 800×800 的居中 modal，中文正常横排。**
+那个 bug 是 Bloom 自己造成的 —— 侧栏的 `backdrop-filter` 让 `_sidebarCol` 成为
+其 `position: fixed` 后代的 containing block，而 DSH 的设置面板恰好挂在侧栏子树里，
+于是 overlay 的 `fixed` 从「相对视口」变成「相对 280px 的侧栏」。
+
+所以在动手覆盖 DSH 布局之前，**先摘掉 Bloom 自己的样式量一遍原生形态**：
+
+```js
+// 在 DSH 里跑：禁用 Bloom 注入的相关规则 + 摘掉可疑属性，再量几何
+side.style.setProperty('backdrop-filter', 'none', 'important')
+console.log(el.getBoundingClientRect())   // 和「有 Bloom」时对比
+```
+
+差异消失 → 是我们自己的问题，去修根因，别写覆盖。
+
+### 会污染后代 fixed 的属性（加玻璃/动效前必查）
+
+| 属性 | 破坏什么 | 症状 |
+|---|---|---|
+| `backdrop-filter` / `filter` / `transform` / `perspective` / `contain` / `will-change` | 成为 fixed 后代的 **containing block** | 定位基准变了，fixed 元素被钳在该祖先的盒子里 |
+| `isolation: isolate`（以及任何 `z-index` ≠ auto 的定位元素） | 创建 **stacking context** | 层叠顺序变了，fixed 元素被同级内容盖住 |
+
+判据：**「这个元素的子树里有 `position: fixed` 的东西吗？」**
+有 → 玻璃必须走 `::before`（伪元素的 `backdrop-filter` 只作用于自己），
+且不得顺手加 `isolation` —— 修第一个坑时当场踩了第二个：加了 `isolation: isolate`
+让设置面板被 composer 盖住。
+
+### 确实需要覆盖 DSH 布局时
+
+只准用语义 / 结构选择器，绝不写 `.VOzbGW_overlay` 这种带构建 hash 的类名 ——
+hash 随 DSH 每次构建变化，写死会在升级后**静默失效**（无报错无告警）。
+需要收紧作用域时用 `:has()` 匹配 DOM 结构特征：
+
+```ts
+// 例：DSH 设置面板 = 唯一「直接子元素同时有 _mask 和 _panel」的 overlay
+'div[class*="_overlay"]:has(> div[class*="_mask"]):has(> div[class*="_panel"])'
+```
+
+`npm run check` 会扫 `src/client.ts`（剥掉注释后）拦下任何 `<hash>_<名>` 硬编码。

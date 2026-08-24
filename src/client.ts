@@ -125,7 +125,15 @@ import { checkUpdate } from './version.js'
   const CHECK_TTL_MS = 24 * 60 * 60 * 1000
   const LS_LAST = 'dsh-bloom-update-check'      // { at, latest } 上次检查
   const LS_DISMISSED = 'dsh-bloom-update-dismissed' // 已关闭的版本号
-  const UPDATE_CMD = 'dsh plugin --profile web up ' + PLUGIN_ID + '@latest'
+  /* 用 add 而不是 up —— 这条命令是给用户复制去执行的，必须真的管用。
+     实测（0.8.6 发布 2 分钟后，在真实 profile 上跑）：
+       up  <pkg>@latest  → 「Already up to date」，停在 0.8.5   ✗
+       up -L <pkg>       → 同样停在 0.8.5                       ✗
+       add <pkg>@latest  → 升到 0.8.6，声明也更新为 ^0.8.6      ✓
+     `up` 不会重新去 registry 解析最新版（即便 registry / npm view / pnpm view
+     三处都已显示 0.8.6），`add @latest` 才会。横幅提示一条装不上新版的命令，
+     比不提示更糟。 */
+  const UPDATE_CMD = 'dsh plugin --profile web add ' + PLUGIN_ID + '@latest'
   const RELEASES_URL = 'https://github.com/webkubor/dsh-bloom-theme/releases'
   const zh = (navigator.language || '').toLowerCase().startsWith('zh')
 

@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.7](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.6...v0.8.7) (2026-08-24)
+
+
+### 🐛 Bug Fixes
+
+* **banner:** 升级命令改用 add —— up [@latest](https://github.com/latest) 装不上刚发布的版本 ([d74c9e0](https://github.com/webkubor/dsh-bloom-theme/commit/d74c9e041b1820d024110f84ade72533035bc326))
+
 ## [0.8.6](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.5...v0.8.6) (2026-08-24)
 
 

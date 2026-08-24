@@ -13,6 +13,24 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.8.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.1...v0.8.2) (2026-08-24)
+
+
+### 🐛 Bug Fixes
+
+* **switcher:** 「复制升级命令」按钮在 180px 下拉里折成两行 ([c495a01](https://github.com/webkubor/dsh-bloom-theme/commit/c495a013e8322c3e3c6c5d5d1d2165343d390809))
+
+
+### 📝 Documentation
+
+* 修正 README 的构建说明 —— 教了一个已删除的命令 ([a9522ad](https://github.com/webkubor/dsh-bloom-theme/commit/a9522ad501137299e2d02e181e3a2c5aed714698))
+* 推广帖草稿重写 + 新增 npm run stats,对外数字一律现拿 ([7ca031f](https://github.com/webkubor/dsh-bloom-theme/commit/7ca031f467f7629110178a61dbb375ee288d24ba))
+
+
+### 🛠️ CI / Build
+
+* **preflight:** 加第 5 组 —— 本地 DSH profile 装的版本 ([5d64350](https://github.com/webkubor/dsh-bloom-theme/commit/5d64350623a37595b816bb4327ba0b79577fe27e))
+
 ## [0.8.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.0...v0.8.1) (2026-08-24)
 
 

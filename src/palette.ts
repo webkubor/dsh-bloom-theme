@@ -1,5 +1,5 @@
 /**
- * 8 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
+ * 9 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
  *
  * **双轨制不能退回单轨**（见 CONTRIBUTING「改配色时注意」）：
  *   accentL / accentD  可读轨 —— 文字、按钮填充、边框，必须过 WCAG AA
@@ -8,9 +8,9 @@
  * 拿可读轨铺大面积、或拿气质轨做文字色，都会失去莫兰迪质感。
  */
 
-export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
+export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora']
 
-export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
+export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora']
 
 /**
  * Bloom 色板 —— 双轨制（这是从 typora-Bloom-theme 继承来的关键设计，别退回单轨）。
@@ -101,15 +101,32 @@ export const PALETTE = {
     motionL: ['oklch(50% 0.13 258)', 'oklch(50% 0.12 226)', 'oklch(50% 0.11 295)'],
     motionD: ['oklch(74% 0.10 255)', 'oklch(74% 0.11 225)', 'oklch(74% 0.10 292)'],
   },
+  /* v0.9.0：用户反馈暗色琥珀「过暗、发闷」。
+     原版 bgD 21.9% / txD hue 75（暖白），全是 56~75 暖色相、没有冷色衬底，
+     整图就「红橙棕一片」。把 bg/sf 提亮一档（保持暖度），让暗色琥珀呼吸出来；
+     txD 改成中性微暖，让暖白 vs 暖棕之间还有一丝冷暖差可对比。 */
   amber: {
-    accentL: 'oklch(55.5% 0.12 70)',  accentD: 'oklch(75.9% 0.11 70)',
+    accentL: 'oklch(55.5% 0.12 70)',  accentD: 'oklch(78% 0.11 70)',
     morandi: '159, 100, 1',
-    bgL: 'oklch(97.5% 0.008 74)',     bgD: 'oklch(21.9% 0.021 56)',
-    txL: 'oklch(24% 0.02 74)',        txD: 'oklch(96.1% 0.012 75)',
-    sfL: 'oklch(95.6% 0.01 82)',      sfD: 'oklch(29.1% 0.023 61)',
-    sf2L: 'oklch(93% 0.014 78)',      sf2D: 'oklch(35.2% 0.025 59)',
+    bgL: 'oklch(97.5% 0.008 74)',     bgD: 'oklch(26% 0.018 60)',
+    txL: 'oklch(24% 0.02 74)',        txD: 'oklch(95% 0.008 70)',
+    sfL: 'oklch(95.6% 0.01 82)',      sfD: 'oklch(32% 0.020 60)',
+    sf2L: 'oklch(93% 0.014 78)',      sf2D: 'oklch(38% 0.022 60)',
     motionL: ['oklch(55.5% 0.12 70)', 'oklch(55.5% 0.11 38)', 'oklch(55.5% 0.12 100)'],
-    motionD: ['oklch(75.9% 0.11 70)', 'oklch(75.9% 0.12 38)', 'oklch(75.9% 0.11 100)'],
+    motionD: ['oklch(78% 0.11 70)', 'oklch(78% 0.12 38)', 'oklch(78% 0.11 100)'],
+  },
+  /* v0.9.0：极光 —— 北极光的青绿 → 蓝 → 紫光谱，莫兰迪化后压低彩度。
+     主色走 165 hue 的青绿（极光最典型的颜色），motion 三色取光谱
+     165/210/300，正好是「流线」与 deep-dive 渐变要用的流动色源。 */
+  aurora: {
+    accentL: 'oklch(50% 0.10 165)',   accentD: 'oklch(75% 0.12 165)',
+    morandi: '134, 186, 160',
+    bgL: 'oklch(96% 0.015 165)',      bgD: 'oklch(24% 0.02 165)',
+    txL: 'oklch(25% 0.02 165)',       txD: 'oklch(96% 0.015 165)',
+    sfL: 'oklch(94% 0.015 165)',      sfD: 'oklch(30% 0.022 165)',
+    sf2L: 'oklch(91.5% 0.018 165)',   sf2D: 'oklch(36% 0.024 165)',
+    motionL: ['oklch(50% 0.10 165)', 'oklch(50% 0.11 210)', 'oklch(52% 0.11 300)'],
+    motionD: ['oklch(75% 0.12 165)', 'oklch(75% 0.12 210)', 'oklch(75% 0.12 300)'],
   },
 }
 
@@ -122,6 +139,7 @@ export const VARIANT_LABELS = {
   stone:    { zh: '暖石', en: 'Stone' },
   lapis:    { zh: '青金', en: 'Lapis' },
   amber:    { zh: '琥珀', en: 'Amber' },
+  aurora:   { zh: '极光', en: 'Aurora' },
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

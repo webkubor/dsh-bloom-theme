@@ -244,7 +244,7 @@ div[class*="_composer"] div[class*="_card"]:focus-within {
   box-shadow:
     inset 0 1px 0 rgba(var(--bloom-morandi), 0.2),
     var(--bloom-shadow),
-    0 0 0 3px var(--bloom-glow);
+    0 0 0 2px var(--bloom-glow);
 }
 
 /* 消息气泡：柔和圆角 + 近距阴影，脱离"贴在背景上"的平面感 */

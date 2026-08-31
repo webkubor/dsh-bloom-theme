@@ -38,6 +38,12 @@ export function bloomTokens(p, dark) {
   --bloom-motion-1: ${motion[0]};
   --bloom-motion-2: ${motion[1]};
   --bloom-motion-3: ${motion[2]};
+  /* v0.9.0：极光流线光带色 —— 从 motion 谱取色，混透明度降饱和后做丝带渐变。
+     透明度低是故意的：流线是大尺度、低饱和的氛围效果，不是主色块。
+     aurora 变体的 motion 谱是 165/210/300 → 青绿→蓝→紫，正好是北极光。 */
+  --bloom-aurora-stream-1: color-mix(in oklch, ${motion[0]}, transparent ${dark ? 40 : 60}%);
+  --bloom-aurora-stream-2: color-mix(in oklch, ${motion[1]}, transparent ${dark ? 40 : 60}%);
+  --bloom-aurora-stream-3: color-mix(in oklch, ${motion[2]}, transparent ${dark ? 40 : 60}%);
   /* ⚠️ 阴影在暗色下必须用纯黑，不能用前景色混透明度 ——
      暗色的 --text 是近白，mix 出来的"阴影"会变成一团白雾贴在深色背景上。
      原版 root-*-dark.css 同样是写死 rgba(0,0,0,.4~.6)，只有亮色才用 text 混。 */

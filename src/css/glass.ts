@@ -20,6 +20,49 @@
  * 全部用 color-mix(theme token, transparent) 而不是死白/死黑，色相跟着变体走。
  */
 export const GLASS_CSS = `
+/* ═══ 极光流线（v0.9.0，仅 aurora 变体）═══════════════════════════
+   用户要的「流线」—— body 背后挂两条斜向渐变丝带，transform 缓慢漂移 +
+   blur 软化，做出北极光帘幕的视差感。
+   用 ::before 而非改 body background 的原因：动 body 的 background-image
+   每帧重绘整个 viewport；伪元素独立合成层，transform 走 GPU，便宜得多。
+   z-index:-1 + position:fixed —— body 的背景透传规则下，负 z-index 落在根
+   堆叠上下文的负层，画在 body 背景之上、应用内容之下。
+   颜色走 --bloom-aurora-stream-1/2/3（在 tokens.ts 由 motion 谱混透明得到），
+   切到 aurora 变体时呈现青绿→蓝→紫的北极光，其它变体保持原样不显示。 */
+body[data-bloom-variant="aurora"]::before {
+  content: '';
+  position: fixed;
+  inset: -40%;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(115deg,
+      transparent 38%, var(--bloom-aurora-stream-1) 50%, transparent 62%),
+    linear-gradient(70deg,
+      transparent 32%, var(--bloom-aurora-stream-2) 46%, transparent 60%),
+    radial-gradient(60% 40% at 50% 60%,
+      var(--bloom-aurora-stream-3), transparent 70%);
+  background-size: 220% 220%, 260% 240%, 100% 100%;
+  background-position: 25% 30%, 80% 15%, 50% 50%;
+  background-repeat: no-repeat;
+  filter: blur(60px) saturate(1.2);
+  opacity: 0.6;
+  transform: translate3d(0, 0, 0);
+  animation: bloom-aurora-drift 28s ease-in-out infinite alternate;
+  will-change: transform, background-position;
+}
+@keyframes bloom-aurora-drift {
+  from { transform: translate3d(-2.5%, -1.5%, 0); background-position: 25% 30%, 80% 15%, 50% 50%; }
+  to   { transform: translate3d(3%, 2%, 0);      background-position: 65% 55%, 35% 45%, 55% 45%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-bloom-variant="aurora"]::before {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.4 !important;
+  }
+}
+
 /* ═══ 顶栏 tab 条：不做玻璃,只留一条发丝底边 ═══════════════════
    这里曾和侧栏/排队条共用「面级玻璃」档位(半透底 + backdrop blur +
    inset 白描边)。但 tab 条只有 27px 高、1400px 宽 —— 那套玻璃在这个尺寸上
@@ -121,36 +164,40 @@ div[class*="_tabs"] [class*="_tab"] {
   white-space: nowrap !important;
 }
 
-/* ═══ 输入卡片（主角）—— 最清晰的一块玻璃，focus 时玻璃边缘点亮 ═══ */
+/* ═══ 输入卡片（主角）—— 最清晰的一块玻璃，focus 时玻璃边缘点亮 ═══
+   v0.9.0: 用户反馈边框「粗粗的」——
+     原因不是 1px hairline 本身粗，而是 COMPONENT_CSS 给的 border: 1px solid var(--bloom-hairline)
+     又叠了 GLASS_CSS 的 inset 0 0 0 1px rgba(255,255,255,...) 内白圈，
+     1px 外框 + 1px 内圈 = 视觉上等于 2px 的厚边框；focus-within 再加 3px 的
+     --bloom-glow 光环就更肥。
+   修复：去掉 inset 0 0 0 1px 那圈内白线，只保留顶部 1px 高光（玻璃边沿）
+     和外阴影；focus 环 3px -> 2px，颜色用 accent x 25% 收敛到主题色相，
+     远看像一根细线而不是一圈光晕。border 本身仍走 COMPONENT_CSS 的 hairline。 */
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 84%) !important;
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.28),
-    inset 0 0 0 1px rgba(255,255,255,0.14),
     0 18px 52px -20px rgba(0,0,0,0.26);
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 0 0 1px rgba(255,255,255,0.06),
     0 20px 56px -22px rgba(0,0,0,0.55);
 }
 div[class*="_composer"] div[class*="_card"]:focus-within {
-  border-color: rgba(255,255,255,0.24) !important;
+  border-color: var(--bloom-hairline-strong) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.3),
-    inset 0 0 0 1px rgba(255,255,255,0.18),
-    0 0 0 3px var(--bloom-glow),
+    0 0 0 2px color-mix(in oklch, var(--bloom-accent) 25%, transparent),
     0 18px 52px -20px rgba(0,0,0,0.26) !important;
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-within {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 0 0 1px rgba(255,255,255,0.08),
-    0 0 0 3px var(--bloom-glow),
+    0 0 0 2px color-mix(in oklch, var(--bloom-accent) 28%, transparent),
     0 20px 56px -22px rgba(0,0,0,0.55) !important;
 }
 
@@ -245,4 +292,25 @@ body[data-ds-dark-theme] [class*="_tableScroll"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 56%) !important;
 }
 .md-code-block pre, .md-code-block code { background: transparent !important; }
+
+/* ═══ 表格内部分隔线加强（v0.9.0）用户截图反馈列线几乎不可见 ═══
+   原 CSS 用 var(--bloom-hairline)（莫兰迪 30% alpha）做列分隔，
+   在深色氛围渐变上几乎消失，看起来像没线的「列表」。提到
+   hairline-strong（55% alpha）并给 thead 加一档淡底，列与行都立起来。 */
+[class*="_tableScroll"] th,
+[class*="_tableScroll"] td {
+  border-color: var(--bloom-hairline-strong) !important;
+}
+[class*="_tableScroll"] thead th {
+  background: rgba(var(--bloom-morandi), 0.10);
+}
+body[data-ds-dark-theme] [class*="_tableScroll"] thead th {
+  background: rgba(var(--bloom-morandi), 0.08);
+}
+[class*="_tableScroll"] tbody tr:nth-child(even) td {
+  background: rgba(var(--bloom-morandi), 0.03);
+}
+body[data-ds-dark-theme] [class*="_tableScroll"] tbody tr:nth-child(even) td {
+  background: rgba(var(--bloom-morandi), 0.04);
+}
 `

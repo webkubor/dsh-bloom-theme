@@ -207,6 +207,11 @@ export const SWITCHER_CSS = `
   background: color-mix(in oklch, oklch(45% 0.13 150), transparent 88%);
   color: oklch(45% 0.13 150);
 }
+.dsh-bloom-dsh-state[data-state="managed"],
+.dsh-bloom-dsh-state[data-state="ahead"] {
+  background: color-mix(in oklch, var(--dsw-alias-brand-primary, #4a90e2), transparent 88%);
+  color: var(--dsw-alias-brand-primary, #4a90e2);
+}
 .dsh-bloom-dsh-state[data-state="err"] {
   background: color-mix(in oklch, oklch(48% 0.17 28), transparent 88%);
   color: oklch(48% 0.17 28);

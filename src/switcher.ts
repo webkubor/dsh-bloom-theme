@@ -119,7 +119,7 @@ export function buildSwitcherHTML(currentVariant) {
           <span class="dsh-bloom-dsh-state" data-dsh-state></span>
           <span class="dsh-bloom-dsh-spacer"></span>
           <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="重新检查 DSH 最新版">↻</button>
-          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="复制升级命令：npm i -g @deepseek-ai/dsh@latest">复制</button>
+          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="检查到可用版本后复制精确升级命令">复制</button>
         </div>
         <div class="dsh-bloom-dsh-row dsh-bloom-dsh-row--latest">
           <span class="dsh-bloom-dsh-label">最新</span>

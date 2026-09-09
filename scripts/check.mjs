@@ -20,7 +20,7 @@
  *
  * 用法：npm run check（CI 与本地同一份）
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
@@ -86,6 +86,40 @@ for (const f of ['cordis.patch.yml', 'lib']) {
 pkg.publishConfig?.access === 'public'
   ? ok('publishConfig.access = public')
   : bad('scoped 包缺 publishConfig.access=public，发布会失败')
+
+// exports 声明的入口必须真的存在于产物里 —— issue #19
+//
+// 症状：profile 声明了本插件，但组合出来的 client roster 不含 ./client 入口，
+// 宿主反复请求 /plugins/@kubor/dsh-bloom-theme/client.js 拿 404，主题静默不可用。
+// package.json 侧的契约（exports["./client"] + dsh.client）看着完全正确，
+// 所以光读 package.json 查不出来 —— 必须对着产物验。
+//
+// 注意这和文件顶部「为什么不读 lib/」不冲突：那条禁的是**用正则去产物里匹配内容**
+// （打包器一换就静默失效）；这里只断言「声明的文件存不存在」，是契约验证本身，
+// 打包器怎么变都不影响这个判据。
+//
+// 时机：prepublishOnly 是 build && check，跑到这里 lib/ 一定是新鲜产物。
+// 单独跑 npm run check 时 lib/ 可能还没构建，这种情况只提示、不判失败，
+// 否则本地每次 check 都红，久了就没人看了。
+if (!existsSync(resolve(root, 'lib'))) {
+  console.log(`  [33m·[0m lib/ 不存在，跳过产物校验（先 npm run build；发布走 prepublishOnly 一定会验）`)
+} else {
+  for (const [sub, cond] of Object.entries(pkg.exports ?? {})) {
+    const target = typeof cond === 'string' ? cond : cond?.default
+    if (!target || !target.startsWith('./lib/')) continue // package.json 自身等非产物入口不验
+    existsSync(resolve(root, target))
+      ? ok(`exports["${sub}"] → ${target} 产物存在`)
+      : bad(`exports["${sub}"] 声明了 ${target}，但产物里没有 —— 装上后宿主请求这个入口会 404，主题静默不可用（issue #19）`)
+  }
+}
+
+// dsh.client 声明了就必须有对应的 ./client 导出：awesome-dsh-plugin 明写
+// 「最常见的被拒原因是只声明 dsh.client」——两边只写一半，宿主同样取不到入口
+if (pkg.dsh?.client) {
+  pkg.exports?.['./client']
+    ? ok('dsh.client 与 exports["./client"] 成对声明')
+    : bad('声明了 dsh.client 却没有 exports["./client"] —— 宿主按 exports 解析，取不到客户端入口')
+}
 
 // 包名与源码里的 PLUGIN_ID 必须一致，否则 loader 注册对不上
 const idMatch = SRC_ALL.match(/const PLUGIN_ID = '([^']+)'/)

@@ -124,7 +124,9 @@ body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
 
    判据（以后加玻璃时对每个目标问一遍）：
    「这个元素的子树里有 position:fixed 的东西吗？」有 → 玻璃必须走 ::before，
-   且不得引入 isolation / transform / filter / contain / will-change。 */
+   且不得引入 isolation / transform / filter / contain / will-change。
+   输入卡的 conversation.input.overlay 槽也会注入 fixed 元素（如 dsh-convmap），
+   必须遵守同一判据，不能把滤镜放回卡片本体（issue #15）。 */
 [class*="_sidebarCol"] {
   position: relative;
   background-color: transparent !important;
@@ -174,18 +176,30 @@ div[class*="_tabs"] [class*="_tab"] {
      和外阴影；focus 环 3px -> 2px，颜色用 accent x 25% 收敛到主题色相，
      远看像一根细线而不是一圈光晕。border 本身仍走 COMPONENT_CSS 的 hairline。 */
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 84%) !important;
-  backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
-  -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
+  position: relative;
+  background-color: transparent !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.28),
     0 18px 52px -20px rgba(0,0,0,0.26);
 }
+body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 84%) !important;
+  backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
+  -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
+}
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.12),
     0 20px 56px -22px rgba(0,0,0,0.55);
+}
+body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]::before {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%) !important;
 }
 div[class*="_composer"] div[class*="_card"]:focus-within {
   border-color: var(--bloom-hairline-strong) !important;

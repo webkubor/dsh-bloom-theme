@@ -350,6 +350,30 @@ cssBlocks.length === 0
         `    → 同上：新视觉模块要么归入现有四块，要么显式扩 ALLOWED_CSS_BLOCKS。`,
     )
 
+// !important 棘轮：只能减、不能加。
+// 2026-09-10 一次性从 53 降到 23 —— 手法不是硬删，是把「压宿主」换成两条正路：
+//   ① 宿主已经把这块暴露成 --dsw-* token 的（tokens.ts 已覆写 85 个），改 token；
+//   ② 没暴露 token 的，给选择器加主题作用域 body[data-bloom-variant]（+0,1,1），
+//      正常赢过宿主那些 (0,1,0) 的单类规则。
+// 剩下的都是「宿主也在用 !important 或自带 animation」才不得不留：无障碍
+// reduced-motion 兜底、入场动画压宿主动画、tab 字号保护、深潜渐变文字。
+// 想加一条前先问：这块有没有对应的 --dsw-* token？加作用域够不够？
+const IMPORTANT_BUDGET = { 'component.ts': 15, 'glass.ts': 7, 'switcher.ts': 1 }
+const overBudget = []
+for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
+  const name = f.path.split('/').pop()
+  const budget = IMPORTANT_BUDGET[name]
+  if (budget === undefined) continue
+  const n = (f.code.match(/!important;/g) || []).length
+  if (n > budget) overBudget.push(`${name} ${n} > ${budget}`)
+}
+overBudget.length === 0
+  ? ok(`!important 未超预算（${Object.values(IMPORTANT_BUDGET).reduce((a, b) => a + b, 0)} 处封顶）`)
+  : bad(
+      `!important 变多了：${overBudget.join(', ')}\n` +
+        `    → 先试 --dsw-* token 覆写，再试 body[data-bloom-variant] 作用域；确实必要就连同理由一起调低预算表。`,
+    )
+
 // ── 结果 ───────────────────────────────────────────────────────
 console.log()
 if (failed) {

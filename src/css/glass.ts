@@ -71,8 +71,8 @@ body[data-bloom-variant="aurora"]::before {
 
    玻璃需要面积才成立。窄条带该做的是「分界」而不是「面」,所以只留一条
    morandi 发丝底边,底色完全交给 body 的氛围渐变。 */
-div[class*="_tabs"] {
-  background-color: transparent !important;
+body[data-bloom-variant] div[class*="_tabs"] {
+  background-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: inset 0 -1px 0 var(--bloom-hairline, rgba(146,168,179,0.3));
@@ -80,8 +80,8 @@ div[class*="_tabs"] {
 
 /* ═══ 面级面板（排队条 / 预览 dock）═══════════════════════════════
    面积大，档位「略实」；顶部亮高光 + 深色外辉让它像一块立起来的玻璃。 */
-div[class*="_dock"]:has(> [class*="_preview"]) {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 82%) !important;
+body[data-bloom-variant] div[class*="_dock"]:has(> [class*="_preview"]) {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 82%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
   box-shadow:
@@ -90,7 +90,7 @@ div[class*="_dock"]:has(> [class*="_preview"]) {
     0 14px 44px -16px rgba(0,0,0,0.22);
 }
 body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 64%) !important;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 64%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 0 0 1px rgba(255,255,255,0.05),
@@ -127,12 +127,12 @@ body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
    且不得引入 isolation / transform / filter / contain / will-change。
    输入卡的 conversation.input.overlay 槽也会注入 fixed 元素（如 dsh-convmap），
    必须遵守同一判据，不能把滤镜放回卡片本体（issue #15）。 */
-[class*="_sidebarCol"] {
+body[data-bloom-variant] [class*="_sidebarCol"] {
   position: relative;
   /* v0.10.x：之前 transparent !important 让侧栏和 body 完全同色，没有容器感。
      改成带 accent tint 的底色 —— 6% accent 混进 bg-layer-1，肉眼能看出
      "这块区域有自己的颜色"，但又不至于抢内容。 */
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 94%) !important;
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 94%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.22),
     inset 0 0 0 1px rgba(255,255,255,0.10),
@@ -143,19 +143,19 @@ body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
     24px 0 40px -24px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 45%),
     0 14px 44px -16px rgba(0,0,0,0.22);
 }
-[class*="_sidebarCol"]::before {
+body[data-bloom-variant] [class*="_sidebarCol"]::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   /* 玻璃层也带一点 accent tint —— 和上面的底色呼应 */
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 88%) !important;
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 88%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"] {
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 92%) !important;
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 92%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 0 0 1px rgba(255,255,255,0.05),
@@ -163,7 +163,7 @@ body[data-ds-dark-theme] [class*="_sidebarCol"] {
     0 16px 48px -18px rgba(0,0,0,0.5);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"]::before {
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 82%) !important;
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 82%);
 }
 
 /* v0.6.2: 「对话 / 轨迹」tab 字号上限保护 —— 用户在窄屏 / 浏览器 zoom>100% 下
@@ -188,7 +188,7 @@ div[class*="_tabs"] [class*="_tab"] {
      远看像一根细线而不是一圈光晕。border 本身仍走 COMPONENT_CSS 的 hairline。 */
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
   position: relative;
-  background-color: transparent !important;
+  background-color: transparent;
   /* v0.10.x（owner 反馈「没层次感」）：阴影只完成"功能"没完成"戏剧"。
      单层远影 + 顶部内高光只是让卡片不和背景撞色，不让卡片"提起来"。
      三层叠：① 顶部内高光（光从上方来）；② 紧贴的硬短影（贴着卡边的
@@ -208,7 +208,7 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 84%) !important;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 84%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
 }
@@ -220,16 +220,16 @@ body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"] {
     0 0 64px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 72%);
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]::before {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%) !important;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%);
 }
-div[class*="_composer"] div[class*="_card"]:focus-within {
-  border-color: var(--bloom-hairline-strong) !important;
+body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:focus-within {
+  border-color: var(--bloom-hairline-strong);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.3),
     0 1px 2px -1px rgba(0, 0, 0, 0.18),
     0 0 0 2px color-mix(in oklch, var(--bloom-accent) 25%, transparent),
     0 18px 52px -20px rgba(0,0,0,0.26),
-    0 0 56px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 74%) !important;
+    0 0 56px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 74%);
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-within {
   box-shadow:
@@ -237,12 +237,12 @@ body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-withi
     0 1px 2px -1px rgba(0, 0, 0, 0.5),
     0 0 0 2px color-mix(in oklch, var(--bloom-accent) 28%, transparent),
     0 20px 56px -22px rgba(0,0,0,0.55),
-    0 0 72px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 68%) !important;
+    0 0 72px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 68%);
 }
 
 /* ═══ 消息气泡 —— 柔和玻璃，近距淡影，不压内容 ═══ */
-[class*="_bubble"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 78%) !important;
+body[data-bloom-variant] [class*="_bubble"] {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 78%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.25);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.25);
   box-shadow:
@@ -251,7 +251,7 @@ body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-withi
     0 6px 24px -10px rgba(0,0,0,0.14);
 }
 body[data-ds-dark-theme] [class*="_bubble"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 62%) !important;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 62%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.08),
     inset 0 0 0 1px rgba(255,255,255,0.04),
@@ -263,9 +263,9 @@ body[data-ds-dark-theme] [class*="_bubble"] {
    v0.6.0 早期设到 22%（78% 不透明）已被 verify 证伪：青金/冷色调 + 亮色聊天内容
    透字仍明显（用户截图「字竖排的 layout bug」整段透出）。现在跟 Bloom 自己的
    下拉（transparent 12%）一致。*/
-[class*="_menu"],
-[class*="_selector"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 20%) !important;
+body[data-bloom-variant] [class*="_menu"],
+body[data-bloom-variant] [class*="_selector"] {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 20%);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
   box-shadow:
@@ -275,7 +275,7 @@ body[data-ds-dark-theme] [class*="_bubble"] {
 }
 body[data-ds-dark-theme] [class*="_menu"],
 body[data-ds-dark-theme] [class*="_selector"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #101010), transparent 12%) !important;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #101010), transparent 12%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.1),
     inset 0 0 0 1px rgba(255,255,255,0.05),
@@ -301,11 +301,11 @@ body[data-ds-dark-theme] [class*="_selector"] {
    选中卡片写的是 border-color: var(--dsw-alias-label-primary) —— 那是正文文字色，
    Bloom 在暗色下给它 oklch(0.96 …) 近白，于是选中卡围了一圈刺眼白边。
    选中态本该是主题色。hover 态同样拿 label-dimmed 当边框，一并换成发丝线。 */
-[class*="_cardActive"] {
-  border-color: var(--bloom-accent) !important;
+body[data-bloom-variant] [class*="_cardActive"] {
+  border-color: var(--bloom-accent);
 }
-[class*="_card"]:hover:not([class*="_cardActive"]) {
-  border-color: var(--bloom-hairline-strong) !important;
+body[data-bloom-variant] [class*="_card"]:hover:not([class*="_cardActive"]) {
+  border-color: var(--bloom-hairline-strong);
 }
 
 /* 「浅色 / 深色 / 跟随系统」选中态的边框：DSH 用 --dsw-static-neutral-bluish-400
@@ -316,29 +316,30 @@ body[data-ds-dark-theme] [class*="_selector"] {
    选中态本该是主题色，这里按 accent 接管。并且**不**整体覆盖
    --dsw-static-neutral-bluish-400 —— static 是 DSH 的基础色阶，全局改会波及
    大量无关组件；只在这个具体组件上纠正，影响面可控。 */
-button[class*="_themeCube"][class*="_selected"] {
-  border-color: var(--bloom-accent) !important;
+body[data-bloom-variant] button[class*="_themeCube"][class*="_selected"] {
+  border-color: var(--bloom-accent);
 }
 
-.md-code-block,
-[class*="_tableScroll"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 70%) !important;
+body[data-bloom-variant] .md-code-block,
+body[data-bloom-variant] [class*="_tableScroll"] {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 70%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
 }
 body[data-ds-dark-theme] .md-code-block,
 body[data-ds-dark-theme] [class*="_tableScroll"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 56%) !important;
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 56%);
 }
-.md-code-block pre, .md-code-block code { background: transparent !important; }
+body[data-bloom-variant] .md-code-block pre,
+body[data-bloom-variant] .md-code-block code { background: transparent; }
 
 /* ═══ 表格内部分隔线加强（v0.9.0）用户截图反馈列线几乎不可见 ═══
    原 CSS 用 var(--bloom-hairline)（莫兰迪 30% alpha）做列分隔，
    在深色氛围渐变上几乎消失，看起来像没线的「列表」。提到
    hairline-strong（55% alpha）并给 thead 加一档淡底，列与行都立起来。 */
-[class*="_tableScroll"] th,
-[class*="_tableScroll"] td {
-  border-color: var(--bloom-hairline-strong) !important;
+body[data-bloom-variant] [class*="_tableScroll"] th,
+body[data-bloom-variant] [class*="_tableScroll"] td {
+  border-color: var(--bloom-hairline-strong);
 }
 [class*="_tableScroll"] thead th {
   background: rgba(var(--bloom-morandi), 0.10);

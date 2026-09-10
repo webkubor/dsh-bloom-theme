@@ -35,16 +35,16 @@ body {
 
 /* 让 body 的氛围层透出来：DSH 这几个全屏容器自带不透明底色会盖住它。
    侧栏与卡片保留自己的 surface 色（原版同样保留），只做描边和光。 */
-[class*="_frame"],
-[class*="_centerCol"],
+body[data-bloom-variant] [class*="_frame"],
+body[data-bloom-variant] [class*="_centerCol"],
 /* :has() 里不能加子组合器（\`> \`）：实测 DSH 的结构是 _root > _body > _scrollBody，
    scrollBody 是孙子。写成子选择器这条一直没命中 —— 会话区一直盖着
    oklch(0.28 0.02 240) 不透明底，body 的极光在中区完全看不见（这就是
    owner 说「没光感」的真正原因）。 */
-[class*="_root"]:has([class*="_scrollBody"]),
-[class*="_scrollBody"] {
-  background-color: transparent !important;
-  background-image: none !important;
+body[data-bloom-variant] [class*="_root"]:has([class*="_scrollBody"]),
+body[data-bloom-variant] [class*="_scrollBody"] {
+  background-color: transparent;
+  background-image: none;
 }
 
 /* ═══ 2. 冷光线条 ═════════════════════════════════════════════════
@@ -151,9 +151,9 @@ body {
    自己的"色"，与 body 区分；② 顶部 120px 氛围染。右侧冷光线交给下面的
    ::after / ::before 双层（线 + 光晕），因为 box-shadow inset 会被 glass.ts
    的 _sidebarCol 规则覆盖掉（cascade 顺序），改用伪元素才不会被吃掉。 */
-[class*="_sidebarCol"] {
+body[data-bloom-variant] [class*="_sidebarCol"] {
   /* 宿主那条 0.5px 实线优先级更高，不加 !important 关不掉（实测覆盖后仍是 0.5px） */
-  border-right: 0 !important;
+  border-right: 0;
   background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 96%);
   background-image: linear-gradient(
     180deg,
@@ -351,9 +351,9 @@ pre code {
   border-spacing: 0;
   min-width: 100%;
 }
-[class*="_tableScroll"] th,
-[class*="_tableScroll"] td {
-  border-color: var(--bloom-hairline) !important;
+body[data-bloom-variant] [class*="_tableScroll"] th,
+body[data-bloom-variant] [class*="_tableScroll"] td {
+  border-color: var(--bloom-hairline);
   border-right-width: 1px;
   border-right-style: solid;
   border-bottom-width: 1px;
@@ -378,7 +378,7 @@ pre code {
 /* 推理中的 “Deep diving…”：DSH 原生 shimmer 直接使用 DeepSeek 静态蓝。
    Bloom 为每个变体提供主色及两种邻近色，做成克制的三色光谱流动：有 Gemini
    式的生命力，但色相始终属于当前主题。以语义后缀而非 CSS Module hash 匹配。 */
-[class*="_turnStatus"]:not([class*="_turnStatusClock"]) {
+body[data-bloom-variant] [class*="_turnStatus"]:not([class*="_turnStatusClock"]) {
   background-image: linear-gradient(
     110deg,
     var(--bloom-motion-1) 0%,
@@ -387,7 +387,7 @@ pre code {
     var(--bloom-motion-1) 60%,
     var(--bloom-motion-2) 78%,
     var(--bloom-motion-3) 100%
-  ) !important;
+  );
   background-size: 260% 100% !important;
   animation: bloom-deep-dive-spectrum 3.6s ease-in-out infinite alternate !important;
 }
@@ -711,9 +711,9 @@ div[class*="_composer"] div[class*="_card"]:focus-within::after {
  */
 
 /* 顶部标题栏下沿：宽 18px 软渐变 —— 不是"线"是"光"。最右 12% 不透明度，向下淡出到透明。 */
-[class*="_header"] {
+body[data-bloom-variant] [class*="_header"] {
   position: relative;
-  border-bottom: 0 !important;
+  border-bottom: 0;
 }
 [class*="_header"]::after {
   content: '';
@@ -732,11 +732,11 @@ div[class*="_composer"] div[class*="_card"]:focus-within::after {
 
 /* 描边按钮 → 浅底。新会话 / Session 日志 / 本主题切换器三个长得一样，
    一起处理，免得只改自己的显得突兀 */
-[class*="_newSession"],
-[class*="_sessionLogButton"],
-.dsh-bloom-trigger {
-  border-color: transparent !important;
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%) !important;
+body[data-bloom-variant] [class*="_newSession"],
+body[data-bloom-variant] [class*="_sessionLogButton"],
+body[data-bloom-variant] .dsh-bloom-trigger {
+  border-color: transparent;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
   /* transform + box-shadow 也进 transition：§7 hover 抬升要平滑，不能 snap。
      §7 那边只改属性，不重声明 transition —— 避免重复定义打架 */
   transition:
@@ -744,15 +744,15 @@ div[class*="_composer"] div[class*="_card"]:focus-within::after {
     transform var(--bloom-dur-fast, .16s) var(--bloom-ease, ease),
     box-shadow var(--bloom-dur-fast, .16s) var(--bloom-ease, ease);
 }
-[class*="_newSession"]:hover,
-[class*="_sessionLogButton"]:hover,
-.dsh-bloom-trigger:hover {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%) !important;
+body[data-bloom-variant] [class*="_newSession"]:hover,
+body[data-bloom-variant] [class*="_sessionLogButton"]:hover,
+body[data-bloom-variant] .dsh-bloom-trigger:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
 }
 
 /* 侧栏底部操作区：上边框 → 向上扩散的极淡阴影 */
-[class*="_footerActions"] {
-  border-top: 0 !important;
+body[data-bloom-variant] [class*="_footerActions"] {
+  border-top: 0;
   box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
 `

@@ -13,6 +13,15 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.9.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.9.0...v0.9.1) (2026-09-10)
+
+
+### 🐛 Bug Fixes
+
+* **check:** 校验 exports 声明的入口真的存在于产物（closes [#19](https://github.com/webkubor/dsh-bloom-theme/issues/19)） ([4599621](https://github.com/webkubor/dsh-bloom-theme/commit/45996218af61529ebc422bc239d4919182ad78f1))
+* **glass:** 输入卡玻璃移到 ::before，不再破坏后代 fixed 定位（closes [#15](https://github.com/webkubor/dsh-bloom-theme/issues/15)） ([951cd7e](https://github.com/webkubor/dsh-bloom-theme/commit/951cd7e980f0f6a1f36307bb81f315428ba9c29c))
+* **tokens:** button-primary-dimmed 取 bg，恢复「fill 上的文字色」官方语义（closes [#16](https://github.com/webkubor/dsh-bloom-theme/issues/16)） ([dbec920](https://github.com/webkubor/dsh-bloom-theme/commit/dbec920af86920bfe809d04833ba456c4aebe018))
+
 ## [0.8.8](https://github.com/webkubor/dsh-bloom-theme/compare/v0.8.7...v0.8.8) (2026-08-24)
 
 

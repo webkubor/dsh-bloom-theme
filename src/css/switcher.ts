@@ -13,7 +13,17 @@ export const SWITCHER_CSS = `
   top: 84px;
   right: 16px;
   z-index: 9999;
+  /* 触摸设备上拖动不要连带滚页面 */
+  touch-action: none;
 }
+/* 浮动形态可拖动（#14）：这个形态钉在固定坐标上，会压住什么取决于用户
+   装了哪些插件（报告里是侧边栏展开后顶部那排按钮）。给 grab 光标是为了
+   让「它挡住我了」的人第一反应就是把它拖开；点击打开菜单照旧可用。 */
+.dsh-bloom-switcher[data-floating="true"] .dsh-bloom-trigger { cursor: grab; }
+.dsh-bloom-switcher[data-dragging="true"] .dsh-bloom-trigger { cursor: grabbing; }
+.dsh-bloom-switcher[data-dragging="true"] .dsh-bloom-trigger { transition: none; }
+/* 拖到屏幕左半边时菜单改左对齐，否则 right:0 的菜单会伸出视口 */
+.dsh-bloom-switcher[data-menu-side="left"] .dsh-bloom-menu { left: 0; right: auto; }
 
 .dsh-bloom-trigger {
   display: inline-flex;

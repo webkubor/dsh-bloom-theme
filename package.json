@@ -33,7 +33,7 @@
     "package": "npm run build && npm pack",
     "desktop:link": "node scripts/desktop-profile.mjs link",
     "desktop:production": "node scripts/desktop-profile.mjs production",
-    "check": "node scripts/check.mjs && contrast-guard",
+    "check": "node scripts/check.mjs && node scripts/check-drag.mjs && contrast-guard",
     "check:contrast": "contrast-guard",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",

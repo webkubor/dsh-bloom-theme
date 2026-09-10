@@ -10,6 +10,7 @@ import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, hasSettingsEntry, setMode, type AppearanceMode } from './appearance.js'
+import { enableFloatingDrag, clearFloatingPos } from './drag.js'
 import { VARIANTS } from './palette.js'
 
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
@@ -257,6 +258,9 @@ export function injectSwitcher(initialVariant) {
     // 已存在但宿主出现了（首屏时 header 还没渲染），迁进去
     if (host && !host.contains(existing)) {
       existing.dataset.floating = 'false'
+      // 迁回 header 前必须清掉浮动坐标：fixed 时代的 left/top 残留在
+      // inline-flex 元素上会把它顶出顶栏（#14）
+      clearFloatingPos(existing)
       host.prepend(existing)
     }
     return
@@ -268,6 +272,8 @@ export function injectSwitcher(initialVariant) {
   } else {
     el.dataset.floating = 'true'
     document.body.appendChild(el)
+    // 必须在入 DOM 之后：恢复位置要读 offsetWidth/offsetHeight 做视口夹取
+    enableFloatingDrag(el)
   }
 }
 

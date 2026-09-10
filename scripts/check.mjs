@@ -301,10 +301,16 @@ uniqHardcoded.length === 0
 
 // CSS 常量是模板字符串，注释里写反引号会**提前终止模板** —— tsc 报的是
 // 「',' expected」这种毫不相干的语法错，定位很费时间（实测踩过）。
+// ⚠️ 这条判据本身修过一次（2026-09-10）：原来先 `.replace(/`[\s\S]*$/, '')` 砍掉
+// 第一个反引号之后的所有内容，于是**裸反引号正好把自己砍掉了** —— 注释里写
+// 一个裸反引号，inner 在它之前就结束，检查恒过（实测假阴性，漏掉一次真 bug：
+// COMPONENT_CSS 被提前终止后整个变成 `"前半段" > "后半段"` 的布尔表达式，
+// tsc 不报错、门禁全绿、页面上组件 CSS 静默消失）。
+// 现在改成：先去掉转义反引号 \`，模板起点之后应当**只剩收尾那一个**反引号。
 const backtickBugs = []
 for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
-  const inner = f.code.replace(/^[\s\S]*?= `/, '').replace(/`[\s\S]*$/, '')
-  if (inner.includes('`')) backtickBugs.push(f.path)
+  const inner = f.code.replace(/\\`/g, '').replace(/^[\s\S]*?= `/, '')
+  if ((inner.match(/`/g) || []).length !== 1) backtickBugs.push(f.path)
 }
 backtickBugs.length === 0
   ? ok('CSS 模板字符串内无裸反引号')

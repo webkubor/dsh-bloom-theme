@@ -62,27 +62,13 @@ body {
     radial-gradient(600px circle at 0% 0%, rgba(var(--bloom-morandi), 0.08), transparent 60%);
 }
 
-/* 会话条目：hover 冷光淡染，选中态左侧一道主色标记
-   !important 必要：DSH 后注入 .YDXeBa_sessionRow:hover 用
-   --dsw-alias-interactive-bg-hover（固定蓝色），不 !important 压不住。 */
+/* 会话条目：圆角 + 过渡。hover / 选中的着色统一在 §6「会话行」那一处，
+   这里不再重复一遍（曾经两处各写一遍 6% 和 7%，靠 !important 决定谁赢，
+   等于用 !important 压自己人）。 */
 [class*="_sidebarCol"] [role="treeitem"],
 [class*="_sidebarCol"] [class*="_sessionRow"] {
   border-radius: 8px;
   transition: background 0.15s ease;
-}
-[class*="_sidebarCol"] [role="treeitem"]:hover,
-[class*="_sidebarCol"] [class*="_sessionRow"]:hover {
-  background: color-mix(in oklch, var(--bloom-accent) 6%, transparent) !important;
-}
-[class*="_sidebarCol"] [role="treeitem"][aria-selected="true"],
-[class*="_sidebarCol"] [class*="_active"],
-[class*="_sidebarCol"] [class*="_selected"] {
-  position: relative;
-  /* v0.10.x（owner 反馈「脏」）：25% accent 实色底成了色块。
-  改成 8% accent —— 选中感靠"染色"传达，不是色块。
-  !important 必要：DSH 后注入 .YDXeBa_sessionRow.YDXeBa_selected 用
-  --dsw-alias-interactive-bg-hover（固定蓝色，不跟变体走），会把这条吃掉。 */
-  background: color-mix(in oklch, var(--bloom-accent) 8%, transparent) !important;
 }
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] [class*="_title"],
 [class*="_sidebarCol"] [class*="_active"] [class*="_title"],
@@ -525,13 +511,17 @@ body {
 /* 当前行：只染色，不画条不画框（owner 反馈「脏」）
    之前有左侧 3px 蓝竖条 + inset 1px 边框 + 25% accent 实色底，三个都是脏点。
    现在只留一个 8% 的极淡 accent 染色，跟 hover 区分用细微浓淡差。
-   !important 必要：DSH 后注入 .YDXeBa_sessionRow.YDXeBa_selected 用
-   --dsw-alias-interactive-bg-hover（固定蓝色，不跟变体走），不 !important 压不住。 */
+
+   这里不需要 !important（2026-09-10 实测推翻了原注释）：DSH 那条是
+   .YDXeBa_sessionRow.YDXeBa_selected { background: var(--dsw-alias-interactive-bg-hover) }，
+   特异度 (0,2,0) 且不带 !important，而本条 (0,3,0) 本来就赢；更何况
+   --dsw-alias-interactive-bg-hover 早已被 tokens.ts 覆写成本主题的 accent，
+   压根不是"固定蓝色"。 */
 [class*="_sidebarCol"] [class*="_sessionRow"][class*="_selected"],
 [class*="_sidebarCol"] [class*="_sessionRow"][class*="_active"],
 [class*="_sidebarCol"] [class*="_sessionRow"][aria-selected="true"],
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%) !important;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
 }
 
 /* v0.10.x：左色条 + bloom-bar-in 动画整体删除（owner 反馈「脏」）。

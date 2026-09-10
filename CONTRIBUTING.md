@@ -19,7 +19,7 @@ npm run dev      # 监听 lib/，保存即部署到 web profile 并自动刷新�
 
 ```
 meta.ts        插件 ID / 版本号 / localStorage key —— 最底层，不 import 任何东西
-palette.ts     8 套配色的色板与标签 + mix()  —— 纯数据，无依赖
+palette.ts     10 套配色的色板与标签 + mix()  —— 纯数据，无依赖
    ↓
 tokens.ts      色板 → CSS 变量（borderStack / labelStack / sharedDswTokens / 三个变体块）
 css/           component.ts · glass.ts · switcher.ts —— 纯 CSS 字符串常量，零插值
@@ -152,6 +152,34 @@ preflight 查 check 照不到的那一类 —— 它们都得对照**外部真�
 （conventional-changelog 的规范如此，body 一律丢掉）。而本项目的 commit body 才是
 有价值的部分 —— 现象、根因、实测数字。所以**正文照旧要好好写**，它不会白写：
 Release 页面顶部是简洁列表，底部有可展开的详细说明。
+
+### 📸 Release notes 必须配图（owner 要求，2026-09-10）
+
+**一个主题的发版说明只有文字等于没写。** 自动生成的 changelog 是给 git 看的，
+Release 页是给人看的 —— 人要看到这一版长什么样。
+
+发完版（tag 已打、npm 已发）补这一段，放在自动 changelog **上面**：
+
+1. **拍图**：ego-browser 开 `http://127.0.0.1:3080`，至少三张 ——
+   整页深色、整页浅色、以及这一版真正改动的那块（面板/输入卡/侧栏，按需裁剪）。
+   变体统一用 mist 雾蓝，跟 README 对齐；换变体是另一回事，别混在同一张里。
+2. **传图**：走 R2（`cs resource policy` 是真源：**picx 已冻结新增**）。
+   注意 `cs image upload` 的默认值还停在 picx，必须显式 `--target r2`；
+   凭据不要手填，从密钥库注入：
+
+   ```sh
+   CF_ACCOUNT_ID=916ebb1b9f240bf4c8826021dd161692 \
+   cs kyvault run --env CF_API_TOKEN=secret://cloudflare/api-token -- \
+     cs image upload <file> --target r2 --path projects/dsh-bloom-theme/<版本号>
+   ```
+
+3. **写说明**：`gh release edit v<x.y.z> --notes-file <文件>`，内容不是复述
+   changelog，而是回答三件事 —— **看起来什么样**（图 + 一句话）、
+   **新增了什么可感知的东西**（比如输入卡三态那张表）、
+   **升级后哪里会变得不一样**（行为变化要单独说，别埋在列表里）。
+   有外部贡献者就在这里点名致谢并链 PR。
+
+参照 v0.11.0：<https://github.com/webkubor/dsh-bloom-theme/releases/tag/v0.11.0>
 
 ### ⛔ 不要做这些
 

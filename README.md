@@ -7,7 +7,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 套主题</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>8 套配色 · 当前</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>10 套配色 · 当前</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>配色护栏</sub></td>
 </tr>
 </table>
@@ -42,14 +42,14 @@
   把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
   <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />
-  <b>玻璃 + 莫兰迪</b>：8 套明暗双主题，磨砂玻璃面板，顶栏一键切换，
+  <b>玻璃 + 莫兰迪</b>：10 套明暗双主题，磨砂玻璃面板，顶栏一键切换，
   连 AI 思考的等待也跟主题一起呼吸。
 </p>
 
 ## 一句话
 
 **给 DeepSeek Harness 的「玻璃 + 莫兰迪」主题。**
-8 套配色，明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
+10 套配色，明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
 配色是低饱和莫兰迪（OKLCH 调色、WCAG AA），全站统一克制的微动效，零运行时依赖，前端 TypeScript 构建。
 
 > 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
@@ -61,7 +61,7 @@
   <sub>鼠尾草·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
 </p>
 
-**8 套配色（亮色）**：点击任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
+**10 套配色（亮色）**：点击任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
 
 <table align="center">
 <tr>
@@ -95,7 +95,7 @@ npm i -g @kubor/dsh-bloom-theme
 dsh plugin enable @kubor/dsh-bloom-theme
 ```
 
-装完刷新页面，顶栏右上角会出现「雾蓝 ▾」主题按钮。点击展开即可在 **8 套配色**间切换，
+装完刷新页面，顶栏右上角会出现「雾蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，
 下拉底部显示当前版本号；npm 上有更新的版本时会亮一个 `↑ vX` 徽标（点它跳 Release 页）。
 
 ## 特性
@@ -103,7 +103,7 @@ dsh plugin enable @kubor/dsh-bloom-theme
 | 特性 | 说明 |
 | :-- | :-- |
 | **磨砂玻璃面板（默认常开）** | 半透底 + `backdrop-filter` 模糊 + 玻璃边缘（顶部亮高光 / 半透描边 / 柔和外辉），明暗两档透明度自适应 |
-| **8 套莫兰迪配色** | 雾蓝 / 丹红 / 花瓣 / 涟漪 / 鼠尾草 / 暖石 / 青金 / 琥珀，每套明暗双主题，一键切换 |
+| **10 套莫兰迪配色** | 雾蓝 / 朱砂 / 花瓣 / 涟漪 / 鼠尾草 / 暖石 / 青金 / 琥珀 / 极光 / 薰衣草，每套明暗双主题，一键切换 |
 | **双轨配色** | 可读轨保对比度（文字/按钮），气质轨专供氛围渐变，两轨分工不混用 |
 | **微交互动效** | 菜单入场、选中态色条滑入、hover / 按压反馈；统一时长与缓动 token，全站一致 |
 | **主题色推理动效** | `Deep diving…` 以当前主题三色光谱流动，不再固定 DeepSeek 蓝；`prefers-reduced-motion` 下自动静止 |

@@ -1,5 +1,5 @@
 /**
- * 9 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
+ * 10 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
  *
  * **双轨制不能退回单轨**（见 CONTRIBUTING「改配色时注意」）：
  *   accentL / accentD  可读轨 —— 文字、按钮填充、边框，必须过 WCAG AA
@@ -8,9 +8,9 @@
  * 拿可读轨铺大面积、或拿气质轨做文字色，都会失去莫兰迪质感。
  */
 
-export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora']
+export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender']
 
-export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora']
+export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender']
 
 /**
  * Bloom 色板 —— 双轨制（这是从 typora-Bloom-theme 继承来的关键设计，别退回单轨）。
@@ -25,7 +25,7 @@ export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', '
  * 一旦把 accent 拿去刷大面积，petal 就会从藕粉变成荧光洋红 —— 莫兰迪感就没了。
  *
  * 亮色 accent 的 L 值已按 WCAG AA(4.5:1) 反推校准（底色为各变体的 bgL）。
- * accent × bg 实测对比度（9 变体 × 明暗，全部 ≥ 4.5:1）——
+ * accent × bg 实测对比度（10 变体 × 明暗，全部 ≥ 4.5:1）——
  * 这一对同时也是主按钮的 fill × dimmed（见 tokens.ts 的 button-primary-dimmed）：
  *
  *   变体       亮色     暗色        变体       亮色     暗色
@@ -33,7 +33,7 @@ export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', '
  *   cinnabar 4.87:1   5.63:1      lapis    5.63:1   7.31:1
  *   petal    4.55:1   6.07:1      amber    4.54:1   7.65:1
  *   ripple   4.61:1   8.51:1      aurora   5.10:1   7.74:1
- *   sage     4.53:1   7.42:1
+ *   sage     4.53:1   7.42:1      lavender 5.24:1   6.81:1
  *
  * 最紧的是 sage 亮色 4.53:1 —— 改任何变体的 accentL/bgL 前先重算，
  * 别只看「颜色好不好看」。（此前这段注释停在 petal 3.55 / ripple 3.02，
@@ -139,6 +139,20 @@ export const PALETTE = {
     motionL: ['oklch(50% 0.10 165)', 'oklch(50% 0.11 210)', 'oklch(52% 0.11 300)'],
     motionD: ['oklch(75% 0.12 165)', 'oklch(75% 0.12 210)', 'oklch(75% 0.12 300)'],
   },
+  /* v0.12.0：薰衣草 —— 灰调紫。hue 295 卡在 mist(240) 与 petal(350) 中间，
+     跟两边都拉得开；彩度压到 0.10~0.11（比 petal 的 0.22 低一半），
+     紫一旦上彩度就变霓虹，莫兰迪的紫必须是"蒙了一层灰的紫"。
+     motion 三色取 265/295/325，是同一束紫光偏冷偏暖的两侧。 */
+  lavender: {
+    accentL: 'oklch(52% 0.11 295)',   accentD: 'oklch(75% 0.11 295)',
+    morandi: '164, 148, 190',
+    bgL: 'oklch(97% 0.012 295)',      bgD: 'oklch(26% 0.02 295)',
+    txL: 'oklch(25% 0.02 295)',       txD: 'oklch(96% 0.012 295)',
+    sfL: 'oklch(95% 0.014 295)',      sfD: 'oklch(32% 0.022 295)',
+    sf2L: 'oklch(92.5% 0.016 295)',   sf2D: 'oklch(38% 0.024 295)',
+    motionL: ['oklch(52% 0.11 295)', 'oklch(52% 0.10 265)', 'oklch(53% 0.12 325)'],
+    motionD: ['oklch(75% 0.11 295)', 'oklch(75% 0.11 265)', 'oklch(76% 0.12 325)'],
+  },
 }
 
 export const VARIANT_LABELS = {
@@ -151,6 +165,7 @@ export const VARIANT_LABELS = {
   lapis:    { zh: '青金', en: 'Lapis' },
   amber:    { zh: '琥珀', en: 'Amber' },
   aurora:   { zh: '极光', en: 'Aurora' },
+  lavender: { zh: '薰衣草', en: 'Lavender' },
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

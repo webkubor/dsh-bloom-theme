@@ -18,6 +18,14 @@
  * 别用 try/catch 包住它继续截图。
  */
 ;(() => {
+  const PROJECTS = ['my-app', 'design-system', 'api-server', 'docs-site', 'playground', 'sandbox']
+  const SESSIONS = [
+    'Refactor auth flow', 'Add dark mode toggle', 'Fix pagination bug',
+    'Update dependencies', 'Write API docs', 'Improve error handling',
+    'Optimize bundle size', 'Migrate to v2',
+  ]
+
+
   // 脱敏**前**先把真名记下来 —— 下面收尾时要拿它反查有没有漏网的。
   // 用现场读到的真名当断言依据（而不是维护一份写死的黑名单），
   // 换台机器、换个工作区都不用改这份脚本。
@@ -37,19 +45,16 @@
     if (t) chrome.add(t)
   })
 
+  // 脚本必须可重复执行：连拍多张时第二次跑，页面上已经是假名了。
+  // 不排掉假名，取样就会把 "my-app" 当"真名"、收尾又必然在页面上找到它 ——
+  // 断言会 100% 误报（2026-09-10 连拍第二张时踩到）。
+  const FAKE = new Set([...PROJECTS, ...SESSIONS])
   const realNames = new Set()
   targetEls.forEach((el) => {
     const t = firstLine(el)
     // 太短的（"…"、时间戳）留着会误报，长度门槛卡在 3
-    if (t.length >= 3 && !chrome.has(t)) realNames.add(t)
+    if (t.length >= 3 && !chrome.has(t) && !FAKE.has(t)) realNames.add(t)
   })
-
-  const PROJECTS = ['my-app', 'design-system', 'api-server', 'docs-site', 'playground', 'sandbox']
-  const SESSIONS = [
-    'Refactor auth flow', 'Add dark mode toggle', 'Fix pagination bug',
-    'Update dependencies', 'Write API docs', 'Improve error handling',
-    'Optimize bundle size', 'Migrate to v2',
-  ]
 
   const setText = (el, text) => {
     // 只换纯文本节点，保留图标 / 徽标 / 时间戳那些兄弟节点

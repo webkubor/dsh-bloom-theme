@@ -199,7 +199,9 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
     inset 0 1px 0 rgba(255,255,255,0.28),
     0 1px 2px -1px rgba(0, 0, 0, 0.18),
     0 18px 52px -20px rgba(0,0,0,0.26),
-    0 0 48px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
+    /* 外晕浓度由 --bloom-halo 驱动（component.ts §7 的呼吸动画在推它）：
+       halo=0.73 时等于原来的 78%，0.3 时淡到 91%，0.85 时浓到 74.5%。 */
+    0 0 48px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent calc(100% - var(--bloom-halo, 0.73) * 30%));
 }
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
   content: '';
@@ -217,7 +219,7 @@ body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"] {
     inset 0 1px 0 rgba(255,255,255,0.12),
     0 1px 2px -1px rgba(0, 0, 0, 0.5),
     0 20px 56px -22px rgba(0,0,0,0.55),
-    0 0 64px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 72%);
+    0 0 64px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent calc(100% - var(--bloom-halo, 0.7) * 40%));
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]::before {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%);

@@ -265,9 +265,14 @@ console.log('\n自有 CSS 变量引用')
 // （--dsw-alias-* 由 DSH 定义，无法穷举，不在此列。）
 {
   // 用剥注释后的源码 —— 注释里复述「原先写的是 var(--bloom-tx)」是合法的
-  const defined = new Set(
-    [...SRC_CODE.matchAll(/^\s*(--bloom-[a-z0-9-]+)\s*:/gm)].map((m) => m[1]),
-  )
+  const defined = new Set([
+    ...[...SRC_CODE.matchAll(/^\s*(--bloom-[a-z0-9-]+)\s*:/gm)].map((m) => m[1]),
+    // @property 也是定义（而且是更正式的那种：带 syntax / initial-value，
+    // 声明后才能在 keyframes 里被插值）。2026-09-10 漏过一次：--bloom-spin
+    // 只在 @property 里声明、在 keyframes 写成 `to { --bloom-spin: 360deg }`
+    // 同一行，上面那条按行首匹配的正则扫不到，误报成"未定义"。
+    ...[...SRC_CODE.matchAll(/@property\s+(--bloom-[a-z0-9-]+)/g)].map((m) => m[1]),
+  ])
   const referenced = [...SRC_CODE.matchAll(/var\(\s*(--bloom-[a-z0-9-]+)/g)].map((m) => m[1])
   const undef = [...new Set(referenced)].filter((v) => !defined.has(v))
   undef.length === 0

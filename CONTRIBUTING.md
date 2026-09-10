@@ -163,6 +163,25 @@ Release 页是给人看的 —— 人要看到这一版长什么样。
 1. **拍图**：ego-browser 开 `http://127.0.0.1:3080`，至少三张 ——
    整页深色、整页浅色、以及这一版真正改动的那块（面板/输入卡/侧栏，按需裁剪）。
    变体统一用 mist 雾蓝，跟 README 对齐；换变体是另一回事，别混在同一张里。
+
+   ⛔ **截图前必须脱敏，这一步不能省。** 侧栏会把真实工作区一览无余 ——
+   项目名、会话标题；输入卡上方还有一枚"当前工作区"胶囊。这些图会进 README
+   和公开的 Release 页，等于把私有项目清单发布出去。
+   （2026-09-10 实际发生过：v0.11.0 首版配图带出了七八个真实项目名和一整段
+   对话正文，已删对象 + 清 CDN 缓存 + 换文件名重发。）
+
+   ```js
+   // 先开一个新会话（正文空 = hero 态），再注入脱敏脚本，最后才截图
+   await js(fs.readFileSync('scripts/redact-for-shot.js', 'utf8'))
+   ```
+
+   假数据沿用 README 那套（my-app / design-system / Refactor auth flow…），
+   换一套会让新旧展示图对不上号。截完自查一遍：
+
+   ```js
+   await js(`['CortexOS','modelgo',...].filter(k => document.body.innerText.includes(k))`)
+   // 必须返回 []
+   ```
 2. **传图**：走 R2（`cs resource policy` 是真源：**picx 已冻结新增**）。
    注意 `cs image upload` 的默认值还停在 picx，必须显式 `--target r2`；
    凭据不要手填，从密钥库注入：

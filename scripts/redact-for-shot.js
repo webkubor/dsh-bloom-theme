@@ -12,8 +12,38 @@
  * 换一套会让新旧展示图对不上号。
  *
  * 只改 DOM 文本，不写 localStorage、不发请求 —— 刷新即恢复。
+ *
+ * **它是闸门，不是工具**：结尾会拿脱敏前记下的真名反查整页，还有残留就抛错，
+ * 让 js() 调用直接失败 —— 调用方拿不到返回值，也就走不到截图那一步。
+ * 别用 try/catch 包住它继续截图。
  */
 ;(() => {
+  // 脱敏**前**先把真名记下来 —— 下面收尾时要拿它反查有没有漏网的。
+  // 用现场读到的真名当断言依据（而不是维护一份写死的黑名单），
+  // 换台机器、换个工作区都不用改这份脚本。
+  const TARGETS = '[class*="_sidebarCol"] [class*="_projectRow"], [class*="_sidebarCol"] [class*="_sessionRow"],'
+    + ' [class*="_workspaceLabel"], [class*="_header"] [class*="_title"]'
+  const targetEls = [...document.querySelectorAll(TARGETS)]
+  const firstLine = (el) => (el.innerText || '').trim().split('\n')[0].trim()
+
+  // 界面自带的固定文案（"新会话""设置""工作区"…）也可能正好等于某个会话标题。
+  // 它们不是隐私，而且脱敏后照样留在页面上 —— 不排掉就会把断言变成必然误报。
+  // 判据是"这段文字在脱敏目标之外也出现过"，不写死名单，换语言/换版本都不用改。
+  const chrome = new Set()
+  document.querySelectorAll('body *').forEach((el) => {
+    if (el.children.length) return
+    if (targetEls.some((t) => t === el || t.contains(el))) return
+    const t = (el.textContent || '').trim()
+    if (t) chrome.add(t)
+  })
+
+  const realNames = new Set()
+  targetEls.forEach((el) => {
+    const t = firstLine(el)
+    // 太短的（"…"、时间戳）留着会误报，长度门槛卡在 3
+    if (t.length >= 3 && !chrome.has(t)) realNames.add(t)
+  })
+
   const PROJECTS = ['my-app', 'design-system', 'api-server', 'docs-site', 'playground', 'sandbox']
   const SESSIONS = [
     'Refactor auth flow', 'Add dark mode toggle', 'Fix pagination bug',
@@ -56,9 +86,29 @@
   const bubbles = document.querySelectorAll('[class*="_bubble"], [class*="_scrollBody"] [class*="_markdown"]')
   bubbles.forEach((b) => { b.textContent = '' })
 
-  return {
+  // ⛔ 自校验：漏网就**抛错**，不是返回一个没人看的 warning。
+  // 这条是这份脚本存在的意义 —— 靠人记得"还要检查一遍"是不可靠的，
+  // v0.11.0 那次就是每一处都想到了、唯独漏了输入卡上的工作区胶囊。
+  // 抛错会让 js() 调用失败，调用方拿不到结果、走不到截图那一步。
+  const page = document.body.innerText
+  const leaked = [...realNames].filter((n) => page.includes(n))
+  if (leaked.length) {
+    throw new Error(
+      '[redact-for-shot] 脱敏不完整，以下真实名称仍出现在页面上：'
+      + JSON.stringify(leaked)
+      + ' —— 说明有新的 DOM 位置没被覆盖。补上对应选择器再截图，不要手动绕过这个断言。',
+    )
+  }
+
+  // 结果同时挂到 window：某些执行环境（如 ego-browser 的 js()）会把整段源码
+  // 再包一层 IIFE，导致这里的返回值被丢掉。调用方读 window.__bloomRedact 更稳。
+  const result = {
+    ok: true,
     projects: document.querySelectorAll('[class*="_projectRow"]').length,
     sessions: document.querySelectorAll('[class*="_sessionRow"]').length,
     clearedBubbles: bubbles.length,
+    verifiedAgainst: realNames.size,
   }
+  window.__bloomRedact = result
+  return result
 })()

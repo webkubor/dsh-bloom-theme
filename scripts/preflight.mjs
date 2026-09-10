@@ -220,6 +220,25 @@ head('本地 DSH profile 装的版本')
   if (!any) skip('本机没有 ~/.dsh/profiles，跳过')
 }
 
+// ── 上一版 Release 是否配了图 ─────────────────────────────────────
+// owner 2026-09-10：「以后你的日志里要加新版的图不能只加文字」。
+// 这条只能事后查（图是发完版才补的），所以放在**下一次**发版前 —— 上一版没配图，
+// 这次发版前就会被拦下来补。纯文字 changelog 对一个主题项目等于没写。
+head('上一版 Release 配图')
+if (online) {
+  const body = sh('gh release view --json body -q .body 2>/dev/null')
+  if (!body) {
+    skip('拿不到 Release 正文（gh 未登录 / 无网 / 还没发过版）')
+  } else {
+    const hasImg = /!\[[^\]]*\]\(https?:\/\//.test(body) || /<img\s[^>]*src=["']https?:\/\//.test(body)
+    const tag = sh('gh release view --json tagName -q .tagName 2>/dev/null') || '上一版'
+    hasImg
+      ? ok(`${tag} 的 Release 正文里有图`)
+      : bad(`${tag} 的 Release 只有文字 —— 先按 CONTRIBUTING「Release notes 必须配图」补上再发新版。\n`
+          + `      拍图前务必注入 scripts/redact-for-shot.js（它会自校验，漏脱敏会直接抛错）`)
+  }
+} else skip('离线，跳过')
+
 // ── 结果 ────────────────────────────────────────────────────────
 console.log()
 if (failed) {

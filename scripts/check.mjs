@@ -379,6 +379,28 @@ overBudget.length === 0
         `    → 先试 --dsw-* token 覆写，再试 body[data-bloom-variant] 作用域；确实必要就连同理由一起调低预算表。`,
     )
 
+// 截图脱敏闸门必须还在。
+// 它防的是一次真实事故：v0.11.0 首版配图把侧栏里的真实项目清单和一整段对话
+// 正文发到了公开 Release 页。脚本删了、或者自校验被摘掉（只剩改文本、不再抛错），
+// 这道防线就只剩"记得手动检查一遍"——而那次恰恰是每处都想到了、漏了一处。
+{
+  const redactPath = resolve(root, 'scripts/redact-for-shot.js')
+  const contributing = existsSync(resolve(root, 'CONTRIBUTING.md'))
+    ? readFileSync(resolve(root, 'CONTRIBUTING.md'), 'utf8')
+    : ''
+  const problems = []
+  if (!existsSync(redactPath)) {
+    problems.push('scripts/redact-for-shot.js 不见了')
+  } else {
+    const code = readFileSync(redactPath, 'utf8')
+    if (!/throw new Error\(/.test(code)) problems.push('脱敏脚本里没有 throw —— 自校验被摘了，它就从闸门退回成工具')
+  }
+  if (!contributing.includes('redact-for-shot.js')) problems.push('CONTRIBUTING 的发版流程没再引用脱敏脚本')
+  problems.length === 0
+    ? ok('截图脱敏闸门在位（脚本存在 + 自校验会抛错 + 流程有引用）')
+    : bad(`截图脱敏闸门破了：${problems.join('；')}`)
+}
+
 // ── 结果 ───────────────────────────────────────────────────────
 console.log()
 if (failed) {

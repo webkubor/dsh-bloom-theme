@@ -384,4 +384,12 @@ export function refreshUpdateBadge() {
   el.hidden = false
   el.setAttribute('title', '可更新到 v' + latestVersion)
   el.textContent = '↑ v' + latestVersion
+  // 徽标本体躺在「版本与更新」折叠区里，日常是收起的 —— 只写这一处等于
+  // 没人看得见（2026-09-10 owner 问"发新版用户知道吗"时发现：自更新检查
+  // 一直在跑，但提示要点开面板再展开一层才露出来）。所以往上冒两级：
+  // 切换器根节点打标记，CSS 在触发器和「版本与更新」那行各点一个小圆点。
+  const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
+  if (root) root.dataset.bloomUpdate = latestVersion
+  const trigger = document.querySelector<HTMLElement>('.dsh-bloom-trigger')
+  if (trigger) trigger.title = 'Bloom 主题 · v' + PLUGIN_VERSION + '（可更新到 v' + latestVersion + '）'
 }

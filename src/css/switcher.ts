@@ -75,6 +75,26 @@ export const SWITCHER_CSS = `
      一道极浅的向下扩散阴影同样能分出层次，边界是渐隐的。 */
   box-shadow: 0 6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
+/* 有新版时的小红点：徽标本体在「版本与更新」折叠区里，默认看不见，
+   所以在触发器和那一行入口各点一个 6px 圆点。用 accent 而不是红色 ——
+   这是"有更新"不是"出错了"，莫兰迪主题里一点纯红会非常突兀。 */
+.dsh-bloom-switcher[data-bloom-update] .dsh-bloom-trigger::after,
+.dsh-bloom-switcher[data-bloom-update] .dsh-bloom-more::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bloom-accent, #6b8f71);
+  box-shadow: 0 0 6px -1px var(--bloom-glow);
+  flex: 0 0 auto;
+}
+.dsh-bloom-switcher[data-bloom-update] .dsh-bloom-trigger::after {
+  margin-left: 1px;
+}
+.dsh-bloom-switcher[data-bloom-update] .dsh-bloom-more::after {
+  margin-left: 4px;
+}
+
 .dsh-bloom-head__title { font-size: 14px; font-weight: 600; color: var(--dsw-alias-label-primary, #222); }
 .dsh-bloom-head__current {
   display: inline-flex;

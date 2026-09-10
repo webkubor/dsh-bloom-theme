@@ -59,11 +59,59 @@ export const SWITCHER_CSS = `
 .dsh-bloom-trigger[aria-expanded="true"] .dsh-bloom-chevron { transform: rotate(180deg); }
 
 .dsh-bloom-dot {
-  width: 12px; height: 12px;
+  width: 14px; height: 14px;
   border-radius: 999px;
   flex: none;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
 }
+
+/* ── 面板头部：标题 + 当前配色胶囊 + 关闭（按 owner 2026-09-10 的设计图） ── */
+.dsh-bloom-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--bloom-hairline, rgba(0,0,0,.07));
+}
+.dsh-bloom-head__title { font-size: 14px; font-weight: 600; color: var(--dsw-alias-label-primary, #222); }
+.dsh-bloom-head__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  padding: 3px 10px;
+  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.08));
+  border-radius: 999px;
+  font-size: 12px;
+}
+.dsh-bloom-close {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  color: var(--dsw-alias-label-tertiary, #999);
+  font-size: 13px; line-height: 1; padding: 4px; border-radius: 6px;
+}
+.dsh-bloom-close:hover { background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 90%); }
+
+/* 分组标题：「主题」「模式」—— 弱化的小标题，把长列表切成两块 */
+.dsh-bloom-section {
+  padding: 10px 14px 4px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary, #999);
+}
+.dsh-bloom-section[hidden] { display: none; }
+
+/* 「版本与更新 ›」：默认收起，日常用不到的信息不占版面 */
+.dsh-bloom-more {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  width: 100%; appearance: none; border: 0; background: transparent; cursor: pointer;
+  margin-top: 6px; padding: 9px 14px;
+  border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,.07));
+  font: inherit; font-size: 12px;
+  color: var(--dsw-alias-label-secondary, #777);
+}
+.dsh-bloom-more:hover { color: var(--dsw-alias-label-primary, #222); }
+.dsh-bloom-more[aria-expanded="true"] .dsh-bloom-more__arrow { transform: rotate(90deg); }
+.dsh-bloom-more__arrow { transition: transform .16s ease; }
+.dsh-bloom-more-body[hidden] { display: none; }
 
 .dsh-bloom-menu {
   position: absolute;
@@ -72,8 +120,8 @@ export const SWITCHER_CSS = `
   /* v0.6.0 patch: 提到 99999，确保 Bloom 下拉菜单覆盖在 DSH 原生顶栏 tabs
      （"对话 / 轨迹"，z-index 更高）之上，不被截断 */
   z-index: 99999;
-  min-width: 168px;
-  padding: 5px;
+  min-width: 236px;
+  padding: 0 0 6px;
   border-radius: 12px;
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
   background: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 12%);
@@ -102,7 +150,7 @@ export const SWITCHER_CSS = `
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 7px 9px;
+  padding: 8px 14px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -140,21 +188,19 @@ export const SWITCHER_CSS = `
 
 /* 版本 / 更新指示（菜单底部）：一眼看到当前版本，有新版亮「↑ vX」 chip */
 /* 外观切换（浅色/深色/跟随）——分段控件，跟变体列表用同一条分隔线语言 */
+/* 模式分段控件：等宽三格，外面一圈细框（设计图的样子）。
+   这里不再自带分隔线和标题 —— 标题由 .dsh-bloom-section 提供。 */
 .dsh-bloom-appearance {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 2px;
-  padding: 6px 9px 5px;
-  border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
-  font-size: 11px;
-  color: var(--dsw-alias-label-tertiary, #999);
+  padding: 0 14px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary, #777);
 }
 .dsh-bloom-appearance[hidden] { display: none; }
 .dsh-bloom-appearance__seg {
-  display: inline-flex;
-  flex: 1;                     /* 占满剩余宽度，三个按钮各三分之一，不再被挤成竖排 */
+  display: flex;
+  width: 100%;                 /* 撑满面板宽度，里面三个按钮才能真正三等分
+                                  （inline-flex 时宽度被内容决定，"跟随系统"四个字
+                                  把那格撑到别人的两倍） */
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
   border-radius: 7px;
   overflow: hidden;
@@ -166,7 +212,7 @@ export const SWITCHER_CSS = `
   color: inherit;
   font: inherit;
   flex: 1;                     /* 三等分 */
-  padding: 3px 4px;
+  padding: 7px 4px;
   cursor: pointer;
   line-height: 1.7;
   white-space: nowrap;         /* 「浅色」被折成两行就是少了这一条 */
@@ -182,8 +228,8 @@ export const SWITCHER_CSS = `
 }
 /* 选中态用主题强调色，和上方变体的选中打勾是同一套视觉权重 */
 .dsh-bloom-appearance__btn[data-active="true"] {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 84%);
-  color: var(--dsw-alias-label-primary, inherit);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
+  color: var(--bloom-accent, #6b8f71);
   font-weight: 600;
 }
 .dsh-bloom-appearance__btn:focus-visible {

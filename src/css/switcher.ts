@@ -71,7 +71,9 @@ export const SWITCHER_CSS = `
   align-items: center;
   gap: 10px;
   padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--bloom-hairline, rgba(0,0,0,.07));
+  /* 用阴影代替分隔线：硬线在圆角面板里显得生硬、没有过渡（owner 2026-09-10）。
+     一道极浅的向下扩散阴影同样能分出层次，边界是渐隐的。 */
+  box-shadow: 0 6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
 .dsh-bloom-head__title { font-size: 14px; font-weight: 600; color: var(--dsw-alias-label-primary, #222); }
 .dsh-bloom-head__current {
@@ -80,8 +82,9 @@ export const SWITCHER_CSS = `
   gap: 6px;
   margin-right: auto;
   padding: 3px 10px;
-  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.08));
   border-radius: 999px;
+  /* 浅色底代替描边：一圈线在头部会和标题争视觉重量 */
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
   font-size: 12px;
 }
 .dsh-bloom-close {
@@ -103,8 +106,8 @@ export const SWITCHER_CSS = `
 .dsh-bloom-more {
   display: flex; align-items: center; justify-content: center; gap: 5px;
   width: 100%; appearance: none; border: 0; background: transparent; cursor: pointer;
-  margin-top: 6px; padding: 9px 14px;
-  border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,.07));
+  margin-top: 8px; padding: 9px 14px;
+  box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
   font: inherit; font-size: 12px;
   color: var(--dsw-alias-label-secondary, #777);
 }
@@ -201,9 +204,11 @@ export const SWITCHER_CSS = `
   width: 100%;                 /* 撑满面板宽度，里面三个按钮才能真正三等分
                                   （inline-flex 时宽度被内容决定，"跟随系统"四个字
                                   把那格撑到别人的两倍） */
-  border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
-  border-radius: 7px;
-  overflow: hidden;
+  /* 整条用一层浅底当容器，不描边；选中项靠更实的底色浮起来 —— 
+     线框 + 格间竖线在小尺寸下线太多，显得脏 */
+  padding: 3px;
+  border-radius: 9px;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%);
 }
 .dsh-bloom-appearance__btn {
   appearance: none;
@@ -220,17 +225,16 @@ export const SWITCHER_CSS = `
   transition: background-color .14s ease, color .14s ease;
 }
 .dsh-bloom-appearance__btn[hidden] { display: none; }
-.dsh-bloom-appearance__btn + .dsh-bloom-appearance__btn {
-  border-left: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
-}
+.dsh-bloom-appearance__btn { border-radius: 7px; }
 .dsh-bloom-appearance__btn:hover {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
 }
 /* 选中态用主题强调色，和上方变体的选中打勾是同一套视觉权重 */
 .dsh-bloom-appearance__btn[data-active="true"] {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
+  background: var(--dsw-alias-bg-layer-1, #fff);
   color: var(--bloom-accent, #6b8f71);
   font-weight: 600;
+  box-shadow: 0 1px 3px -1px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 70%);
 }
 .dsh-bloom-appearance__btn:focus-visible {
   outline: 2px solid var(--bloom-accent, #6b8f71);
@@ -242,8 +246,7 @@ export const SWITCHER_CSS = `
   align-items: center;
   gap: 6px;
   margin-top: 4px;
-  padding: 6px 9px 2px;
-  border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
+  padding: 6px 14px 2px;
   font-size: 11px;
   color: var(--dsw-alias-label-tertiary, #999);
 }
@@ -278,8 +281,7 @@ export const SWITCHER_CSS = `
   flex-direction: column;
   gap: 2px;
   margin-top: 2px;
-  padding: 5px 9px 6px;
-  border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,.06));
+  padding: 2px 14px 6px;
   font-size: 11px;
   color: var(--dsw-alias-label-tertiary, #999);
 }

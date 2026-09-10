@@ -29,24 +29,38 @@ export const dotStyle = (v) =>
  */
 export function applyVariant(variant) {
   if (!VARIANTS.includes(variant)) variant = 'mist'
-  document.body.dataset.bloomVariant = variant
-  try { window.localStorage.setItem(STORAGE_KEY, variant) } catch {}
-  const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
-  if (!root) return
-  root.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((el) => {
-    const on = el.dataset.variant === variant
-    el.setAttribute('data-active', String(on))
-    el.setAttribute('aria-selected', String(on))
-  })
-  const name = root.querySelector<HTMLElement>('.dsh-bloom-trigger__name')
-  if (name) name.textContent = VARIANT_LABELS[variant].zh
-  const dot = root.querySelector<HTMLElement>('.dsh-bloom-trigger .dsh-bloom-dot')
-  if (dot) dot.setAttribute('style', dotStyle(variant))
-  // 面板头部也有一份「当前配色」胶囊，不同步就会和列表里的对勾对不上
-  const headName = root.querySelector<HTMLElement>('[data-head-name]')
-  if (headName) headName.textContent = VARIANT_LABELS[variant].zh
-  const headDot = root.querySelector<HTMLElement>('.dsh-bloom-head__current .dsh-bloom-dot')
-  if (headDot) headDot.setAttribute('style', dotStyle(variant))
+  // 应用变体本身的所有副作用（写 body 属性 / 同步下拉胶囊 / 写 localStorage）。
+  // 拆出来单独跑，让 View Transition 在它前后各捕一帧：CSS 变量整体替换的
+  // 「瞬切」变成整页 cross-fade，让颜色"流过去"。动画时长 / 缓动由
+  // css/component.ts 的 ::view-transition-* 控制（320ms）。
+  const apply = () => {
+    document.body.dataset.bloomVariant = variant
+    try { window.localStorage.setItem(STORAGE_KEY, variant) } catch {}
+    const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
+    if (!root) return
+    root.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((el) => {
+      const on = el.dataset.variant === variant
+      el.setAttribute('data-active', String(on))
+      el.setAttribute('aria-selected', String(on))
+    })
+    const name = root.querySelector<HTMLElement>('.dsh-bloom-trigger__name')
+    if (name) name.textContent = VARIANT_LABELS[variant].zh
+    const dot = root.querySelector<HTMLElement>('.dsh-bloom-trigger .dsh-bloom-dot')
+    if (dot) dot.setAttribute('style', dotStyle(variant))
+    // 面板头部也有一份「当前配色」胶囊，不同步就会和列表里的对勾对不上
+    const headName = root.querySelector<HTMLElement>('[data-head-name]')
+    if (headName) headName.textContent = VARIANT_LABELS[variant].zh
+    const headDot = root.querySelector<HTMLElement>('.dsh-bloom-head__current .dsh-bloom-dot')
+    if (headDot) headDot.setAttribute('style', dotStyle(variant))
+  }
+  // View Transitions API（Chrome 111+/Edge/Safari TP）。
+  // 不支持时降级为瞬时应用 —— 行为与改前一致，老浏览器照常工作。
+  // prefers-reduced-motion 由 css 媒体查询把动画时长清零，不是 JS 拦截。
+  if (typeof document.startViewTransition === 'function') {
+    document.startViewTransition(apply)
+  } else {
+    apply()
+  }
 }
 
 export function buildSwitcherHTML(currentVariant) {

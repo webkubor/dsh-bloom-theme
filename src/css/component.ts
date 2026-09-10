@@ -14,21 +14,34 @@
 export const COMPONENT_CSS = `
 /* ═══ 1. 氛围层 ═══════════════════════════════════════════════════
    原版 body 的三层叠加：大尺度径向光晕 + 斜向淡染 + 顶部柔光。
-   全部用气质轨(morandi)的极低透明度，这是莫兰迪「灰调通透」的来源。 */
+   全部用气质轨(morandi)的极低透明度，这是莫兰迪「灰调通透」的来源。
+
+   v0.10.x（owner 反馈「没光感」）：把 veil 换成 aurora-stream 并提高透明度。
+   aurora-stream 来自 motion 谱，是每个变体的三色光谱（鼠尾草=草绿系、青金=蓝系），
+   透明度从原来的 40% 提高到 55-65%，让"四角色斑"真正能看出来 —— 这是
+   "光感"的主要来源，不再靠硬边光带。 */
 body {
   background-attachment: fixed;
   background-image:
-    radial-gradient(1200px circle at 12% 0%, var(--bloom-veil-1), transparent 55%),
-    radial-gradient(1000px circle at 88% 8%, var(--bloom-veil-2), transparent 50%),
-    linear-gradient(160deg, var(--bloom-veil-2), transparent 55%),
-    radial-gradient(900px circle at 100% 100%, var(--bloom-veil-1), transparent 55%);
+    /* 顶左：主色光晕（accent，给画面主调） */
+    radial-gradient(1400px circle at 6% -4%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 80%), transparent 50%),
+    /* 顶右：aurora stream 2 —— 异色相，跟主色形成对比 */
+    radial-gradient(1100px circle at 100% 8%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 50%), transparent 60%),
+    /* 底右：aurora stream 3 —— 再一个异色相 */
+    radial-gradient(900px circle at 96% 100%, color-mix(in oklch, var(--bloom-aurora-stream-3), transparent 50%), transparent 62%),
+    /* 底左：aurora stream 1 —— 四角各一团 */
+    radial-gradient(1000px circle at 2% 96%, color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 50%), transparent 60%);
 }
 
 /* 让 body 的氛围层透出来：DSH 这几个全屏容器自带不透明底色会盖住它。
    侧栏与卡片保留自己的 surface 色（原版同样保留），只做描边和光。 */
 [class*="_frame"],
 [class*="_centerCol"],
-[class*="_root"]:has(> [class*="_scrollBody"]),
+/* :has() 里不能加子组合器（\`> \`）：实测 DSH 的结构是 _root > _body > _scrollBody，
+   scrollBody 是孙子。写成子选择器这条一直没命中 —— 会话区一直盖着
+   oklch(0.28 0.02 240) 不透明底，body 的极光在中区完全看不见（这就是
+   owner 说「没光感」的真正原因）。 */
+[class*="_root"]:has([class*="_scrollBody"]),
 [class*="_scrollBody"] {
   background-color: transparent !important;
   background-image: none !important;
@@ -49,60 +62,55 @@ body {
     radial-gradient(600px circle at 0% 0%, rgba(var(--bloom-morandi), 0.08), transparent 60%);
 }
 
-/* 会话条目：hover 冷光淡染，选中态左侧一道主色标记 */
-[class*="_sidebarCol"] [role="treeitem"] {
+/* 会话条目：hover 冷光淡染，选中态左侧一道主色标记
+   !important 必要：DSH 后注入 .YDXeBa_sessionRow:hover 用
+   --dsw-alias-interactive-bg-hover（固定蓝色），不 !important 压不住。 */
+[class*="_sidebarCol"] [role="treeitem"],
+[class*="_sidebarCol"] [class*="_sessionRow"] {
   border-radius: 8px;
   transition: background 0.15s ease;
 }
-[class*="_sidebarCol"] [role="treeitem"]:hover {
-  background: rgba(var(--bloom-morandi), 0.12);
+[class*="_sidebarCol"] [role="treeitem"]:hover,
+[class*="_sidebarCol"] [class*="_sessionRow"]:hover {
+  background: color-mix(in oklch, var(--bloom-accent) 6%, transparent) !important;
 }
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"],
-[class*="_sidebarCol"] [class*="_active"] {
+[class*="_sidebarCol"] [class*="_active"],
+[class*="_sidebarCol"] [class*="_selected"] {
   position: relative;
-  /* 用 accent 而不是 morandi：accent 随变体 hue 差异大（雾蓝/丹红/鼠尾草/琥珀…），
-     选中态切主题才会「肉眼可见地变色」；morandi 太灰，跨变体几乎看不出差别。
-     20% 底 + 高亮文字 + 左侧色条，三层一起才够醒目。 */
-  background: color-mix(in oklch, var(--bloom-accent) 20%, transparent);
+  /* v0.10.x（owner 反馈「脏」）：25% accent 实色底成了色块。
+  改成 8% accent —— 选中感靠"染色"传达，不是色块。
+  !important 必要：DSH 后注入 .YDXeBa_sessionRow.YDXeBa_selected 用
+  --dsw-alias-interactive-bg-hover（固定蓝色，不跟变体走），会把这条吃掉。 */
+  background: color-mix(in oklch, var(--bloom-accent) 8%, transparent) !important;
 }
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] [class*="_title"],
-[class*="_sidebarCol"] [class*="_active"] [class*="_title"] {
+[class*="_sidebarCol"] [class*="_active"] [class*="_title"],
+[class*="_sidebarCol"] [class*="_selected"] [class*="_title"] {
   font-weight: 500;
-  color: color-mix(in oklch, var(--bloom-accent) 55%, var(--dsw-alias-label-primary));
+  color: var(--dsw-alias-label-primary);
 }
-[class*="_sidebarCol"] [role="treeitem"][aria-selected="true"]::before,
-[class*="_sidebarCol"] [class*="_active"]::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 50%;
-  width: 3px; height: 18px;
-  margin-top: -9px;
-  border-radius: 999px;
-  background: var(--bloom-accent);
-  box-shadow: 0 0 10px -1px var(--bloom-glow);
-}
+/* v0.10.x（owner 反馈「脏」）：左侧 3px 蓝竖条是脏点 —— 莫兰迪克制不应有这种色块。
+   删掉 ::before。选中感靠 bg 的 8% 染色传达。 */
 
-/* 新建会话按钮：冷光描边 + 内高光，跟输入卡片同一套语言。
-   background 必须一起接管 —— 只改描边的话按钮底色仍是 DSH 原生的
-   oklch(0.28 0.02 240)（色相 240 的蓝灰）+ 青色描边，跟本主题任何一个
-   莫兰迪变体都不同色系；浅色模式下那块冷蓝尤其跳，看着像没上主题。 */
+/* 新建会话按钮：极淡底色，无 border，文字与图标都用主文字色（owner 反馈「脏」——
+   之前 accent 色的 svg + accent 染色 bg + hairline border 三层叠，跟莫兰迪"统一克制"冲突）。
+   现在的按钮只靠 5% accent 染色跟会话行区分，没有色块、没有边框、没有彩色文字。 */
 [class*="_sidebarCol"] button[class*="_newSession"],
 [class*="_sidebarCol"] button[class*="_newChat"] {
-  background: color-mix(in oklch, var(--bloom-accent) 10%, var(--dsw-specific-sidebar-fill, transparent));
-  border: 1px solid var(--bloom-hairline);
+  background: color-mix(in oklch, var(--bloom-accent) 5%, transparent);
+  border: 0;
   border-radius: 10px;
-  box-shadow: inset 0 1px 0 rgba(var(--bloom-morandi), 0.12);
-  transition: background 180ms ease, border-color 180ms ease;
+  transition: background 180ms ease;
 }
 [class*="_sidebarCol"] button[class*="_newSession"]:hover,
 [class*="_sidebarCol"] button[class*="_newChat"]:hover {
-  background: color-mix(in oklch, var(--bloom-accent) 18%, var(--dsw-specific-sidebar-fill, transparent));
-  border-color: color-mix(in oklch, var(--bloom-accent) 45%, transparent);
+  background: color-mix(in oklch, var(--bloom-accent) 12%, transparent);
 }
-/* 新建按钮的图标着主色，强化它作为侧栏唯一主 CTA 的地位（文字仍正文色） */
+/* 图标和文字都用主色 —— 不让 accent 出现在按钮上，跟莫兰迪统一 */
 [class*="_sidebarCol"] button[class*="_newSession"] svg,
 [class*="_sidebarCol"] button[class*="_newChat"] svg {
-  color: var(--bloom-accent);
+  color: var(--dsw-alias-label-primary);
 }
 
 /* 分组标题（工作区 / 未分组）：拉开与条目的层级。
@@ -150,15 +158,30 @@ body {
 /* 侧边栏成「面」：右侧一道冷光分界 + 向内的极淡渐变。
    光靠 sidebar-fill 的底色差不足以让它跟消息区分开 —— 消息区有氛围渐变和气泡，
    侧边栏只有一列文字，不给边界就显得平。分界线用 hairline（比实色 border 轻），
-   渐变只在顶部 120px 内，避免整列发灰。 */
+   渐变只在顶部 120px 内，避免整列发灰。
+
+   v0.10.x（owner 反馈「没层次感」）：之前光带 1px + 18% alpha 在截图里几乎
+   看不见，侧栏和背景完全融成一片。这里两层：① 内部底色 4% accent 给容器
+   自己的"色"，与 body 区分；② 顶部 120px 氛围染。右侧冷光线交给下面的
+   ::after / ::before 双层（线 + 光晕），因为 box-shadow inset 会被 glass.ts
+   的 _sidebarCol 规则覆盖掉（cascade 顺序），改用伪元素才不会被吃掉。 */
 [class*="_sidebarCol"] {
-  border-right: 1px solid var(--bloom-hairline);
+  /* 宿主那条 0.5px 实线优先级更高，不加 !important 关不掉（实测覆盖后仍是 0.5px） */
+  border-right: 0 !important;
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 96%);
   background-image: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--bloom-accent) 4%, transparent),
+    color-mix(in oklch, var(--bloom-accent) 6%, transparent),
     transparent 120px
   );
+  background-repeat: no-repeat;
+  background-position: left top;
+  background-size: 100% 100%;
 }
+/* 侧栏右缘的冷光交给 glass.ts 的 box-shadow（向外投）——
+   这里曾用 ::after 画一条 18px 渐变，但侧栏 overflow:hidden，伪元素只能落在
+   容器内侧，看上去是「向内发光」，owner 反馈很奇怪。box-shadow 的外阴影不受
+   自身 overflow 裁剪，是唯一能真正往外散的做法。 */
 
 /* 底部设置区与会话列表之间补一道分隔，让「设置」不像是最后一条会话 */
 [class*="_sidebarCol"] [class*="_footer"],
@@ -460,16 +483,59 @@ body {
 }
 [class*="_sidebarCol"] [role="treeitem"]:active { transform: translateX(2px) scale(0.996); }
 
-/* 选中态左侧色条：从左侧滑入（satisfying 的「已锁定」反馈） */
-[class*="_sidebarCol"] [role="treeitem"][aria-selected="true"]::before,
-[class*="_sidebarCol"] [class*="_active"]::before {
-  transform-origin: left center;
-  animation: bloom-bar-in var(--bloom-dur) var(--bloom-ease-out);
+/* ── 侧栏：去分割线，靠间距 + 极淡光感分组（owner 2026-09-10）──
+ *
+ * 反馈原话：「基本取消分割线，用行间距和浅色交替分组」「取消网格，增加当前行
+ * 左侧粉色短竖条」「现在已经不流行通过 border 去做切割了，要不然就是很淡的
+ * 边框线加光感流动或者是阴影，比硬的边框好看得多」。
+ *
+ * 所以这里一条实线都不画：分组之间用外边距拉开，组标题下方给一道
+ * 极淡的渐隐光带（左浓右透，像一束扫过的光），比 1px 实线柔和得多。
+ */
+[class*="_sidebarCol"] [class*="_groupSection"] + [class*="_groupSection"] {
+  margin-top: 10px;
 }
-@keyframes bloom-bar-in {
-  from { transform: scaleY(0); opacity: 0; }
-  to { transform: scaleY(1); opacity: 1; }
+[class*="_sidebarCol"] [class*="_projectRow"] {
+  position: relative;
 }
+/* 组标题下的光带：从左侧主题色渐隐到透明，不是一条等宽的线 */
+[class*="_sidebarCol"] [class*="_projectRow"]::after {
+  content: '';
+  position: absolute;
+  left: 10px; right: 10px; bottom: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 72%) 0%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%) 38%,
+    transparent 100%
+  );
+}
+
+/* 会话行：圆角 + hover 淡染，靠留白区分，不描边不画网格 */
+[class*="_sidebarCol"] [class*="_sessionRow"] {
+  position: relative;
+  border-radius: 8px;
+}
+[class*="_sidebarCol"] [class*="_sessionRow"]:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 93%);
+}
+
+/* 当前行：只染色，不画条不画框（owner 反馈「脏」）
+   之前有左侧 3px 蓝竖条 + inset 1px 边框 + 25% accent 实色底，三个都是脏点。
+   现在只留一个 8% 的极淡 accent 染色，跟 hover 区分用细微浓淡差。
+   !important 必要：DSH 后注入 .YDXeBa_sessionRow.YDXeBa_selected 用
+   --dsw-alias-interactive-bg-hover（固定蓝色，不跟变体走），不 !important 压不住。 */
+[class*="_sidebarCol"] [class*="_sessionRow"][class*="_selected"],
+[class*="_sidebarCol"] [class*="_sessionRow"][class*="_active"],
+[class*="_sidebarCol"] [class*="_sessionRow"][aria-selected="true"],
+[class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%) !important;
+}
+
+/* v0.10.x：左色条 + bloom-bar-in 动画整体删除（owner 反馈「脏」）。
+   没有 ::before 了，bloom-bar-in keyframe 也跟着删。 */
 
 /* 玻璃面板 / 输入卡片 hover：微抬升（只在已有 transition 的元素上加，避免泛化抖动） */
 div[class*="_composer"] div[class*="_card"] {
@@ -505,14 +571,198 @@ div[class*="_composer"] div[class*="_card"]:hover {
   to { opacity: 1; transform: none; }
 }
 
+/* ═══ 6.5 空状态视觉锚点 (v0.10.x) ═══════════════════════════════════
+ *
+ * owner 反馈「没层次感」：空状态下「探索未至之境」一行字飘在苍白画布上，
+ * 眼睛找不到着陆位置。这里在 scrollBody 没有气泡时（即空状态），在中央
+ * 投一团主题色光晕 + 慢呼吸，给视觉一个焦点。光晕跟 message 流重叠的
+ * 概率低（消息堆在顶部），不会污染正常态。
+ *
+ * selector 限制条件：\`:not(:has([class*="_bubble"]))\` 确保只在没消息时出现；
+ * 有消息时这条规则不匹配，::before 不渲染。\`:has()\` Chrome 105+/Safari 15.4+。 */
+[class*="_scrollBody"] { position: relative; }
+[class*="_scrollBody"]:not(:has([class*="_bubble"]))::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    42% 32% at 50% 48%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%) 0%,
+    color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 92%) 35%,
+    transparent 68%
+  );
+  animation: bloom-anchor-breathe 4.2s ease-in-out infinite;
+}
+@keyframes bloom-anchor-breathe {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.05); }
+}
+
+/* ═══ 7. 全站统一入场系统 (v0.10.x) ═════════════════════════════════
+ *
+ * owner 反馈：「除了深度求索中的文字有动效外，别的几乎是没有任何吸引到我的动画」
+ * ——所以这一节专门把页面"活起来"：消息气泡/工具行/侧栏/顶栏首次入场都走
+ * 同一条 keyframe，长度/缓动全走 §6 的 token；只动 opacity + transform，
+ * prefers-reduced-motion 下由下方媒体查询清零。
+ *
+ * 为什么用 \`animation\` 而不是 transition + \`:not([hidden])\`：
+ *   后者在 React 里反复 toggle hidden 时 transition 不会重新计算；
+ *   且「元素插入」这件事 transition 表达不了。\`animation\` 在元素 mount 那一刻
+ *   唯一一次触发，正好对应「第一次出现在视野中」的语义；React 重渲染复用
+ *   DOM 节点时也不会重放，不会污染正常状态切换。
+ */
+@keyframes bloom-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes bloom-fade-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 消息气泡 / 工具调用行 / 滚动体内的卡片 —— 整页停留时间最长的地方。
+   \`:not(:has(...))\` 排除含终端 / 代码块的卡：它们是「展开后才有」的元素，
+   跟着外层一起进，单独动会让代码块在父卡里飘。
+   !important 必要：DSH 在这些元素上有自己的 \`animation\`（比如呼吸 loader），
+   后注入的会赢；用 !important 让 Bloom 的入场动画压过它。 */
+[class*="_bubble"],
+div[class*="_toolRow"],
+div[class*="_scrollBody"] > div[class*="_card"]:not(:has([class*="_terminal"])):not(:has(pre)) {
+  animation: bloom-fade-up 420ms var(--bloom-ease-out) backwards !important;
+}
+/* 侧栏会话行：页面打开时整组淡入（一次性，不是循环） */
+[class*="_sidebarCol"] [role="treeitem"] {
+  animation: bloom-fade-up 320ms var(--bloom-ease-out) backwards !important;
+}
+/* 顶栏 —— 从顶部滑下比从下方滑上更贴「页面打开」的语义 */
+[class*="_header"] {
+  animation: bloom-fade-down 420ms var(--bloom-ease-out) backwards !important;
+}
+/* 顶栏三按钮入场（newSession / sessionLog / Bloom trigger）：
+   transform / box-shadow 加到原 transition 里 —— 原来 WIP 只 transition 了
+   background，加 lift 不需要新 transition 字段，hover 时一并平滑 */
+[class*="_newSession"],
+[class*="_sessionLogButton"],
+.dsh-bloom-trigger {
+  animation: bloom-fade-down 320ms var(--bloom-ease-out) backwards !important;
+}
+[class*="_newSession"]:hover,
+[class*="_sessionLogButton"]:hover,
+.dsh-bloom-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -6px var(--bloom-glow);
+}
+
+/* 输入卡 focus-within 呼吸脉冲 —— 主题色微光，慢速涨落。用 ::after 叠层，
+   不动现有玻璃 ::before（z-index:-1，玻璃本身）和 focus-within 的 box-shadow
+   （2px 主题色环，已经够锐利了）；我们只给它一个会呼吸的额外外晕。
+   composer card 圆角 16px，所以 ::after 圆角 20px、inset -4px 让外晕不切边 */
+@keyframes bloom-composer-breathe {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.014); }
+}
+div[class*="_composer"] div[class*="_card"]::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  background: radial-gradient(
+    55% 55% at 50% 50%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%) 0%,
+    transparent 70%
+  );
+  transition: opacity var(--bloom-dur, 200ms) var(--bloom-ease);
+}
+div[class*="_composer"] div[class*="_card"]:focus-within::after {
+  opacity: 1;
+  animation: bloom-composer-breathe 2.8s ease-in-out infinite;
+}
+
+/* View Transition：主题切换时整页 cross-fade，让颜色"流过去"而不是瞬切。
+   只有浏览器支持 \`document.startViewTransition\` 时才触发（switcher.ts 里
+   调），这里只控动画时长 / 缓动；不支持和 reduced-motion 一起由下方兜底
+   清零。 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 /* ④ 无障碍：动效全部降级为瞬间 */
 @media (prefers-reduced-motion: reduce) {
   [class*="_sidebarCol"] [role="treeitem"],
   [class*="_sidebarCol"] [class*="_active"]::before,
   .dsh-bloom-switcher, .dsh-bloom-trigger, .dsh-bloom-option, .dsh-bloom-menu,
-  [class*="_composer"] div[class*="_card"] {
+  [class*="_composer"] div[class*="_card"],
+  [class*="_composer"] div[class*="_card"]::after,
+  [class*="_bubble"],
+  div[class*="_toolRow"],
+  div[class*="_scrollBody"] > div[class*="_card"],
+  [class*="_newSession"], [class*="_sessionLogButton"],
+  [class*="_scrollBody"]:not(:has([class*="_bubble"]))::before,
+  ::view-transition-old(root), ::view-transition-new(root) {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ══ 去硬边框：全站统一换成光带 / 浅底 / 阴影（owner 2026-09-10）══
+ *
+ * 原话：「现在已经不流行通过 border 去做切割了，要不然就是很淡的边框线加光感
+ * 流动或者是阴影，比硬的边框好看得多」；以及「不能光靠我一个一个说」。
+ *
+ * 所以全页扫了一遍 border-width > 0 的元素（39 处 / 9 类），按类别统一处理。
+ * 消息气泡与输入卡不在此列 —— 它们的边由 glass.ts 的玻璃体系管，动了会破相。
+ */
+
+/* 顶部标题栏下沿：宽 18px 软渐变 —— 不是"线"是"光"。最右 12% 不透明度，向下淡出到透明。 */
+[class*="_header"] {
+  position: relative;
+  border-bottom: 0 !important;
+}
+[class*="_header"]::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 18px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 88%) 0%,
+    transparent 100%
+  );
+}
+
+/* 描边按钮 → 浅底。新会话 / Session 日志 / 本主题切换器三个长得一样，
+   一起处理，免得只改自己的显得突兀 */
+[class*="_newSession"],
+[class*="_sessionLogButton"],
+.dsh-bloom-trigger {
+  border-color: transparent !important;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%) !important;
+  /* transform + box-shadow 也进 transition：§7 hover 抬升要平滑，不能 snap。
+     §7 那边只改属性，不重声明 transition —— 避免重复定义打架 */
+  transition:
+    background var(--bloom-dur-fast, .16s) var(--bloom-ease, ease),
+    transform var(--bloom-dur-fast, .16s) var(--bloom-ease, ease),
+    box-shadow var(--bloom-dur-fast, .16s) var(--bloom-ease, ease);
+}
+[class*="_newSession"]:hover,
+[class*="_sessionLogButton"]:hover,
+.dsh-bloom-trigger:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%) !important;
+}
+
+/* 侧栏底部操作区：上边框 → 向上扩散的极淡阴影 */
+[class*="_footerActions"] {
+  border-top: 0 !important;
+  box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
 `

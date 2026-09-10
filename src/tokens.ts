@@ -64,10 +64,6 @@ export function bloomTokens(p, dark) {
   --bloom-hairline: rgba(${m}, ${dark ? 0.3 : 0.3});
   --bloom-hairline-strong: rgba(${m}, ${dark ? 0.55 : 0.5});
   --bloom-glow: rgba(${m}, ${dark ? 0.34 : 0.2});
-  /* v0.5.0：提亮氛围渐变 —— 玻璃面板要透出底色，需要背景更有"存在感"。
-     亮色 0.18/0.12、暗色 0.26/0.18，过强会脏，过弱玻璃没东西可透。 */
-  --bloom-veil-1: rgba(${m}, ${dark ? 0.26 : 0.18});
-  --bloom-veil-2: rgba(${m}, ${dark ? 0.18 : 0.12});
   --bloom-code-bg: rgba(${m}, ${dark ? 0.16 : 0.13});
   --bloom-code-fg: ${dark ? p.txD : p.txL};`
 }

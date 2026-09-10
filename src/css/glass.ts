@@ -129,10 +129,18 @@ body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
    必须遵守同一判据，不能把滤镜放回卡片本体（issue #15）。 */
 [class*="_sidebarCol"] {
   position: relative;
-  background-color: transparent !important;
+  /* v0.10.x：之前 transparent !important 让侧栏和 body 完全同色，没有容器感。
+     改成带 accent tint 的底色 —— 6% accent 混进 bg-layer-1，肉眼能看出
+     "这块区域有自己的颜色"，但又不至于抢内容。 */
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 94%) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.22),
     inset 0 0 0 1px rgba(255,255,255,0.10),
+    /* 右缘冷光必须走 box-shadow：侧栏 overflow:hidden，伪元素画的光带只能落在
+       容器内侧，看上去是「向内发光」（owner 2026-09-10 反馈）；外阴影不受自身
+       overflow 裁剪，是唯一真正往外散的做法。offset 与 spread 同量（24/-24），
+       让光只出现在右侧，不糊到上下边。 */
+    24px 0 40px -24px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 45%),
     0 14px 44px -16px rgba(0,0,0,0.22);
 }
 [class*="_sidebarCol"]::before {
@@ -141,18 +149,21 @@ body[data-ds-dark-theme] div[class*="_dock"]:has(> [class*="_preview"]) {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 82%);
+  /* 玻璃层也带一点 accent tint —— 和上面的底色呼应 */
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 88%) !important;
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"] {
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 92%) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 0 0 1px rgba(255,255,255,0.05),
+    24px 0 40px -24px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 35%),
     0 16px 48px -18px rgba(0,0,0,0.5);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"]::before {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 64%);
+  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 82%) !important;
 }
 
 /* v0.6.2: 「对话 / 轨迹」tab 字号上限保护 —— 用户在窄屏 / 浏览器 zoom>100% 下
@@ -178,9 +189,17 @@ div[class*="_tabs"] [class*="_tab"] {
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
   position: relative;
   background-color: transparent !important;
+  /* v0.10.x（owner 反馈「没层次感」）：阴影只完成"功能"没完成"戏剧"。
+     单层远影 + 顶部内高光只是让卡片不和背景撞色，不让卡片"提起来"。
+     三层叠：① 顶部内高光（光从上方来）；② 紧贴的硬短影（贴着卡边的
+     0.5px 影，像把卡片按下去一点弹回来的感觉）；③ 远散的长距柔影
+     （把卡片安放在画布上）；④ 主题色 tint 外晕（"这张卡属于这里"——
+     莫兰迪主题自己的颜色，不是死的灰黑阴影）。 */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.28),
-    0 18px 52px -20px rgba(0,0,0,0.26);
+    0 1px 2px -1px rgba(0, 0, 0, 0.18),
+    0 18px 52px -20px rgba(0,0,0,0.26),
+    0 0 48px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
   content: '';
@@ -196,7 +215,9 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"] {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.12),
-    0 20px 56px -22px rgba(0,0,0,0.55);
+    0 1px 2px -1px rgba(0, 0, 0, 0.5),
+    0 20px 56px -22px rgba(0,0,0,0.55),
+    0 0 64px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 72%);
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]::before {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 66%) !important;
@@ -205,14 +226,18 @@ div[class*="_composer"] div[class*="_card"]:focus-within {
   border-color: var(--bloom-hairline-strong) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.3),
+    0 1px 2px -1px rgba(0, 0, 0, 0.18),
     0 0 0 2px color-mix(in oklch, var(--bloom-accent) 25%, transparent),
-    0 18px 52px -20px rgba(0,0,0,0.26) !important;
+    0 18px 52px -20px rgba(0,0,0,0.26),
+    0 0 56px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 74%) !important;
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-within {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
+    0 1px 2px -1px rgba(0, 0, 0, 0.5),
     0 0 0 2px color-mix(in oklch, var(--bloom-accent) 28%, transparent),
-    0 20px 56px -22px rgba(0,0,0,0.55) !important;
+    0 20px 56px -22px rgba(0,0,0,0.55),
+    0 0 72px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 68%) !important;
 }
 
 /* ═══ 消息气泡 —— 柔和玻璃，近距淡影，不压内容 ═══ */

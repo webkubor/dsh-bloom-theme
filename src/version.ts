@@ -160,11 +160,18 @@ export async function checkDshLatest(force = false): Promise<void> {
   dshCheckPromise = (async () => {
     try {
       const r = await fetch(
-        'https://registry.npmjs.org/-/package/@deepseek-ai%2Fdsh/dist-tags',
-        { cache: 'no-store' },
+        // ⚠️ 不能用 registry 的 /-/package/<pkg>/dist-tags 端点：它**不带 CORS 头**，
+        // 浏览器里直接 `Failed to fetch`（2026-09-10 在 DSH 页面实测；同域下
+        // /<pkg>/latest 与 /<pkg> 都正常）。而 checkDshLatest 是静默失败的，
+        // 坏了不会报错，只会永远停在「点击 ↻ 检查」。
+        // 改用简版 packument：同一条能过 CORS 的路径，加 install-v1 的 Accept
+        // 头把响应从 119KB 压到 94KB，dist-tags 就在里面。
+        'https://registry.npmjs.org/@deepseek-ai/dsh',
+        { cache: 'no-store', headers: { Accept: 'application/vnd.npm.install-v1+json' } },
       )
       if (r.ok) {
-        const distTags = await r.json()
+        const packument = await r.json()
+        const distTags = (packument && packument['dist-tags']) || {}
         const tag = selectDshDistTag(distTags, runtime.currentVersion)
         const selected = tag ? distTags?.[tag] : null
         dshLatestVersion = typeof selected === 'string' ? selected : null

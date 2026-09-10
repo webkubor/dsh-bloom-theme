@@ -13,6 +13,20 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.12.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.11.0...v0.12.0) (2026-09-10)
+
+
+### ✨ Features
+
+* **check:** 截图脱敏做成闸门，不再靠"记得检查一遍" ([80b6141](https://github.com/webkubor/dsh-bloom-theme/commit/80b61417ca2a7e276d6442814198ccdc2c674122))
+* **palette:** 加薰衣草紫 —— 第 10 套莫兰迪配色 ([3b8f484](https://github.com/webkubor/dsh-bloom-theme/commit/3b8f4847b8915fcecaec93df03856ee3254ea2fa))
+
+
+### 📝 Documentation
+
+* **contributing:** 发版说明必须配图（owner 2026-09-10 要求） ([3b8f484](https://github.com/webkubor/dsh-bloom-theme/commit/3b8f4847b8915fcecaec93df03856ee3254ea2fa))
+* **contributing:** 截图必须先脱敏 + 加脱敏脚本 ([ff184a6](https://github.com/webkubor/dsh-bloom-theme/commit/ff184a66563b77b5d8468423f4f1e743d50a22f3))
+
 ## [0.11.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.10.0...v0.11.0) (2026-09-10)
 
 

@@ -13,6 +13,14 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.10.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.9.1...v0.10.0) (2026-09-10)
+
+
+### ✨ Features
+
+* **switcher:** 下拉里加深浅外观切换，顺手压紧版本区 ([6004934](https://github.com/webkubor/dsh-bloom-theme/commit/6004934b7997710d1ee022787db81a395880aaff))
+* **switcher:** 浮动形态可拖动 + 位置记忆（closes [#14](https://github.com/webkubor/dsh-bloom-theme/issues/14)） ([fac721b](https://github.com/webkubor/dsh-bloom-theme/commit/fac721b4c3115678feaa8f2482180b85f7e2bab5))
+
 ## [0.9.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.9.0...v0.9.1) (2026-09-10)
 
 

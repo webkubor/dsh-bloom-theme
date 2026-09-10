@@ -517,29 +517,22 @@ body {
  * 左侧粉色短竖条」「现在已经不流行通过 border 去做切割了，要不然就是很淡的
  * 边框线加光感流动或者是阴影，比硬的边框好看得多」。
  *
- * 所以这里一条实线都不画：分组之间用外边距拉开，组标题下方给一道
- * 极淡的渐隐光带（左浓右透，像一束扫过的光），比 1px 实线柔和得多。
+ * 所以这里一条实线都不画。曾经退而求其次画过"极淡的渐隐光带"，
+ * 结果 18 个分组 = 18 条横线，等于换了个材质的网格 —— 也删了，见下。
  */
 [class*="_sidebarCol"] [class*="_groupSection"] + [class*="_groupSection"] {
-  margin-top: 10px;
+  /* 分组之间只靠留白。10px 时还要配一条组标题下的光带才分得开，
+     16px 之后光带就多余了 —— 见下面那段。 */
+  margin-top: 16px;
 }
-[class*="_sidebarCol"] [class*="_projectRow"] {
-  position: relative;
-}
-/* 组标题下的光带：从左侧主题色渐隐到透明，不是一条等宽的线 */
-[class*="_sidebarCol"] [class*="_projectRow"]::after {
-  content: '';
-  position: absolute;
-  left: 10px; right: 10px; bottom: 0;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(
-    to right,
-    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 72%) 0%,
-    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%) 38%,
-    transparent 100%
-  );
-}
+
+/* 组标题下曾有一道渐隐光带（左浓右透）。删掉了：侧栏里有 18 个分组，
+ * 一组一条 = 18 条横线，正是 owner 说的「取消网格」要取消的东西
+ * （2026-09-10 实拍反馈"细节不满意"）。浅色下线的左端是 28% accent，
+ * 在莫兰迪里更是一条明显的彩色规线。
+ *
+ * 分组识别现在靠三件不画线的东西：组标题自带文件夹图标、条目相对缩进、
+ * 组间 16px 留白。实测这三样够了 —— 加线只是把"够了"变成"吵"。 */
 
 /* 会话行：圆角 + hover 淡染，靠留白区分，不描边不画网格 */
 [class*="_sidebarCol"] [class*="_sessionRow"] {

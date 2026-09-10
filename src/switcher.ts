@@ -9,6 +9,7 @@ import { findSwitcherHost, injectCSS, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
+import { currentIsDark, hasSettingsEntry, setMode, type AppearanceMode } from './appearance.js'
 import { VARIANTS } from './palette.js'
 
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
@@ -63,6 +64,14 @@ export function buildSwitcherHTML(currentVariant) {
   </button>
   <div class="dsh-bloom-menu" role="listbox" aria-label="Bloom 主题变体" hidden>
     ${options}
+    <div class="dsh-bloom-appearance" role="group" aria-label="深浅外观" hidden>
+      <span class="dsh-bloom-appearance__label">外观</span>
+      <div class="dsh-bloom-appearance__seg">
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="light">浅色</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="dark">深色</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">跟随</button>
+      </div>
+    </div>
     <div class="dsh-bloom-version" role="separator">
       <a class="dsh-bloom-version__name" href="https://github.com/webkubor/dsh-bloom-theme" target="_blank" rel="noopener">Bloom</a>
       <span class="dsh-bloom-version__current">v${PLUGIN_VERSION}</span>
@@ -73,14 +82,13 @@ export function buildSwitcherHTML(currentVariant) {
         <span class="dsh-bloom-dsh-label">DSH</span>
         <span class="dsh-bloom-dsh-ver" data-dsh-current>—</span>
         <span class="dsh-bloom-dsh-state" data-dsh-state></span>
+        <span class="dsh-bloom-dsh-spacer"></span>
+        <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="重新检查 DSH 最新版">↻</button>
+        <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="复制升级命令：npm i -g @deepseek-ai/dsh@latest">复制</button>
       </div>
-      <div class="dsh-bloom-dsh-row">
+      <div class="dsh-bloom-dsh-row dsh-bloom-dsh-row--latest">
         <span class="dsh-bloom-dsh-label">最新</span>
         <span class="dsh-bloom-dsh-ver" data-dsh-latest>检查中…</span>
-      </div>
-      <div class="dsh-bloom-dsh-actions">
-        <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="重新检查 DSH 最新版">↻ 检查</button>
-        <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="复制升级命令到剪贴板：npm i -g @deepseek-ai/dsh@latest">复制命令</button>
       </div>
       <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
     </div>
@@ -95,6 +103,31 @@ export function closeMenu(root: HTMLElement) {
   if (trigger) trigger.setAttribute('aria-expanded', 'false')
 }
 
+/**
+ * 把外观行的选中态与宿主对齐。
+ *
+ * 每次打开菜单都重读，而不是缓存：用户可能刚从设置面板里改过，
+ * 也可能「跟随系统」下系统主题变了 —— 缓存必然对不上。
+ * 宿主按钮找不到（DSH 换了实现）就整行隐藏，宁可没有也不要一个点不动的控件。
+ */
+function syncAppearanceRow(el: HTMLElement) {
+  const row = el.querySelector<HTMLElement>('.dsh-bloom-appearance')
+  if (!row) return
+  // 显隐只看「有没有设置入口」—— 宿主那三个按钮跟随面板生灭，平时不在 DOM 里，
+  // 拿它们当判据这行会永远隐藏（2026-09-10 走过这个弯路）。
+  if (!hasSettingsEntry()) { row.hidden = true; return }
+  row.hidden = false
+  // 选中态同理：面板关着读不到 selected 类，用 body 标记推断深浅。
+  // 「跟随系统」无法从 body 反推，所以它不标选中 —— 宁可不标，也不标错。
+  const dark = currentIsDark()
+  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-appearance__btn'))) {
+    const m = btn.dataset.mode as AppearanceMode
+    const on = (m === 'dark' && dark) || (m === 'light' && !dark)
+    btn.dataset.active = String(on)
+    btn.setAttribute('aria-pressed', String(on))
+  }
+}
+
 export function buildSwitcherEl(initialVariant) {
   const wrapper = document.createElement('div')
   wrapper.innerHTML = buildSwitcherHTML(initialVariant)
@@ -105,6 +138,7 @@ export function buildSwitcherEl(initialVariant) {
     const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
     menu.hidden = false
     trigger.setAttribute('aria-expanded', 'true')
+    syncAppearanceRow(el)
     // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
     const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
       || menu.querySelector<HTMLElement>('.dsh-bloom-option')
@@ -112,6 +146,13 @@ export function buildSwitcherEl(initialVariant) {
   }
 
   el.addEventListener('click', (e) => {
+    const modeBtn = (e.target as HTMLElement).closest<HTMLElement>('.dsh-bloom-appearance__btn')
+    if (modeBtn) {
+      // 代点宿主按钮；点不动就把这行藏起来，不给一个按了没反应的控件
+      // 切换要开合宿主面板（异步），完事再回读 body 标记刷新选中态
+      void setMode(modeBtn.dataset.mode as AppearanceMode).then(() => syncAppearanceRow(el))
+      return
+    }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')
     if (trigger) {
       const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
@@ -206,6 +247,10 @@ export function injectSwitcher(initialVariant) {
   refreshUpdateBadge()
   renderDshUpdate()
   void checkDshLatest()
+  // 把宿主的外观按钮叫醒一次（它们懒渲染，设置面板开过才进 DOM）。
+  // 放在初始化而不是「打开菜单时」：唤醒要点宿主的设置按钮，那一下会触发
+  // document 的 outside-click 把刚展开的菜单关掉。这里做，用户还没开菜单，
+  // 面板在左下角闪一下就过去了，之后按钮常驻、菜单里直接可用。
   const existing = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
   const host = findSwitcherHost()
   if (existing) {

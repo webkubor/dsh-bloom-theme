@@ -129,6 +129,58 @@ export const SWITCHER_CSS = `
 /* v0.5.0：氛围区（壁纸 / 玻璃 toggle / 主题包控件）已移除，菜单只保留变体列表。 */
 
 /* 版本 / 更新指示（菜单底部）：一眼看到当前版本，有新版亮「↑ vX」 chip */
+/* 外观切换（浅色/深色/跟随）——分段控件，跟变体列表用同一条分隔线语言 */
+.dsh-bloom-appearance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 6px 9px 5px;
+  border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary, #999);
+}
+.dsh-bloom-appearance[hidden] { display: none; }
+.dsh-bloom-appearance__seg {
+  display: inline-flex;
+  flex: 1;                     /* 占满剩余宽度，三个按钮各三分之一，不再被挤成竖排 */
+  border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
+  border-radius: 7px;
+  overflow: hidden;
+}
+.dsh-bloom-appearance__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  flex: 1;                     /* 三等分 */
+  padding: 3px 4px;
+  cursor: pointer;
+  line-height: 1.7;
+  white-space: nowrap;         /* 「浅色」被折成两行就是少了这一条 */
+  text-align: center;
+  transition: background-color .14s ease, color .14s ease;
+}
+.dsh-bloom-appearance__btn[hidden] { display: none; }
+.dsh-bloom-appearance__btn + .dsh-bloom-appearance__btn {
+  border-left: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
+}
+.dsh-bloom-appearance__btn:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
+}
+/* 选中态用主题强调色，和上方变体的选中打勾是同一套视觉权重 */
+.dsh-bloom-appearance__btn[data-active="true"] {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 84%);
+  color: var(--dsw-alias-label-primary, inherit);
+  font-weight: 600;
+}
+.dsh-bloom-appearance__btn:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: -2px;
+}
+
 .dsh-bloom-version {
   display: flex;
   align-items: center;
@@ -161,12 +213,16 @@ export const SWITCHER_CSS = `
 .dsh-bloom-version__update:hover { color: color-mix(in oklch, var(--dsw-alias-brand-primary, #4a90e2), black 15%); }
 
 /* ── DSH 升级检查区块（紧贴 Bloom 版本行下方）── */
+/* 版本区：两行封顶（当前+按钮 / 最新），按钮收进第一行右侧。
+   原来是三行——版本、最新、两个大按钮各占一行，菜单被撑得很长（owner 反馈"太拥挤"）。 */
+.dsh-bloom-dsh-spacer { flex: 1; }
+.dsh-bloom-dsh-row--latest { opacity: .72; }
 .dsh-bloom-dsh-update {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 4px;
-  padding: 6px 9px 7px;
+  gap: 2px;
+  margin-top: 2px;
+  padding: 5px 9px 6px;
   border-top: 1px solid var(--bloom-hairline, rgba(0,0,0,.06));
   font-size: 11px;
   color: var(--dsw-alias-label-tertiary, #999);

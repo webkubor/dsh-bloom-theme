@@ -171,6 +171,25 @@ darkShadow?.[1]?.includes('rgba(0,0,0')
   ? ok('暗色阴影使用纯黑')
   : bad('暗色阴影未使用纯黑 —— 用前景色 mix 会渲染成白雾')
 
+// button-primary-dimmed 是官方定义的「主按钮填充上的文字色」，与 fill 反向
+// （官方亮色 fill #0f1115 / dimmed #ebeef2，暗色 fill #f9fafb / dimmed #43454a）。
+// 而 bloom 的 fill 就是 accent，所以 dimmed 一旦由 accent 派生（mix(accent, 85)
+// 这种「淡化」写法），就是同色相文字叠同色相底 → 对比度趋 0，按钮字不可见。
+// 第三方插件按官方语义直接把它当文字色用（@opendsh/dsh-plugin-scheduled-tasks 的
+// .dshst-btn-primary / .dshst-tab-active），于是全线中招 —— issue #16 就是这么来的。
+// 正解取 bg：accent 与 bg 在明暗之间反向翻转，两个主题都成立，且 accent×bg
+// 的 L 值本来就按 WCAG AA 校准过（palette.ts 顶部注释）。
+const dimmedVals = [...SRC_CODE.matchAll(/--dsw-alias-button-primary-dimmed:\s*([^;]+);/g)].map((m) => m[1].trim())
+const badDimmed = dimmedVals.filter((v) => /\$\{\s*(mix\(\s*)?a[LD]?\b/.test(v))
+dimmedVals.length > 0 && badDimmed.length === 0
+  ? ok(`button-primary-dimmed 与 fill 反向（${dimmedVals.length} 处，全部取 bg）`)
+  : bad(
+      dimmedVals.length === 0
+        ? '找不到 button-primary-dimmed 定义 —— 闸门失效，请检查正则'
+        : `button-primary-dimmed 有 ${badDimmed.length} 处由 accent 派生：${badDimmed.join(', ')}\n` +
+          `    → 它是「fill 上的文字色」而 fill 就是 accent，同色相叠同色相对比度趋 0（#16）。取 \${bg} 系列。`,
+    )
+
 // ── 1.5 scripts 不得撞 npm 生命周期钩子 ────────────────────────
 console.log('\nscripts 命名')
 

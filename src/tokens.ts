@@ -254,7 +254,18 @@ ${labelStack(p, false)}
 ${borderStack(p, false)}
   --dsw-alias-button-primary-fill: ${aL};
   --dsw-alias-button-primary-hover: color-mix(in oklch, ${aL}, black 8%);
-  --dsw-alias-button-primary-dimmed: ${mix(aL, 85)};
+  /* dimmed 的官方语义是「主按钮填充上的文字色」，与 fill 反向——
+     官方亮色 fill=neutral-bluish-1000(#0f1115) / dimmed=neutral-bluish-100(#ebeef2)，
+     官方暗色 fill=neutral-bluish-50(#f9fafb) / dimmed=neutral-bluish-750(#43454a)。
+     曾误当作「accent 淡化」写成 mix(accent, 85)，于是任何按官方语义把它用作
+     文字色的插件（如 @opendsh/dsh-plugin-scheduled-tasks 的 .dshst-btn-primary
+     与 .dshst-tab-active）都得到「accent 文字叠在 accent 填充上」→ 对比度趋 0，
+     按钮字不可见（#16）。
+     这里取 bg 而非 label 类 token 是刻意的：fill 是 accent，而 accent 与 bg 在
+     明暗之间反向翻转（亮色 accent 中深 / bg 浅，暗色 accent 亮 / bg 深），
+     两个主题都成立；bloom 内 label-primary-foreground 与 brand-primary-invert
+     早已用同一个值表达「品牌色块上的前景」，此处复用，不新造颜色。 */
+  --dsw-alias-button-primary-dimmed: ${bgL};
   --dsw-alias-button-tool-bar-fill: ${sfL};
   --dsw-alias-button-tool-bar-hover: ${mix(txL, 95)};
   --dsw-alias-button-floating-fill: ${sfL};
@@ -330,7 +341,8 @@ ${labelStack(p, true)}
 ${borderStack(p, true)}
   --dsw-alias-button-primary-fill: ${aD};
   --dsw-alias-button-primary-hover: color-mix(in oklch, ${aD}, white 8%);
-  --dsw-alias-button-primary-dimmed: ${mix(aD, 82)};
+  /* 见亮色段说明：fill 上的文字色，与 fill 反向（#16） */
+  --dsw-alias-button-primary-dimmed: ${bgD};
   --dsw-alias-button-tool-bar-fill: ${sfD};
   --dsw-alias-button-tool-bar-hover: ${mix(txD, 92)};
   --dsw-alias-button-floating-fill: ${sfD};
@@ -403,7 +415,8 @@ ${sel} {${bloomTokens(p, dark)}${sharedDswTokens(p, dark)}
   --dsw-alias-brand-text: ${bg};
   --dsw-alias-button-primary-fill: ${a};
   --dsw-alias-button-primary-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
-  --dsw-alias-button-primary-dimmed: ${mix(a, dark ? 82 : 85)};
+  /* 见亮色段说明：fill 上的文字色，与 fill 反向（#16） */
+  --dsw-alias-button-primary-dimmed: ${bg};
   --dsw-alias-button-info-fill: ${mix(a, dark ? 86 : 90)};
   --dsw-alias-button-info-hover: ${mix(a, dark ? 78 : 84)};
   --dsw-alias-button-ghost-active-fill: ${mix(a, dark ? 88 : 92)};

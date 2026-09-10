@@ -24,9 +24,20 @@ export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', '
  * 原版 14 处 gradient 全部用气质轨，从不用可读轨铺面。
  * 一旦把 accent 拿去刷大面积，petal 就会从藕粉变成荧光洋红 —— 莫兰迪感就没了。
  *
- * 亮色 accent 的 L 值已按 WCAG AA(4.5:1) 反推校准（底色为各变体的 bgL）：
- *   mist 50%(5.28:1) / cinnabar 55%(4.87:1) 原值达标，保持
- *   petal 64%→58% (3.55:1 → 达标)   ripple 62%→51% (3.02:1 → 达标)
+ * 亮色 accent 的 L 值已按 WCAG AA(4.5:1) 反推校准（底色为各变体的 bgL）。
+ * accent × bg 实测对比度（9 变体 × 明暗，全部 ≥ 4.5:1）——
+ * 这一对同时也是主按钮的 fill × dimmed（见 tokens.ts 的 button-primary-dimmed）：
+ *
+ *   变体       亮色     暗色        变体       亮色     暗色
+ *   mist     5.28:1   5.96:1      stone    5.48:1   7.77:1
+ *   cinnabar 4.87:1   5.63:1      lapis    5.63:1   7.31:1
+ *   petal    4.55:1   6.07:1      amber    4.54:1   7.65:1
+ *   ripple   4.61:1   8.51:1      aurora   5.10:1   7.74:1
+ *   sage     4.53:1   7.42:1
+ *
+ * 最紧的是 sage 亮色 4.53:1 —— 改任何变体的 accentL/bgL 前先重算，
+ * 别只看「颜色好不好看」。（此前这段注释停在 petal 3.55 / ripple 3.02，
+ * 那是校准**前**的值，且自相矛盾地标着「达标」。）
  */
 export const PALETTE = {
   mist: {

@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.12.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.12.0...v0.12.1) (2026-09-10)
+
+
+### 🐛 Bug Fixes
+
+* **scripts:** 脱敏脚本连拍第二张必然误报 ([93e304a](https://github.com/webkubor/dsh-bloom-theme/commit/93e304a60f8ebe2c77124e8744ac41604973474a))
+
 ## [0.12.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.11.0...v0.12.0) (2026-09-10)
 
 

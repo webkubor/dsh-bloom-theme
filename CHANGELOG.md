@@ -13,6 +13,31 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.11.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.10.0...v0.11.0) (2026-09-10)
+
+
+### ✨ Features
+
+* **css:** 去硬边框改光感，侧栏冷光改为向外投 ([279942c](https://github.com/webkubor/dsh-bloom-theme/commit/279942cc0f622933705411943971434023396e38))
+* **css:** 输入卡三态 —— 静置呼吸 / 聚焦收紧 / 执行中流光绕边 ([1b05f31](https://github.com/webkubor/dsh-bloom-theme/commit/1b05f316a5d2968ebdde52a6340df6480a38104c))
+* **switcher:** 有新版时在触发器上点一个圆点 ([6c83134](https://github.com/webkubor/dsh-bloom-theme/commit/6c831344887529bdc3e34083cf980d3e857d64d1))
+* **switcher:** 面板按设计图重做 —— 加标题栏与分组，版本信息收起 ([9a94b78](https://github.com/webkubor/dsh-bloom-theme/commit/9a94b78433577db802c7e82ad6f2df45ff3aaefe))
+
+
+### 🐛 Bug Fixes
+
+* **check:** 裸反引号判据是假阴性，反而漏掉它要抓的 bug ([0fad557](https://github.com/webkubor/dsh-bloom-theme/commit/0fad557009f4d01b7b628ac0a33785fdd7964c82))
+* **css:** 侧栏 18 条组标题光带删掉，分组只靠留白 ([bc353d2](https://github.com/webkubor/dsh-bloom-theme/commit/bc353d24329a21aacfe0c73409a68a4df79dc0e6))
+* **css:** 顶栏光带打错了元素，"像被玻璃劈开" ([cd6657f](https://github.com/webkubor/dsh-bloom-theme/commit/cd6657f864b18366582a6db7ae73572d13f9f3d7))
+* **updater:** dist-tags 端点没有 CORS 头，浏览器里取不到 ([8bfd084](https://github.com/webkubor/dsh-bloom-theme/commit/8bfd084924872cab71bc5d49aa9afcaf919b24fe))
+* **updater:** respect host-managed DSH versions ([86139c0](https://github.com/webkubor/dsh-bloom-theme/commit/86139c0f1fcb18429db1a6f495f9426013a0b75b))
+
+
+### 🧱 重构
+
+* **css:** !important 从 53 降到 23，改走 token 与主题作用域 ([56293b9](https://github.com/webkubor/dsh-bloom-theme/commit/56293b9c2b6353192d748d03800f361bf2f161f8))
+* **css:** 会话行去重，删掉压自己人的 !important ([9480706](https://github.com/webkubor/dsh-bloom-theme/commit/94807062fdf0f5162d8b67bf12c8e10622125ed0))
+
 ## [0.10.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.9.1...v0.10.0) (2026-09-10)
 
 

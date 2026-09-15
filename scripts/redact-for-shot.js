@@ -32,7 +32,12 @@
   const TARGETS = '[class*="_sidebarCol"] [class*="_projectRow"], [class*="_sidebarCol"] [class*="_sessionRow"],'
     + ' [class*="_workspaceLabel"], [class*="_header"] [class*="_title"]'
   const targetEls = [...document.querySelectorAll(TARGETS)]
-  const firstLine = (el) => (el.innerText || '').trim().split('\n')[0].trim()
+  // 取样要和下面**真正会改的那个元素**对齐。原先取整行的第一行文本，于是把行内的
+  // 状态徽标也当成了"真名"——会话行长这样：`[进行中] 检查项目中的wt问题 1小时`，
+  // 第一行取到的是「进行中」，而改名只改标题节点，徽标原样留着 → 收尾断言必然报
+  // 「脱敏不完整：进行中」，而页面其实已经干净了（2026-09-15 补拍落霞/青莲时踩到）。
+  const labelOf = (el) => el.querySelector('[class*="_projectText"], [class*="_title"]') || el
+  const firstLine = (el) => (labelOf(el).innerText || '').trim().split('\n')[0].trim()
 
   // 界面自带的固定文案（"新会话""设置""工作区"…）也可能正好等于某个会话标题。
   // 它们不是隐私，而且脱敏后照样留在页面上 —— 不排掉就会把断言变成必然误报。

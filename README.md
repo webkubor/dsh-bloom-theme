@@ -69,12 +69,14 @@
 <td align="center">🧧 朱砂 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
 <td align="center">🌸 桃夭 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
 <td align="center">🌊 天青 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
+<td align="center">🌿 竹青 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
 </tr>
 <tr>
-<td align="center">🌿 竹青 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
 <td align="center">🧱 赭石 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
 <td align="center">🔷 青金 Lapis<br/><img src="assets/screenshots/ui-lapis-light.png" width="100%"/></td>
 <td align="center">🍯 琥珀 Amber<br/><img src="assets/screenshots/ui-amber-light.png" width="100%"/></td>
+<td align="center">🌅 落霞 Afterglow<br/><img src="assets/screenshots/ui-aurora-light.png" width="100%"/></td>
+<td align="center">🪷 青莲 Lavender<br/><img src="assets/screenshots/ui-lavender-light.png" width="100%"/></td>
 </tr>
 </table>
 

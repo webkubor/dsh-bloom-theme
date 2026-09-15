@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.13.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.0...v0.13.1) (2026-09-15)
+
+
+### 🐛 Bug Fixes
+
+* **switcher:** 底栏三个入口换成描边图标，不再用 emoji ([2120446](https://github.com/webkubor/dsh-bloom-theme/commit/21204469855eabd636dc731a41d7f19a2fb21dea))
+
 ## [0.13.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.12.0...v0.13.0) (2026-09-15)
 
 

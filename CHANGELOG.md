@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.13.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.1...v0.13.2) (2026-09-15)
+
+
+### 🐛 Bug Fixes
+
+* **share:** 分享文案补上 boot graph 那一步，装进去才会生效 ([9c8de6c](https://github.com/webkubor/dsh-bloom-theme/commit/9c8de6c00fbf3d2d326b1485cd4f0e625dfbf07c))
+
 ## [0.13.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.0...v0.13.1) (2026-09-15)
 
 

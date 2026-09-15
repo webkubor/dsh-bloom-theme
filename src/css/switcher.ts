@@ -143,7 +143,12 @@ export const SWITCHER_CSS = `
   /* v0.6.0 patch: 提到 99999，确保 Bloom 下拉菜单覆盖在 DSH 原生顶栏 tabs
      （"对话 / 轨迹"，z-index 更高）之上，不被截断 */
   z-index: 99999;
-  min-width: 236px;
+  /* v0.12.x: 236 → 312。最宽的是「版本与更新」里的 DSH 检查行：
+     label 28 + 版本号 63 + 状态 chip 62 + 两个按钮 92 + 5×gap 30 = 275，
+     加左右 padding 28 ≈ 303 —— 236px 时 flex 把没有 nowrap 的状态 chip
+     压到 min-content（1 字宽），「版本未知」被折成竖排字（owner 2026-09-14
+     实拍反馈「下面怎么就变窄了」）。宽度按最宽内容实算留出余量。 */
+  min-width: 312px;
   padding: 0 0 6px;
   border-radius: 12px;
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
@@ -192,11 +197,45 @@ export const SWITCHER_CSS = `
 }
 .dsh-bloom-option[data-active="true"] { background: rgba(var(--bloom-morandi), 0.2); }
 .dsh-bloom-option__name { font-weight: 500; }
+/* 右列从英文名改成出处诗句（v0.12.1）：中文在 11px 下太小、字距也不该按西文排，
+   所以放大一档、加字距、上衬线。衬线体是这套主题唯一的书卷气来源 —— 正文保持
+   无衬线保可读性，只在这一列用宋体，克制但立得住。 */
 .dsh-bloom-option__en {
   margin-left: auto;
-  font-size: 11px;
-  opacity: 0.5;
-  letter-spacing: 0.02em;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  font-family: 'Songti SC', 'STSong', 'Source Han Serif SC', 'Noto Serif SC', serif;
+  /* 诗句走渐变文字（owner 2026-09-15：「和深度求索中…一样有颜色渐变」）。
+     两端取本变体的气质轨→可读轨，跟左边色点同一对颜色，所以整行是一句话：
+     色点是这个颜色，诗句也是这个颜色。纯灰的 opacity 做不到这件事。 */
+  /* 起点用正文次级色而不是该变体的气质轨：气质轨是低饱和的莫兰迪，深色底上
+     竹青/琥珀这几支直接糊掉（实测诗句看不清）。起点保证可读、终点交代身份。 */
+  background-image: linear-gradient(100deg, var(--dsw-alias-label-tertiary, #9a9a9a) 0%, var(--bloom-poem-b) 66%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0.8;
+}
+body[data-ds-dark-theme] .dsh-bloom-option__en {
+  background-image: linear-gradient(100deg, var(--dsw-alias-label-tertiary, #8d8d8d) 0%, var(--bloom-poem-bd) 66%);
+  opacity: 0.88;
+}
+.dsh-bloom-option:hover .dsh-bloom-option__en,
+.dsh-bloom-option[data-active="true"] .dsh-bloom-option__en { opacity: 1; }
+/* 选中那一行让渐变缓缓流过，跟「深度求索中…」同一种语言 —— 只给一行，
+   十行一起流会变成灯箱。 */
+.dsh-bloom-option[data-active="true"] .dsh-bloom-option__en {
+  background-size: 220% 100%;
+  animation: dsh-bloom-poem-flow 4.2s ease-in-out infinite;
+}
+@keyframes dsh-bloom-poem-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsh-bloom-option[data-active="true"] .dsh-bloom-option__en { animation: none; }
 }
 .dsh-bloom-check {
   width: 12px;
@@ -320,9 +359,14 @@ export const SWITCHER_CSS = `
   color: var(--dsw-alias-label-secondary, #555);
   font-family: ui-monospace, SFMono-Regular, 'Menlo', monospace;
   font-size: 10.5px;
+  white-space: nowrap;
 }
+/* 状态 chip：绝不允许折行 —— 折行后 flex-shrink 会把它压到 1 字宽，
+   「版本未知」变成竖排字。推右交给 .dsh-bloom-dsh-spacer（flex:1），
+   不再用 margin-left:auto，两份「吃光自由空间」会互相抵消语义。 */
 .dsh-bloom-dsh-state {
-  margin-left: auto;
+  flex: none;
+  white-space: nowrap;
   font-size: 10px;
   padding: 1px 6px;
   border-radius: 999px;
@@ -363,8 +407,8 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-state[data-state="err"] {
   gap: 4px;
   margin-top: 4px;
 }
-/* 下拉只有 180px 宽,actions 区实际可用 150px。两个按钮原本都 flex:1 平分 73px,
-   而「复制升级命令」6 字 × 10.5px + 左右 padding ≈ 79px —— 装不下就折成两行,
+/* 菜单 min-width 312px 时 actions 区实际可用 ≈ 284px。两个按钮原本都 flex:1
+   平分,而「复制升级命令」6 字 × 10.5px + 左右 padding 装不下就折成两行,
    加上 line-height:1 两行字直接贴在一起。修法三件套:
      · 文案缩到「复制命令」(完整说明进 title)
      · white-space: nowrap 兜底 —— 以后换文案/换字号也不会再折行
@@ -441,6 +485,39 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   background: color-mix(in oklch, oklch(78% 0.14 150), transparent 88%);
   color: oklch(78% 0.14 150);
 }
+
+/* ── 底部快链：配色投票 / 反馈（v0.12.x，owner 要求）──
+   放常驻底部而不是「版本与更新」折叠区里 —— 折叠区本来就是低频信息，
+   反馈入口再藏一层等于没有。分隔沿用全站的「向下扩散阴影」语言。 */
+.dsh-bloom-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 7px 14px 9px;
+  font-size: 11px;
+  box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 82%);
+}
+.dsh-bloom-foot__link {
+  color: var(--dsw-alias-label-secondary, #777);
+  text-decoration: none;
+  transition: color .15s ease;
+  /* 「分享」是 button（要跑复制逻辑），其余是 a —— 这里把 button 的默认样式抹平，
+     两种标签在这一行必须长得一模一样。 */
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.dsh-bloom-foot__link:hover { color: var(--bloom-accent, #6b8f71); }
+.dsh-bloom-foot__link:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.dsh-bloom-foot__sep { color: var(--dsw-alias-label-tertiary, #999); opacity: .6; }
 
 @media (prefers-reduced-motion: reduce) {
   .dsh-bloom-trigger, .dsh-bloom-chevron, .dsh-bloom-option { transition: none !important; }

@@ -266,7 +266,9 @@ console.log('\n自有 CSS 变量引用')
 {
   // 用剥注释后的源码 —— 注释里复述「原先写的是 var(--bloom-tx)」是合法的
   const defined = new Set([
-    ...[...SRC_CODE.matchAll(/^\s*(--bloom-[a-z0-9-]+)\s*:/gm)].map((m) => m[1]),
+    // 行首、`;`、`{` 或模板串起头之后都算声明位置 —— 内联 style 是把一串
+    // 声明写在同一行的（poemStyle 就是），只认行首会把它们漏成"未定义"。
+    ...[...SRC_CODE.matchAll(/(?:^|[;{`])\s*(--bloom-[a-z0-9-]+)\s*:/gm)].map((m) => m[1]),
     // @property 也是定义（而且是更正式的那种：带 syntax / initial-value，
     // 声明后才能在 keyframes 里被插值）。2026-09-10 漏过一次：--bloom-spin
     // 只在 @property 里声明、在 keyframes 写成 `to { --bloom-spin: 360deg }`

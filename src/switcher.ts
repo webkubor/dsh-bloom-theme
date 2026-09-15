@@ -17,6 +17,10 @@ import { VARIANTS } from './palette.js'
 export const dotStyle = (v) =>
   `background:linear-gradient(135deg, rgb(${PALETTE[v].morandi}) 0%, ${PALETTE[v].accentL} 100%)`
 
+/** 诗句渐变：和色点同一对颜色，深浅两套各给一个变量，由 CSS 按 body 的深色标记挑。 */
+export const poemStyle = (v) =>
+  `--bloom-poem-a:rgb(${PALETTE[v].morandi});--bloom-poem-b:${PALETTE[v].accentL};--bloom-poem-bd:${PALETTE[v].accentD}`
+
 /**
  * 顶栏切换器：下拉式（收起只占一个按钮宽度）。
  *
@@ -63,6 +67,31 @@ export function applyVariant(variant) {
   }
 }
 
+/** 分享文案：对方原样贴进自己的 DSH 就能装上，不需要再问「怎么装」。 */
+const SHARE_TEXT = [
+  'Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。',
+  '装到你的 DSH：dsh plugin add @kubor/dsh-bloom-theme',
+  '仓库：https://github.com/webkubor/dsh-bloom-theme',
+].join('\n')
+
+/** 复制分享文案；就地把按钮文字换成「已复制」给反馈（视线在按钮上，改别处等于没反馈）。 */
+async function shareInstall(btn: HTMLElement) {
+  const label = btn.textContent
+  let ok = false
+  try {
+    if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(SHARE_TEXT); ok = true }
+  } catch {}
+  if (!ok) {
+    const ta = document.createElement('textarea')
+    ta.value = SHARE_TEXT; ta.style.position = 'fixed'; ta.style.opacity = '0'
+    document.body.appendChild(ta); ta.select()
+    try { ok = document.execCommand('copy') } catch {}
+    ta.remove()
+  }
+  btn.textContent = ok ? '✓ 已复制' : '复制失败'
+  setTimeout(() => { btn.textContent = label }, 1600)
+}
+
 export function buildSwitcherHTML(currentVariant) {
   const options = VARIANTS.map((v) => {
     const on = v === currentVariant
@@ -70,7 +99,7 @@ export function buildSwitcherHTML(currentVariant) {
       ` aria-selected="${on}" data-active="${on}">` +
       `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
       `<span class="dsh-bloom-option__name">${VARIANT_LABELS[v].zh}</span>` +
-      `<span class="dsh-bloom-option__en">${VARIANT_LABELS[v].en}</span>` +
+      `<span class="dsh-bloom-option__en" style="${poemStyle(v)}">${VARIANT_LABELS[v].poem}</span>` +
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
   }).join('')
   return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
@@ -119,7 +148,7 @@ export function buildSwitcherHTML(currentVariant) {
           <span class="dsh-bloom-dsh-state" data-dsh-state></span>
           <span class="dsh-bloom-dsh-spacer"></span>
           <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="重新检查 DSH 最新版">↻</button>
-          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="检查到可用版本后复制精确升级命令">复制</button>
+          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="检查到可用版本后，把升级命令直接填进下方输入框">填入</button>
         </div>
         <div class="dsh-bloom-dsh-row dsh-bloom-dsh-row--latest">
           <span class="dsh-bloom-dsh-label">最新</span>
@@ -127,6 +156,13 @@ export function buildSwitcherHTML(currentVariant) {
         </div>
         <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
       </div>
+    </div>
+    <div class="dsh-bloom-foot">
+      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="为你喜欢的配色点赞投票，或提议新色">🗳 配色投票</a>
+      <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
+      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="报问题 / 提建议">💬 反馈</a>
+      <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
+      <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="复制一段话，对方贴进自己的 DSH 就能装上 Bloom">🎁 分享</button>
     </div>
   </div>
 </div>`
@@ -187,6 +223,12 @@ export function buildSwitcherEl(initialVariant) {
   el.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
     if (target.closest('.dsh-bloom-close')) { closeMenu(el); return }
+    const share = target.closest<HTMLElement>('.dsh-bloom-share')
+    if (share) {
+      e.stopPropagation()
+      void shareInstall(share)
+      return
+    }
     const more = target.closest<HTMLElement>('.dsh-bloom-more')
     if (more) {
       // 版本与更新默认收起：日常用不到，摊开会把面板撑长（设计图里它就是一行入口）

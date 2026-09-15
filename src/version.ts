@@ -7,6 +7,68 @@
 import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
 
 /** npm 上最新版本（异步拉取，null=未知/失败） */
+/**
+ * 把一段文本写进 DSH 的主输入框并聚焦，返回是否成功。
+ *
+ * React 受控组件不认 `el.value = x` —— 必须走原型链上的 setter 再派发 input 事件，
+ * 否则 React 的内部 state 不更新，界面上看着有字、发送出去却是空的。
+ * contenteditable 走另一条路（DSH 两种实现都可能出现，两边都兜住）。
+ */
+async function fillMainComposer(text: string): Promise<boolean> {
+  // 顺序很重要：DSH 的主输入框是富文本 contenteditable，页面上另有隐藏 textarea。
+  // 先查 textarea 会命中那个隐藏的，写进去没人看得见，还会返回 true 把后路堵死
+  // （实测点「填入」页面毫无反应）。所以 contenteditable 优先，textarea 只作兜底
+  // 且必须可见。
+  // 选择器不能写死 ="true"：DSH 的输入框实测是 contenteditable=""（空值也生效），
+  // 写死会漏掉它，然后掉进下面的 textarea 兜底，表现成「点了填入没反应」。
+  const ce = document.querySelector<HTMLElement>('[contenteditable]:not([contenteditable="false"])')
+  if (ce) {
+    const selectAll = () => {
+      // insertText / paste 都是「替换选区」，不选中就变成追加（实测点两次，
+      // 框里成了两条命令首尾相连）。用 Range 精确选中本元素内容，
+      // 而不是 execCommand('selectAll') —— 后者在富文本编辑器里实测选不中东西。
+      const range = document.createRange()
+      range.selectNodeContents(ce)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+    }
+    // 关键是这两次 await：Lexical / ProseMirror 这类编辑器在自己的模型里另记一份光标，
+    // 靠 document 的 selectionchange 异步同步。同一个 tick 内「改 DOM 选区→马上插入」，
+    // 编辑器用的还是它记的旧光标（末尾），结果就是追加而不是替换 —— 实测两次都栽在这里。
+    // 让出一个宏任务，等它把选区同步进模型再插。
+    ce.focus({ preventScroll: true })
+    await new Promise((r) => setTimeout(r, 0))
+    selectAll()
+    await new Promise((r) => setTimeout(r, 0))
+    // 兜底只看 execCommand 的返回值，不比对 textContent —— 编辑器会把
+    // `@deepseek-ai/...` 解析成 mention 节点，textContent 跟原文对不上，
+    // 拿它当判据会误判成失败、再补一次 paste，框里就成了两条命令（实测）。
+    if (!document.execCommand('insertText', false, text)) {
+      // 编辑器可能吞掉 insertText，但一定处理 paste。
+      selectAll()
+      await new Promise((r) => setTimeout(r, 0))
+      const dt = new DataTransfer()
+      dt.setData('text/plain', text)
+      ce.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+    }
+    return true
+  }
+  const ta = Array.from(
+    document.querySelectorAll<HTMLTextAreaElement>('textarea'),
+  ).find((el) => el.offsetParent !== null)
+  if (ta) {
+    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+    if (!setter) return false
+    setter.call(ta, text)
+    ta.dispatchEvent(new Event('input', { bubbles: true }))
+    ta.focus()
+    ta.setSelectionRange(text.length, text.length)
+    return true
+  }
+  return false
+}
+
 export let latestVersion = null
 
 /**
@@ -80,13 +142,34 @@ function normalizeSemver(value: unknown): string | null {
  * 读取宿主运行时信息。桌面壳提供的语义化版本优先；提交 hash 只作为构建号展示，
  * 永远不参与版本大小比较。
  */
+/** host 半侧读到的 DSH 版本（见 src/index.ts 的 /api/bloom/dsh-version）。 */
+let dshVersionFromHost: string | null = null
+
+/**
+ * 向 host 半要一次 DSH 版本号，成功则刷新面板。
+ * 浏览器侧只有 7 位 commit rev，拿它没法和 npm 上的 semver 比较。
+ */
+export async function fetchDshVersionFromHost(): Promise<string | null> {
+  try {
+    const res = await fetch('/api/bloom/dsh-version', { headers: { accept: 'application/json' } })
+    const body = await res.json()
+    if (body?.ok === true && typeof body.version === 'string') {
+      dshVersionFromHost = body.version
+      return dshVersionFromHost
+    }
+  } catch {}
+  return null
+}
+
 export function readDshRuntimeInfo(): DshRuntimeInfo {
   try {
     const hostWindow = window as any
     const bridge = (hostWindow.__DSH_LOCAL__ || {}) as DshLocalBridge
     const boot = hostWindow.__DSH_BOOT__ || {}
     const dataVersion = document.documentElement?.dataset?.dshRuntimeVersion
-    const currentVersion = [bridge.runtimeVersion, dataVersion, boot.version, boot.rev]
+    // host 半读到的排第一 —— 它直接来自 @deepseek-ai/dsh/package.json，是唯一权威来源；
+    // 其余几个在实测里要么没有、要么只是 commit rev。
+    const currentVersion = [dshVersionFromHost, bridge.runtimeVersion, dataVersion, boot.version, boot.rev]
       .map(normalizeSemver)
       .find(Boolean) || null
     const buildRev = typeof boot.rev === 'string' && /^[0-9a-f]{7,40}$/i.test(boot.rev)
@@ -209,6 +292,12 @@ export function renderDshUpdate() {
   const cur = runtime.currentVersion || runtime.buildRev || '?'
   curEl.textContent = cur
 
+  // 首次渲染时浏览器侧只有 commit rev；异步向 host 半要一次真版本号，到了就重画。
+  // 只问一次 —— 版本号在运行期不会变。
+  if (!runtime.currentVersion && dshVersionFromHost === null) {
+    void fetchDshVersionFromHost().then((v) => { if (v) renderDshUpdate() })
+  }
+
   const btnRefresh = document.querySelector<HTMLButtonElement>('[data-act="refresh"]')
   const btnCopy = document.querySelector<HTMLButtonElement>('[data-act="copy"]')
 
@@ -252,9 +341,13 @@ export function renderDshUpdate() {
       stEl.removeAttribute('data-state')
       stEl.textContent = ''
     } else if (!runtime.currentVersion) {
+      // 浏览器半侧读不到 DSH 的本地版本号（它在 node_modules 的 package.json 里，
+      // 而本主题按设计不引入 client↔node 桥 —— 见 src/index.ts 里 /bloom stats 的教训）。
+      // 这不是错误，是能力边界：不该标红成 err，也不该说「版本未知」装作在比较。
+      // 如实说读不到，并且不妨碍「填入」升级命令 —— 那条路不需要知道当前版本。
       latEl.textContent = dshLatestVersion
-      stEl.textContent = '版本未知'
-      stEl.setAttribute('data-state', 'err')
+      stEl.textContent = '本地版本读不到'
+      stEl.setAttribute('data-state', 'warn')
     } else {
       latEl.textContent = dshLatestVersion
       const comparison = cmpVersion(dshLatestVersion, runtime.currentVersion)
@@ -309,21 +402,29 @@ export function renderDshUpdate() {
         return
       }
       if (!dshLatestVersion) return
-      const cmd = `npm i -g @deepseek-ai/dsh@${dshLatestVersion}`
-      let ok = false
-      try {
-        if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(cmd)
-          ok = true
-        }
-      } catch {}
+      // 填进去的是**给 AI 的一句话**，不是裸命令 —— 那个框是对话框，
+      // 收到一行 `npm i -g ...` 它并不知道你要它干嘛（owner 2026-09-15 指出）。
+      // 带上意图和命令，AI 才能直接执行并回报结果。
+      const cmd = `帮我把 DSH 升级到 ${dshLatestVersion}，执行：npm i -g @deepseek-ai/dsh@${dshLatestVersion}`
+      // 一步到位：直接把这句话填进 DSH 的主输入框，用户回车就能跑
+      // （owner 2026-09-15：「最好一步到位，点击后把更新命令输入到主输入框」）。
+      // 复制到剪贴板只做了一半 —— 人还得自己找到输入框再粘一次。
+      let ok = await fillMainComposer(cmd)
+      // 填不进去（找不到输入框 / DSH 换了实现）才退回复制，功能不至于消失。
       if (!ok) {
-        // 降级：临时 textarea
-        const ta = document.createElement('textarea')
-        ta.value = cmd; ta.style.position = 'fixed'; ta.style.opacity = '0'
-        document.body.appendChild(ta); ta.select()
-        try { ok = document.execCommand('copy') } catch {}
-        ta.remove()
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(cmd)
+            ok = true
+          }
+        } catch {}
+        if (!ok) {
+          const ta = document.createElement('textarea')
+          ta.value = cmd; ta.style.position = 'fixed'; ta.style.opacity = '0'
+          document.body.appendChild(ta); ta.select()
+          try { ok = document.execCommand('copy') } catch {}
+          ta.remove()
+        }
       }
       // 就地反馈：按钮自己变「✓ 已复制」并染成成功色 —— 用户点的是按钮，
       // 反馈就该出现在按钮上。下方那行 hint 仍保留（它带完整命令，便于手动执行），
@@ -331,7 +432,7 @@ export function renderDshUpdate() {
       // 「✓ 已复制」与「复制命令」都是 4 个字符宽，替换时布局不跳。
       const label = btnCopy.dataset.bloomLabel || btnCopy.textContent
       btnCopy.dataset.bloomLabel = label
-      btnCopy.textContent = ok ? '✓ 已复制' : '✗ 复制失败'
+      btnCopy.textContent = ok ? '✓ 已填入' : '✗ 失败'
       btnCopy.classList.add(ok ? 'is-done' : 'is-fail')
       clearTimeout(+(btnCopy.dataset.bloomTimer || 0))
       const t = setTimeout(() => {

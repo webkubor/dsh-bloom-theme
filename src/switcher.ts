@@ -67,6 +67,15 @@ export function applyVariant(variant) {
   }
 }
 
+/* 底栏图标：emoji 各家字体形状/基线都不一样，三个挤一排像贴纸（owner 2026-09-15
+   「图片位置优化下」）。换成同一套描边 SVG —— 1.4 线宽、13px、currentColor，
+   跟面板里的 chevron 同一种语言，颜色也跟着 hover 一起变。 */
+const icon = (body: string) =>
+  `<svg class="dsh-bloom-foot__icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
+const ICON_VOTE = icon('<rect x="1.9" y="1.9" width="10.2" height="10.2" rx="2.4"/><path d="M4.5 7.1l1.8 1.8 3.3-3.7"/>')
+const ICON_CHAT = icon('<path d="M12.1 8.1a1.8 1.8 0 0 1-1.8 1.8H5.6L2.9 12.1V3.7a1.8 1.8 0 0 1 1.8-1.8h5.6a1.8 1.8 0 0 1 1.8 1.8z"/>')
+const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy="7" r="1.6"/><circle cx="10.5" cy="10.7" r="1.6"/><path d="M4.9 6.2l4.2-2.2M4.9 7.8l4.2 2.2"/>')
+
 /** 分享文案：对方原样贴进自己的 DSH 就能装上，不需要再问「怎么装」。 */
 const SHARE_TEXT = [
   'Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。',
@@ -76,7 +85,9 @@ const SHARE_TEXT = [
 
 /** 复制分享文案；就地把按钮文字换成「已复制」给反馈（视线在按钮上，改别处等于没反馈）。 */
 async function shareInstall(btn: HTMLElement) {
-  const label = btn.textContent
+  // 只改文字那个 span —— 直接写 btn.textContent 会把 svg 图标一起擦掉。
+  const slot = btn.querySelector('span') ?? btn
+  const label = slot.textContent
   let ok = false
   try {
     if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(SHARE_TEXT); ok = true }
@@ -88,8 +99,8 @@ async function shareInstall(btn: HTMLElement) {
     try { ok = document.execCommand('copy') } catch {}
     ta.remove()
   }
-  btn.textContent = ok ? '✓ 已复制' : '复制失败'
-  setTimeout(() => { btn.textContent = label }, 1600)
+  slot.textContent = ok ? '已复制' : '复制失败'
+  setTimeout(() => { slot.textContent = label }, 1600)
 }
 
 export function buildSwitcherHTML(currentVariant) {
@@ -158,11 +169,11 @@ export function buildSwitcherHTML(currentVariant) {
       </div>
     </div>
     <div class="dsh-bloom-foot">
-      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="为你喜欢的配色点赞投票，或提议新色">🗳 配色投票</a>
+      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="为你喜欢的配色点赞投票，或提议新色">${ICON_VOTE}<span>配色投票</span></a>
       <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
-      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="报问题 / 提建议">💬 反馈</a>
+      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="报问题 / 提建议">${ICON_CHAT}<span>反馈</span></a>
       <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
-      <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="复制一段话，对方贴进自己的 DSH 就能装上 Bloom">🎁 分享</button>
+      <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="复制一段话，对方贴进自己的 DSH 就能装上 Bloom">${ICON_SHARE}<span>分享</span></button>
     </div>
   </div>
 </div>`

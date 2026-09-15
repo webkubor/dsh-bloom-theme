@@ -511,7 +511,20 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   font: inherit;
   cursor: pointer;
 }
+.dsh-bloom-foot__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1;
+}
+.dsh-bloom-foot__icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  opacity: .78;
+}
 .dsh-bloom-foot__link:hover { color: var(--bloom-accent, #6b8f71); }
+.dsh-bloom-foot__link:hover .dsh-bloom-foot__icon { opacity: 1; }
 .dsh-bloom-foot__link:focus-visible {
   outline: 2px solid var(--bloom-accent, #6b8f71);
   outline-offset: 2px;

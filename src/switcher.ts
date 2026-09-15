@@ -79,7 +79,10 @@ const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy
 /** 分享文案：对方原样贴进自己的 DSH 就能装上，不需要再问「怎么装」。 */
 const SHARE_TEXT = [
   'Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。',
-  '装到你的 DSH：dsh plugin add @kubor/dsh-bloom-theme',
+  '装到你的 DSH（profile 名按自己的改，默认 web）：',
+  '  1) dsh plugin --profile web add @kubor/dsh-bloom-theme',
+  '  2) 把 "@kubor/dsh-bloom-theme" 加进 ~/.dsh/profiles/web/package.json 的 dsh.profile.bundles',
+  '  3) 重启 DSH',
   '仓库：https://github.com/webkubor/dsh-bloom-theme',
 ].join('\n')
 

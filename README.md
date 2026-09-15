@@ -87,12 +87,14 @@
 ## 安装
 
 ```bash
-# 方式一：通过 dsh CLI 添加（推荐）
-dsh plugin add @kubor/dsh-bloom-theme
+# 1) 装进你的 profile（profile 名按自己的改，默认 web）
+dsh plugin --profile web add @kubor/dsh-bloom-theme
 
-# 方式二：全局安装后启用
-npm i -g @kubor/dsh-bloom-theme
-dsh plugin enable @kubor/dsh-bloom-theme
+# 2) 接进 boot graph：把 "@kubor/dsh-bloom-theme" 加进
+#    ~/.dsh/profiles/web/package.json 的 dsh.profile.bundles 数组
+
+# 3) 重启 DSH
+~/.dsh/restart.sh
 ```
 
 装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，

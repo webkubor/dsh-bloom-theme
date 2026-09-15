@@ -1,0 +1,51 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:3200px;height:1000px;overflow:hidden;background:#000}
+  .stage{
+    position:relative;width:3200px;height:1000px;
+    background:#08090b url("bg-band.png") right center / cover no-repeat;
+  }
+  /* 左侧压暗，给文字一块干净的底 —— 原图就是这个语言：左边是空的 */
+  .stage::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(100deg,
+      rgba(8,9,11,.99) 0%, rgba(8,9,11,.97) 26%,
+      rgba(8,9,11,.80) 42%, rgba(8,9,11,.30) 60%, rgba(8,9,11,0) 78%);
+  }
+  .copy{position:absolute;left:186px;top:284px;z-index:2}
+  h1{
+    font:700 132px/1.0 "Helvetica Neue",Helvetica,Arial,sans-serif;
+    letter-spacing:-.022em;color:#fff;
+  }
+  .rule{width:290px;height:2px;margin:56px 0 44px;
+    background:linear-gradient(90deg,rgba(255,255,255,.55),rgba(255,255,255,0))}
+  .sub{font:400 44px/1.4 "PingFang SC","Helvetica Neue",Helvetica,Arial,sans-serif;
+    color:rgba(255,255,255,.80)}
+  .meta{margin-top:40px;
+    font:600 25px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;
+    letter-spacing:.20em;color:rgba(255,255,255,.44)}
+  .dots{position:absolute;left:186px;top:800px;display:flex;gap:26px;z-index:2}
+  .dots i{width:26px;height:26px;border-radius:50%;display:block;
+    box-shadow:0 0 0 1px rgba(255,255,255,.10) inset}
+</style>
+<div class="stage">
+  <div class="copy">
+    <h1>Bloom for DSH</h1>
+    <div class="rule"></div>
+    <div class="sub">把 Bloom 的莫兰迪质感搬进 DeepSeek Harness</div>
+    <div class="meta">10 VARIANTS &nbsp;·&nbsp; LIGHT &amp; DARK &nbsp;·&nbsp; OKLCH &nbsp;·&nbsp; WCAG AA</div>
+  </div>
+  <div class="dots">
+    <i style="background:rgb(146,168,179)"></i>
+    <i style="background:rgb(215,75,75)"></i>
+    <i style="background:rgb(232,133,155)"></i>
+    <i style="background:rgb(95,168,178)"></i>
+    <i style="background:rgb(138,154,91)"></i>
+    <i style="background:rgb(180,160,155)"></i>
+    <i style="background:rgb(47,98,172)"></i>
+    <i style="background:rgb(159,100,1)"></i>
+    <i style="background:rgb(218,158,72)"></i>
+    <i style="background:rgb(164,148,190)"></i>
+  </div>
+</div>

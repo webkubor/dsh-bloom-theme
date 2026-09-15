@@ -13,6 +13,20 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.13.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.12.0...v0.13.0) (2026-09-15)
+
+
+### ✨ Features
+
+* **palette:** 十套配色改中国风命名，右列换成出处诗句 ([8785106](https://github.com/webkubor/dsh-bloom-theme/commit/878510635fb6af5e042f357105a92d05013f4e36))
+* **switcher:** 诗句上渐变色，底部加「分享」一键复制安装说明 ([50c3923](https://github.com/webkubor/dsh-bloom-theme/commit/50c39238eeefcbce17fab1e0e97c30246db82d03))
+
+
+### 🐛 Bug Fixes
+
+* **scripts:** 脱敏脚本连拍第二张必然误报 ([93e304a](https://github.com/webkubor/dsh-bloom-theme/commit/93e304a60f8ebe2c77124e8744ac41604973474a))
+* **version:** 面板显示 DSH 真实版本号，「填入」改成替换而不是追加 ([0db5e45](https://github.com/webkubor/dsh-bloom-theme/commit/0db5e45b5f1291c3bb7fe5df752b1a205ae93bf6))
+
 ## [0.12.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.11.0...v0.12.0) (2026-09-10)
 
 

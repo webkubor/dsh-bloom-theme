@@ -37,8 +37,24 @@ const raw = sh('npx contrast-guard --json 2>/dev/null')
 if (!raw) { console.error('✗ contrast-guard --json 跑不起来（先 npm install）'); process.exit(1) }
 const cg = JSON.parse(raw.slice(raw.indexOf('{')))
 
-const ZH = { mist: '雾蓝', cinnabar: '朱砂', petal: '花瓣', ripple: '涟漪',
-             sage: '鼠尾草', stone: '暖石', lapis: '青金', amber: '琥珀' }
+// 中文名不在这里再抄一份 —— 配色改名（v0.13.0 全改中国风）时这份副本没人想起来改，
+// 于是「可以直接贴出去」的表格贴出去的是雾蓝/花瓣/鼠尾草这些早就不存在的名字，
+// 而且新加的 aurora / lavender 压根没有中文名。跟对比度一样从 lib/client.js 里读，
+// 它是 build 产物、跟 src/palette.ts 的 VARIANT_LABELS 同源。
+const ZH = (() => {
+  const src = readFileSync(resolve(root, 'lib/client.js'), 'utf8')
+  const block = src.slice(src.indexOf('VARIANT_LABELS = {'))
+  const map = {}
+  // 引号两种都认：src 里是单引号，bundle 产物里被改写成双引号。
+  for (const m of block.slice(0, block.indexOf('};')).matchAll(/(\w+):\s*\{[^}]*?zh:\s*['"]([^'"]+)['"]/g)) {
+    map[m[1]] = m[2]
+  }
+  if (Object.keys(map).length === 0) {
+    console.error('✗ 从 lib/client.js 读不到 VARIANT_LABELS（先 npm run build）')
+    process.exit(1)
+  }
+  return map
+})()
 const rows = cg.results.map((r) => ({
   variant: r.group,
   mode: /浅色|light/i.test(r.pair) ? 'light' : 'dark',

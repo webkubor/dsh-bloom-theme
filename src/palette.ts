@@ -126,18 +126,28 @@ export const PALETTE = {
     motionL: ['oklch(55.5% 0.12 70)', 'oklch(55.5% 0.11 38)', 'oklch(55.5% 0.12 100)'],
     motionD: ['oklch(78% 0.11 70)', 'oklch(78% 0.12 38)', 'oklch(78% 0.11 100)'],
   },
-  /* v0.9.0：极光 —— 北极光的青绿 → 蓝 → 紫光谱，莫兰迪化后压低彩度。
-     主色走 165 hue 的青绿（极光最典型的颜色），motion 三色取光谱
-     165/210/300，正好是「流线」与 deep-dive 渐变要用的流动色源。 */
+  /* v0.12.x：落霞（原「极光」，owner 2026-09-14 反馈「极光颜色不好看」）——
+     青绿→蓝→紫的北极光谱整族换成**橙黄系**：明亮金橙（hue 78）为主，
+     motion 三色取 78/55/35 的金→橙→珊瑚日落谱，「流线」背景随之变成晚霞。
+     与琥珀的区分：琥珀是压暗的棕橙（morandi 159,100,1，C 0.11~0.12），
+     落霞提亮一档、彩度更高（morandi 218,158,72，accent C 0.145），读作「金」而非「棕」。
+     accent×bg 两档对比度由 contrast-guard 守着，改完必须跑 npm run check。 */
   aurora: {
-    accentL: 'oklch(50% 0.10 165)',   accentD: 'oklch(75% 0.12 165)',
-    morandi: '134, 186, 160',
-    bgL: 'oklch(96% 0.015 165)',      bgD: 'oklch(24% 0.02 165)',
-    txL: 'oklch(25% 0.02 165)',       txD: 'oklch(96% 0.015 165)',
-    sfL: 'oklch(94% 0.015 165)',      sfD: 'oklch(30% 0.022 165)',
-    sf2L: 'oklch(91.5% 0.018 165)',   sf2D: 'oklch(36% 0.024 165)',
-    motionL: ['oklch(50% 0.10 165)', 'oklch(50% 0.11 210)', 'oklch(52% 0.11 300)'],
-    motionD: ['oklch(75% 0.12 165)', 'oklch(75% 0.12 210)', 'oklch(75% 0.12 300)'],
+    accentL: 'oklch(55% 0.145 72)',   accentD: 'oklch(80% 0.13 72)',
+    morandi: '218, 158, 72',
+    /* v0.12.1：底色去黄（owner 2026-09-15 反馈「视觉不舒服、不高级、有点脏」）。
+       原因是**背景自己带色**：bgL 彩度 0.012 @ hue 80 是全套最高，而 hue 80 正是
+       芥末黄区，97.5% 亮度下大面积铺开就成了「发黄的旧纸」。同为金橙的琥珀只有
+       0.008 @ hue 74，干净得多 —— 差别不在色相在彩度。
+       改法：底色系彩度压到 0.004~0.006（回到近中性），色相 80→72 避开黄绿；
+       暖色全部集中到 accent 与 motion 上。高级感来自「底色干净、强调克制」，
+       不是把主色摊到整个背景上。 */
+    bgL: 'oklch(98% 0.004 72)',       bgD: 'oklch(24.5% 0.008 70)',
+    txL: 'oklch(24% 0.012 72)',       txD: 'oklch(95% 0.005 72)',
+    sfL: 'oklch(96.2% 0.005 72)',     sfD: 'oklch(30.5% 0.01 70)',
+    sf2L: 'oklch(93.4% 0.007 72)',    sf2D: 'oklch(36.5% 0.012 70)',
+    motionL: ['oklch(55% 0.145 72)', 'oklch(56% 0.15 50)', 'oklch(56% 0.13 32)'],
+    motionD: ['oklch(80% 0.13 72)', 'oklch(80% 0.14 50)', 'oklch(80% 0.12 32)'],
   },
   /* v0.12.0：薰衣草 —— 灰调紫。hue 295 卡在 mist(240) 与 petal(350) 中间，
      跟两边都拉得开；彩度压到 0.10~0.11（比 petal 的 0.22 低一半），
@@ -156,16 +166,22 @@ export const PALETTE = {
 }
 
 export const VARIANT_LABELS = {
-  mist:     { zh: '雾蓝', en: 'Mist' },
-  cinnabar: { zh: '朱砂', en: 'Cinnabar' },
-  petal:    { zh: '花瓣', en: 'Petal' },
-  ripple:   { zh: '涟漪', en: 'Ripple' },
-  sage:     { zh: '鼠尾草', en: 'Sage' },
-  stone:    { zh: '暖石', en: 'Stone' },
-  lapis:    { zh: '青金', en: 'Lapis' },
-  amber:    { zh: '琥珀', en: 'Amber' },
-  aurora:   { zh: '极光', en: 'Aurora' },
-  lavender: { zh: '薰衣草', en: 'Lavender' },
+  // 中文名一律「两字 · 中国风 · 有出处」，且必须对得上实际色相（owner 2026-09-15 定）。
+  // key 全部保持不动 —— key 写进了用户的本地偏好，改 key 等于把人家选好的主题弄丢。
+  //
+  // poem 是配色右侧那一列：原来放英文名（Mist/Cinnabar…），对中文用户没有信息量
+  // （owner：「后面的英文没啥意义，不如一句诗词呢」）。换成该色的出处诗句后，
+  // 中国风就从名字渗进了界面本身。en 保留给英文 locale。
+  mist:     { zh: '黛蓝', en: 'Mist',      poem: '山色有无中' },   // hue 240 · 王维《汉江临泛》
+  cinnabar: { zh: '朱砂', en: 'Cinnabar',  poem: '日出江花红胜火' },   // hue 25  · 白居易《忆江南》
+  petal:    { zh: '桃夭', en: 'Petal',     poem: '灼灼其华' },     // hue 350 ·《诗经·周南·桃夭》
+  ripple:   { zh: '天青', en: 'Ripple',    poem: '雨过天青云破处' },   // hue 195 · 宋徽宗品汝窑语
+  sage:     { zh: '竹青', en: 'Sage',      poem: '绿竹猗猗' },     // hue 115 ·《诗经·卫风·淇奥》
+  stone:    { zh: '赭石', en: 'Stone',     poem: '秋山敛余照' },   // hue 29  · 王维《木兰柴》
+  lapis:    { zh: '青金', en: 'Lapis',     poem: '碧海青天夜夜心' },   // hue 258 · 李商隐《嫦娥》
+  amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光' },   // hue 70  · 李白《客中行》
+  aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞' },   // hue 72  · 王勃《滕王阁序》
+  lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉' },   // hue 295 · 李白《经乱离后天恩流夜郎》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

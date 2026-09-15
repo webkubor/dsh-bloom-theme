@@ -58,21 +58,21 @@
 
 <p align="center">
   <img src="assets/screenshots/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
-  <sub>鼠尾草·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
+  <sub>竹青·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
 </p>
 
 **10 套配色（亮色）**：点击任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
 
 <table align="center">
 <tr>
-<td align="center">☁️ 雾蓝 Mist<br/><img src="assets/screenshots/ui-mist-light.png" width="100%"/></td>
-<td align="center">🧧 丹红 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
-<td align="center">🌸 花瓣 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
-<td align="center">🌊 涟漪 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
+<td align="center">☁️ 黛蓝 Mist<br/><img src="assets/screenshots/ui-mist-light.png" width="100%"/></td>
+<td align="center">🧧 朱砂 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
+<td align="center">🌸 桃夭 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
+<td align="center">🌊 天青 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
 </tr>
 <tr>
-<td align="center">🌿 鼠尾草 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
-<td align="center">🧱 暖石 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
+<td align="center">🌿 竹青 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
+<td align="center">🧱 赭石 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
 <td align="center">🔷 青金 Lapis<br/><img src="assets/screenshots/ui-lapis-light.png" width="100%"/></td>
 <td align="center">🍯 琥珀 Amber<br/><img src="assets/screenshots/ui-amber-light.png" width="100%"/></td>
 </tr>
@@ -95,7 +95,7 @@ npm i -g @kubor/dsh-bloom-theme
 dsh plugin enable @kubor/dsh-bloom-theme
 ```
 
-装完刷新页面，顶栏右上角会出现「雾蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，
+装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，
 下拉底部显示当前版本号；npm 上有更新的版本时会亮一个 `↑ vX` 徽标（点它跳 Release 页）。
 
 ## 特性
@@ -103,7 +103,7 @@ dsh plugin enable @kubor/dsh-bloom-theme
 | 特性 | 说明 |
 | :-- | :-- |
 | **磨砂玻璃面板（默认常开）** | 半透底 + `backdrop-filter` 模糊 + 玻璃边缘（顶部亮高光 / 半透描边 / 柔和外辉），明暗两档透明度自适应 |
-| **10 套莫兰迪配色** | 雾蓝 / 朱砂 / 花瓣 / 涟漪 / 鼠尾草 / 暖石 / 青金 / 琥珀 / 极光 / 薰衣草，每套明暗双主题，一键切换 |
+| **10 套莫兰迪配色** | 黛蓝 / 朱砂 / 桃夭 / 天青 / 竹青 / 赭石 / 青金 / 琥珀 / 落霞 / 青莲，每套明暗双主题，一键切换 |
 | **双轨配色** | 可读轨保对比度（文字/按钮），气质轨专供氛围渐变，两轨分工不混用 |
 | **微交互动效** | 菜单入场、选中态色条滑入、hover / 按压反馈；统一时长与缓动 token，全站一致 |
 | **主题色推理动效** | `Deep diving…` 以当前主题三色光谱流动，不再固定 DeepSeek 蓝；`prefers-reduced-motion` 下自动静止 |
@@ -124,7 +124,7 @@ Bloom 的核心不是「换个颜色」，而是一套**莫兰迪质感语言**�
 - **气质轨 `--accent-rgb`** —— 真正的莫兰迪色（低饱和、发灰），只用于大面积氛围渐变、冷光细线。
 
 原版 14 处渐变全部用气质轨，从不用可读轨铺面。一旦把可读色拿去刷大面积，
-花瓣就会从藕粉变成荧光洋红——莫兰迪感就没了。这个插件把两轨完整搬过来，
+桃夭就会从藕粉变成荧光洋红——莫兰迪感就没了。这个插件把两轨完整搬过来，
 并在 `contrast-guard`（同系列工具）里用护栏守住「主色 + 底色」的对比度。
 
 ## 开发 / 构建（TypeScript）

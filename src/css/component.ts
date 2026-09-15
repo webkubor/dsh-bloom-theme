@@ -81,7 +81,7 @@ body[data-bloom-variant] [class*="_frame"],
 body[data-bloom-variant] [class*="_centerCol"],
 /* :has() 里不能加子组合器（\`> \`）：实测 DSH 的结构是 _root > _body > _scrollBody，
    scrollBody 是孙子。写成子选择器这条一直没命中 —— 会话区一直盖着
-   oklch(0.28 0.02 240) 不透明底，body 的极光在中区完全看不见（这就是
+   oklch(0.28 0.02 240) 不透明底，body 的流线在中区完全看不见（这就是
    owner 说「没光感」的真正原因）。 */
 body[data-bloom-variant] [class*="_root"]:has([class*="_scrollBody"]),
 body[data-bloom-variant] [class*="_scrollBody"] {
@@ -298,8 +298,12 @@ div[class*="_composer"] div[class*="_card"]:focus-within {
     0 0 0 2px var(--bloom-glow);
 }
 
-/* 消息气泡：柔和圆角 + 近距阴影，脱离"贴在背景上"的平面感 */
-[class*="_bubble"] {
+/* 消息气泡：柔和圆角 + 近距阴影，脱离"贴在背景上"的平面感。
+   限定 div：DSH 的全局 Tooltip 是 span[class*="_bubble"]（见 glass.ts 同名注释），
+   不能吃到气泡的圆角/阴影/入场动画 —— 尤其动画：带 !important 的 bloom-fade-up
+   会在 420ms 里盖掉 tooltip 的定位 transform（[data-side=right] 的 translateY(-50%)），
+   气泡先偏移再跳回，也是"提示看不清"的一部分。 */
+div[class*="_bubble"] {
   border-radius: 14px;
   box-shadow: var(--bloom-shadow-sm);
 }
@@ -603,10 +607,11 @@ div[class*="_composer"] div[class*="_card"]:hover {
  * 投一团主题色光晕 + 慢呼吸，给视觉一个焦点。光晕跟 message 流重叠的
  * 概率低（消息堆在顶部），不会污染正常态。
  *
- * selector 限制条件：\`:not(:has([class*="_bubble"]))\` 确保只在没消息时出现；
- * 有消息时这条规则不匹配，::before 不渲染。\`:has()\` Chrome 105+/Safari 15.4+。 */
+ * selector 限制条件：\`:not(:has(div[class*="_bubble"]))\` 确保只在没消息时出现；
+ * 有消息时这条规则不匹配，::before 不渲染。\`:has()\` Chrome 105+/Safari 15.4+。
+ * 限定 div 同样是为了不把 tooltip（span）算进"有消息"。 */
 [class*="_scrollBody"] { position: relative; }
-[class*="_scrollBody"]:not(:has([class*="_bubble"]))::before {
+[class*="_scrollBody"]:not(:has(div[class*="_bubble"]))::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -648,11 +653,13 @@ div[class*="_composer"] div[class*="_card"]:hover {
 }
 
 /* 消息气泡 / 工具调用行 / 滚动体内的卡片 —— 整页停留时间最长的地方。
+   气泡限定 div（span 的 _bubble 是全局 Tooltip，动画会盖掉它的定位 transform，
+   见 §3 气泡圆角处的注释）。
    \`:not(:has(...))\` 排除含终端 / 代码块的卡：它们是「展开后才有」的元素，
    跟着外层一起进，单独动会让代码块在父卡里飘。
    !important 必要：DSH 在这些元素上有自己的 \`animation\`（比如呼吸 loader），
    后注入的会赢；用 !important 让 Bloom 的入场动画压过它。 */
-[class*="_bubble"],
+div[class*="_bubble"],
 div[class*="_toolRow"],
 div[class*="_scrollBody"] > div[class*="_card"]:not(:has([class*="_terminal"])):not(:has(pre)) {
   animation: bloom-fade-up 420ms var(--bloom-ease-out) backwards !important;
@@ -761,11 +768,11 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
   [class*="_composer"] div[class*="_card"],
   [class*="_composer"] div[class*="_card"]::after,
   [class*="_composer"] div[class*="_card"]:has([class*="_pending"])::after,
-  [class*="_bubble"],
+  div[class*="_bubble"],
   div[class*="_toolRow"],
   div[class*="_scrollBody"] > div[class*="_card"],
   [class*="_newSession"], [class*="_sessionLogButton"],
-  [class*="_scrollBody"]:not(:has([class*="_bubble"]))::before,
+  [class*="_scrollBody"]:not(:has(div[class*="_bubble"]))::before,
   ::view-transition-old(root), ::view-transition-new(root) {
     animation: none !important;
     transition: none !important;
@@ -834,5 +841,17 @@ body[data-bloom-variant] .dsh-bloom-trigger:hover {
 body[data-bloom-variant] [class*="_footerActions"] {
   border-top: 0;
   box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
+}
+
+/* ═══ 禁用主按钮的图标可读性（2026-09-14 用户实拍「浅色下看不清」）══
+ * DSH 禁用主按钮（空输入时的发送键等）的原生做法：fill 压到 10% + 整体再叠
+ * opacity .4，但文字/图标仍用「fill 上的前景」label-primary-foreground ——
+ * 那个 token 亮色语义就是白（static neutral-bluish-00）。白箭头浮在洗白的
+ * 淡染底上，禁用态形同消失（禁用 bloom 样式实测原生同样如此，只是莫兰迪的
+ * 淡底把它衬得更明显）。README 挂着 WCAG 徽章，这里修正：禁用态的底已经是
+ * 近白的淡染，图标用正文字色（label-primary）才读得清，明暗自适应 ——
+ * 暗色下两者同为亮色，行为不变，只有亮色被纠正。 */
+body[data-bloom-variant] button[class*="_primary"]:disabled {
+  color: var(--dsw-alias-label-primary);
 }
 `

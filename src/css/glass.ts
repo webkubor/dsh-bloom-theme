@@ -20,15 +20,16 @@
  * 全部用 color-mix(theme token, transparent) 而不是死白/死黑，色相跟着变体走。
  */
 export const GLASS_CSS = `
-/* ═══ 极光流线（v0.9.0，仅 aurora 变体）═══════════════════════════
+/* ═══ 落霞流线（v0.9.0，仅 aurora 变体）═══════════════════════════
    用户要的「流线」—— body 背后挂两条斜向渐变丝带，transform 缓慢漂移 +
-   blur 软化，做出北极光帘幕的视差感。
+   blur 软化，做出光帘的视差感。
    用 ::before 而非改 body background 的原因：动 body 的 background-image
    每帧重绘整个 viewport；伪元素独立合成层，transform 走 GPU，便宜得多。
    z-index:-1 + position:fixed —— body 的背景透传规则下，负 z-index 落在根
    堆叠上下文的负层，画在 body 背景之上、应用内容之下。
    颜色走 --bloom-aurora-stream-1/2/3（在 tokens.ts 由 motion 谱混透明得到），
-   切到 aurora 变体时呈现青绿→蓝→紫的北极光，其它变体保持原样不显示。 */
+   v0.12.x 起 aurora 换橙黄系，切到该变体时呈现金→橙→珊瑚的晚霞流光，
+   其它变体保持原样不显示。 */
 body[data-bloom-variant="aurora"]::before {
   content: '';
   position: fixed;
@@ -45,8 +46,14 @@ body[data-bloom-variant="aurora"]::before {
   background-size: 220% 220%, 260% 240%, 100% 100%;
   background-position: 25% 30%, 80% 15%, 50% 50%;
   background-repeat: no-repeat;
-  filter: blur(60px) saturate(1.2);
-  opacity: 0.6;
+  /* v0.12.1：这层是「脏」的真正来源（owner 2026-09-15）。原来 opacity .6 +
+     saturate(1.2) + blur 60px 铺满整个视口 —— 三条金橙渐变糊成一片盖在界面上，
+     底色再干净也被这层罩住。saturate 尤其致命：它在已经糊开的大色块上继续加彩度，
+     等于把浑浊放大。
+     氛围层的作用是「若隐若现的呼吸感」，不是给界面上色：不透明度砍到三分之一，
+     去掉饱和增益，blur 加大让边界更软。 */
+  filter: blur(76px);
+  opacity: 0.2;
   transform: translate3d(0, 0, 0);
   animation: bloom-aurora-drift 28s ease-in-out infinite alternate;
   will-change: transform, background-position;
@@ -242,8 +249,14 @@ body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-withi
     0 0 72px -20px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 68%);
 }
 
-/* ═══ 消息气泡 —— 柔和玻璃，近距淡影，不压内容 ═══ */
-body[data-bloom-variant] [class*="_bubble"] {
+/* ═══ 消息气泡 —— 柔和玻璃，近距淡影，不压内容 ═══
+   ⚠️ 必须限定 div（2026-09-14 用户实拍「浅色下提示看不清」）：
+   DSH 的全局 Tooltip 与消息气泡共用「_bubble」语义类名（_bubble_1nw3t_1，span）。
+   裸 [class*="_bubble"] 会把 tooltip 的深底 var(--dsw-alias-tooltip-bg) 盖成
+   22% 透明度的近白玻璃，而 tooltip 文字是 static 白（--dsw-static-neutral-bluish-00）
+   —— 白字白底，实测对比度 1.0。消息气泡是 div、tooltip 是 span，限定标签即分开；
+   tooltip 的底色由 tokens.ts 接管的 --dsw-alias-tooltip-bg（深底）自动跟随主题。 */
+body[data-bloom-variant] div[class*="_bubble"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 78%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.25);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.25);
@@ -252,7 +265,7 @@ body[data-bloom-variant] [class*="_bubble"] {
     inset 0 0 0 1px rgba(255,255,255,0.08),
     0 6px 24px -10px rgba(0,0,0,0.14);
 }
-body[data-ds-dark-theme] [class*="_bubble"] {
+body[data-ds-dark-theme] div[class*="_bubble"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 62%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.08),

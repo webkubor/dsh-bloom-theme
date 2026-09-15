@@ -162,7 +162,7 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 ## 常见问题
 
 **主题没生效？** 先硬刷新一次（`Cmd/Ctrl + Shift + R`）。若页面提示 `Failed to load plugins`，
-说明该版本的 client 没能注册，请确认 `dsh plugin add` 步骤无误，或换用最新版。
+说明该版本的 client 没能注册，请确认 `dsh plugin --profile <name> add` 那步无误，或换用最新版。
 
 **能自定义颜色吗？** 目前通过「变体」选择整套色系；单色自定义在规划中（见 Roadmap）。
 
@@ -177,6 +177,13 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 
 如果 Bloom 让你的 DSH 用起来更舒服，欢迎留下一颗 ⭐，或请我喝杯咖啡（赞助入口在下面的
 [Sponsor](https://github.com/sponsors/webkubor) / 面板菜单里也有一处）。
+
+## 同一台 DSH 上的另一半
+
+Bloom 管的是**看起来**顺不顺眼；模型页**用**起来顺不顺手是另一件事 ——
+[dsh-llm-hub](https://github.com/webkubor/dsh-llm-hub) 补的是那半：网关可达性探测、
+拉取网关模型目录并勾选写回配置、余额与配额常驻、每个 provider 实际接入的协议与地址。
+同样零运行时依赖、不改 DSH 安装里的任何文件。
 
 ## License
 

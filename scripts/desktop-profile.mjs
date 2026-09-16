@@ -10,10 +10,12 @@ import { homedir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const packageName = '@kubor/dsh-bloom-theme'
+const packageName = '@webkubor/dsh-bloom-theme'
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const repoDir = resolve(scriptDir, '..')
-const profileDir = resolve(homedir(), '.dsh/profiles/desktop')
+// 2026-09-16：本机 profile 已从 `desktop` 改名 `desktop-local` —— 官方 Electron 桌面端
+// 独占 profiles/desktop，CLI 会拒绝对该名字做任何插件操作，所以脚本跟着改。
+const profileDir = resolve(homedir(), '.dsh/profiles/desktop-local')
 const profilePackagePath = resolve(profileDir, 'package.json')
 const rootPackage = JSON.parse(readFileSync(resolve(repoDir, 'package.json'), 'utf8'))
 const args = process.argv.slice(2)

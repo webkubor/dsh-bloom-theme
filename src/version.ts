@@ -81,7 +81,7 @@ export let latestVersion = null
 /** 从 npm registry 拉最新版，仅作版本对比（离线/网络失败静默，只显示当前版）。 */
 export async function checkUpdate() {
   try {
-    const r = await fetch('https://registry.npmjs.org/@kubor/dsh-bloom-theme/latest', { cache: 'no-store' })
+    const r = await fetch('https://registry.npmjs.org/@webkubor/dsh-bloom-theme/latest', { cache: 'no-store' })
     if (!r.ok) return
     const d = await r.json()
     latestVersion = (d && d.version) || null

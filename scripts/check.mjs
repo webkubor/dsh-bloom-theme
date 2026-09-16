@@ -90,7 +90,7 @@ pkg.publishConfig?.access === 'public'
 // exports 声明的入口必须真的存在于产物里 —— issue #19
 //
 // 症状：profile 声明了本插件，但组合出来的 client roster 不含 ./client 入口，
-// 宿主反复请求 /plugins/@kubor/dsh-bloom-theme/client.js 拿 404，主题静默不可用。
+// 宿主反复请求 /plugins/@webkubor/dsh-bloom-theme/client.js 拿 404，主题静默不可用。
 // package.json 侧的契约（exports["./client"] + dsh.client）看着完全正确，
 // 所以光读 package.json 查不出来 —— 必须对着产物验。
 //

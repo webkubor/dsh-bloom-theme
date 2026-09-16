@@ -18,8 +18,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@kubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/@kubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@kubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
+  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@webkubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@webkubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
   <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
   <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=5fa8b2" alt="License" />
 </p>
@@ -89,11 +89,11 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 
 ```bash
 # via the dsh CLI (recommended)
-dsh plugin add @kubor/dsh-bloom-theme
+dsh plugin add @webkubor/dsh-bloom-theme
 
 # or global install + enable
-npm i -g @kubor/dsh-bloom-theme
-dsh plugin enable @kubor/dsh-bloom-theme
+npm i -g @webkubor/dsh-bloom-theme
+dsh plugin enable @webkubor/dsh-bloom-theme
 ```
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between

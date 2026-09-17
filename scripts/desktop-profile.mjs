@@ -10,7 +10,7 @@ import { homedir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const packageName = '@webkubor/dsh-bloom-theme'
+const packageName = 'dsh-bloom-theme'
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const repoDir = resolve(scriptDir, '..')
 // 2026-09-16：本机 profile 已从 `desktop` 改名 `desktop-local` —— 官方 Electron 桌面端

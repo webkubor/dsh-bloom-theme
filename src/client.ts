@@ -110,7 +110,7 @@ import { checkUpdate } from './version.js'
  *
  * 机制（全部浏览器端，零 node 侧依赖）：
  *   1. 「当前版本」来自 PLUGIN_VERSION 常量（scripts/sync-version.mjs 随发版自动同步）
- *   2. 「最新版本」查 https://registry.npmjs.org/@webkubor/dsh-bloom-theme/latest
+ *   2. 「最新版本」查 https://registry.npmjs.org/dsh-bloom-theme/latest
  *      取响应里的 version 字段。⚠️ 必须用这个端点：npm registry 只有完整
  *      manifest 端点带 CORS 头（access-control-allow-origin: *），精简的
  *      /-/package/<id>/dist-tags 端点不带，浏览器会拦 —— 实测过别改回去。

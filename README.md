@@ -18,8 +18,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/@webkubor/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/@webkubor/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/@webkubor/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
+  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
   <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
   <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=5fa8b2" alt="License" />
 </p>
@@ -90,9 +90,9 @@
 
 ```bash
 # 1) 装进你的 profile（profile 名按自己的改，默认 web）
-dsh plugin --profile web add @webkubor/dsh-bloom-theme
+dsh plugin --profile web add dsh-bloom-theme
 
-# 2) 接进 boot graph：把 "@webkubor/dsh-bloom-theme" 加进
+# 2) 接进 boot graph：把 "dsh-bloom-theme" 加进
 #    ~/.dsh/profiles/web/package.json 的 dsh.profile.bundles 数组
 
 # 3) 重启 DSH

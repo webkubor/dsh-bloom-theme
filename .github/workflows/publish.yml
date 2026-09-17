@@ -56,7 +56,7 @@ jobs:
             echo "tag v$TAG 与 package.json version $VER 不一致"; exit 1
           fi
           echo "ver=$VER" >> "$GITHUB_OUTPUT"
-          if npm view "@webkubor/dsh-bloom-theme@$VER" version >/dev/null 2>&1; then
+          if npm view "dsh-bloom-theme@$VER" version >/dev/null 2>&1; then
             echo "published=true"  >> "$GITHUB_OUTPUT"
             echo "v$VER 已在 npm 上，将跳过 publish"
           else

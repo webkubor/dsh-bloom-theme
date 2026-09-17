@@ -13,6 +13,21 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.13.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.2...v0.13.3) (2026-09-15)
+
+
+### 🐛 Bug Fixes
+
+* **stats:** 中文名从 lib/client.js 读，别再抄第二份 ([e26bfc5](https://github.com/webkubor/dsh-bloom-theme/commit/e26bfc5578931068011a72dcb99458757fb03403))
+
+
+### 📝 Documentation
+
+* **brand:** 重做 banner —— 旧图上印着「4 VARIANTS」，现在是 10 套 ([fb751b9](https://github.com/webkubor/dsh-bloom-theme/commit/fb751b99e8a29cafcd6d03c815542fe1d0649e80))
+* **readme:** 指一下同作者的 dsh-llm-hub，并修正安装命令 ([bce16ba](https://github.com/webkubor/dsh-bloom-theme/commit/bce16ba2c2d1d451e31edf95628062f2a46e229e))
+* **screenshots:** 落霞/青莲重拍成和另外八张同尺寸，配色表列宽拉齐 ([119562f](https://github.com/webkubor/dsh-bloom-theme/commit/119562fad98db95deb962133f56e16be26a771ba))
+* **screenshots:** 补拍落霞与青莲，配色表终于是十套 ([486477f](https://github.com/webkubor/dsh-bloom-theme/commit/486477f9f2aa4678f809c6656cfbd32963866e77))
+
 ## [0.13.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.1...v0.13.2) (2026-09-15)
 
 

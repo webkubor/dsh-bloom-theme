@@ -13,7 +13,7 @@
  *
  * 注意：皮肤是浏览器端注入的，部署完必须刷新页面才生效 —— 按 r 即可。
  */
-import { watch } from 'node:fs'
+import { watch, readFileSync } from 'node:fs'
 import { execSync, exec } from 'node:child_process'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,7 +21,10 @@ import readline from 'node:readline'
 import { syncVersion } from './sync-version.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const DEST = resolve(process.env.HOME, '.dsh/profiles/web/node_modules/@kubor/dsh-bloom-theme')
+// 目标目录从 package.json 的 name 推 —— 硬编码过 @kubor，包名迁走两轮后这里没跟着改，
+// rsync 照常成功、只是把文件同步进一个 DSH 不读的目录，dev 热部署静默失效了很久。
+const PKG_NAME = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).name
+const DEST = resolve(process.env.HOME, `.dsh/profiles/web/node_modules/${PKG_NAME}`)
 const GUI_URL = process.env.DSH_BLOOM_GUI_URL ?? 'http://127.0.0.1:3080'
 
 let deploying = false

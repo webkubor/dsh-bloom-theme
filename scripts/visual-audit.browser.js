@@ -305,7 +305,11 @@
    */
   function withNativeBaseline(findings, remeasure) {
     if (!findings.length) return findings
-    const mine = [...document.querySelectorAll('style[data-plugin-css^="@kubor"]')]
+    // 按产品名 bloom 匹配，不按包名 —— 包名带不带 scope 改过三轮（@kubor →
+    // @webkubor → 无 scope），每次都让这个选择器静默匹配 0 个元素：拿不到自己的
+    // style 就关不掉，native 基线等于当前值，所有对比结论退化成「无差异」且不报错。
+    const mine = [...document.querySelectorAll('style[data-plugin-css*="bloom"]')]
+    if (!mine.length) throw new Error('visual-audit: 没找到 Bloom 注入的 style，基线对比会失真')
     const before = findings.map((f) => f.el)
     mine.forEach((s) => { s.disabled = true })
     const native = before.map((sel) => remeasure(sel))

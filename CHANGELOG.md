@@ -13,6 +13,18 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.13.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.3...v0.13.4) (2026-09-18)
+
+
+### 🐛 Bug Fixes
+
+* **deploy:** 两条部署链路都还指着旧 scope，同步进了没人读的目录 ([bd79424](https://github.com/webkubor/dsh-bloom-theme/commit/bd794248233ba9bd4247773982d3e6a9738fe6eb))
+
+
+### 🧱 重构
+
+* 包名去掉 scope，@webkubor/dsh-bloom-theme → dsh-bloom-theme ([c6b27ae](https://github.com/webkubor/dsh-bloom-theme/commit/c6b27ae59c71353a78d42921b11e021294e221a8))
+
 ## [0.13.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.2...v0.13.3) (2026-09-15)
 
 

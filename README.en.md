@@ -7,7 +7,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 themes</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>8 palettes · current</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>10 palettes · current</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>color guardrail</sub></td>
 </tr>
 </table>
@@ -62,7 +62,7 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
   <sub>Sage · light — frosted-glass panels + the selected session row tints with the active theme</sub>
 </p>
 
-**8 palettes (light)**: click any one and the whole accent / background / glass / motion hue switches together.
+**10 palettes (light)**: click any one and the whole accent / background / glass / motion hue switches together.
 
 <table align="center">
 <tr>
@@ -97,7 +97,7 @@ dsh plugin enable dsh-bloom-theme
 ```
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
-**8 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
+**10 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
 ## Features
@@ -144,8 +144,7 @@ npm run check        # 6 static gates + contrast-guard (runs on every commit)
 npm run preflight    # pre-release: version consistency / git state / listing sync
 ```
 
-`src/` is 10 modules (`meta` · `palette` · `tokens` · `css/` · `dom` · `version` ·
-`switcher` · `client`); DSH loads the artifacts in `lib/`.
+`src/` is 10 modules (`meta` · `appearance` · `palette` · `tokens` · `css/` · `dom` · `drag` · `version` · `switcher` · `client`); DSH loads the artifacts in `lib/`.
 
 **The build is dual-track** — the two halves want opposite module formats:
 

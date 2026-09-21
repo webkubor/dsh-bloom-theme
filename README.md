@@ -145,8 +145,7 @@ npm run check        # 6 组静态闸门 + contrast-guard（每次提交都跑�
 npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收录同步
 ```
 
-源码 `src/` 是 10 个模块（`meta` · `palette` · `tokens` · `css/` · `dom` · `version` ·
-`switcher` · `client`），DSH 加载的是 `lib/` 里的产物。
+源码 `src/` 是 10 个模块（`meta` · `appearance` · `palette` · `tokens` · `css/` · `dom` · `drag` · `version` · `switcher` · `client`），DSH 加载的是 `lib/` 里的产物。
 
 **构建是双轨的**，两侧对模块格式的要求正好相反：
 

@@ -19,6 +19,7 @@
 ### 🐛 Bug Fixes
 
 * **deploy:** 两条部署链路都还指着旧 scope，同步进了没人读的目录 ([bd79424](https://github.com/webkubor/dsh-bloom-theme/commit/bd794248233ba9bd4247773982d3e6a9738fe6eb))
+* **route:** 优化 DSH 版本检测端点错误捕获与类型保护
 
 
 ### 🧱 重构

@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 /**
  * dsh-bloom-theme —— node 半侧（cordis plugin）。
@@ -42,33 +43,51 @@ const DSH_VERSION_PATH = '/api/bloom/dsh-version'
  * 那种需要持续同步本地 git 状态的功能；读一个静态版本号是一次性的、只读的、
  * 零状态的，和实时桥不是一回事。判断标准是「要不要持续同步」，不是「有没有端点」。
  */
-function readDshVersion(): string | null {
+function readDshVersion(): { version: string; error?: undefined } | { version?: undefined; error: string } {
   try {
     const require = createRequire(import.meta.url)
     const pkgPath = require.resolve('@deepseek-ai/dsh/package.json')
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
-    return typeof pkg.version === 'string' ? pkg.version : null
-  } catch {
-    return null
+    const pkg: { version?: unknown } = JSON.parse(readFileSync(pkgPath, 'utf8'))
+    if (typeof pkg.version === 'string') return { version: pkg.version }
+    return { error: 'version field missing or non-string' }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { error: msg }
   }
 }
 
-function apply(ctx: any) {
+/** 本插件用到的 cordis ctx 子集 —— 不引入完整 @types/cordis 也能类型守门。 */
+interface BloomCtx {
+  effect?: (fn: () => void) => void
+  webServer?: {
+    register: (route: {
+      kind: 'exact'
+      path: string
+      handler: (request: IncomingMessage, response: ServerResponse) => void
+    }, label?: string) => unknown
+  }
+}
+
+function apply(ctx: BloomCtx) {
   ctx.effect?.(() => ctx.webServer?.register({
     kind: 'exact',
     path: DSH_VERSION_PATH,
-    handler: (request: any, response: any) => {
+    handler: (request, response) => {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         response.writeHead(405, { allow: 'GET, HEAD' })
         response.end()
         return
       }
-      const version = readDshVersion()
-      const body = JSON.stringify(version ? { ok: true, version } : { ok: false })
+      const result = readDshVersion()
+      const body = JSON.stringify(
+        result.version !== undefined
+          ? { ok: true as const, version: result.version }
+          : { ok: false as const, reason: result.error ?? 'unknown' }
+      )
       response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
       response.end(body)
     }
-  }), 'dsh-bloom-theme: dsh version route')
+  }, 'dsh-bloom-theme: dsh version route'))
 }
 
 export const inject = ['webServer']

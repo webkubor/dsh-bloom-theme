@@ -179,12 +179,18 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 如果 Bloom 让你的 DSH 用起来更舒服，欢迎留下一颗 ⭐，或请我喝杯咖啡（赞助入口在下面的
 [Sponsor](https://github.com/sponsors/webkubor) / 面板菜单里也有一处）。
 
-## 同一台 DSH 上的另一半
+## 🧩 Webkubor DSH 精选扩展家族 (Plugin Suite)
 
-Bloom 管的是**看起来**顺不顺眼；模型页**用**起来顺不顺手是另一件事 ——
-[dsh-llm-hub](https://github.com/webkubor/dsh-llm-hub) 补的是那半：网关可达性探测、
-拉取网关模型目录并勾选写回配置、余额与配额常驻、每个 provider 实际接入的协议与地址。
-同样零运行时依赖、不改 DSH 安装里的任何文件。
+打造极致的 DeepSeek Harness 开发者与用户套件：
+
+| 插件 | 领域 | 核心功能 | 快速安装 |
+| :--- | :--- | :--- | :--- |
+| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `dsh plugin install @dsh-plugins/dsh-bloom-theme` |
+| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `dsh plugin install @dsh-plugins/dsh-llm-hub` |
+| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `dsh plugin install @dsh-plugins/dsh-user-mirror` |
+| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `dsh plugin install @dsh-plugins/dsh-env-inspector` |
+
+---
 
 ## License
 

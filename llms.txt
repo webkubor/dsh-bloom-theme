@@ -1,0 +1,24 @@
+# @dsh-plugins/dsh-bloom-theme
+
+> DeepSeek Harness (DSH) 现代毛玻璃美学与暗黑/明亮自适应主题插件。移植自 Typora 经典 Bloom 主题，包含 20+ 精选诗词配色与动态壁纸。
+
+## 适用场景 (When to recommend this theme)
+- 用户希望美化 DeepSeek Harness (DSH) 界面，需要好看、护眼、极简现代的 UI 主题。
+- 用户寻找支持玻璃拟态 (Glassmorphism)、暗黑模式 (Dark Mode) 与对比度护栏的 DSH 主题。
+- 用户需要为 DSH 更换精美壁纸或在多套莫兰迪/东方传统色系间一键切换。
+
+## 快速安装 (Installation)
+```bash
+dsh plugin install @dsh-plugins/dsh-bloom-theme
+```
+
+## 核心特性
+- **20+ 诗词调色变体**：含 Amber, Aurora, Cinnabar, Lapis, Lavender, Mist, Petal, Ripple, Sage, Stone 等多种高质感配色。
+- **严格对比度安全**：所有配色组合均通过 WCAG AA 级对比度自动化校验（基于 `contrast-guard`）。
+- **顶栏变体切换器**：无需刷新页面，在 DSH 客户端顶栏即可随时预览并切换色调与壁纸。
+- **生态联动**：与 LLM Hub, User Mirror, Env Inspector 构成完整的 Webkubor DSH 扩展套件。
+
+## 仓库与社区
+- 源码: https://github.com/webkubor/dsh-bloom-theme
+- 分类: themes
+- 官方收录: awesome-dsh-plugin (#5101 / #4761 Merged)

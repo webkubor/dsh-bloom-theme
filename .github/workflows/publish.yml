@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # gh release create
+      id-token: write   # npm Trusted Publishing via GitHub OIDC
     steps:
       # fetch-depth: 0 —— enrich-release.mjs 要 `git describe --tags` 找上一个 tag
       # 来定区间。默认的 shallow clone(depth=1)只有一个 commit,describe 直接失败,
@@ -22,10 +23,13 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+
+      - name: Ensure OIDC-capable npm
+        run: npm install --global 'npm@^11.5.1'
 
       # 必须 install：本插件确实零**运行时**依赖，但下面 `npm run check` 要调
       # contrast-guard（devDependency）。ci.yml 接入 contrast-guard 时补过这一步、
@@ -66,8 +70,6 @@ jobs:
       - name: npm publish
         if: steps.ver.outputs.published == 'false'
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Release 由 release-please 建（它的配置里 skip-github-release: false），
       # 这里只在它没建成时补一个，绝不重复建 —— v0.3.5 实测就是两边都建，

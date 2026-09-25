@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src",
     "outDir": "lib",
-    "declaration": false,
+    "declaration": true,
     "sourceMap": false,
     "newLine": "lf"
   },

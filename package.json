@@ -39,7 +39,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "test:version": "node --test scripts/version.test.mjs",
     "preflight": "node scripts/preflight.mjs",
-    "stats": "node scripts/stats-table.mjs"
+    "stats": "node scripts/stats-table.mjs",
+    "test": "npm run check"
   },
   "repository": {
     "type": "git",

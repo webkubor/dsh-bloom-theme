@@ -13,6 +13,28 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.14.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.4...v0.14.0) (2026-09-25)
+
+
+### ✨ Features
+
+* **types:** export generated TypeScript declarations in package.json ([ed65888](https://github.com/webkubor/dsh-bloom-theme/commit/ed65888b27cb82c02514fd91aa9ae1af331eac21))
+
+
+### 🐛 Bug Fixes
+
+* **route:** 优化 DSH 版本检测端点错误捕获与类型保护 (0.13.4) ([788b010](https://github.com/webkubor/dsh-bloom-theme/commit/788b010490ca419821f221a5534793f097599fa1))
+
+
+### 📝 Documentation
+
+* add suite matrix to README, add llms.txt and screenshots.json ([5916736](https://github.com/webkubor/dsh-bloom-theme/commit/59167364c65c1222ea797ec89f9916e7b87056a7))
+
+
+### 🛠️ CI / Build
+
+* **npm:** 将 Bloom Theme 发布切换到 OIDC ([81ab8a0](https://github.com/webkubor/dsh-bloom-theme/commit/81ab8a08d6f5c23d2853663a9dab5774f85e5798))
+
 ## [0.13.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.3...v0.13.4) (2026-09-18)
 
 

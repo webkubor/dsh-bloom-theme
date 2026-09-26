@@ -37,7 +37,7 @@
     "desktop:production": "node scripts/desktop-profile.mjs production",
     "check": "node scripts/check.mjs && node scripts/check-drag.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs",
     "check:contrast": "contrast-guard",
-    "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check",
+    "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check && node scripts/prepublish-gate.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "test:version": "node --test scripts/version.test.mjs",
     "preflight": "node scripts/preflight.mjs",

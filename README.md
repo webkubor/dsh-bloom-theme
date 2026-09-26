@@ -57,7 +57,7 @@
 ## 截图
 
 <p align="center">
-  <img src="assets/screenshots/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
+  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
   <sub>竹青·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
 </p>
 
@@ -65,25 +65,25 @@
 
 <table align="center">
 <tr>
-<td align="center" width="20%">☁️ 黛蓝 Mist<br/><img src="assets/screenshots/ui-mist-light.png" width="100%"/></td>
-<td align="center" width="20%">🧧 朱砂 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
-<td align="center" width="20%">🌸 桃夭 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
-<td align="center" width="20%">🌊 天青 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
-<td align="center" width="20%">🌿 竹青 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
+<td align="center" width="20%">☁️ 黛蓝 Mist<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-mist-light.png" width="100%"/></td>
+<td align="center" width="20%">🧧 朱砂 Cinnabar<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-cinnabar-light.png" width="100%"/></td>
+<td align="center" width="20%">🌸 桃夭 Petal<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-petal-light.png" width="100%"/></td>
+<td align="center" width="20%">🌊 天青 Ripple<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-ripple-light.png" width="100%"/></td>
+<td align="center" width="20%">🌿 竹青 Sage<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" width="100%"/></td>
 </tr>
 <tr>
-<td align="center" width="20%">🧱 赭石 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
-<td align="center" width="20%">🔷 青金 Lapis<br/><img src="assets/screenshots/ui-lapis-light.png" width="100%"/></td>
-<td align="center" width="20%">🍯 琥珀 Amber<br/><img src="assets/screenshots/ui-amber-light.png" width="100%"/></td>
-<td align="center" width="20%">🌅 落霞 Afterglow<br/><img src="assets/screenshots/ui-aurora-light.png" width="100%"/></td>
-<td align="center" width="20%">🪷 青莲 Lavender<br/><img src="assets/screenshots/ui-lavender-light.png" width="100%"/></td>
+<td align="center" width="20%">🧱 赭石 Stone<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-stone-light.png" width="100%"/></td>
+<td align="center" width="20%">🔷 青金 Lapis<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-lapis-light.png" width="100%"/></td>
+<td align="center" width="20%">🍯 琥珀 Amber<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-light.png" width="100%"/></td>
+<td align="center" width="20%">🌅 落霞 Afterglow<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-aurora-light.png" width="100%"/></td>
+<td align="center" width="20%">🪷 青莲 Lavender<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-lavender-light.png" width="100%"/></td>
 </tr>
 </table>
 
 **每套都有对应暗色**（示例：琥珀·暗色）：
 
 <p align="center">
-  <img src="assets/screenshots/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
+  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
 </p>
 
 ## 安装

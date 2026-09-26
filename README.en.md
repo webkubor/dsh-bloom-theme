@@ -58,7 +58,7 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 ## Screenshots
 
 <p align="center">
-  <img src="assets/screenshots/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
+  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
   <sub>Sage · light — frosted-glass panels + the selected session row tints with the active theme</sub>
 </p>
 
@@ -66,23 +66,23 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 
 <table align="center">
 <tr>
-<td align="center">☁️ Mist<br/><img src="assets/screenshots/ui-mist-light.png" width="100%"/></td>
-<td align="center">🧧 Cinnabar<br/><img src="assets/screenshots/ui-cinnabar-light.png" width="100%"/></td>
-<td align="center">🌸 Petal<br/><img src="assets/screenshots/ui-petal-light.png" width="100%"/></td>
-<td align="center">🌊 Ripple<br/><img src="assets/screenshots/ui-ripple-light.png" width="100%"/></td>
+<td align="center">☁️ Mist<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-mist-light.png" width="100%"/></td>
+<td align="center">🧧 Cinnabar<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-cinnabar-light.png" width="100%"/></td>
+<td align="center">🌸 Petal<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-petal-light.png" width="100%"/></td>
+<td align="center">🌊 Ripple<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-ripple-light.png" width="100%"/></td>
 </tr>
 <tr>
-<td align="center">🌿 Sage<br/><img src="assets/screenshots/ui-sage-light.png" width="100%"/></td>
-<td align="center">🧱 Stone<br/><img src="assets/screenshots/ui-stone-light.png" width="100%"/></td>
-<td align="center">🔷 Lapis<br/><img src="assets/screenshots/ui-lapis-light.png" width="100%"/></td>
-<td align="center">🍯 Amber<br/><img src="assets/screenshots/ui-amber-light.png" width="100%"/></td>
+<td align="center">🌿 Sage<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" width="100%"/></td>
+<td align="center">🧱 Stone<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-stone-light.png" width="100%"/></td>
+<td align="center">🔷 Lapis<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-lapis-light.png" width="100%"/></td>
+<td align="center">🍯 Amber<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-light.png" width="100%"/></td>
 </tr>
 </table>
 
 **Every palette has a dark variant too** (example: Amber · dark):
 
 <p align="center">
-  <img src="assets/screenshots/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
+  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
 </p>
 
 ## Install

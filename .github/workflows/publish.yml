@@ -37,17 +37,19 @@ jobs:
       # 结果 tag 打出去了、npm 没发成。改依赖时两个工作流的安装步骤都要连带检查。
       - run: npm ci
 
-      - name: 语法检查 + 自检 + 产物校验
+      # 产物校验不在这里写死清单 —— 见下面的说明与 package.json#prepublishOnly。
+      - name: 语法检查 + 自检
         run: |
           node --check lib/client.js && node --check lib/index.js
           npm run check
-          npm pack --dry-run --json > pack.json
-          node -e "
-            const f = require('./pack.json')[0].files.map(x => x.path)
-            const need = ['package.json', 'cordis.patch.yml', 'lib/client.js', 'lib/index.js', 'README.md', 'LICENSE']
-            const miss = need.filter(n => !f.includes(n))
-            if (miss.length) { console.error('发布产物缺少: ' + miss.join(', ')); process.exit(1) }
-          "
+
+      # 发版门禁只挂在 `package.json#scripts.prepublishOnly` 上（npm publish 一定执行它），
+      # 所以本地 / CI / `cs kyvault run … -- npm publish` 走的是同一条路径、同一个脚本
+      # （真源 CortexOS/scripts/release-gate/prepublish-gate.mjs，各仓一份拷贝）。
+      #
+      # 2026-09-26：这里原先硬编码了 need 数组，而数组里**没有 assets** —— README 里
+      # 11 张相对路径截图因此从没进过 tarball，npm 页面上一直是坏图，CI 却全绿。
+      # 「多处各拦一道」的实际效果是把判据拆散，删掉之后只剩一份。
 
       # tag 名必须与 package.json version 一致，防止「tag 是 v0.3.5 发的却是 0.3.4」；
       # 同时探测该版本是否已发过 npm（重推同一 tag 时不报错、不重复发）

@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.14.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.14.0...v0.14.1) (2026-09-26)
+
+
+### 🐛 Bug Fixes
+
+* **readme:** 11 张截图改成图床直链，npm 页面上一直是坏图 ([a21adab](https://github.com/webkubor/dsh-bloom-theme/commit/a21adabb457df29dd974c68e973f033f74207a0f))
+
 ## [0.14.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.4...v0.14.0) (2026-09-25)
 
 

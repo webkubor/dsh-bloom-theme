@@ -13,6 +13,18 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.15.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.14.0...v0.15.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **aurora/cinnabar:** 鼠标跟随光斑，0.15 唯一的亮点 ([40f85e1](https://github.com/webkubor/dsh-bloom-theme/commit/40f85e1))
+
+
+### 🐛 Bug Fixes
+
+* **tokens:** 把 --bloom-cursor-x/y 写进 token 清单（通过 check.mjs 的变量未定义闸门） ([638d2cc](https://github.com/webkubor/dsh-bloom-theme/commit/638d2cc))
+
 ## [0.14.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.13.4...v0.14.0) (2026-09-25)
 
 

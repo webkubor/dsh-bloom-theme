@@ -2,6 +2,13 @@
   <img src="https://img.webkubor.online/projects/dsh-bloom-theme/bloom-banner.png" alt="Bloom for DSH" width="100%" />
 </p>
 
+<h1 align="center">🌊 Bloom for DSH</h1>
+
+<p align="center">
+  <strong>10 套莫兰迪中国风主题，配色全部实测达 WCAG AA</strong><br/>
+  <sub>Ten Morandi palettes for DeepSeek Harness — every one measured against WCAG AA.</sub>
+</p>
+
 <!-- bloom-series-nav -->
 
 <table align="center">
@@ -18,20 +25,20 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
-  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
-  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=5fa8b2" alt="License" />
+  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/dsh-bloom-theme?style=for-the-badge&color=A873C4&logo=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=for-the-badge&color=92a8b3" alt="downloads" /></a>
+  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=for-the-badge&color=cc584d" alt="Stars" />
+  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=for-the-badge&color=5fa8b2" alt="License" />
 </p>
 
 <p align="center">
   <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="Awesome DSH Plugin" /></a>
-  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
-  <img src="https://img.shields.io/badge/TypeScript-built-3178c6?style=flat-square" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
-  <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=flat-square" alt="OKLCH" />
-  <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=flat-square" alt="zero dependency" />
+  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=for-the-badge" alt="DSH Plugin" /></a>
+  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=for-the-badge" alt="dsh-plugin" /></a>
+  <img src="https://img.shields.io/badge/TypeScript-built-3178c6?style=for-the-badge" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=for-the-badge" alt="WCAG AA" />
+  <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=for-the-badge" alt="OKLCH" />
+  <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=for-the-badge" alt="zero dependency" />
 </p>
 
 <p align="center">
@@ -53,6 +60,18 @@
 配色是低饱和莫兰迪（OKLCH 调色、WCAG AA），全站统一克制的微动效，零运行时依赖，前端 TypeScript 构建。
 
 > 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
+
+## 🏆 为什么用它
+
+| | DSH 原生 | 普通主题插件 | **Bloom for DSH** |
+| :-- | :-- | :-- | :-- |
+| 配色数量 | 1 套 | 3-5 套 | **10 套莫兰迪，明暗各一套** |
+| 配色依据 | 手工挑色 | 手工挑色 | **OKLCH 感知均匀调色** |
+| 对比度 | 未声明 | 未声明 | **明暗主色对全部实测 ≥ 4.5:1（WCAG AA）** |
+| 面板质感 | 实色 | 实色 / 简单半透 | **真磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘）** |
+| 切换方式 | — | 改配置文件 | **顶栏一键切换，即时生效** |
+| 动效 | 固定 | 无 / 硬编码 | **跟随主题三色光谱，支持 prefers-reduced-motion** |
+| 运行时开销 | — | 常驻进程 / 依赖 | **零依赖，只注入 CSS 变量** |
 
 ## 截图
 

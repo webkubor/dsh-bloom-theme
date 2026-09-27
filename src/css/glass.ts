@@ -368,4 +368,44 @@ body[data-ds-dark-theme] [class*="_tableScroll"] thead th {
 body[data-ds-dark-theme] [class*="_tableScroll"] tbody tr:nth-child(even) td {
   background: rgba(var(--bloom-morandi), 0.04);
 }
+
+/* ═══ v0.15 流光反应层：body::after 鼠标跟随光斑 ═════════════════════════
+   这是 0.15 唯一的「亮点」——你刷新页面、在主区里晃鼠标，背景会有一道柔光
+   跟着你走。不需要 hover 触发、不需要点什么东西，常驻、安静、live。
+
+   只在 aurora + cinnabar 两套本身有「色」的变体里启用 —— 它 8 套根本不会渲染
+   这道光（owner 反复强调「不要让花里胡哨覆盖原本的气质」：mist/petal/ripple 等
+   6 套清淡氛围应该保持纯静，光斑只属于那两个「本身有戏剧张力」的色）。
+
+   设计约束：
+   · 透明度 ≤ 0.4（v0.12.1 owner 砍 saturate 那次的教训：aurora 流光只要太重就脏）
+   · 不用 saturate() / contrast() / backdrop-filter —— 0 依赖、纯 GPU 层
+   · 不用 isolation / transform / perspective / contain —— v0.8 backdrop-filter 那次的
+     教训：这些属性会让 fixed 后代变成相对自己的 containing block
+   · 不进 \`--bloom-accent\`（气质轨），只动 \`--bloom-aurora-stream-1\`（v0.9 已经
+     写好的 motion 色，色相跟着变体走）
+   · prefers-reduced-motion 下隐藏（尊重系统设置）
+   · 用 body 自身而不是 _root 或 main，因为 DSH 重渲染时这两个会被替换；
+     body 是稳定的宿主，跟 sidebar 那种 fixed 一样是相对视口 */
+body[data-bloom-variant="aurora"]::after,
+body[data-bloom-variant="cinnabar"]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    360px 360px at var(--bloom-cursor-x, 50%) var(--bloom-cursor-y, 50%),
+    color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 65%),
+    transparent 72%
+  );
+  opacity: 0.95;
+  /* GPU 合成层 —— transform / opacity 不重绘文本 */
+  transform: translate3d(0, 0, 0);
+  will-change: background;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-bloom-variant="aurora"]::after,
+  body[data-bloom-variant="cinnabar"]::after { display: none; }
+}
 `

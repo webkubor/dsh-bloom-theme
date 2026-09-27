@@ -62,6 +62,11 @@ export function bloomTokens(p, dark) {
      视觉没问题,但这个变量是**死的**:想统一调玻璃质感根本改不到。定义出来之后
      它才真的是一个可调参数(暗色略薄一点,深色面板本就更"实"、不需要那么重的糊)。 */
   --bloom-glass-blur: ${dark ? '22px' : '24px'};
+  /* 鼠标跟随光斑的归一化坐标（0..1） —— client.ts 的 watchCursorGlow 每帧写。
+     静态值取中心 50% 是合理的「无光斑时退到画面正中」fallback，不写就静默吃掉，
+     aurora/cinnabar 的 radial-gradient 会立刻漂到 0%/0% 角上。 */
+  --bloom-cursor-x: 50%;
+  --bloom-cursor-y: 50%;
   --bloom-hairline: rgba(${m}, ${dark ? 0.3 : 0.3});
   --bloom-hairline-strong: rgba(${m}, ${dark ? 0.55 : 0.5});
   --bloom-glow: rgba(${m}, ${dark ? 0.34 : 0.2});

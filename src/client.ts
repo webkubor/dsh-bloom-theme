@@ -38,6 +38,36 @@ import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { checkUpdate } from './version.js'
 
+/**
+ * 鼠标跟随光斑（v0.15 唯一的亮点）。
+ *
+ * 性能：mousemove 每秒可能触发 60+ 次，每次写两个 CSS var（CPU 几乎为零，
+ * GPU 用 background-position 插值，文本不重绘）。
+ * 退出时（变体切换到非 aurora/cinnabar / 切走标签页）解绑监听 —— 不留幽灵。
+ */
+function watchCursorGlow() {
+  if (window.__dshBloomCursorBound__) return
+  window.__dshBloomCursorBound__ = true
+
+  let raf = 0
+  const write = (x, y) => {
+    if (raf) return
+    raf = requestAnimationFrame(() => {
+      raf = 0
+      const root = document.documentElement
+      root.style.setProperty('--bloom-cursor-x', `${x * 100}%`)
+      root.style.setProperty('--bloom-cursor-y', `${y * 100}%`)
+    })
+  }
+
+  const onMove = (e) => {
+    const v = document.body?.dataset.bloomVariant
+    if (v !== 'aurora' && v !== 'cinnabar') return
+    write(e.clientX / window.innerWidth, e.clientY / window.innerHeight)
+  }
+  window.addEventListener('pointermove', onMove, { passive: true })
+}
+
 ;(function() {
   if (typeof document === 'undefined') return
   const variant = readVariant()
@@ -51,6 +81,7 @@ import { checkUpdate } from './version.js'
     watchSwitcher(variant)
     watchThinkTags()
     checkUpdate()
+    watchCursorGlow()
   }
   if (document.body) boot()
   else document.addEventListener('DOMContentLoaded', boot)

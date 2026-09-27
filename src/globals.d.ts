@@ -7,5 +7,6 @@ declare global {
     }
     __dshBloomObserver__?: MutationObserver
     __dshBloomThinkObserver__?: MutationObserver
+    __dshBloomCursorBound__?: boolean
   }
 }

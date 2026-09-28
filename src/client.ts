@@ -120,18 +120,22 @@ function watchCursorGlow() {
     return h.toString(36)
   }
 
+  // 2026-09-28 修 #31「控制台刷 404」：宿主已改走合并路由 /plugins/??<id>/client.js&rev=…，
+  // 单包路径 /plugins/<包名>/client.js 一律 404（curl 实测，dsh-client-modules 的 comboUrl）。
+  // 原来 !r.ok 只是 return，于是每 3 秒一条 404 永不停。现在：拿不到基线就停表，不再轮询。
+  let timer: ReturnType<typeof setInterval> | undefined
+  const stop = () => { if (timer !== undefined) clearInterval(timer); timer = undefined }
   const check = async () => {
     try {
       const r = await fetch(`${myUrl}?t=${Date.now()}`, { cache: 'no-store' })
-      if (!r.ok) return
+      if (!r.ok) { if (initialKey === null) stop(); return }
       const text = await r.text()
       const key = fnv1a(text) + ':' + text.length
-      if (initialKey === null) { initialKey = key; return }
+      if (initialKey === null) { initialKey = key; timer ??= setInterval(check, 3000); return }
       if (key !== initialKey) location.reload()
     } catch (_) { /* 网络抖动忽略 */ }
   }
-  check()                                            // 首次记录基线
-  setInterval(check, 3000)                           // 3 秒一次
+  check()                                            // 首次记录基线；成功才开 3 秒轮询
 })()
 
 /** ── 更新检测：npm 有新版本时提醒老用户 ─────────────────────────────────────

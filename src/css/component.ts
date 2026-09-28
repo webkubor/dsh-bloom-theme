@@ -646,9 +646,15 @@ div[class*="_composer"] div[class*="_card"]:hover {
   );
   animation: bloom-anchor-breathe 4.2s ease-in-out infinite;
 }
+/* 2026-09-27 修 #32「空状态下页面持续上下浮动」：
+   原来 50% 帧是 transform: scale(1.05)。这块 ::before 用 inset:0 铺满整个
+   消息区（实测 900px 高），scale 以中心为原点，垂直方向上下各动约 11px；
+   4.2s infinite 且不依赖任何操作，视线读成「画布自己在抖」而不是呼吸。
+   改成只动 opacity：零位移、只走合成器，呼吸感靠明暗传达。
+   想找回一点尺寸脉动，scale 上限别超过 1.005（900px 上约 ±2px）。 */
 @keyframes bloom-anchor-breathe {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50%      { opacity: 1; transform: scale(1.05); }
+  0%, 100% { opacity: 0.72; }
+  50%      { opacity: 1; }
 }
 
 /* ═══ 7. 全站统一入场系统 (v0.10.x) ═════════════════════════════════

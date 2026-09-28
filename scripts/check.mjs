@@ -249,6 +249,20 @@ if (extraFiles.length === 0) {
     : bad(`extra-files 指向的文件缺标记或不存在：${broken.join(', ')} —— release PR 不会 bump 它`)
 }
 
+// 第 4 处副本：编译产物 lib/client.js。上面三道闸门查的都是「源码与账本」，
+// 唯独漏了「源码 → bundle」。release PR 只改 package.json 和 extra-files（src/meta.ts），
+// 不会重跑 bundle，于是 lib/client.js 里的 PLUGIN_VERSION 原地不动。
+// 2026-09-28 实际撞上：package.json 已是 0.15.1，lib/client.js 还写着 0.15.0 ——
+// 浏览器加载的是 bundle，所以 UI 显示的版本号会退回到上一个版本。
+// 这道闸门把「改了版本号必须重编」变成 CI 拦得住的事，而不是靠人记得。
+const builtVer = read('lib/client.js').match(/PLUGIN_VERSION\s*=\s*["']([^"']+)["']/)?.[1]
+builtVer === pkg.version
+  ? ok(`lib/client.js 编译产物版本一致（${builtVer}）`)
+  : bad(
+      `lib/client.js 里 PLUGIN_VERSION (${builtVer}) ≠ package.json (${pkg.version})\n` +
+        `    → 跑 npm run build 让 bundle 跟上；release PR 只改源码不重编，浏览器读到的是旧版本号。`,
+    )
+
 // ── 3.8 --bloom-* 变量引用必须都有定义 ─────────────────────────
 console.log('\n自有 CSS 变量引用')
 

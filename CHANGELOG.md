@@ -13,6 +13,19 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.15.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.15.0...v0.15.1) (2026-09-28)
+
+
+### 🐛 Bug Fixes
+
+* 空状态画布浮动 + 热重载轮询刷 404 ([3d940bb](https://github.com/webkubor/dsh-bloom-theme/commit/3d940bb6c48fd73512bd4b0d83b37dd881c057b9)), closes [#31](https://github.com/webkubor/dsh-bloom-theme/issues/31) [#32](https://github.com/webkubor/dsh-bloom-theme/issues/32)
+
+
+### 📝 Documentation
+
+* 安装命令改为官方 npx 写法 ([2c2b27b](https://github.com/webkubor/dsh-bloom-theme/commit/2c2b27b6262eb77a631e012042b51d2d4407b777))
+* 底部推荐区改为一张全家桶预览图 + 一行装齐命令 ([9b88b82](https://github.com/webkubor/dsh-bloom-theme/commit/9b88b82b83607e474a21b9b9f22545bb62c911cc))
+
 ## [0.15.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.14.0...v0.15.0) (2026-09-27)
 
 

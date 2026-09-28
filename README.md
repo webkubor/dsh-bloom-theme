@@ -198,16 +198,24 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 如果 Bloom 让你的 DSH 用起来更舒服，欢迎留下一颗 ⭐，或请我喝杯咖啡（赞助入口在下面的
 [Sponsor](https://github.com/sponsors/webkubor) / 面板菜单里也有一处）。
 
-## 🧩 Webkubor DSH 精选扩展家族 (Plugin Suite)
+## 🧩 DSH 插件全家桶
 
-打造极致的 DeepSeek Harness 开发者与用户套件：
+<p align="center">
+  <img src="https://img.webkubor.online/projects/dsh-plugins/dsh-plugins-family.png" alt="DSH 插件全家桶：主题美化 / 模型管理 / 用户记忆 / 电脑环境" width="100%" />
+</p>
 
-| 插件 | 领域 | 核心功能 | 快速安装 |
-| :--- | :--- | :--- | :--- |
-| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme` |
-| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-llm-hub` |
-| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-user-mirror` |
-| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-env-inspector` |
+<p align="center">
+  <a href="https://github.com/webkubor/dsh-bloom-theme">🎨 主题美化</a> ·
+  <a href="https://github.com/webkubor/dsh-llm-hub">⚡ 模型管理</a> ·
+  <a href="https://github.com/webkubor/dsh-mirror">🪞 用户记忆</a> ·
+  <a href="https://github.com/webkubor/dsh-env-inspector">🖥️ 电脑环境</a>
+</p>
+
+一行装齐（只需 Node.js），装完重启 DSH 即可：
+
+```bash
+npx -y @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme @dsh-plugins/dsh-llm-hub @dsh-plugins/dsh-user-mirror @dsh-plugins/dsh-env-inspector && node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/web/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
+```
 
 ---
 

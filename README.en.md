@@ -87,13 +87,17 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 
 ## Install
 
-```bash
-# via the dsh CLI (recommended)
-dsh plugin add dsh-bloom-theme
+> Only Node.js is required — **no global dsh install**; upstream's official entry is `npx @deepseek-ai/dsh`. If dsh is installed globally, use `dsh` instead.
 
-# or global install + enable
-npm i -g dsh-bloom-theme
-dsh plugin enable dsh-bloom-theme
+```bash
+# 1) install into your profile (default: web)
+npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme
+
+# 2) wire it into the boot graph: add "dsh-bloom-theme" to the
+#    dsh.profile.bundles array in ~/.dsh/profiles/web/package.json
+
+# 3) restart DSH: stop it and rerun
+npx @deepseek-ai/dsh web
 ```
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
@@ -164,7 +168,7 @@ part of the publish path. See [CONTRIBUTING](./CONTRIBUTING.md).
 ## FAQ
 
 **Theme not applying?** Hard-refresh once (`Cmd/Ctrl + Shift + R`). If the page says `Failed to load plugins`,
-the client failed to register — re-run `dsh plugin add` or upgrade to the latest version.
+the client failed to register — re-run `npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme` or upgrade to the latest version.
 
 **Can I customize colors?** For now you pick a whole palette via variants; per-color customization is on the roadmap.
 

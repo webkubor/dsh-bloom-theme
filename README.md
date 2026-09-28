@@ -114,8 +114,8 @@ dsh plugin --profile web add dsh-bloom-theme
 # 2) 接进 boot graph：把 "dsh-bloom-theme" 加进
 #    ~/.dsh/profiles/web/package.json 的 dsh.profile.bundles 数组
 
-# 3) 重启 DSH
-~/.dsh/restart.sh
+# 3) 重启 DSH：结束当前进程后重新运行
+npx @deepseek-ai/dsh web
 ```
 
 装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，
@@ -204,10 +204,10 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 
 | 插件 | 领域 | 核心功能 | 快速安装 |
 | :--- | :--- | :--- | :--- |
-| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `dsh plugin install @dsh-plugins/dsh-bloom-theme` |
-| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `dsh plugin install @dsh-plugins/dsh-llm-hub` |
-| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `dsh plugin install @dsh-plugins/dsh-user-mirror` |
-| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `dsh plugin install @dsh-plugins/dsh-env-inspector` |
+| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme` |
+| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-llm-hub` |
+| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-user-mirror` |
+| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-env-inspector` |
 
 ---
 

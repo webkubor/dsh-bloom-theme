@@ -320,6 +320,66 @@ uniqHardcoded.length === 0
         `      需要收紧作用域时用 :has() 按 DOM 结构特征匹配。`,
     )
 
+// 4.5 子串选择器的歧义：短名会连着长名一起命中 ──────────────────
+//
+// `[class*="_x"]` 是子串匹配：凡是类名里**含** "_x" 的元素都命中，包括
+// 「_x 自己」和「以 _x 为前缀的另一个语义名」。给前者上表面属性，后者会跟着
+// 一起上色；两者一叠加就是同一条半透明底色画两遍（≈22% 而不是 8%），
+// 视觉上是一个硬边小条套在一个圆角块里。
+//
+// 这不是假想：2026-09-29 用户实拍「怎么这么丑」，两处都是它 ——
+//   ① component.ts 的 [class*="_newSession"] 命中 hHd-Xa_newSession 按钮**和**
+//      它自己的后代 _newSessionLabelMask / _newSessionContent（后者比前者宽
+//      38px 且是直角）→ 侧栏「新会话」按钮里套出一个硬边小条。
+//   ② glass.ts 的 [class*="_menu"] 命中 cubgiG_menuAnchor —— 那不是下拉面板，
+//      是「标准模式」chip 的行内 wrapper → chip 变成直角实心黑盒，
+//      比旁边的工作区 chip 重三倍。
+//
+// 为什么只钉死这一对、不做成「所有上表面属性的子串选择器都要加元素限定」：
+// 那条规则会把 61 处既有规则全判失败（容器类 _sidebarCol / _tableScroll /
+// _scrollBody 本来就该宽匹配），白名单会长到 60 行 —— 60 行的白名单没人维护，
+// 闸门就退化成摆设。这里改成**按已知歧义对逐条立规矩**：DSH 的语义名是有限的，
+// 撞上一次就登记一对，登记过的必须显式排除，多一个都要重新决策。
+//
+// 另一半防线（自叠检测，即①那种「同一条规则同时命中祖先和后代」）在
+// scripts/visual-audit.browser.js 里跑 —— 那要真实 DOM，静态扫不出来。
+const AMBIGUOUS_SUBSTRINGS = [
+  {
+    short: '_menu',
+    long: '_menuAnchor',
+    note: '下拉面板 vs 触发器按钮的行内 wrapper（标准模式 / 工作区 chip）',
+  },
+]
+// 只看「给面上色」的规则：颜色/字号类误伤无关，背景/边框/阴影/模糊类才是本体
+const SURFACE_DECL =
+  /(^|;)\s*(background|background-color|border|border-top|border-right|border-bottom|border-left|box-shadow|backdrop-filter|-webkit-backdrop-filter)\s*:/
+const ambiguousHits = []
+for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
+  // 剥块注释 + 转义反引号：注释里讨论选择器是合法的，不能算命中
+  const css = f.code.replace(/\\\`/g, '').replace(/\/\*[\s\S]*?\*\//g, '')
+  const ruleRe = /([^{}]+)\{([^{}]*)\}/g
+  let m
+  while ((m = ruleRe.exec(css))) {
+    const selector = m[1].trim()
+    if (!SURFACE_DECL.test(m[2])) continue
+    for (const pair of AMBIGUOUS_SUBSTRINGS) {
+      if (!selector.includes(`[class*="${pair.short}"]`)) continue
+      if (selector.includes(`:not([class*="${pair.long}"])`)) continue
+      ambiguousHits.push(`${f.path.split('/').pop()}  [class*="${pair.short}"]  →  ${selector.replace(/\s+/g, ' ').slice(0, 90)}`)
+    }
+  }
+}
+ambiguousHits.length === 0
+  ? ok(`子串选择器歧义已逐条排除（登记 ${AMBIGUOUS_SUBSTRINGS.length} 对：${AMBIGUOUS_SUBSTRINGS.map((p) => `${p.short} ⊃ ${p.long}`).join('、')}）`)
+  : bad(
+      `这些上表面属性的规则用了有歧义的子串选择器：\n` +
+        ambiguousHits.map((h) => `      ${h}`).join('\n') +
+        `\n    → [class*="${AMBIGUOUS_SUBSTRINGS[0].short}"] 会连 ${AMBIGUOUS_SUBSTRINGS[0].long} 一起命中` +
+        `（${AMBIGUOUS_SUBSTRINGS[0].note}）。\n` +
+        `      加 :not([class*="${AMBIGUOUS_SUBSTRINGS[0].long}"]) 收窄；确实要一起上色，\n` +
+        `      就把这一对登记进 AMBIGUOUS_SUBSTRINGS 并写清理由 —— 别让它悄悄溜过去。`,
+    )
+
 // CSS 常量是模板字符串，注释里写反引号会**提前终止模板** —— tsc 报的是
 // 「',' expected」这种毫不相干的语法错，定位很费时间（实测踩过）。
 // ⚠️ 这条判据本身修过一次（2026-09-10）：原来先 `.replace(/`[\s\S]*$/, '')` 砍掉

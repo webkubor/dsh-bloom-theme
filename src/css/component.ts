@@ -133,17 +133,23 @@ body[data-bloom-variant] [class*="_scrollBody"] {
 
 /* 新建会话按钮：极淡底色，无 border，文字与图标都用主文字色（owner 反馈「脏」——
    之前 accent 色的 svg + accent 染色 bg + hairline border 三层叠，跟莫兰迪"统一克制"冲突）。
-   现在的按钮只靠 5% accent 染色跟会话行区分，没有色块、没有边框、没有彩色文字。 */
+   现在的按钮只靠 8% accent 染色跟会话行区分，没有色块、没有边框、没有彩色文字。
+   ⚠️ 选择器必须写 button[class*="_newSession"]：类名是子串匹配，
+   hHd-Xa_newSession 的**后代** hHd-Xa_newSessionLabelMask / _newSessionContent /
+   _newSessionLabel / _newSessionShortcut 全都含 "_newSession"，裸写
+   [class*="_newSession"] 会把同一份底色叠三层（1-(0.92³)≈22%），
+   而 Content 比 LabelMask 宽 38px 且是直角 —— 于是按钮里套出一个硬边小条，
+   看上去像「盒中盒」（2026-09-29 实拍）。详见 §去硬边框 那条的同款注解。 */
 [class*="_sidebarCol"] button[class*="_newSession"],
 [class*="_sidebarCol"] button[class*="_newChat"] {
-  background: color-mix(in oklch, var(--bloom-accent) 5%, transparent);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
   border: 0;
   border-radius: 10px;
   transition: background 180ms ease;
 }
 [class*="_sidebarCol"] button[class*="_newSession"]:hover,
 [class*="_sidebarCol"] button[class*="_newChat"]:hover {
-  background: color-mix(in oklch, var(--bloom-accent) 12%, transparent);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
 }
 /* 图标和文字都用主色 —— 不让 accent 出现在按钮上，跟莫兰迪统一 */
 [class*="_sidebarCol"] button[class*="_newSession"] svg,
@@ -711,8 +717,8 @@ div[class*="_scrollBody"] > div[class*="_card"]:not(:has([class*="_terminal"])):
 .dsh-bloom-trigger {
   animation: bloom-fade-down 200ms var(--bloom-ease-out) backwards !important;
 }
-[class*="_newSession"]:hover,
-[class*="_sessionLogButton"]:hover,
+button[class*="_newSession"]:hover,
+button[class*="_sessionLogButton"]:hover,
 .dsh-bloom-trigger:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 14px -6px var(--bloom-glow);
@@ -801,7 +807,7 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
   div[class*="_bubble"],
   div[class*="_toolRow"],
   div[class*="_scrollBody"] > div[class*="_card"],
-  [class*="_newSession"], [class*="_sessionLogButton"],
+  button[class*="_newSession"], button[class*="_sessionLogButton"],
   [class*="_scrollBody"]:not(:has(div[class*="_bubble"]))::before,
   ::view-transition-old(root), ::view-transition-new(root) {
     animation: none !important;
@@ -848,12 +854,22 @@ body[data-bloom-variant] [class*="_header"]:has(> [class*="_tabs"])::after {
 }
 
 /* 描边按钮 → 浅底。新会话 / Session 日志 / 本主题切换器三个长得一样，
-   一起处理，免得只改自己的显得突兀 */
-body[data-bloom-variant] [class*="_newSession"],
-body[data-bloom-variant] [class*="_sessionLogButton"],
+   一起处理，免得只改自己的显得突兀。
+
+   ⚠️ 三条约束，都来自 2026-09-29 那次「怎么这么丑」：
+   ① 一律写成 button[class*="_…"]。子串匹配会连后代一起命中 —— 侧栏新会话
+      按钮的后代 hHd-Xa_newSessionLabelMask / _Content / _Label / _Shortcut
+      全都含 "_newSession"，裸写 [class*="_newSession"] 时同一份 8% 底色被
+      叠三层（≈22%），Content 还比 LabelMask 宽 38px 且是直角 ——
+      按钮里套出一个硬边小条。
+   ② 底色只在这里出现一次。侧栏那颗的底色由 §新建会话按钮 那条给（同样是
+      transparent 92%），这里不再重复 —— 两处各写一遍、靠特异度决出胜负，
+      正是这个仓库 0.10.x 清过一次的老毛病（见 §会话条目 的注解）。
+   ③ 三个按钮用同一个值（92% / hover 86%），差一档就会看出"哪个重了一档"。 */
+body[data-bloom-variant] button[class*="_newSession"],
+body[data-bloom-variant] button[class*="_sessionLogButton"],
 body[data-bloom-variant] .dsh-bloom-trigger {
   border-color: transparent;
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
   /* transform + box-shadow 也进 transition：§7 hover 抬升要平滑，不能 snap。
      §7 那边只改属性，不重声明 transition —— 避免重复定义打架 */
   transition:
@@ -861,8 +877,11 @@ body[data-bloom-variant] .dsh-bloom-trigger {
     transform var(--bloom-dur-fast, .16s) var(--bloom-ease, ease),
     box-shadow var(--bloom-dur-fast, .16s) var(--bloom-ease, ease);
 }
-body[data-bloom-variant] [class*="_newSession"]:hover,
-body[data-bloom-variant] [class*="_sessionLogButton"]:hover,
+body[data-bloom-variant] button[class*="_sessionLogButton"],
+body[data-bloom-variant] .dsh-bloom-trigger {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
+}
+body[data-bloom-variant] button[class*="_sessionLogButton"]:hover,
 body[data-bloom-variant] .dsh-bloom-trigger:hover {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
 }

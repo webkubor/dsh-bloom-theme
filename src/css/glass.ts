@@ -278,7 +278,17 @@ body[data-ds-dark-theme] div[class*="_bubble"] {
    v0.6.0 早期设到 22%（78% 不透明）已被 verify 证伪：青金/冷色调 + 亮色聊天内容
    透字仍明显（用户截图「字竖排的 layout bug」整段透出）。现在跟 Bloom 自己的
    下拉（transparent 12%）一致。*/
-body[data-bloom-variant] [class*="_menu"],
+/* ⚠️ 「_menu」必须排除「_menuAnchor」（2026-09-29 实拍「怎么这么丑」）。
+   [class*="_menu"] 是子串匹配，cubgiG_menuAnchor 里含 "_menu" → 一起命中。
+   而 menuAnchor 是**触发器按钮的行内 wrapper**（span，撑在 chip 位置），
+   不是覆盖型面板：给它铺底 + 两道白色 inset 光带 + blur，就得到输入区上方
+   那个「标准模式」chip —— 直角、实心、比旁边的工作区 chip 重三倍的黑盒子。
+   实测证据：标准模式 chip 的 span.cubgiG_menuAnchor 计算值
+   background=oklch(0.34 0.02 240 / 0.88) radius=0px，而并排的
+   button.pXSMma_workspace（工作区 chip）是透明底 + radius 8px。
+   排除后两者同重，页面即刻恢复正常。
+   真面板（_menuList / _menuPopover 之类）类名同样含 "_menu"，不受影响。 */
+body[data-bloom-variant] [class*="_menu"]:not([class*="_menuAnchor"]),
 body[data-bloom-variant] [class*="_selector"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 20%);
   backdrop-filter: blur(28px) saturate(1.4);
@@ -288,7 +298,7 @@ body[data-bloom-variant] [class*="_selector"] {
     inset 0 0 0 1px rgba(255,255,255,0.12),
     0 20px 56px -18px rgba(0,0,0,0.3);
 }
-body[data-ds-dark-theme] [class*="_menu"],
+body[data-ds-dark-theme] [class*="_menu"]:not([class*="_menuAnchor"]),
 body[data-ds-dark-theme] [class*="_selector"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #101010), transparent 12%);
   box-shadow:

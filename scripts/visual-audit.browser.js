@@ -5,7 +5,7 @@
  * 最终 sRGB 值，也看不到「半透明面板叠在氛围渐变上之后」的实际对比度。
  * 这类问题只有 CSS 引擎能回答，所以必须在浏览器里跑。
  *
- * 它检查三件事（都是本项目真实出过血的地方，见 DEV_NOTES 2026-08-24）：
+ * 它检查五件事（都是本项目真实出过血的地方，见 DEV_NOTES 2026-08-24）：
  *
  *   1. 文字对比度 —— 沿祖先链把半透明背景逐层叠加求有效底色，再算 WCAG。
  *      修过的坑：亮色 label-tertiary 3.46:1、暗色 label-dimmed 8/8 变体不及格、
@@ -18,6 +18,9 @@
  *      永远是蓝的；#adb2b8 曾是设置面板那圈刺眼灰白边。
  *   4. 自有控件的布局 —— 设计为单行的小控件折行或溢出。颜色审计查不到这类：
  *      「复制升级命令」6 字塞进 73px 的按钮折成两行，line-height:1 让两行贴在一起。
+ *   5. 表面自叠 —— 同一条规则同时给一个元素和它自己的后代上底色。子串选择器
+ *      撞上 DSH 的同前缀命名（_newSession 一家五口）就会画两遍，屏幕上是一个
+ *      硬边小条套在圆角块里（2026-09-29 实拍「怎么这么丑」）。
  *
  * ── 用法 ──
  *
@@ -213,6 +216,7 @@
       brightBorder,
       staticColor,
       layout,
+      selfOverlap: auditSurfaceSelfOverlap(),
     }
   }
 
@@ -291,6 +295,66 @@
   }
 
   /**
+   * 5. 表面自叠：同一条规则同时命中一个元素和它自己的后代。
+   *
+   * 为什么单列一条：`[class*="_x"]` 是子串匹配，DSH 的类名又习惯用同一段前缀
+   * 命名一串东西（hHd-Xa_newSession / _newSessionLabelMask / _newSessionContent /
+   * _newSessionLabel / _newSessionShortcut 五个）。写 `[class*="_newSession"]`
+   * 时按钮和它的四个后代**一起**中招，同一条 8% 底色在三层盒子上各画一遍：
+   * 1-(0.92³) ≈ 22%，而 _newSessionContent 比 _newSessionLabelMask 宽 38px
+   * 且是直角 —— 屏幕上就是按钮里套一个硬边小条（2026-09-29 用户实拍）。
+   *
+   * 为什么必须用真实 DOM 判：`npm run check` 是纯 node 的，看不见
+   * 「这条选择器实际命中了谁」。静态正则只能钉死已知的几对（见 check.mjs 的
+   * AMBIGUOUS_SUBSTRINGS），命中集合这件事只有 CSS 引擎知道。
+   *
+   * 判据：同一条自带背景/边框/阴影的规则，命中的元素里存在祖先-后代关系，
+   * 且后代自己确实渲染出了背景（alpha ≥ 0.03）或背景图。祖先-后代同规则
+   * 命中几乎总是意外 —— 没有人会想让同一条半透明底色在一块区域里画两遍。
+   */
+  function auditSurfaceSelfOverlap() {
+    const sheets = [...document.querySelectorAll('style[data-plugin-css*="bloom"]')]
+    const hits = []
+    const seen = new Set()
+    const SURFACE = /^(background|background-color|background-image|border|border-top|border-right|border-bottom|border-left|box-shadow)$/
+    const PAINTS = /^(?!none$|transparent$|0$|0px$)/
+
+    const visit = (list) => {
+      for (const r of Array.from(list)) {
+        if (r.selectorText && r.style) {
+          const decl = [...r.style].filter((p) => SURFACE.test(p) && PAINTS.test(r.style.getPropertyValue(p).trim()))
+          if (!decl.length) continue
+          let els = []
+          try { els = Array.from(document.querySelectorAll(r.selectorText)) } catch { continue }
+          for (const outer of els) {
+            for (const inner of els) {
+              if (outer === inner || !outer.contains(inner)) continue
+              const cs = getComputedStyle(inner)
+              const c = toRgb(cs.backgroundColor)
+              if (!((c && c.a >= 0.03) || cs.backgroundImage !== 'none')) continue
+              const key = r.selectorText + '|' + (String(outer.className) || outer.tagName)
+              if (seen.has(key)) continue
+              seen.add(key)
+              hits.push({
+                selector: r.selectorText.slice(0, 90),
+                outer: (String(outer.className) || outer.tagName).slice(0, 40),
+                inner: (String(inner.className) || inner.tagName).slice(0, 40),
+                props: decl.join(','),
+                stackedAlpha: +((1 - (1 - (c ? c.a : 0)) ** 2) * 100).toFixed(0),
+                hint: '同一条规则同时给祖先和后代上底色 → 收窄成 button[class*="…"] 或加 :not()',
+              })
+            }
+          }
+        } else if (r.cssRules) {
+          visit(r.cssRules)
+        }
+      }
+    }
+    for (const s of sheets) { try { visit(s.sheet.cssRules) } catch { /* 跨源 style 读不到，跳过 */ } }
+    return hits
+  }
+
+  /**
    * 给运行时 findings 补一条**原生基线**：禁用 Bloom 注入的样式后重测同一元素。
    *
    * 为什么必须有这步：判据不能只是「是否过 AA」。DSH 自己就有够不上 AA 的配色
@@ -347,7 +411,7 @@
     const ourFault = rendered.lowContrast.filter((f) => f.verdict === 'BLOOM-WORSE')
     const dshInherent = rendered.lowContrast.filter((f) => f.verdict === 'dsh-inherent')
     const totalFails = tokens.failCount + ourFault.length + rendered.brightBorder.length
-      + rendered.staticColor.length + rendered.layout.length
+      + rendered.staticColor.length + rendered.layout.length + rendered.selfOverlap.length
     return {
       TRUSTWORTHY: true,
       verdict: totalFails === 0 ? 'PASS' : 'FAIL (' + totalFails + ' 项归因于 Bloom)',
@@ -361,4 +425,5 @@
   }
   window.__bloomAudit.auditTokens = auditTokens
   window.__bloomAudit.auditRendered = auditRendered
+  window.__bloomAudit.auditSelfOverlap = auditSurfaceSelfOverlap
 })()

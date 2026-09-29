@@ -85,8 +85,17 @@ const walkStrings = (v) => {
 for (const field of ['main', 'types', 'module', 'bin', 'exports']) walkStrings(pkg[field])
 if (pkg.dsh && typeof pkg.dsh === 'object') walkStrings(pkg.dsh.bundle)
 
+// exports 允许「子路径模式」：`"./styles/*": "./styles/*"`。
+// 这是 npm 官方推荐的整目录可 import 写法，不是错字 —— 2026-09-22 的 retro 记过：
+// 白名单式把每个子路径列一遍，漏一个下游构建就直接 `Missing "./styles/x.css"` 失败。
+// 所以带 * 的条目必须按 glob 去匹配 tarball，而不是要求存在一个名叫 `styles/*` 的文件。
+// 但「模式一个文件都匹配不到」仍要拦 —— 那说明目录被删了或没进 files[]，模式是死的。
+const entryGlobRe = (g) => new RegExp(
+  '^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$'
+)
 for (const p of entryPaths) {
-  if (!inPack(p)) {
+  const ok = /[*?]/.test(p) ? packFiles.some(f => entryGlobRe(p).test(f)) : inPack(p)
+  if (!ok) {
     errors.push(`package.json 的入口字段引用了 '${p}'，但 tarball 里没有\n  → 装包的人会在 require/import 时直接失败`)
   }
 }

@@ -255,15 +255,34 @@ body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-withi
    裸 [class*="_bubble"] 会把 tooltip 的深底 var(--dsw-alias-tooltip-bg) 盖成
    22% 透明度的近白玻璃，而 tooltip 文字是 static 白（--dsw-static-neutral-bluish-00）
    —— 白字白底，实测对比度 1.0。消息气泡是 div、tooltip 是 span，限定标签即分开；
-   tooltip 的底色由 tokens.ts 接管的 --dsw-alias-tooltip-bg（深底）自动跟随主题。 */
+   tooltip 的底色由 tokens.ts 接管的 --dsw-alias-tooltip-bg（深底）自动跟随主题。
+
+   浅色为什么原来看着"很普通"（2026-09-29 owner 实拍，deepseek 对比最明显）：
+   这套玻璃边原本三条全是白的 —— 顶部高光 0.16 白 + 1px 白环。暗色底下白高光
+   抓得住顶边，浅色底（oklch 96%）上白高光没有更亮的亮度可抓，等于白写；
+   真正定义边缘的 1px 白环同理，整条边只剩一个 0.14 的弱影撑着，气泡就"贴"
+   在背景上而不是"浮"着。浅色模式的抬起感只能靠阴影扛，阴影一弱就彻底平掉。
+
+   所以浅色改成：抬不透明度（78%→64%，与暗色的 62% 对齐，别让两个模式差一档）、
+   白色顶高光加强（0.16→0.9，白底上确实有更亮处可抓）、**1px 环换成暗色发丝**
+   （rgba(0,0,0,.05) 是白底上唯一能划出边界的东西）、影子拆成「接触 + 环境」
+   两层（单层大 spread 在白底上会糊成一团，边就没了）。
+
+   再调一轮（同日，对照深色截图逐像素比出来的）：浅色底是 oklch 96%，抬亮表面
+   只剩 4% 余量 —— 「比背景更亮」这条路在浅色下基本走不通，气泡和背景的分离
+   只能由影和边扛。所以环境影把负 spread 收小（-8px→-10px 配更小 blur 不行，
+   负 spread 越大影子越缩进气泡底下、边反而糊掉），改成 14px/32px/-10px 并
+   提到 0.14；发丝 0.05→0.07，接触影 0.06→0.08。改完浅色才和深色读得同样
+   「浮」。 */
 body[data-bloom-variant] div[class*="_bubble"] {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 78%);
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 64%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.25);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.25);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 0 0 1px rgba(255,255,255,0.08),
-    0 6px 24px -10px rgba(0,0,0,0.14);
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 0 0 1px rgba(0,0,0,0.07),
+    0 1px 3px rgba(0,0,0,0.08),
+    0 14px 32px -10px rgba(0,0,0,0.14);
 }
 body[data-ds-dark-theme] div[class*="_bubble"] {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 62%);

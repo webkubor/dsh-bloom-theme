@@ -13,6 +13,22 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.16.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.15.1...v0.16.0) (2026-09-29)
+
+
+### ✨ Features
+
+* **motion:** 在跑的步骤接管主题色 —— 扫光的颜色从灰换成 Bloom 三色 ([3f493af](https://github.com/webkubor/dsh-bloom-theme/commit/3f493af06e289a8700c0ace6eaeb8eee9d578c82))
+
+
+### 🐛 Bug Fixes
+
+* **light:** 消息气泡的玻璃边在浅色下等于没画 ([e47cc01](https://github.com/webkubor/dsh-bloom-theme/commit/e47cc01f0fa1a4add5c5d9a6abadc064d5f13f17))
+* **motion:** 撤掉在跑步骤上的胶囊底色 —— 状态不靠盒子说话 ([964af4a](https://github.com/webkubor/dsh-bloom-theme/commit/964af4ab6e289c68596540b5ae90f69741de1e6e))
+* **motion:** 重新接上轮次状态的三色光谱 —— DSH 换名后渐变静默消失了 ([8d26427](https://github.com/webkubor/dsh-bloom-theme/commit/8d26427d3473cb3ece3772fd4922ce04b9c4b8ef))
+* **release:** 补上第 4 处版本副本的闸门 —— lib/client.js 编译产物 ([56fed4b](https://github.com/webkubor/dsh-bloom-theme/commit/56fed4ba9bd32d51dcebeb8cb3de0730b58f7ce2))
+* **ui:** 子串选择器自叠 —— 修掉「盒中盒」与「直角黑盒 chip」两处 ([e5094bb](https://github.com/webkubor/dsh-bloom-theme/commit/e5094bb393191f5157cf9bd732557b4efe7c1003))
+
 ## [0.15.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.15.0...v0.15.1) (2026-09-28)
 
 

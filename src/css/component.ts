@@ -442,9 +442,44 @@ body[data-bloom-variant] [class*="_tableScroll"] td {
 /* 空 cell 视觉降权：透明度 0.35，省得缺值列（P1 状态空）显得行"断了一截" */
 [class*="_tableScroll"] td:empty { opacity: 0.35; }
 
-/* 推理中的 “Deep diving…”：DSH 原生 shimmer 直接使用 DeepSeek 静态蓝。
+/* 推理中的「深度求索中，用时 1分30秒」：DSH 原生 shimmer 直接使用 DeepSeek 静态蓝。
    Bloom 为每个变体提供主色及两种邻近色，做成克制的三色光谱流动：有 Gemini
-   式的生命力，但色相始终属于当前主题。以语义后缀而非 CSS Module hash 匹配。 */
+   式的生命力，但色相始终属于当前主题。以语义后缀而非 CSS Module hash 匹配。
+
+   ⚠️ 2026-09-29（用户「原来好看的渐变动效没了」）：老选择器 [class*="_turnStatus"]
+   在当前 DSH 上**命中 0 个元素** —— DSH 把这个组件改名了，现在是
+   <button data-turn-process> > span._label，跑完和跑着共用同一个元素。
+   失配是静默的：不报错、门禁全绿，只是渐变没了（这正是本文件头部写的
+   「失配时退回纯色」那条安全降级的代价）。
+   新的钩子用 data-turn-process（宿主语义属性，不带 hash，比类名稳）；
+   「跑完的不闪」由 dom.ts 的 markLiveTurn() 打 data-bloom-live-turn 解决 ——
+   跑完和跑着是同一个元素，只有文本在变能区分。
+   老选择器保留：DSH 回退到旧构建时它仍然生效。
+
+   ⚠️ 两条分开写、!important 只留给老选择器：新钩子那条特异度已经是
+   (0,4,2)（body + 属性 + button + 两个 data 属性 + 类名子串），实测压得过
+   DSH 的 .l_V-RG_label (0,1,0)，不需要 !important；加了就撞 !important 预算棘轮
+   （check.mjs 的 IMPORTANT_BUDGET），而那个预算的存在就是为了逼人回头想
+   「有没有更省的办法」。 */
+body[data-bloom-variant] button[data-turn-process][data-bloom-live-turn] [class*="_label"] {
+  background-image: linear-gradient(
+    110deg,
+    var(--bloom-motion-1) 0%,
+    var(--bloom-motion-2) 24%,
+    var(--bloom-motion-3) 43%,
+    var(--bloom-motion-1) 60%,
+    var(--bloom-motion-2) 78%,
+    var(--bloom-motion-3) 100%
+  );
+  background-size: 260% 100%;
+  /* 新组件不再自带 text-fill 那套：实测 label 的 -webkit-text-fill-color 是
+     实色（label 色），只给渐变不裁字的话，渐变整个看不见。所以三件套要一起写。 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: bloom-deep-dive-spectrum 3.6s ease-in-out infinite alternate;
+}
+/* 老组件：DSH 旧构建里这个 shimmer 自带 !important，只能跟着加 */
 body[data-bloom-variant] [class*="_turnStatus"]:not([class*="_turnStatusClock"]) {
   background-image: linear-gradient(
     110deg,
@@ -467,6 +502,7 @@ body[data-bloom-variant] [class*="_turnStatus"]:not([class*="_turnStatusClock"])
   to { background-position: 0 0; }
 }
 @media (prefers-reduced-motion: reduce) {
+  body[data-bloom-variant] button[data-turn-process][data-bloom-live-turn] [class*="_label"],
   [class*="_turnStatus"]:not([class*="_turnStatusClock"]) {
     animation: none !important;
     background-position: 50% 0 !important;

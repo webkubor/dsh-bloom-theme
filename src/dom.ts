@@ -54,12 +54,57 @@ export function watchThinkTags() {
   const schedule = () => {
     // 流式输出会高频触发，节流到 300ms
     if (timer) return
-    timer = setTimeout(() => { timer = null; markThinkTags() }, 300)
+    timer = setTimeout(() => { timer = null; markThinkTags(); markLiveTurn() }, 300)
   }
   const obs = new MutationObserver(schedule)
   obs.observe(document.body, { childList: true, subtree: true, characterData: true })
   window.__dshBloomThinkObserver__ = obs
   markThinkTags()
+  markLiveTurn()
+}
+
+/**
+ * 标出「正在跑」的那一行轮次状态 —— "深度求索中，用时 1分30秒"。
+ *
+ * ## 为什么需要 JS 标
+ *
+ * 这行字现在由 DSH 渲染成 `<button data-turn-process>` 里的一个 label，
+ * **跑完和跑着是同一个元素**：跑完是 "用时 7分11秒"，跑着是 "深度求索中，用时
+ * 1分30秒"，两者在 DOM 上只差文本内容，没有状态属性可挂。
+ * （实测三种状态：跑完折叠 `data-open`+disabled、跑完展开 `aria-expanded`、
+ * 正在跑 `data-open`+disabled —— disabled / data-open 都不能当「在跑」的判据。）
+ *
+ * 唯一稳定的信号是**文本在变**：计时每 ~1s 跳一次，跑完就不动了。
+ * 所以：同一个 row 的文本相比上一次扫描变了 → 标上；2.5s 内没等到下一次变化
+ * → 摘掉。切会话时新 row 第一次被看到不算「变过」（WeakMap 里没有旧值），
+ * 所以切过去不会先闪一下再停。
+ *
+ * ## 为什么复用 watchThinkTags 的 observer
+ *
+ * 两者要的都是「DOM 变了就重扫一遍」，而计时文本本身就是 characterData 变更，
+ * 已经在那个 observer 的射程里。再挂一个 observer 只是把同样的事做两遍。
+ * 代价是函数名比做的事多一点 —— 已在调用处注明。
+ */
+const LIVE_TURN_ATTR = 'data-bloom-live-turn'
+const lastRowText = new WeakMap<Element, string>()
+let liveTurnTimer: ReturnType<typeof setTimeout> | undefined
+
+export function markLiveTurn() {
+  const rows = document.querySelectorAll('[data-turn-process]')
+  if (!rows.length) return
+  // DOM 顺序就是时间顺序，最后一个 = 当前这一轮
+  const row = rows[rows.length - 1]
+  const label = row.querySelector('[class*="_label"]') || row
+  const text = (label.textContent || '').trim()
+  if (!text) return
+  const prev = lastRowText.get(row)
+  lastRowText.set(row, text)
+  if (prev === undefined || text === prev) return      // 初次见到 / 没变 → 不算在跑
+  row.setAttribute(LIVE_TURN_ATTR, '')
+  if (liveTurnTimer) clearTimeout(liveTurnTimer)
+  liveTurnTimer = setTimeout(() => {
+    if (lastRowText.get(row) === text) row.removeAttribute(LIVE_TURN_ATTR)
+  }, 2500)
 }
 
 /* v0.5.0：氛围层（壁纸 / 玻璃开关 / 主题包）整体移除，玻璃改为默认常开。 */

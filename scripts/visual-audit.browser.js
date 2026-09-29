@@ -101,6 +101,7 @@
     const dark = document.body.hasAttribute('data-ds-dark-theme')
     const lowContrast = [], brightBorder = [], staticColor = []
     const seen = new Set()
+    let gradientTextCount = 0
 
     for (const el of document.querySelectorAll('*')) {
       const rect = el.getBoundingClientRect()
@@ -120,7 +121,19 @@
         // 「透明 textarea + 镜像层渲染」（为了 @提及着色）：uV2eYG_input 的
         // color 是 rgba(0,0,0,0)，真正画字的是 _mirror / _backdrop 层（实测 16.13:1）。
         // 不排除的话每次扫描都会报一条 ratio 1.0 的假阳性。
-        if (fg && fg.a >= 0.05) {
+        //
+        // 渐变裁字同理，而且更要命：background-clip:text 的元素，真正画出来的是
+        // 背景渐变里的颜色，`color` 只是留下的原始值 —— 拿它算对比度等于拿一个
+        // 根本没被画出来的颜色去算。Bloom 的「在跑」文字（[data-text-shimmer]、
+        // data-bloom-live-turn）就是这一类：`-webkit-text-fill-color: transparent`
+        // + 渐变裁字。2026-09-29 引入这条样式后，暗色下一次扫描报了 13 条
+        // ratio≈1.06 的假阳性（原生基线 4.92），逐条查 DOM 全部是渐变文字。
+        // 它们的对比度由 --bloom-motion-* 决定，而那一层由 contrast-guard 按
+        // 变体逐个验过（见 §auditTokens 里的 motion 组），不在这里的判据范围。
+        const gradientText = (s.webkitBackgroundClip === 'text' || s.backgroundClip === 'text')
+          && (s.webkitTextFillColor === 'rgba(0, 0, 0, 0)' || s.webkitTextFillColor === 'transparent')
+        if (gradientText) gradientTextCount++
+        if (fg && fg.a >= 0.05 && !gradientText) {
           const bg = effBg(el)
           const cr = ratio(over(fg, bg), bg)
           const size = parseFloat(s.fontSize)
@@ -217,6 +230,8 @@
       staticColor,
       layout,
       selfOverlap: auditSurfaceSelfOverlap(),
+      gradientTextSkipped: gradientTextCount,
+      deadSelectors: auditDeadSelectors(),
     }
   }
 
@@ -225,7 +240,9 @@
    * 这层可以安全地用属性切换（纯 CSS 变量求值，不依赖组件重渲染）。
    */
   function auditTokens() {
-    const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
+    // 变体清单必须与 palette.ts 的 VARIANTS 对齐：少两个就等于有两个变体的
+    // 配色从来没被 token 层验过。2026-09-29 实测正好漏了 aurora / lavender。
+    const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender']
     const TEXT_TOKENS = {
       'state-error-primary': '--dsw-alias-state-error-primary',
       'state-success-primary': '--dsw-alias-state-success-primary',
@@ -236,6 +253,13 @@
       'label-tertiary': '--dsw-alias-label-tertiary',
       'label-caption': '--dsw-alias-label-caption',
       'label-dimmed': '--dsw-alias-label-dimmed',
+      // 「在跑」文字（[data-text-shimmer] / data-bloom-live-turn）是渐变裁字，
+      // 渲染出来的对比度取决于光谱三色，而不是 color。审计跳过它们（见 auditRendered
+      // 里的 gradientText），代价是这一层就没人管了 —— 所以在这里补上：motion 三色
+      // 必须自己对底色达标，否则等于把可读性检查让给了一双看不见的眼睛。
+      'motion-1': '--bloom-motion-1',
+      'motion-2': '--bloom-motion-2',
+      'motion-3': '--bloom-motion-3',
     }
     const body = document.body
     const savedVariant = body.getAttribute('data-bloom-variant')
@@ -355,6 +379,92 @@
   }
 
   /**
+   * 6. 选择器失配：主题自己的规则在真实 DOM 上命中 0 个元素。
+   *
+   * 为什么必须做：这套主题只能用 [class*="_语义名"] 匹配宿主（hash 每次构建都变），
+   * 而子串匹配**失配时完全静默** —— 不报错、门禁全绿、页面照常渲染，只是那段
+   * 样式悄悄不生效了。2026-09-29 连续两次栽在这：轮次状态那条三色光谱
+   * （[class*="_turnStatus"]）命中 0 个元素，DSH 改名成 data-turn-process 之后
+   * 渐变直接消失，用户只看到「原来好看的动效没了」。
+   *
+   * 静态扫不出来 —— 必须真的在页面上 querySelectorAll 一次。
+   *
+   * 判据是「排除法」，因为「0 命中」有两种完全不同的含义：
+   *   · 选择器写错了（真 bug，要修）
+   *   · 这个视图里恰好没有对应的东西（假阳性，比如没打开设置面板、
+   *     没有表格、没到 hover 状态）
+   * 前者只有把假阳性剔干净才能露出来，所以下面先按可机械判定的理由分类：
+   *
+   *   pseudo-element   ::before / ::after / ::-webkit-* —— querySelectorAll 语法上就会抛
+   *   interaction      :hover / :focus* / :active —— 快照里天然不存在
+   *   variant          body[data-bloom-variant="cinnabar"] 这类调色板 —— 同时只有一个生效
+   *   mode             body[data-ds-dark-theme] —— 深浅二选一
+   *   inactive-media   条件不成立的 @media（prefers-reduced-motion 等）
+   *   own-mark         主题自己打的标（[data-bloom-think] 等），依赖模型输出
+   *   content          markdown / 表格 / 代码块 / 终端 —— 需要对应内容在场才能验
+   *   STATE_GATED      需要某个交互状态才存在的（settings 打开、下拉展开、空输入框）
+   * 剩下的就是「结构性选择器在当前视图命中 0 个」—— 那才是要报出来的。
+   *
+   * KNOWN_DORMANT 是最后一道：连多视图都验不到的，逐条写明理由。
+   * 它只减不加：新增一条等于承认一次「我知道它没生效且我选择不改」。
+   */
+  const DEAD_EXEMPT = {
+    pseudo: (s) => s.includes('::'),
+    interaction: (s) => /:(hover|focus|focus-visible|focus-within|active|visited|target)\b/.test(s),
+    variant: (s) => /^body\[data-bloom-variant="(mist|aurora|cinnabar|petal|ripple|sage|stone|lapis|amber|lavender)"\]/.test(s.trim()),
+    mode: (s) => s.includes('[data-ds-dark-theme]'),
+    // 主题自己的组件：dsh-bloom-* 的状态选择器（[data-floating] / [data-state] /
+    // [data-dragging]…）按定义就只在那个状态下存在，0 命中是正常的。
+    own: (s) => s.includes('data-bloom-') || s.includes('.dsh-bloom-'),
+    content: (s) => /_(markdown|tableScroll|terminal|preview|dock|toolRow)\b/.test(s)
+      || /^(pre|code|blockquote|hr|\.md-)/.test(s.trim())
+      || s.includes('[class*="_card"]:has(') || s.includes('[class*="_card"] div'),
+  }
+  // 跨视图实测仍然 0 命中的，逐条登记理由。新增一条是一次显式决策。
+  const KNOWN_DORMANT = {
+    'body[data-bloom-variant] [class*="_turnStatus"]:not([class*="_turnStatusClock"])':
+      'DSH 旧构建的轮次状态类名（v0.19 起换成 button[data-turn-process]）。留着当降级路径：DSH 回退旧版本时它还得生效。',
+    '[class*="_turnStatusClock"]': '同上 —— 旧构建的计时器部件，新构建里没有这个元素。',
+    'body[data-bloom-variant] button[class*="_primary"]:disabled':
+      '只在输入框为空时存在（发送键禁用态）。审计跑在有内容的会话上，测不到。',
+  }
+
+  function auditDeadSelectors() {
+    const sheets = [...document.querySelectorAll('style[data-plugin-css*="bloom"]')]
+    const hits = []
+    let checked = 0
+    const seen = new Set()
+
+    const walk = (list, media) => {
+      for (const r of Array.from(list)) {
+        if (r.selectorText && r.style) {
+          if (media && !matchMedia(media).matches) continue
+          for (const part of r.selectorText.split(',').map((x) => x.trim()).filter(Boolean)) {
+            if (seen.has(part)) continue
+            seen.add(part)
+            checked++
+            let n = 0
+            try { n = document.querySelectorAll(part).length } catch { continue }
+            if (n > 0) continue
+            const why = Object.keys(DEAD_EXEMPT).find((k) => DEAD_EXEMPT[k](part))
+            hits.push({
+              sel: part,
+              exempt: why || (KNOWN_DORMANT[part] ? 'known-dormant' : null),
+              reason: KNOWN_DORMANT[part] || null,
+              verdict: why ? 'exempt' : (KNOWN_DORMANT[part] ? 'known' : 'DEAD'),
+            })
+          }
+        } else if (r.cssRules) {
+          const cond = r.conditionText || (r.media && r.media.mediaText) || media
+          walk(r.cssRules, cond)
+        }
+      }
+    }
+    for (const s of sheets) { try { walk(s.sheet.cssRules, null) } catch { /* 读不到就跳过 */ } }
+    return { checked, total: hits.length, dead: hits.filter((h) => h.verdict === 'DEAD'), known: hits.filter((h) => h.verdict === 'known'), exemptCount: hits.filter((h) => h.verdict === 'exempt').length }
+  }
+
+  /**
    * 给运行时 findings 补一条**原生基线**：禁用 Bloom 注入的样式后重测同一元素。
    *
    * 为什么必须有这步：判据不能只是「是否过 AA」。DSH 自己就有够不上 AA 的配色
@@ -412,6 +522,7 @@
     const dshInherent = rendered.lowContrast.filter((f) => f.verdict === 'dsh-inherent')
     const totalFails = tokens.failCount + ourFault.length + rendered.brightBorder.length
       + rendered.staticColor.length + rendered.layout.length + rendered.selfOverlap.length
+      + rendered.deadSelectors.dead.length
     return {
       TRUSTWORTHY: true,
       verdict: totalFails === 0 ? 'PASS' : 'FAIL (' + totalFails + ' 项归因于 Bloom)',
@@ -426,4 +537,5 @@
   window.__bloomAudit.auditTokens = auditTokens
   window.__bloomAudit.auditRendered = auditRendered
   window.__bloomAudit.auditSelfOverlap = auditSurfaceSelfOverlap
+  window.__bloomAudit.auditDeadSelectors = auditDeadSelectors
 })()

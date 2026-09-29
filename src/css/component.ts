@@ -123,7 +123,6 @@ body[data-bloom-variant] [class*="_scrollBody"] {
   transition: background 0.15s ease;
 }
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] [class*="_title"],
-[class*="_sidebarCol"] [class*="_active"] [class*="_title"],
 [class*="_sidebarCol"] [class*="_selected"] [class*="_title"] {
   font-weight: 500;
   color: var(--dsw-alias-label-primary);
@@ -140,28 +139,23 @@ body[data-bloom-variant] [class*="_scrollBody"] {
    [class*="_newSession"] 会把同一份底色叠三层（1-(0.92³)≈22%），
    而 Content 比 LabelMask 宽 38px 且是直角 —— 于是按钮里套出一个硬边小条，
    看上去像「盒中盒」（2026-09-29 实拍）。详见 §去硬边框 那条的同款注解。 */
-[class*="_sidebarCol"] button[class*="_newSession"],
-[class*="_sidebarCol"] button[class*="_newChat"] {
+[class*="_sidebarCol"] button[class*="_newSession"] {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
   border: 0;
   border-radius: 10px;
   transition: background 180ms ease;
 }
-[class*="_sidebarCol"] button[class*="_newSession"]:hover,
-[class*="_sidebarCol"] button[class*="_newChat"]:hover {
+[class*="_sidebarCol"] button[class*="_newSession"]:hover {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
 }
 /* 图标和文字都用主色 —— 不让 accent 出现在按钮上，跟莫兰迪统一 */
-[class*="_sidebarCol"] button[class*="_newSession"] svg,
-[class*="_sidebarCol"] button[class*="_newChat"] svg {
+[class*="_sidebarCol"] button[class*="_newSession"] svg {
   color: var(--dsw-alias-label-primary);
 }
 
 /* 分组标题（工作区 / 未分组）：拉开与条目的层级。
    _sectionLabel 是 DSH 实际用的类名片段（qDHVXG_sectionLabel），
    12px + 字距让它明显是「标签」而不是一行内容。 */
-[class*="_sidebarCol"] [class*="_groupLabel"],
-[class*="_sidebarCol"] [class*="_sectionTitle"],
 [class*="_sidebarCol"] [class*="_sectionLabel"] {
   font-size: 12px;
   letter-spacing: 0.06em;
@@ -228,8 +222,7 @@ body[data-bloom-variant] [class*="_sidebarCol"] {
    自身 overflow 裁剪，是唯一能真正往外散的做法。 */
 
 /* 底部设置区与会话列表之间补一道分隔，让「设置」不像是最后一条会话 */
-[class*="_sidebarCol"] [class*="_footer"],
-[class*="_sidebarCol"] [class*="_bottom"] {
+[class*="_sidebarCol"] [class*="_footer"] {
   border-top: 1px solid var(--bloom-hairline);
 }
 
@@ -669,7 +662,6 @@ body {
    --dsw-alias-interactive-bg-hover 早已被 tokens.ts 覆写成本主题的 accent，
    压根不是"固定蓝色"。 */
 [class*="_sidebarCol"] [class*="_sessionRow"][class*="_selected"],
-[class*="_sidebarCol"] [class*="_sessionRow"][class*="_active"],
 [class*="_sidebarCol"] [class*="_sessionRow"][aria-selected="true"],
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
@@ -797,19 +789,19 @@ div[class*="_scrollBody"] > div[class*="_card"]:not(:has([class*="_terminal"])):
 }
 /* 顶栏 —— 从顶部滑下比从下方滑上更贴「页面打开」的语义。
    :has(> _tabs) 是"真顶栏"的唯一判据，见下方 §去硬边框 里的说明。 */
-[class*="_header"]:has(> [class*="_tabs"]) {
+header[class*="_header"] {
   animation: bloom-fade-down 240ms var(--bloom-ease-out) backwards !important;
 }
-/* 顶栏三按钮入场（newSession / sessionLog / Bloom trigger）：
-   transform / box-shadow 加到原 transition 里 —— 原来 WIP 只 transition 了
-   background，加 lift 不需要新 transition 字段，hover 时一并平滑 */
-[class*="_newSession"],
-[class*="_sessionLogButton"],
+/* 顶栏两按钮入场（newSession / Bloom trigger）：transform / box-shadow
+   加到原 transition 里 —— 原来 WIP 只 transition 了 background，
+   加 lift 不需要新 transition 字段，hover 时一并平滑。
+   ⚠️ 原来还有一条 [class*="_sessionLogButton"]：2026-09-29 实测该语义名在
+   DSH 全部包里 0 命中（顶栏现在只挂 Bloom 切换器），属于死规则，已删。 */
+button[class*="_newSession"],
 .dsh-bloom-trigger {
   animation: bloom-fade-down 200ms var(--bloom-ease-out) backwards !important;
 }
 button[class*="_newSession"]:hover,
-button[class*="_sessionLogButton"]:hover,
 .dsh-bloom-trigger:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 14px -6px var(--bloom-glow);
@@ -890,7 +882,6 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
 /* ④ 无障碍：动效全部降级为瞬间 */
 @media (prefers-reduced-motion: reduce) {
   [class*="_sidebarCol"] [role="treeitem"],
-  [class*="_sidebarCol"] [class*="_active"]::before,
   .dsh-bloom-switcher, .dsh-bloom-trigger, .dsh-bloom-option, .dsh-bloom-menu,
   [class*="_composer"] div[class*="_card"],
   [class*="_composer"] div[class*="_card"]::after,
@@ -898,7 +889,7 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
   div[class*="_bubble"],
   div[class*="_toolRow"],
   div[class*="_scrollBody"] > div[class*="_card"],
-  button[class*="_newSession"], button[class*="_sessionLogButton"],
+  button[class*="_newSession"],
   [class*="_scrollBody"]:not(:has(div[class*="_bubble"]))::before,
   ::view-transition-old(root), ::view-transition-new(root) {
     animation: none !important;
@@ -932,14 +923,14 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
  * 而真顶栏 wSkVaW_header 反而没吃到：它自带 ::after 是 0.5px 线，
  * 跟我们 (0,1,0) 平手、后注入者赢。:has() 把特异度提到 (0,2,0)，
  * 既只命中真顶栏，又压得过宿主那条硬线。 */
-body[data-bloom-variant] [class*="_header"]:has(> [class*="_tabs"]) {
+body[data-bloom-variant] header[class*="_header"] {
   position: relative;
   border-bottom: 0;
   /* 强度实测定档：45% 时边界跳变 32 级、仍读成一条线；78% 跳变 10 级，
      只剩"上面比下面亮一点"的错觉，这才是分隔而不是分割。 */
   box-shadow: 0 28px 48px -28px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
-body[data-bloom-variant] [class*="_header"]:has(> [class*="_tabs"])::after {
+body[data-bloom-variant] header[class*="_header"]::after {
   /* 宿主那条 0.5px 硬线关掉，交给上面的辉光 */
   display: none;
 }
@@ -958,7 +949,6 @@ body[data-bloom-variant] [class*="_header"]:has(> [class*="_tabs"])::after {
       正是这个仓库 0.10.x 清过一次的老毛病（见 §会话条目 的注解）。
    ③ 三个按钮用同一个值（92% / hover 86%），差一档就会看出"哪个重了一档"。 */
 body[data-bloom-variant] button[class*="_newSession"],
-body[data-bloom-variant] button[class*="_sessionLogButton"],
 body[data-bloom-variant] .dsh-bloom-trigger {
   border-color: transparent;
   /* transform + box-shadow 也进 transition：§7 hover 抬升要平滑，不能 snap。
@@ -968,11 +958,9 @@ body[data-bloom-variant] .dsh-bloom-trigger {
     transform var(--bloom-dur-fast, .16s) var(--bloom-ease, ease),
     box-shadow var(--bloom-dur-fast, .16s) var(--bloom-ease, ease);
 }
-body[data-bloom-variant] button[class*="_sessionLogButton"],
 body[data-bloom-variant] .dsh-bloom-trigger {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
 }
-body[data-bloom-variant] button[class*="_sessionLogButton"]:hover,
 body[data-bloom-variant] .dsh-bloom-trigger:hover {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
 }

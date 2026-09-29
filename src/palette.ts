@@ -67,7 +67,7 @@ export const PALETTE = {
     txL: 'oklch(25% 0.02 354)',      txD: 'oklch(98% 0.01 350)',
     sfL: 'oklch(96% 0.015 350)',     sfD: 'oklch(34% 0.02 350)',
     sf2L: 'oklch(94% 0.015 350)',    sf2D: 'oklch(40% 0.02 350)',
-    motionL: ['oklch(58% 0.22 350)', 'oklch(58% 0.17 310)', 'oklch(58% 0.17 20)'],
+    motionL: ['oklch(56.7% 0.22 350)', 'oklch(56.7% 0.17 310)', 'oklch(56.7% 0.17 20)'],
     motionD: ['oklch(75% 0.18 350)', 'oklch(75% 0.14 310)', 'oklch(76% 0.14 20)'],
   },
   ripple: {
@@ -89,7 +89,7 @@ export const PALETTE = {
     txL: 'oklch(25% 0.02 116)',       txD: 'oklch(96% 0.011 118)',
     sfL: 'oklch(94.9% 0.009 113)',    sfD: 'oklch(27.9% 0.02 116)',
     sf2L: 'oklch(91.9% 0.009 113)',   sf2D: 'oklch(34% 0.03 116)',
-    motionL: ['oklch(54.1% 0.111 115)', 'oklch(54.1% 0.12 83)', 'oklch(54.1% 0.10 152)'],
+    motionL: ['oklch(54.1% 0.111 115)', 'oklch(54.1% 0.12 83)', 'oklch(53.1% 0.10 152)'],
     motionD: ['oklch(71.9% 0.120 115)', 'oklch(71.9% 0.13 83)', 'oklch(71.9% 0.11 152)'],
   },
   stone: {
@@ -123,7 +123,7 @@ export const PALETTE = {
     txL: 'oklch(24% 0.02 74)',        txD: 'oklch(95% 0.008 70)',
     sfL: 'oklch(95.6% 0.01 82)',      sfD: 'oklch(32% 0.020 60)',
     sf2L: 'oklch(93% 0.014 78)',      sf2D: 'oklch(38% 0.022 60)',
-    motionL: ['oklch(55.5% 0.12 70)', 'oklch(55.5% 0.11 38)', 'oklch(55.5% 0.12 100)'],
+    motionL: ['oklch(55.5% 0.12 70)', 'oklch(55.5% 0.11 38)', 'oklch(54.1% 0.12 100)'],
     motionD: ['oklch(78% 0.11 70)', 'oklch(78% 0.12 38)', 'oklch(78% 0.11 100)'],
   },
   /* v0.12.x：落霞（原「极光」，owner 2026-09-14 反馈「极光颜色不好看」）——

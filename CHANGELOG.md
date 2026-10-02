@@ -13,6 +13,14 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.1...v0.17.2) (2026-10-02)
+
+
+### 🐛 Bug Fixes
+
+* **dev:** watch-deploy 默认 profile 从 desktop-local 改回 desktop ([53e7a25](https://github.com/webkubor/dsh-bloom-theme/commit/53e7a25e7f03235d06ccfa86c61d19d262878b0b))
+* **scripts:** desktop-profile 从 desktop-local 改回 desktop ([84bc13f](https://github.com/webkubor/dsh-bloom-theme/commit/84bc13f40c72e0a0b640a41b1b74493dd5e7eec5))
+
 ## [0.17.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.0...v0.17.1) (2026-10-02)
 
 

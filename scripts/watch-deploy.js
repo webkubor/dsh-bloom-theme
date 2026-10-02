@@ -13,7 +13,7 @@
  *
  * 注意：皮肤是浏览器端注入的，部署完必须刷新页面才生效 —— 按 r 即可。
  */
-import { watch, readFileSync } from 'node:fs'
+import { watch, readFileSync, existsSync } from 'node:fs'
 import { execSync, exec } from 'node:child_process'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,8 +24,22 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 // 目标目录从 package.json 的 name 推 —— 硬编码过 @kubor，包名迁走两轮后这里没跟着改，
 // rsync 照常成功、只是把文件同步进一个 DSH 不读的目录，dev 热部署静默失效了很久。
 const PKG_NAME = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).name
-const DEST = resolve(process.env.HOME, `.dsh/profiles/web/node_modules/${PKG_NAME}`)
-const GUI_URL = process.env.DSH_BLOOM_GUI_URL ?? 'http://127.0.0.1:3080'
+// ⚠️ 2026-10-02：profile 名又迁了一次 —— 宿主从 web（3080）换到桌面端 app（19387），
+// 本地开发 profile 是 desktop-local（官方 Electron 端独占 desktop，见
+// scripts/desktop-profile.mjs）。这正是上面那条注释警告过的同一个失效模式：
+// 路径写死 → 宿主搬走 → rsync 照常成功但没人读。所以这次：
+//   ① 两个值都做成环境变量可覆盖；② 加一道存在性检查，目标不在就明确报错。
+const PROFILE = process.env.DSH_BLOOM_PROFILE ?? 'desktop-local'
+const DEST = resolve(process.env.HOME, `.dsh/profiles/${PROFILE}/node_modules/${PKG_NAME}`)
+const GUI_URL = process.env.DSH_BLOOM_GUI_URL ?? 'http://127.0.0.1:19387'
+
+if (!existsSync(DEST)) {
+  console.error(`\n✗ 目标目录不存在：${DEST}`)
+  console.error(`  profile「${PROFILE}」可能已改名，或该 profile 里还没装本插件。`)
+  console.error('  换一个：DSH_BLOOM_PROFILE=<名字> npm run dev')
+  console.error('  （不拦的话会 rsync 进一个 DSH 不读的目录 —— 命令成功、页面没变，最难查的那种。）\n')
+  process.exit(1)
+}
 
 let deploying = false
 let pending = false

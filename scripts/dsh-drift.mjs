@@ -46,12 +46,29 @@ function targetVersion () {
     try {
       const deps = JSON.parse(readFileSync(f, 'utf8')).dependencies ?? {}
       for (const [k, v] of Object.entries(deps)) {
-        if (k.startsWith('@deepseek-ai/dsh-') && !k.includes('cli')) return String(v).replace(/^[\^~]/, '')
+        // ⚠️ 别写 `!k.includes('cli')` —— "client" 里就含 "cli"，那样会把
+        // @deepseek-ai/dsh-client-* 全部排除掉（Cursor reviewer 2026-10-02 指出的）。
+        // 真正要排除的是独立发版的 @deepseek-ai/dsh-cli 本体，所以按全名比。
+        if (!k.startsWith('@deepseek-ai/dsh-')) continue
+        if (k === '@deepseek-ai/dsh-cli') continue
+        return String(v).replace(/^[\^~]/, '')
       }
     } catch { /* 读不动就下一个 */ }
   }
   return '0.2.0-rc.2'
 }
+
+/**
+ * 剥掉注释后的源码 —— 与 scripts/check.mjs 同一份实现（含 `(?<!:)` 那个保护，
+ * 免得把 URL 里的 `//` 当行注释吃掉）。
+ *
+ * ⚠️ 必须先剥再扫：注释里举反例 / 记历史是合法的（本仓大量这么做），
+ * 不剥就会把注释里的 `[class*="_xyz"]` 当成真实选择器收进清单。
+ * 2026-10-02 Codex 与 Cursor 两个 reviewer 都指出了这一点，实测确实捞出一个
+ * 假名字 sessionLogButton —— 它只存在于注释里，源码中根本没有这个选择器。
+ */
+const stripComments = (code) =>
+  code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/.*$/gm, '')
 
 /** 主题里所有 `[class*="_语义名"]` 的语义名（去重 + 排序）。 */
 function themeNames () {
@@ -59,7 +76,7 @@ function themeNames () {
   const names = new Set()
   for (const f of readdirSync(dir)) {
     if (!f.endsWith('.ts')) continue
-    const src = readFileSync(join(dir, f), 'utf8')
+    const src = stripComments(readFileSync(join(dir, f), 'utf8'))
     for (const m of src.matchAll(/class\*="_([A-Za-z][A-Za-z0-9]*)"/g)) names.add(m[1])
   }
   return [...names].sort()

@@ -439,7 +439,10 @@ cssBlocks.length === 0
 // 剩下的都是「宿主也在用 !important 或自带 animation」才不得不留：无障碍
 // reduced-motion 兜底、入场动画压宿主动画、tab 字号保护、深潜渐变文字。
 // 想加一条前先问：这块有没有对应的 --dsw-* token？加作用域够不够？
-const IMPORTANT_BUDGET = { 'component.ts': 15, 'glass.ts': 7, 'switcher.ts': 1 }
+// component.ts 15 → 16（2026-10-02）：body 的实底必须用 !important —— 让 body 透明的那条
+// 规则是桌面宿主运行时注入的（不在任何已发布的 DSH 包里），特异度压不过。理由见
+// src/css/component.ts 的 §1 注释。
+const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 7, 'switcher.ts': 1 }
 const overBudget = []
 for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
   const name = f.path.split('/').pop()

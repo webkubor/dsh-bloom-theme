@@ -53,6 +53,31 @@
   连 AI 思考的等待也跟主题一起呼吸。
 </p>
 
+## 📌 桌面端优先 —— 关于 DSH Web UI 的说明
+
+**结论：Bloom 接下来的迭代优先兼容 DSH 桌面端；Web UI 不再主动适配，会逐步淡出。**
+
+（0.16.0 及更早的版本是按 DSH Web UI 做的；适配桌面端的那一版正在路上，会作为下一个版本发出。）
+
+DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东西的价值长在 UI 上——宿主怎么改界面，
+配色和玻璃就得跟着长——所以迭代重心跟着挪到桌面端。
+
+具体到你会遇到什么：
+
+| 你在用 | 会发生什么 |
+|---|---|
+| **桌面端** | 新配色、新动效、视觉修复都优先在这里出。我每天都在用它，界面变了我就会跟。 |
+| **Web UI** | 保持现状可用，但不再主动适配 DSH Web 端的新变化；DSH 若改了结构导致某处显示不对，我不一定及时跟。 |
+
+两点补充，省得你按标题猜：
+
+- **已经装上的版本不会失效。** 停的是「跟着新界面继续长」，不是「把你现在能用的弄坏」。
+- 如果你只能用 Web UI，欢迎开 issue 把场景说清楚——真实需求会改变我的判断，这句不是客套。
+
+> **上一个版本（0.16.0）改了什么**：在跑的步骤接管主题色（扫光从灰换成 Bloom 三色）；
+> 轮次状态的三色光谱重新接上（DSH 改名后它静默消失了）；修浅色模式下消息气泡没画出来的玻璃边；
+> 修子串选择器自叠造成的「盒中盒」与「直角黑块 chip」；撤掉在跑步骤上的胶囊底色——状态不该靠盒子说话。
+
 ## 一句话
 
 **给 DeepSeek Harness 的「玻璃 + 莫兰迪」主题。**
@@ -107,16 +132,24 @@
 
 ## 安装
 
+> **桌面端**：在应用内的插件管理里安装、升级。桌面 profile 由应用独占托管，
+> 命令行的 `dsh plugin --profile desktop ...` 会直接报
+> `profile "desktop" is managed exclusively by the Electron application` —— 不是权限问题，是设计如此。
+
+<details>
+<summary>自建 profile（CLI / 服务器 / web）的装法</summary>
+
 ```bash
-# 1) 装进你的 profile（profile 名按自己的改，默认 web）
-dsh plugin --profile web add dsh-bloom-theme
+# 1) 装进你的 profile（profile 名按自己的改）
+dsh plugin --profile <你的 profile> add dsh-bloom-theme
 
 # 2) 接进 boot graph：把 "dsh-bloom-theme" 加进
-#    ~/.dsh/profiles/web/package.json 的 dsh.profile.bundles 数组
+#    ~/.dsh/profiles/<你的 profile>/package.json 的 dsh.profile.bundles 数组
 
-# 3) 重启 DSH：结束当前进程后重新运行
-npx @deepseek-ai/dsh web
+# 3) 重启 DSH
 ```
+
+</details>
 
 装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，
 下拉底部显示当前版本号；npm 上有更新的版本时会亮一个 `↑ vX` 徽标（点它跳 Release 页）。

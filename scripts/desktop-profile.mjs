@@ -13,9 +13,11 @@ import { fileURLToPath } from 'node:url'
 const packageName = 'dsh-bloom-theme'
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const repoDir = resolve(scriptDir, '..')
-// 2026-09-16：本机 profile 已从 `desktop` 改名 `desktop-local` —— 官方 Electron 桌面端
-// 独占 profiles/desktop，CLI 会拒绝对该名字做任何插件操作，所以脚本跟着改。
-const profileDir = resolve(homedir(), '.dsh/profiles/desktop-local')
+// 2026-10-02：宿主已就是官方 Electron 桌面端的 profiles/desktop（19387）。
+// 09-16 那次绕道 `desktop-local` 的前提没了 —— 那时要躲开「CLI 拒绝操作 desktop」，
+// 而现在正是**要**装进 desktop 才生效，躲开它等于部署到一个没有宿主在读的 profile。
+// 与 package.json 的 deploy 同口径：可用 DSH_PROFILE 覆盖。
+const profileDir = resolve(homedir(), `.dsh/profiles/${process.env.DSH_PROFILE || 'desktop'}`)
 const profilePackagePath = resolve(profileDir, 'package.json')
 const rootPackage = JSON.parse(readFileSync(resolve(repoDir, 'package.json'), 'utf8'))
 const args = process.argv.slice(2)

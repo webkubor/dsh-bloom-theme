@@ -1,0 +1,10 @@
+{
+  "note": "已确认在当前 DSH 里匹配 0 个元素、但还没改的语义名。每一条都必须写清为什么还没改。新增条目要谨慎——往这里加名字等于把一条已经失效的规则合法化。",
+  "names": {
+    "turnStatus": "不是漂移：2026-09-29 已换成语义属性钩子 button[data-turn-process][data-bloom-live-turn][class*=\"_label\"]，旧选择器是故意保留的 DSH 回退兜底。等确认没有用户停留在旧构建后可以删。",
+    "turnStatusClock": "同上，属 09-29 那次改名（现走 data-turn-process 那条链），旧选择器留着兜底。",
+    "tableScroll": "已补 0.2.0 的新名 _tablePane（:is() 并列，权重不变），表格样式在 0.2.0 上恢复生效。老名保留给旧构建，所以这条会一直在基线里——除非哪天决定不再兼容旧 DSH。",
+    "toolRow": "已补 0.2.0 的新名 _toolChanges（:is() 并列）。老名保留给旧构建，同 tableScroll。",
+    "sessionLogButton": "真的还没改：只有 1 处引用，0.2.0 的 workspace 包里没有明显对应名（同区域有 sessionOverflowButton / searchButton / iconButton），可能整块 UI 被移走或改名，缺真机 DOM 无法确定。影响面最小，先记着。"
+  }
+}

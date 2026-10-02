@@ -35,14 +35,15 @@
     "package": "npm run build && npm pack",
     "desktop:link": "node scripts/desktop-profile.mjs link",
     "desktop:production": "node scripts/desktop-profile.mjs production",
-    "check": "node scripts/check.mjs && node scripts/check-drag.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs",
+    "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && node scripts/check-drag.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs",
     "check:contrast": "contrast-guard",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "test:version": "node --test scripts/version.test.mjs",
     "preflight": "node scripts/preflight.mjs",
     "stats": "node scripts/stats-table.mjs",
-    "test": "npm run check"
+    "test": "npm run check",
+    "check:drift": "node scripts/dsh-drift.mjs"
   },
   "repository": {
     "type": "git",

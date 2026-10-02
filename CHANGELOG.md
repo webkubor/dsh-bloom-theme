@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.16.0...v0.17.0) (2026-10-02)
+
+
+### ✨ Features
+
+* 桌面端优先 —— DSH 0.2.0 适配 + 漂移门禁 + 用户公告 ([#36](https://github.com/webkubor/dsh-bloom-theme/issues/36)) ([423a162](https://github.com/webkubor/dsh-bloom-theme/commit/423a162617530ac2d81b06f8ea057977be4b332c))
+
 ## [0.16.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.15.1...v0.16.0) (2026-09-29)
 
 

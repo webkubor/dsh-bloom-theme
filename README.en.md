@@ -51,8 +51,9 @@
 **Short version: Bloom's next iterations target the DSH desktop app first. The Web UI is no longer
 actively supported and will fade out.**
 
-(0.16.0 and earlier were built against the DSH Web UI. The desktop-ready release is in the works and
-will ship as the next version.)
+(0.16.0 and earlier were built against the DSH Web UI. **0.17.0 is the desktop-ready release** — it
+brings the DSH 0.2.0 selector adaptation plus a drift gate that catches this class of breakage
+automatically.)
 
 DSH now ships a desktop app, and it is what I use every day. A theme's value lives on top of a UI —
 when the host changes its interface, the palettes and the glass have to follow — so that is where

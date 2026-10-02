@@ -24,12 +24,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 // 目标目录从 package.json 的 name 推 —— 硬编码过 @kubor，包名迁走两轮后这里没跟着改，
 // rsync 照常成功、只是把文件同步进一个 DSH 不读的目录，dev 热部署静默失效了很久。
 const PKG_NAME = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).name
-// ⚠️ 2026-10-02：profile 名又迁了一次 —— 宿主从 web（3080）换到桌面端 app（19387），
-// 本地开发 profile 是 desktop-local（官方 Electron 端独占 desktop，见
-// scripts/desktop-profile.mjs）。这正是上面那条注释警告过的同一个失效模式：
-// 路径写死 → 宿主搬走 → rsync 照常成功但没人读。所以这次：
+// ⚠️ 2026-10-02：profile 名又迁了一次 —— 宿主从 web（3080）换到桌面端 app（19387）。
+// 本地开发 profile **就是 desktop**：09-16 那次改名 desktop-local 是为了躲开
+// 「CLI 拒绝操作 desktop」，而现在正是要装进 desktop 才生效（CLI 的限制只针对
+// `dsh plugin` 子命令，rsync 直接写文件不受影响）。这正是上面那条注释警告过的
+// 同一个失效模式：路径写死 → 宿主搬走 → rsync 照常成功但没人读。所以：
 //   ① 两个值都做成环境变量可覆盖；② 加一道存在性检查，目标不在就明确报错。
-const PROFILE = process.env.DSH_BLOOM_PROFILE ?? 'desktop-local'
+const PROFILE = process.env.DSH_BLOOM_PROFILE ?? process.env.DSH_PROFILE ?? 'desktop'
 const DEST = resolve(process.env.HOME, `.dsh/profiles/${PROFILE}/node_modules/${PKG_NAME}`)
 const GUI_URL = process.env.DSH_BLOOM_GUI_URL ?? 'http://127.0.0.1:19387'
 

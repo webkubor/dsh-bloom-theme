@@ -13,6 +13,18 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.0...v0.17.1) (2026-10-02)
+
+
+### 🐛 Bug Fixes
+
+* 桌面端底色被宿主压成透明 —— 实底与氛围层移进 body::before ([#39](https://github.com/webkubor/dsh-bloom-theme/issues/39)) ([81370db](https://github.com/webkubor/dsh-bloom-theme/commit/81370dbdd31d597bcbe4e8c610210a3279ecddeb))
+
+
+### 📝 Documentation
+
+* 把「web profile / 3080」的过时说法全部改到桌面端 ([ca67902](https://github.com/webkubor/dsh-bloom-theme/commit/ca67902634dbb383d68432673ec114f5f7a33977))
+
 ## [0.17.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.16.0...v0.17.0) (2026-10-02)
 
 

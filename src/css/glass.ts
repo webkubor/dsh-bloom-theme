@@ -365,13 +365,13 @@ body[data-bloom-variant] button[class*="_themeCube"][class*="_selected"] {
 }
 
 body[data-bloom-variant] .md-code-block,
-body[data-bloom-variant] [class*="_tableScroll"] {
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 70%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
 }
 body[data-ds-dark-theme] .md-code-block,
-body[data-ds-dark-theme] [class*="_tableScroll"] {
+body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 56%);
 }
 body[data-bloom-variant] .md-code-block pre,
@@ -381,20 +381,20 @@ body[data-bloom-variant] .md-code-block code { background: transparent; }
    原 CSS 用 var(--bloom-hairline)（莫兰迪 30% alpha）做列分隔，
    在深色氛围渐变上几乎消失，看起来像没线的「列表」。提到
    hairline-strong（55% alpha）并给 thead 加一档淡底，列与行都立起来。 */
-body[data-bloom-variant] [class*="_tableScroll"] th,
-body[data-bloom-variant] [class*="_tableScroll"] td {
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) th,
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) td {
   border-color: var(--bloom-hairline-strong);
 }
-[class*="_tableScroll"] thead th {
+:is([class*="_tableScroll"], [class*="_tablePane"]) thead th {
   background: rgba(var(--bloom-morandi), 0.10);
 }
-body[data-ds-dark-theme] [class*="_tableScroll"] thead th {
+body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) thead th {
   background: rgba(var(--bloom-morandi), 0.08);
 }
-[class*="_tableScroll"] tbody tr:nth-child(even) td {
+:is([class*="_tableScroll"], [class*="_tablePane"]) tbody tr:nth-child(even) td {
   background: rgba(var(--bloom-morandi), 0.03);
 }
-body[data-ds-dark-theme] [class*="_tableScroll"] tbody tr:nth-child(even) td {
+body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) tbody tr:nth-child(even) td {
   background: rgba(var(--bloom-morandi), 0.04);
 }
 

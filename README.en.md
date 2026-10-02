@@ -46,6 +46,37 @@
   even the waiting state breathes with the theme.
 </p>
 
+## 📌 Desktop-first — a note about the DSH Web UI
+
+**Short version: Bloom's next iterations target the DSH desktop app first. The Web UI is no longer
+actively supported and will fade out.**
+
+(0.16.0 and earlier were built against the DSH Web UI. The desktop-ready release is in the works and
+will ship as the next version.)
+
+DSH now ships a desktop app, and it is what I use every day. A theme's value lives on top of a UI —
+when the host changes its interface, the palettes and the glass have to follow — so that is where
+the work goes now.
+
+What this means for you:
+
+| You use | What happens |
+|---|---|
+| **Desktop app** | New palettes, new motion, visual fixes land here first. I use it daily, so when the UI moves, I move with it. |
+| **Web UI** | Stays working as-is, but I no longer adapt it to new changes in the DSH web front-end. If DSH reshuffles its DOM and something looks off there, I may not catch it in time. |
+
+Two clarifications, so you do not have to guess from the heading:
+
+- **Installed versions keep working.** What stops is "growing with the new UI", not "breaking what you have".
+- If the Web UI is your only option, please open an issue and describe your setup — real demand
+  changes my judgement. That is not a formality.
+
+> **What the previous version (0.16.0) changed**: running steps now take on the theme color (the sweep went from grey to the
+> three Bloom tones); the round-status spectrum is wired back up (it vanished silently when DSH was
+> renamed); the message-bubble glass edge that never drew in light mode is fixed; substring-selector
+> self-overlap ("box inside a box", the square black chip) is fixed; the pill background on running
+> steps is gone — state should not have to shout from a box.
+
 ## The gist
 
 A **glass + Morandi** theme for DeepSeek Harness.
@@ -87,18 +118,27 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 
 ## Install
 
+> **Desktop app**: install and update from the plugin manager inside the app. The desktop profile is
+> owned exclusively by the application — running `dsh plugin --profile desktop ...` from a shell fails
+> with `profile "desktop" is managed exclusively by the Electron application`. That is by design, not
+> a permissions problem.
+
+<details>
+<summary>Self-managed profile (CLI / server / web)</summary>
+
 > Only Node.js is required — **no global dsh install**; upstream's official entry is `npx @deepseek-ai/dsh`. If dsh is installed globally, use `dsh` instead.
 
 ```bash
-# 1) install into your profile (default: web)
-npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme
+# 1) install into your profile (use your own profile name)
+npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme
 
 # 2) wire it into the boot graph: add "dsh-bloom-theme" to the
-#    dsh.profile.bundles array in ~/.dsh/profiles/web/package.json
+#    dsh.profile.bundles array in ~/.dsh/profiles/<your-profile>/package.json
 
-# 3) restart DSH: stop it and rerun
-npx @deepseek-ai/dsh web
+# 3) restart DSH
 ```
+
+</details>
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
 **10 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge

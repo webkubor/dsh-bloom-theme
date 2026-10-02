@@ -86,3 +86,31 @@ export function detectChangedRuntime(prevRoot, curRoot, curFiles) {
   }
   return changed
 }
+
+/**
+ * 取 `npm pack --json` 的那一条结果 —— 两种 npm 大版本形状都认。
+ *
+ * **npm 11 → 12 的破坏性变更**：11 回数组 `[{ files: [...] }]`，
+ * 12 回以包名为键的对象 `{ "<name>": { files: [...] } }`。
+ * 原先写死 `JSON.parse(out)[0].files`，在 npm 12 上 `[0]` 是 undefined，
+ * 报出来的是 `Cannot read properties of undefined (reading 'files')`
+ * —— 从这句话完全看不出跟 npm 版本有任何关系。
+ *
+ * 2026-10-02 同一天咬了两次（museav-cli v3.9.2、museav-mcp 2.2.0）：各仓的
+ * publish workflow 里写着 `npm install -g npm@latest`，于是 npm 12 一发版，
+ * **所有仓的 CI 发版同时挂掉**，而本地（还是 npm 11）怎么跑都是绿的。
+ *
+ * 抽进 lib 是为了能测（门禁脚本顶层会跑 pack/连 registry，import 不进来）。
+ * 形状认不出时**抛一句能看懂的话** —— 这正是今天最缺的东西：当时那句
+ * `Cannot read properties of undefined` 让人以为是代码问题，实际是上游换了形状。
+ */
+export function packEntry(parsed) {
+  const entry = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0]
+  if (!entry || !Array.isArray(entry.files)) {
+    throw new Error(
+      `npm pack --json 的返回形状认不出（顶层是 ${Array.isArray(parsed) ? 'array' : typeof parsed}）` +
+      `，npm 可能又换了形状 —— 见 gate-lib.mjs 的 packEntry 注释`,
+    )
+  }
+  return entry
+}

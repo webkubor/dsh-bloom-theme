@@ -31,7 +31,7 @@ import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { createHash } from 'node:crypto'
-import { EXCLUDE, isRuntime, collectAllFiles, detectChangedRuntime } from './gate-lib.mjs'
+import { EXCLUDE, isRuntime, collectAllFiles, detectChangedRuntime, packEntry } from './gate-lib.mjs'
 
 const GATE_VERSION = 1
 
@@ -48,7 +48,7 @@ try {
   const out = execFileSync('npm', ['pack', '--dry-run', '--json'], {
     cwd: pkgRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit']
   })
-  packFiles = JSON.parse(out)[0].files.map(f => f.path)
+  packFiles = packEntry(JSON.parse(out)).files.map(f => f.path)
 } catch (err) {
   console.error('[prepublish-gate] npm pack --dry-run 失败:', err.message)
   process.exit(2)

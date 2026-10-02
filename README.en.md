@@ -182,7 +182,7 @@ npm install
 npm run typecheck    # tsc --noEmit, full type check
 npm run build        # typecheck → tsc emits lib/index.js → esbuild emits lib/client.js
 npm run deploy       # one-click deploy to local DSH (sync-version → build → rsync)
-npm run preview      # deploy + open http://127.0.0.1:3080
+npm run preview      # deploy to desktop-local (the desktop host is an app, not a browser tab)
 npm run dev          # build + watch (recompile+deploy on src change)
 npm run package      # one-click package (npm pack → .tgz)
 npm run check        # 6 static gates + contrast-guard (runs on every commit)
@@ -209,7 +209,7 @@ part of the publish path. See [CONTRIBUTING](./CONTRIBUTING.md).
 ## FAQ
 
 **Theme not applying?** Hard-refresh once (`Cmd/Ctrl + Shift + R`). If the page says `Failed to load plugins`,
-the client failed to register — re-run `npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme` or upgrade to the latest version.
+the client failed to register — re-run `npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme` or upgrade to the latest version.
 
 **Can I customize colors?** For now you pick a whole palette via variants; per-color customization is on the roadmap.
 

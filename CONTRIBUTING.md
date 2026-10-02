@@ -160,7 +160,7 @@ Release 页是给人看的 —— 人要看到这一版长什么样。
 
 发完版（tag 已打、npm 已发）补这一段，放在自动 changelog **上面**：
 
-1. **拍图**：ego-browser 开 `http://127.0.0.1:3080`，至少三张 ——
+1. **拍图**：ego-browser 开 `http://127.0.0.1:19387`（宿主＝桌面端 app），至少三张 ——
    整页深色、整页浅色、以及这一版真正改动的那块（面板/输入卡/侧栏，按需裁剪）。
    变体统一用 mist 雾蓝，跟 README 对齐；换变体是另一回事，别混在同一张里。
 
@@ -224,8 +224,8 @@ git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时
 所以有一个浏览器端脚本补这一层：
 
 ```bash
-npm run deploy   # 先部署到 web profile
-# 然后在 ego-browser 里打开 http://127.0.0.1:3080，注入并运行：
+npm run deploy   # 先部署到 desktop-local（桌面端由 app 独占托管，CLI 装不进 desktop）
+# 然后在 ego-browser 里打开 http://127.0.0.1:19387，注入并运行：
 #   scripts/visual-audit.browser.js  →  window.__bloomAudit()
 ```
 

@@ -26,7 +26,7 @@
  *
  *   ego-browser nodejs <<'EOF'
  *   await useOrCreateTaskSpace('bloom visual audit')
- *   await openOrReuseTab('http://127.0.0.1:3080', { wait: true })
+ *   await openOrReuseTab('http://127.0.0.1:19387', { wait: true })  // 宿主＝桌面端 app
  *   await js(require('fs').readFileSync('scripts/visual-audit.browser.js','utf8'))
  *   cliLog(JSON.stringify(await js('window.__bloomAudit()'), null, 2))
  *   EOF

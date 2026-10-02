@@ -190,7 +190,7 @@ npm install
 npm run typecheck    # tsc --noEmit，全量类型检查
 npm run build        # typecheck → tsc 出 lib/index.js → esbuild 出 lib/client.js
 npm run deploy       # 一键部署到本机 DSH（sync-version → build → rsync）
-npm run preview      # 部署并打开 http://127.0.0.1:3080
+npm run preview      # 部署到 desktop-local（桌面端是 app 不是浏览器，没有可 open 的 URL）
 npm run dev          # build + watch（改 src 自动编译+部署）
 npm run package      # 一键打包（npm pack → .tgz）
 npm run check        # 6 组静态闸门 + contrast-guard（每次提交都跑）
@@ -247,7 +247,8 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 一行装齐（只需 Node.js），装完重启 DSH 即可：
 
 ```bash
-npx -y @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme @dsh-plugins/dsh-llm-hub @dsh-plugins/dsh-user-mirror @dsh-plugins/dsh-env-inspector && node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/web/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
+PROFILE=<你的 profile>
+npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub @dsh-plugins/dsh-user-mirror @dsh-plugins/dsh-env-inspector && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
 ```
 
 ---

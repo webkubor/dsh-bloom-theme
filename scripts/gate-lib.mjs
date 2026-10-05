@@ -105,10 +105,20 @@ export function detectChangedRuntime(prevRoot, curRoot, curFiles) {
  * `Cannot read properties of undefined` 让人以为是代码问题，实际是上游换了形状。
  */
 export function packEntry(parsed) {
-  const entry = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0]
+  // 形状先记下来再判空：报错里要能看出 npm 回了什么，而不是只说「认不出」。
+  const shape = Array.isArray(parsed) ? 'array' : parsed === null ? 'null' : typeof parsed
+  // 先判空再 Object.values —— 否则 parsed 为 null/undefined 时
+  // Object.values 先抛「Cannot convert undefined or null to object」，
+  // 又回到那个「看不出是 npm 换了形状」的老问题上。
+  let entry
+  if (Array.isArray(parsed)) {
+    entry = parsed[0]
+  } else if (parsed && typeof parsed === 'object') {
+    entry = Object.values(parsed)[0]
+  }
   if (!entry || !Array.isArray(entry.files)) {
     throw new Error(
-      `npm pack --json 的返回形状认不出（顶层是 ${Array.isArray(parsed) ? 'array' : typeof parsed}）` +
+      `npm pack --json 的返回形状认不出（顶层是 ${shape}）` +
       `，npm 可能又换了形状 —— 见 gate-lib.mjs 的 packEntry 注释`,
     )
   }

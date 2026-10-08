@@ -95,9 +95,17 @@ export let dshLatestVersion: string | null = null
 /** 最近一次检查的失败原因（null = 没失败）。面板直接显示它，不再静默。 */
 export let dshCheckError: string | null = null
 
-/** 桌面壳那边已经查到的状态（available / error），只问一次。 */
+/** 桌面壳那边已经查到的状态（available / error）。 */
 let desktopStatus: DesktopUpdateStatus | null = null
 let desktopStatusAsked = false
+/** 已排出的延迟重试次数（有界，避免开面板时无限轮询宿主）。 */
+let desktopStatusPolls = 0
+/** 挂起的重试定时器 —— 拿到终态时一次清空。 */
+const pendingPollTimers = new Set<ReturnType<typeof setTimeout>>()
+
+/** 延迟重试：间隔与次数。壳查更新要联网，1.5s 一次、最多 4 次 ≈ 6s 窗口。 */
+const DESKTOP_STATUS_POLL_MS = 1500
+const DESKTOP_STATUS_POLLS = 4
 
 export let dshCheckPromise: Promise<void> | null = null
 
@@ -381,11 +389,29 @@ export function renderDshUpdate() {
         // 只有拿到**终态**（available / error）才记成「问过了」。idle / checking
         // 这类过渡相位返回 null —— 若就此把开关锁死，之后用户点「检查更新」
         // 拉起桌面端面板、等它查完，这行永远等不到结果（Codex PR #41 P2）。
-        if (s) { desktopStatus = s; renderDshUpdate() }
-        else desktopStatusAsked = false
+        if (s) {
+          desktopStatus = s
+          // 终态到手就停掉重试，别让定时器在面板关着时空转。
+          for (const timer of pendingPollTimers) clearTimeout(timer)
+          pendingPollTimers.clear()
+          renderDshUpdate()
+        } else {
+          desktopStatusAsked = false
+        }
       })
     }
-    if (desktopStatus?.phase === 'available') {
+    // 过渡相位不能只问一次：用户点「检查更新」后壳要花时间查，此时读到的是
+    // idle / checking，而且**没有任何东西会再去问** —— 之前显示过的 available
+    // 反而被清空，这行就永远停在「由桌面端检查」（Cursor PR #41 P2）。
+    // 排一次有界的延迟重试：拿到终态就停，最多 DESKTOP_STATUS_POLLS 次。
+    if (desktopStatusPolls < DESKTOP_STATUS_POLLS) {
+      const timer = setTimeout(() => {
+        desktopStatusPolls += 1
+        desktopStatusAsked = false
+        renderDshUpdate()
+      }, DESKTOP_STATUS_POLL_MS)
+      pendingPollTimers.add(timer)
+    }    if (desktopStatus?.phase === 'available') {
       latEl.textContent = desktopStatus.version || '有新版'
       stEl.textContent = '桌面端有可用更新'
       stEl.setAttribute('data-state', 'update')
@@ -486,10 +512,13 @@ export function renderDshUpdate() {
         liveRuntime.requestUpdateCheck?.()
         btnRefresh.disabled = liveRuntime.requestUpdateCheck == null
         btnRefresh.textContent = '检查更新'
-        // 用户刚让桌面端去查了 —— 清掉「已经问过」的记号，让下一次 render
-        // 重新读一次桥，把壳查到的结果带回来（否则这一行永远停在「由桌面端检查」）。
+        // 用户刚让桌面端去查了 —— 清掉「已经问过」的记号和旧结果，让重试窗口
+        // 重新开始，好把壳查到的结果带回来（否则这一行永远停在「由桌面端检查」）。
+        for (const timer of pendingPollTimers) clearTimeout(timer)
+        pendingPollTimers.clear()
         desktopStatus = null
         desktopStatusAsked = false
+        desktopStatusPolls = 0
         renderDshUpdate()
         return
       }

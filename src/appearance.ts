@@ -85,10 +85,20 @@ export function setMode(mode: AppearanceMode): void {
   try { localStorage.setItem(BLOOM_MODE_KEY, mode) } catch {}
 }
 
-/** 启动时重放持久化的深浅模式；system 模式下监听 OS 偏好变化。 */
+/**
+ * 启动时重放持久化的深浅模式；system 模式下监听 OS 偏好变化。
+ *
+ * ⚠️ 三种模式**都要** applyMode，包括 system —— system 不是「什么都不做」，
+ * 它是「读当前 OS 偏好落到 body 上」，那正是它需要执行的那一步。
+ * 曾经写成 `if (mode !== 'system') applyMode(mode)`，于是：
+ * 用户点「跟随系统」→ 存 system → 重启后从没应用过 OS 偏好，菜单里
+ * 「跟随系统」显示选中，实际却是 DSH 恢复的旧值；而 matchMedia 只在
+ * **之后**偏好变化时才触发，所以整个会话都跟错。
+ * 首次安装（无存档，readStoredMode 回落 system）同样中招。
+ * Codex PR #41 / Cursor bugbot 各自独立报了这条（P2）。
+ */
 export function initAppearanceSync(): void {
-  const mode = readStoredMode()
-  if (mode !== 'system') applyMode(mode)
+  applyMode(readStoredMode())
   // "跟随系统"下 OS 偏好变了要跟着变
   const mq = window.matchMedia('(prefers-color-scheme: dark)')
   mq.addEventListener('change', () => {

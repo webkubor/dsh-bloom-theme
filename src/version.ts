@@ -377,7 +377,13 @@ export function renderDshUpdate() {
     // 问不到就说明白"这格由桌面端管"，而不是留一句没人解释的「点击 ↻ 检查」。
     if (!desktopStatusAsked) {
       desktopStatusAsked = true
-      void readDesktopUpdateStatus().then((s) => { if (s) { desktopStatus = s; renderDshUpdate() } })
+      void readDesktopUpdateStatus().then((s) => {
+        // 只有拿到**终态**（available / error）才记成「问过了」。idle / checking
+        // 这类过渡相位返回 null —— 若就此把开关锁死，之后用户点「检查更新」
+        // 拉起桌面端面板、等它查完，这行永远等不到结果（Codex PR #41 P2）。
+        if (s) { desktopStatus = s; renderDshUpdate() }
+        else desktopStatusAsked = false
+      })
     }
     if (desktopStatus?.phase === 'available') {
       latEl.textContent = desktopStatus.version || '有新版'
@@ -480,6 +486,10 @@ export function renderDshUpdate() {
         liveRuntime.requestUpdateCheck?.()
         btnRefresh.disabled = liveRuntime.requestUpdateCheck == null
         btnRefresh.textContent = '检查更新'
+        // 用户刚让桌面端去查了 —— 清掉「已经问过」的记号，让下一次 render
+        // 重新读一次桥，把壳查到的结果带回来（否则这一行永远停在「由桌面端检查」）。
+        desktopStatus = null
+        desktopStatusAsked = false
         renderDshUpdate()
         return
       }

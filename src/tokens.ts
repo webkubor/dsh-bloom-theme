@@ -38,6 +38,25 @@ export function bloomTokens(p, dark) {
   --bloom-motion-1: ${motion[0]};
   --bloom-motion-2: ${motion[1]};
   --bloom-motion-3: ${motion[2]};
+  /* ── 「深度求索中，用时 15 分 26 秒」那行（DSh 0.2.0）─────────────────
+   * DSH 把它从「跑完后那行」（button[data-turn-process]）拆成了独立的
+   * RunningStatus（div[data-chat-running]），并**改用两个专属 token** 取色：
+   *   color: var(--dsw-alias-label-deep-diving)
+   *   --dsw-alias-label-shimmer: var(--dsw-alias-label-deep-diving-shimmer)
+   * 而这两个 token 在 DSH 里硬绑 deepseek-500 混 blue-950 —— 品牌蓝。
+   * 所以不管切哪个变体，那行永远是蓝的（owner 2026-10-08 反馈）。
+   *
+   * 为什么不加选择器去盖：.running 的 color 是 DSH 自己声明的，覆写要写
+   * 组件规则 + !important（会撞 check.mjs 的 IMPORTANT_BUDGET 棘轮）。
+   * 而这两个是**语义 token** —— 接管 token 正是本项目对 DSH 的既有做法
+   * （见下面 sharedDswTokens 里几十个 --dsw-alias-* 覆盖），零 !important。
+   *
+   * 取色从 motion 谱来：它本来就是「随变体变的多色谱」，与渐变扫光同一套。
+   * shimmer（伴生的高光层）用 motion[2] 压淡，两者都跟着变体走。
+   * 透明度只压一点点 —— 原生那两个是 70% 混深蓝、底更暗；直接用 motion 谱
+   * 的实色在浅色卡上更实，正文级可读性反而更好。 */
+  --dsw-alias-label-deep-diving: color-mix(in oklch, ${motion[1]}, transparent ${dark ? 8 : 6}%);
+  --dsw-alias-label-deep-diving-shimmer: color-mix(in oklch, ${motion[2]}, transparent ${dark ? 45 : 35}%);
   /* v0.9.0：落霞流线光带色（v0.12.x 前叫「极光」） —— 从 motion 谱取色，混透明度降饱和后做丝带渐变。
      透明度低是故意的：流线是大尺度、低饱和的氛围效果，不是主色块。
      aurora 变体 v0.12.x 换色后 motion 谱是 78/55/35 → 金→橙→珊瑚，
@@ -272,8 +291,15 @@ ${borderStack(p, false)}
   --dsw-alias-button-tool-bar-hover: ${mix(txL, 95)};
   --dsw-alias-button-floating-fill: ${sfL};
   --dsw-alias-button-floating-hover: ${sf2L};
-  --dsw-alias-button-info-fill: ${mix(aL, 90)};
-  --dsw-alias-button-info-hover: ${mix(aL, 84)};
+  /* info 是**实心按钮**的填充：DSH 原生值是品牌色 deepseek-400/500（实心），
+     composer 发送键的图标直接写死 color:#fff。曾经写成 mix(a,90) —— 那是
+     10% 不透明度（palette.mix 的百分比给的是 transparent 那一份），于是实心
+     按钮变成一层 10% 的淡染 + 白图标 = 1.24:1，整颗按钮消失在卡片里
+     （2026-10-08 用户实拍：实测填充 rgb(232,232,215)，截图 rgb(231,233,218)）。
+     另两处消费者（模型下拉选中行图标、提问卡 badge 文字）也拿它当实色用，
+     同样被洗没了。语义就是实心色，这里改回实心，glyph 由 component.ts 补。 */
+  --dsw-alias-button-info-fill: ${aL};
+  --dsw-alias-button-info-hover: color-mix(in oklch, ${aL}, black 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(aL, 92)};
   --dsw-alias-button-ghost-active-hover: ${mix(aL, 88)};
   --dsw-alias-button-ghost-active-border: ${mix(aL, 78)};
@@ -349,8 +375,9 @@ ${borderStack(p, true)}
   --dsw-alias-button-tool-bar-hover: ${mix(txD, 92)};
   --dsw-alias-button-floating-fill: ${sfD};
   --dsw-alias-button-floating-hover: ${sf2D};
-  --dsw-alias-button-info-fill: ${mix(aD, 86)};
-  --dsw-alias-button-info-hover: ${mix(aD, 78)};
+  /* 见亮色段说明：实心色，不是 10% 淡染 */
+  --dsw-alias-button-info-fill: ${aD};
+  --dsw-alias-button-info-hover: color-mix(in oklch, ${aD}, white 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(aD, 88)};
   --dsw-alias-button-ghost-active-hover: ${mix(aD, 82)};
   --dsw-alias-button-ghost-active-border: ${mix(aD, 70)};
@@ -419,8 +446,9 @@ ${sel} {${bloomTokens(p, dark)}${sharedDswTokens(p, dark)}
   --dsw-alias-button-primary-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
   /* 见亮色段说明：fill 上的文字色，与 fill 反向（#16） */
   --dsw-alias-button-primary-dimmed: ${bg};
-  --dsw-alias-button-info-fill: ${mix(a, dark ? 86 : 90)};
-  --dsw-alias-button-info-hover: ${mix(a, dark ? 78 : 84)};
+  /* 见 mist 段：info 是实心按钮填充，不是 10% 淡染（2026-10-08 发送键消失） */
+  --dsw-alias-button-info-fill: ${a};
+  --dsw-alias-button-info-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(a, dark ? 88 : 92)};
   --dsw-alias-button-ghost-active-hover: ${mix(a, dark ? 82 : 88)};
   --dsw-alias-button-ghost-active-border: ${mix(a, dark ? 70 : 78)};

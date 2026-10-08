@@ -9,7 +9,7 @@ import { findSwitcherHost, injectCSS, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
-import { currentIsDark, hasSettingsEntry, setMode, type AppearanceMode } from './appearance.js'
+import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
 import { enableFloatingDrag, clearFloatingPos } from './drag.js'
 import { VARIANTS } from './palette.js'
 
@@ -194,24 +194,20 @@ export function closeMenu(root: HTMLElement) {
  *
  * 每次打开菜单都重读，而不是缓存：用户可能刚从设置面板里改过，
  * 也可能「跟随系统」下系统主题变了 —— 缓存必然对不上。
- * 宿主按钮找不到（DSH 换了实现）就整行隐藏，宁可没有也不要一个点不动的控件。
+ *
+ * 不再看 hasSettingsEntry —— setMode 已经改成直接切 body 属性（零弹窗），
+ * 不再依赖设置面板里的宿主按钮，这行永远可点。
  */
 function syncAppearanceRow(el: HTMLElement) {
   const row = el.querySelector<HTMLElement>('.dsh-bloom-appearance')
   if (!row) return
-  // 显隐只看「有没有设置入口」—— 宿主那三个按钮跟随面板生灭，平时不在 DOM 里，
-  // 拿它们当判据这行会永远隐藏（2026-09-10 走过这个弯路）。
   const sec = el.querySelector<HTMLElement>('[data-mode-section]')
-  const ok = hasSettingsEntry()
-  row.hidden = !ok
-  if (sec) sec.hidden = !ok      // 标题跟着内容走，不留一个空的「模式」
-  if (!ok) return
-  // 选中态同理：面板关着读不到 selected 类，用 body 标记推断深浅。
-  // 「跟随系统」无法从 body 反推，所以它不标选中 —— 宁可不标，也不标错。
-  const dark = currentIsDark()
+  row.hidden = false
+  if (sec) sec.hidden = false
+  // 用持久化的模式标选中态（system 也能标），而不是从 body 反推深浅。
+  const stored = readStoredMode()
   for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-appearance__btn'))) {
-    const m = btn.dataset.mode as AppearanceMode
-    const on = (m === 'dark' && dark) || (m === 'light' && !dark)
+    const on = btn.dataset.mode === stored
     btn.dataset.active = String(on)
     btn.setAttribute('aria-pressed', String(on))
   }
@@ -254,9 +250,9 @@ export function buildSwitcherEl(initialVariant) {
     }
     const modeBtn = target.closest<HTMLElement>('.dsh-bloom-appearance__btn')
     if (modeBtn) {
-      // 代点宿主按钮；点不动就把这行藏起来，不给一个按了没反应的控件
-      // 切换要开合宿主面板（异步），完事再回读 body 标记刷新选中态
-      void setMode(modeBtn.dataset.mode as AppearanceMode).then(() => syncAppearanceRow(el))
+      // 直接切 body 属性 + 持久化，零弹窗。同步完成，立刻刷新选中态。
+      setMode(modeBtn.dataset.mode as AppearanceMode)
+      syncAppearanceRow(el)
       return
     }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')

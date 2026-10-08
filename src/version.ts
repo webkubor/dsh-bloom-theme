@@ -403,15 +403,22 @@ export function renderDshUpdate() {
     // 过渡相位不能只问一次：用户点「检查更新」后壳要花时间查，此时读到的是
     // idle / checking，而且**没有任何东西会再去问** —— 之前显示过的 available
     // 反而被清空，这行就永远停在「由桌面端检查」（Cursor PR #41 P2）。
-    // 排一次有界的延迟重试：拿到终态就停，最多 DESKTOP_STATUS_POLLS 次。
-    if (desktopStatusPolls < DESKTOP_STATUS_POLLS) {
+    //
+    // 三个条件缺一不可，否则 render 多次就叠多个定时器、几秒内烧光 4 次配额：
+    //   · 已有挂起定时器 → 不重复排（同一时刻只允许一个在等）
+    //   · 已经拿到终态 → 不再排（available / error 是最终答案）
+    //   · 配额未用尽   → 才排下一次
+    if (desktopStatus === null && pendingPollTimers.size === 0 && desktopStatusPolls < DESKTOP_STATUS_POLLS) {
       const timer = setTimeout(() => {
+        pendingPollTimers.delete(timer)
         desktopStatusPolls += 1
         desktopStatusAsked = false
         renderDshUpdate()
       }, DESKTOP_STATUS_POLL_MS)
       pendingPollTimers.add(timer)
-    }    if (desktopStatus?.phase === 'available') {
+    }
+
+    if (desktopStatus?.phase === 'available') {
       latEl.textContent = desktopStatus.version || '有新版'
       stEl.textContent = '桌面端有可用更新'
       stEl.setAttribute('data-state', 'update')

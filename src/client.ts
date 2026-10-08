@@ -35,6 +35,7 @@ import { buildBloomCSS } from './tokens.js'
 import { COMPONENT_CSS } from './css/component.js'
 import { GLASS_CSS } from './css/glass.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
+import { initAppearanceSync } from './appearance.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { checkUpdate } from './version.js'
 
@@ -76,6 +77,7 @@ function watchCursorGlow() {
   injectCSS(GLASS_CSS, 'glass.css')
   const boot = () => {
     document.body.dataset.bloomVariant = variant
+    initAppearanceSync()
     injectSwitcher(variant)
     // header 通常晚于脚本渲染 —— 交给 observer 在宿主就绪后迁进去
     watchSwitcher(variant)
@@ -339,6 +341,7 @@ window.__ModuleLoader__.load({
         injectCSS(GLASS_CSS, 'glass.css')
       }
       document.body.dataset.bloomVariant = variant
+      initAppearanceSync()   // 重放持久化的深浅模式（零弹窗切换的持久化侧）
       injectSwitcher(variant)
       watchSwitcher(variant)
       watchThinkTags()

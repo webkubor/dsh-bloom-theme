@@ -13,6 +13,19 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.2...v0.17.3) (2026-10-08)
+
+
+### 🐛 Bug Fixes
+
+* DSH 0.2.0 三处适配 —— 设置入口漂移 / 发送键 token / 版本桥换名 ([#41](https://github.com/webkubor/dsh-bloom-theme/issues/41)) ([8a9b667](https://github.com/webkubor/dsh-bloom-theme/commit/8a9b66703d09a16a52337a9925e6cf060b57e704))
+* **preflight:** 变体数判据别钉死 —— eight 之后没人跟着改成 ten ([db9656b](https://github.com/webkubor/dsh-bloom-theme/commit/db9656b6fed7f318dfd1614dcc5051f1c4961971))
+
+
+### 📝 Documentation
+
+* **release:** 0.17.3 配图 —— 整页明暗 + 发送键修复特写 ([47c1765](https://github.com/webkubor/dsh-bloom-theme/commit/47c1765405c55527677e75e672594b1eec02590b))
+
 ## [0.17.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.1...v0.17.2) (2026-10-02)
 
 

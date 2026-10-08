@@ -92,11 +92,21 @@ export async function checkUpdate() {
 /* ── DSH 升级检查（宿主管理器优先；否则按当前预发布通道查 npm dist-tag）── */
 export let dshLatestVersion: string | null = null
 
+/** 最近一次检查的失败原因（null = 没失败）。面板直接显示它，不再静默。 */
+export let dshCheckError: string | null = null
+
+/** 桌面壳那边已经查到的状态（available / error），只问一次。 */
+let desktopStatus: DesktopUpdateStatus | null = null
+let desktopStatusAsked = false
+
 export let dshCheckPromise: Promise<void> | null = null
 
 export const DSH_CACHE_KEY = 'bloom-dsh-check-v2'
 
 export const DSH_CACHE_TTL_MS = 6 * 60 * 60 * 1000 // 6h
+
+/** 单次 registry 请求的上限。见 checkDshLatest 里为什么必须有它。 */
+export const DSH_CHECK_TIMEOUT_MS = 8 * 1000
 
 type DshLocalBridge = {
   runtimeVersion?: string
@@ -104,6 +114,27 @@ type DshLocalBridge = {
   updateMode?: string
   requestUpdateCheck?: () => void
 }
+
+/**
+ * DSH 0.2.0 的桌面壳桥（preload 里 contextBridge.exposeInMainWorld("dshDesktop", …)）。
+ *
+ * ⚠️ 0.2.0 换过桥：老代码只认 `__DSH_LOCAL__`，而现在的包连这个字符串都没有了
+ * （preload 只暴露 dshDesktop / dshDesktopBoot / __DSH_LOCALE__）。后果是
+ * `updateManagedBy` 恒为 null，桌面端被当成浏览器：Bloom 放弃宿主更新通道，
+ * 改去 npm 查 `@deepseek-ai/dsh` —— 而打包的 app 根本不靠 npm 更新，那条路
+ * 又常年查不出东西，于是面板上只剩一句没解释的「点击 ↻ 检查」（2026-10-08 实测）。
+ *
+ * 两个都认：老构建（Web UI / 旧壳）走 __DSH_LOCAL__，新壳走 dshDesktop.updates。
+ */
+type DshDesktopBridge = {
+  updates?: {
+    status?: () => Promise<{ phase?: unknown; version?: unknown }>
+    open?: () => Promise<unknown> | unknown
+  }
+}
+
+/** 宿主更新状态里我们只认这两个相位（其余一律按「由桌面端检查」显示，不猜）。 */
+type DesktopUpdateStatus = { phase: string; version: string | null }
 
 export type DshRuntimeInfo = {
   currentVersion: string | null
@@ -165,6 +196,8 @@ export function readDshRuntimeInfo(): DshRuntimeInfo {
   try {
     const hostWindow = window as any
     const bridge = (hostWindow.__DSH_LOCAL__ || {}) as DshLocalBridge
+    const desktop = (hostWindow.dshDesktop || {}) as DshDesktopBridge
+    const updates = desktop.updates
     const boot = hostWindow.__DSH_BOOT__ || {}
     const dataVersion = document.documentElement?.dataset?.dshRuntimeVersion
     // host 半读到的排第一 —— 它直接来自 @deepseek-ai/dsh/package.json，是唯一权威来源；
@@ -175,9 +208,12 @@ export function readDshRuntimeInfo(): DshRuntimeInfo {
     const buildRev = typeof boot.rev === 'string' && /^[0-9a-f]{7,40}$/i.test(boot.rev)
       ? boot.rev.slice(0, 7)
       : null
+    // 桌面壳（0.2.0 的 dshDesktop.updates.open）存在即视为「更新归壳管」——
+    // 判据是**能力**（能不能把检查交给宿主），不是某个字符串常量，那个换过名了。
+    const hasDesktopUpdater = typeof updates?.open === 'function'
     const updateManagedBy = typeof bridge.updateManagedBy === 'string' && bridge.updateManagedBy.trim()
       ? bridge.updateManagedBy.trim()
-      : null
+      : (hasDesktopUpdater ? '桌面端' : null)
     return {
       currentVersion,
       buildRev,
@@ -185,7 +221,7 @@ export function readDshRuntimeInfo(): DshRuntimeInfo {
       updateMode: typeof bridge.updateMode === 'string' ? bridge.updateMode : null,
       requestUpdateCheck: typeof bridge.requestUpdateCheck === 'function'
         ? bridge.requestUpdateCheck.bind(bridge)
-        : null,
+        : (hasDesktopUpdater ? () => { void updates?.open?.() } : null),
     }
   } catch {
     return {
@@ -195,6 +231,28 @@ export function readDshRuntimeInfo(): DshRuntimeInfo {
       updateMode: null,
       requestUpdateCheck: null,
     }
+  }
+}
+
+/**
+ * 问桌面壳一次「它自己查到了什么」。
+ *
+ * 只读两个相位：available（壳已经查到有新版，带版本号）和 error（壳那边失败）。
+ * 其余（idle / checking / ready…）一律不猜，按「由桌面端检查」显示 ——
+ * 猜错一个相位比不显示更糟：这一格是用户判断"要不要更新"的唯一依据。
+ * 读不到（老壳 / 抛错）就返回 null，调用方退回默认文案。
+ */
+export async function readDesktopUpdateStatus(): Promise<DesktopUpdateStatus | null> {
+  try {
+    const desktop = (window as any).dshDesktop as DshDesktopBridge | undefined
+    const status = desktop?.updates?.status
+    if (typeof status !== 'function') return null
+    const raw = await status()
+    const phase = typeof raw?.phase === 'string' ? raw.phase : ''
+    if (phase !== 'available' && phase !== 'error') return null
+    return { phase, version: typeof raw?.version === 'string' ? raw.version : null }
+  } catch {
+    return null
   }
 }
 
@@ -241,16 +299,20 @@ export async function checkDshLatest(force = false): Promise<void> {
   }
   if (dshCheckPromise) return dshCheckPromise
   dshCheckPromise = (async () => {
+    dshCheckError = null
+    // 超时是必须的：不带 signal 的 fetch 在被代理/黑洞的链路上会**永远挂着**，
+    // 面板就停在初始的「检查中…」，看起来像"没触发"。8s 够 165KB 的 packument。
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), DSH_CHECK_TIMEOUT_MS)
     try {
       const r = await fetch(
         // ⚠️ 不能用 registry 的 /-/package/<pkg>/dist-tags 端点：它**不带 CORS 头**，
         // 浏览器里直接 `Failed to fetch`（2026-09-10 在 DSH 页面实测；同域下
-        // /<pkg>/latest 与 /<pkg> 都正常）。而 checkDshLatest 是静默失败的，
-        // 坏了不会报错，只会永远停在「点击 ↻ 检查」。
+        // /<pkg>/latest 与 /<pkg> 都正常）。
         // 改用简版 packument：同一条能过 CORS 的路径，加 install-v1 的 Accept
         // 头把响应从 119KB 压到 94KB，dist-tags 就在里面。
         'https://registry.npmjs.org/@deepseek-ai/dsh',
-        { cache: 'no-store', headers: { Accept: 'application/vnd.npm.install-v1+json' } },
+        { cache: 'no-store', signal: controller.signal, headers: { Accept: 'application/vnd.npm.install-v1+json' } },
       )
       if (r.ok) {
         const packument = await r.json()
@@ -258,6 +320,7 @@ export async function checkDshLatest(force = false): Promise<void> {
         const tag = selectDshDistTag(distTags, runtime.currentVersion)
         const selected = tag ? distTags?.[tag] : null
         dshLatestVersion = typeof selected === 'string' ? selected : null
+        if (dshLatestVersion === null) dshCheckError = `registry 无可用通道（tags: ${Object.keys(distTags).join(',') || '无'}）`
         try {
           sessionStorage.setItem(DSH_CACHE_KEY, JSON.stringify({
             at: Date.now(),
@@ -268,10 +331,17 @@ export async function checkDshLatest(force = false): Promise<void> {
         } catch {}
       } else {
         dshLatestVersion = null
+        dshCheckError = `HTTP ${r.status} ${r.statusText}`.trim()
       }
-    } catch {
+    } catch (err) {
       dshLatestVersion = null
+      // 失败必须留痕。原来的 catch 是空的，面板永远停在「点击 ↻ 检查」——
+      // 2026-10-08 用户问「为啥版本检查不出来」，面板给不出任何线索，只能猜。
+      dshCheckError = err instanceof Error
+        ? (err.name === 'AbortError' ? `超时 ${DSH_CHECK_TIMEOUT_MS / 1000}s` : `${err.name}: ${err.message}`)
+        : String(err)
     } finally {
+      clearTimeout(timer)
       dshCheckPromise = null
     }
     renderDshUpdate()
@@ -303,9 +373,25 @@ export function renderDshUpdate() {
 
   if (runtime.updateManagedBy) {
     root.dataset.updateManagedBy = runtime.updateManagedBy
-    latEl.textContent = '由桌面端检查'
-    stEl.textContent = `${runtime.updateManagedBy} 管理更新`
-    stEl.setAttribute('data-state', 'managed')
+    // 桌面壳自己知道有没有新版（它有独立的更新通道）。问一次：问到了就显示壳的答案，
+    // 问不到就说明白"这格由桌面端管"，而不是留一句没人解释的「点击 ↻ 检查」。
+    if (!desktopStatusAsked) {
+      desktopStatusAsked = true
+      void readDesktopUpdateStatus().then((s) => { if (s) { desktopStatus = s; renderDshUpdate() } })
+    }
+    if (desktopStatus?.phase === 'available') {
+      latEl.textContent = desktopStatus.version || '有新版'
+      stEl.textContent = '桌面端有可用更新'
+      stEl.setAttribute('data-state', 'update')
+    } else if (desktopStatus?.phase === 'error') {
+      latEl.textContent = '桌面端检查失败'
+      stEl.textContent = '点「检查更新」看详情'
+      stEl.setAttribute('data-state', 'err')
+    } else {
+      latEl.textContent = '由桌面端检查'
+      stEl.textContent = `${runtime.updateManagedBy} 管理更新`
+      stEl.setAttribute('data-state', 'managed')
+    }
     hintEl.hidden = true
     hintEl.textContent = ''
     if (btnRefresh) {
@@ -313,7 +399,7 @@ export function renderDshUpdate() {
       btnRefresh.disabled = runtime.requestUpdateCheck == null
       btnRefresh.textContent = '检查更新'
       btnRefresh.title = runtime.requestUpdateCheck
-        ? `由 ${runtime.updateManagedBy} 检查官方更新`
+        ? `打开 ${runtime.updateManagedBy} 的更新面板`
         : `请在 ${runtime.updateManagedBy} 中检查更新`
     }
     if (btnCopy) {
@@ -337,9 +423,19 @@ export function renderDshUpdate() {
     }
 
     if (dshLatestVersion == null) {
-      latEl.textContent = '点击 ↻ 检查'
-      stEl.removeAttribute('data-state')
-      stEl.textContent = ''
+      // 失败要说出来。原来的空 catch 让这一格永远停在「点击 ↻ 检查」——
+      // 用户和后来维护的人都无法区分"没触发"、"网络不通"、"registry 没有这个包"。
+      if (dshCheckError) {
+        latEl.textContent = '检查失败'
+        stEl.textContent = dshCheckError.length > 22 ? `${dshCheckError.slice(0, 22)}…` : dshCheckError
+        stEl.title = dshCheckError
+        stEl.setAttribute('data-state', 'err')
+      } else {
+        latEl.textContent = '点击 ↻ 检查'
+        stEl.removeAttribute('data-state')
+        stEl.removeAttribute('title')
+        stEl.textContent = ''
+      }
     } else if (!runtime.currentVersion) {
       // 浏览器半侧读不到 DSH 的本地版本号（它在 node_modules 的 package.json 里，
       // 而本主题按设计不引入 client↔node 桥 —— 见 src/index.ts 里 /bloom stats 的教训）。
@@ -349,6 +445,7 @@ export function renderDshUpdate() {
       stEl.textContent = '本地版本读不到'
       stEl.setAttribute('data-state', 'warn')
     } else {
+      stEl.removeAttribute('title')
       latEl.textContent = dshLatestVersion
       const comparison = cmpVersion(dshLatestVersion, runtime.currentVersion)
       if (comparison > 0) {

@@ -272,8 +272,15 @@ ${borderStack(p, false)}
   --dsw-alias-button-tool-bar-hover: ${mix(txL, 95)};
   --dsw-alias-button-floating-fill: ${sfL};
   --dsw-alias-button-floating-hover: ${sf2L};
-  --dsw-alias-button-info-fill: ${mix(aL, 90)};
-  --dsw-alias-button-info-hover: ${mix(aL, 84)};
+  /* info 是**实心按钮**的填充：DSH 原生值是品牌色 deepseek-400/500（实心），
+     composer 发送键的图标直接写死 color:#fff。曾经写成 mix(a,90) —— 那是
+     10% 不透明度（palette.mix 的百分比给的是 transparent 那一份），于是实心
+     按钮变成一层 10% 的淡染 + 白图标 = 1.24:1，整颗按钮消失在卡片里
+     （2026-10-08 用户实拍：实测填充 rgb(232,232,215)，截图 rgb(231,233,218)）。
+     另两处消费者（模型下拉选中行图标、提问卡 badge 文字）也拿它当实色用，
+     同样被洗没了。语义就是实心色，这里改回实心，glyph 由 component.ts 补。 */
+  --dsw-alias-button-info-fill: ${aL};
+  --dsw-alias-button-info-hover: color-mix(in oklch, ${aL}, black 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(aL, 92)};
   --dsw-alias-button-ghost-active-hover: ${mix(aL, 88)};
   --dsw-alias-button-ghost-active-border: ${mix(aL, 78)};
@@ -349,8 +356,9 @@ ${borderStack(p, true)}
   --dsw-alias-button-tool-bar-hover: ${mix(txD, 92)};
   --dsw-alias-button-floating-fill: ${sfD};
   --dsw-alias-button-floating-hover: ${sf2D};
-  --dsw-alias-button-info-fill: ${mix(aD, 86)};
-  --dsw-alias-button-info-hover: ${mix(aD, 78)};
+  /* 见亮色段说明：实心色，不是 10% 淡染 */
+  --dsw-alias-button-info-fill: ${aD};
+  --dsw-alias-button-info-hover: color-mix(in oklch, ${aD}, white 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(aD, 88)};
   --dsw-alias-button-ghost-active-hover: ${mix(aD, 82)};
   --dsw-alias-button-ghost-active-border: ${mix(aD, 70)};
@@ -419,8 +427,9 @@ ${sel} {${bloomTokens(p, dark)}${sharedDswTokens(p, dark)}
   --dsw-alias-button-primary-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
   /* 见亮色段说明：fill 上的文字色，与 fill 反向（#16） */
   --dsw-alias-button-primary-dimmed: ${bg};
-  --dsw-alias-button-info-fill: ${mix(a, dark ? 86 : 90)};
-  --dsw-alias-button-info-hover: ${mix(a, dark ? 78 : 84)};
+  /* 见 mist 段：info 是实心按钮填充，不是 10% 淡染（2026-10-08 发送键消失） */
+  --dsw-alias-button-info-fill: ${a};
+  --dsw-alias-button-info-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(a, dark ? 88 : 92)};
   --dsw-alias-button-ghost-active-hover: ${mix(a, dark ? 82 : 88)};
   --dsw-alias-button-ghost-active-border: ${mix(a, dark ? 70 : 78)};

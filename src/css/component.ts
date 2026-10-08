@@ -1019,14 +1019,27 @@ body[data-bloom-variant] [class*="_footerActions"] {
   box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
 
+/* ═══ composer 发送键（DSH .yhfFVG_primary）══
+ * DSH 给这颗按钮写死了 color:#fff —— 不是 token，主题改不到。info-fill 修回
+ * 实心 accent 之后，亮色是「浅底 + 白箭头」没问题，暗色就反了：accentD 是亮色，
+ * 白箭头浮在亮底上约 1.6:1。glyph 改用 primary-dimmed —— 那一对（fill × dimmed）
+ * 是色板按 WCAG 反推校准过的：亮色 dimmed=bgL 近白，暗色 dimmed=bgD 近黑。
+ * 顺带说明：早先 info-fill 写成 mix(a,90)（10% 不透明度）时这条也救不了 ——
+ * 实测填充 rgb(231,233,218) vs 白箭头 1.24:1，整颗按钮在卡片里看不见
+ * （2026-10-08 用户实拍）。根因在 token，已在 tokens.ts 改回实心。 */
+body[data-bloom-variant] button[class*="_primary"] {
+  color: var(--dsw-alias-button-primary-dimmed);
+}
+
 /* ═══ 禁用主按钮的图标可读性（2026-09-14 用户实拍「浅色下看不清」）══
- * DSH 禁用主按钮（空输入时的发送键等）的原生做法：fill 压到 10% + 整体再叠
- * opacity .4，但文字/图标仍用「fill 上的前景」label-primary-foreground ——
- * 那个 token 亮色语义就是白（static neutral-bluish-00）。白箭头浮在洗白的
- * 淡染底上，禁用态形同消失（禁用 bloom 样式实测原生同样如此，只是莫兰迪的
- * 淡底把它衬得更明显）。README 挂着 WCAG 徽章，这里修正：禁用态的底已经是
- * 近白的淡染，图标用正文字色（label-primary）才读得清，明暗自适应 ——
- * 暗色下两者同为亮色，行为不变，只有亮色被纠正。 */
+ * DSH 禁用主按钮（空输入时的发送键等）的做法是整体叠 opacity .4，图标仍是
+ * 「fill 上的前景」label-primary-foreground —— 那个 token 亮色语义就是白
+ * （static neutral-bluish-00）。禁用态的底已经被压成 40% 的淡染，白箭头浮在
+ * 上面等于没有（禁用 bloom 样式实测原生同样如此，只是莫兰迪的淡底把它衬得更
+ * 明显）。README 挂着 WCAG 徽章，这里修正：图标用正文字色（label-primary）
+ * 才读得清，明暗自适应 —— 暗色下两者同为亮色，行为不变，只有亮色被纠正。
+ * 特异度比上面那条高（多一个 :disabled），两条同时生效：启用态走 dimmed，
+ * 禁用态走正文字色。 */
 body[data-bloom-variant] button[class*="_primary"]:disabled {
   color: var(--dsw-alias-label-primary);
 }

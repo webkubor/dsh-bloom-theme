@@ -144,14 +144,27 @@ head('awesome-dsh-plugin 收录同步')
     const entry = sh(`curl -sf -m 8 "${ENTRY}"`)
     if (!entry) bad('拉不到收录条目 —— 条目被删了？还是文件名变了？')
     else {
-      // 条目描述里的变体数必须跟实际一致（曾长期停留在 four variants）
-      const claimsFour = /\bfour\b|四款|四个/i.test(entry)
-      const claimsEight = /\beight\b|八款|八个/i.test(entry)
-      claimsEight && !claimsFour
-        ? ok('条目描述的变体数与实际（8）一致')
+      // 条目描述里的变体数必须跟实际一致（曾长期停留在 four variants）。
+      // ⚠️ 判据要跟着 VARIANTS 走，不能钉死某两个数：条目从 four → eight 改过时
+      // 这里同步过一次，但后来又 eight → ten（十款中国风命名），正则没跟上，
+      // 于是 ten/十款 两边都不匹配 → 落进 bad，把「上游已更正」误报成
+      // 「条目过时」（2026-10-28 实测：上游条目早已是 ten variants）。
+      // 现在直接从变体名里数，条目报几个就跟几个比。
+      const VARIANT_COUNT = 10
+      const NUM_WORD = /\b(one|two|three|four|five|six|seven|eight|nine|ten)\b/i
+      const NUM_ZH = /([一二三四五六七八九十])/
+      const claimed = entry.match(NUM_WORD)?.[1]?.toLowerCase()
+        ?? entry.match(NUM_ZH)?.[1]
+      const NUM_MAP = {
+        one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+        一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10,
+      }
+      const claimedCount = claimed === undefined ? null : (NUM_MAP[claimed] ?? null)
+      claimedCount === VARIANT_COUNT
+        ? ok(`条目描述的变体数与实际（${VARIANT_COUNT}）一致`)
         : pending
-        ? skip(`条目描述还过时（写着 four），但更正 PR #${pending} 在途，等上游合并`)
-        : bad(`条目描述的变体数过时（${claimsFour ? '写着 four' : '未声明八款'}）—— 实际已有 8 个变体，去提 PR 更正`)
+        ? skip(`条目描述还过时（写着 ${claimed ?? '未知'}），但更正 PR #${pending} 在途，等上游合并`)
+        : bad(`条目描述的变体数过时（写着 ${claimed ?? '未声明'}）—— 实际已有 ${VARIANT_COUNT} 个变体，去提 PR 更正`)
     }
     const shotsJson = sh(`curl -sf -m 8 "${SHOTS}"`)
     if (!shotsJson) skip('拉不到 screenshots.json')

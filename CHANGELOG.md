@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.3...v0.17.4) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **install-copy:** 安装/升级文案不再指向已退役的 web profile ([27d7e24](https://github.com/webkubor/dsh-bloom-theme/commit/27d7e24d1fd6e70b8dc31c570032066f5e82403e))
+
 ## [0.17.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.2...v0.17.3) (2026-10-08)
 
 

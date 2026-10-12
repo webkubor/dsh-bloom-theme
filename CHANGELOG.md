@@ -13,6 +13,22 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.4...v0.17.5) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** auto-merge 改用 PR_PAT —— GITHUB_TOKEN 调不动这个 mutation ([f2f4762](https://github.com/webkubor/dsh-bloom-theme/commit/f2f4762de759dd7c6884db0e28dcd0c9c2f18de3))
+* **release:** auto-merge 的 head 过滤写错 + 让 release PR 自己重编产物 ([be2b423](https://github.com/webkubor/dsh-bloom-theme/commit/be2b423e7bf5dbb2865d2fa9fb4343a9bc36c348))
+* **release:** 去掉自拼的 remote URL —— 它覆盖掉 checkout 配好的凭据导致 404 ([8c85b67](https://github.com/webkubor/dsh-bloom-theme/commit/8c85b67096c376eb706011047288d27949dac81c))
+* **release:** 启用 auto-merge 改走 GraphQL —— REST 里没有这个端点 ([0b80199](https://github.com/webkubor/dsh-bloom-theme/commit/0b80199ddfa9687dc1770f634c573f2758f96d76))
+* **release:** 重编产物的推送改用 PR_PAT —— GITHUB_TOKEN 会把 CI 变成 action_required ([5c3c118](https://github.com/webkubor/dsh-bloom-theme/commit/5c3c1189a14beddf8ddd9633bc3317c1f46bbca1))
+
+
+### 🛠️ CI / Build
+
+* **release:** 给 release PR 自动挂 auto-merge —— 日常发版零人工 ([dd7b254](https://github.com/webkubor/dsh-bloom-theme/commit/dd7b254ed2af417af983daba63879b0cea697dc4))
+
 ## [0.17.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.3...v0.17.4) (2026-10-12)
 
 

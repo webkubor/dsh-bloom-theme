@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.17.6](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.5...v0.17.6) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** 等 check 跑完再挂 auto-merge ([0ec4e4c](https://github.com/webkubor/dsh-bloom-theme/commit/0ec4e4cc1a9a9ecfc30b12cd7210962185f26e2c))
+
 ## [0.17.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.4...v0.17.5) (2026-10-12)
 
 

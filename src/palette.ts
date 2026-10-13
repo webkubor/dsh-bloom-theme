@@ -172,16 +172,16 @@ export const VARIANT_LABELS = {
   // poem 是配色右侧那一列：原来放英文名（Mist/Cinnabar…），对中文用户没有信息量
   // （owner：「后面的英文没啥意义，不如一句诗词呢」）。换成该色的出处诗句后，
   // 中国风就从名字渗进了界面本身。en 保留给英文 locale。
-  mist:     { zh: '黛蓝', en: 'Mist',      poem: '山色有无中' },   // hue 240 · 王维《汉江临泛》
-  cinnabar: { zh: '朱砂', en: 'Cinnabar',  poem: '日出江花红胜火' },   // hue 25  · 白居易《忆江南》
-  petal:    { zh: '桃夭', en: 'Petal',     poem: '灼灼其华' },     // hue 350 ·《诗经·周南·桃夭》
-  ripple:   { zh: '天青', en: 'Ripple',    poem: '雨过天青云破处' },   // hue 195 · 宋徽宗品汝窑语
-  sage:     { zh: '竹青', en: 'Sage',      poem: '绿竹猗猗' },     // hue 115 ·《诗经·卫风·淇奥》
-  stone:    { zh: '赭石', en: 'Stone',     poem: '秋山敛余照' },   // hue 29  · 王维《木兰柴》
-  lapis:    { zh: '青金', en: 'Lapis',     poem: '碧海青天夜夜心' },   // hue 258 · 李商隐《嫦娥》
-  amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光' },   // hue 70  · 李白《客中行》
-  aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞' },   // hue 72  · 王勃《滕王阁序》
-  lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉' },   // hue 295 · 李白《经乱离后天恩流夜郎》
+  mist:     { zh: '黛蓝', en: 'Mist',      poem: '山色有无中', ru: 'Индиго', poemRu: 'Горы — то есть их, то нет', poemEn: 'Hills half there, half gone' },   // hue 240 · 王维《汉江临泛》
+  cinnabar: { zh: '朱砂', en: 'Cinnabar',  poem: '日出江花红胜火', ru: 'Киноварь', poemRu: 'Рассвет: цветы жарче огня', poemEn: 'Blooms redder than fire' },   // hue 25  · 白居易《忆江南》
+  petal:    { zh: '桃夭', en: 'Petal',     poem: '灼灼其华', ru: 'Персик', poemRu: 'Персик пышно зацвёл', poemEn: 'Its blossoms ablaze' },     // hue 350 ·《诗经·周南·桃夭》
+  ripple:   { zh: '天青', en: 'Ripple',    poem: '雨过天青云破处', ru: 'Небесный', poemRu: 'После дождя — цвет неба', poemEn: 'After rain, sky breaks blue' },   // hue 195 · 宋徽宗品汝窑语
+  sage:     { zh: '竹青', en: 'Sage',      poem: '绿竹猗猗', ru: 'Бамбук', poemRu: 'Зелён бамбук, высок', poemEn: 'Bamboo green, growing tall' },     // hue 115 ·《诗经·卫风·淇奥》
+  stone:    { zh: '赭石', en: 'Stone',     poem: '秋山敛余照', ru: 'Охра', poemRu: 'Горы в остатнем свете', poemEn: 'Hills gather the last light' },   // hue 29  · 王维《木兰柴》
+  lapis:    { zh: '青金', en: 'Lapis',     poem: '碧海青天夜夜心', ru: 'Лазурь', poemRu: 'Море и небо — ночь за ночью', poemEn: 'Sea, sky, a heart each night' },   // hue 258 · 李商隐《嫦娥》
+  amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光', ru: 'Янтарь', poemRu: 'В чаше янтарный свет', poemEn: 'A jade bowl of amber light' },   // hue 70  · 李白《客中行》
+  aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞', ru: 'Закат', poemRu: 'Закат и одинокий полёт', poemEn: 'Sunset and a lonely flight' },   // hue 72  · 王勃《滕王阁序》
+  lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉', ru: 'Сирень', poemRu: 'Лотос из ясной воды', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

@@ -5,6 +5,7 @@
  * DSH 侧结果缓存在 sessionStorage 6 小时（DSH_CACHE_TTL_MS）。
  */
 import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
+import { tr } from './lang.js'
 
 /** npm 上最新版本（异步拉取，null=未知/失败） */
 /**
@@ -221,7 +222,7 @@ export function readDshRuntimeInfo(): DshRuntimeInfo {
     const hasDesktopUpdater = typeof updates?.open === 'function'
     const updateManagedBy = typeof bridge.updateManagedBy === 'string' && bridge.updateManagedBy.trim()
       ? bridge.updateManagedBy.trim()
-      : (hasDesktopUpdater ? '桌面端' : null)
+      : (hasDesktopUpdater ? tr('桌面端') : null)
     return {
       currentVersion,
       buildRev,
@@ -328,7 +329,7 @@ export async function checkDshLatest(force = false): Promise<void> {
         const tag = selectDshDistTag(distTags, runtime.currentVersion)
         const selected = tag ? distTags?.[tag] : null
         dshLatestVersion = typeof selected === 'string' ? selected : null
-        if (dshLatestVersion === null) dshCheckError = `registry 无可用通道（tags: ${Object.keys(distTags).join(',') || '无'}）`
+        if (dshLatestVersion === null) dshCheckError = tr`registry 无可用通道（tags: ${Object.keys(distTags).join(',') || tr('无')}）`
         try {
           sessionStorage.setItem(DSH_CACHE_KEY, JSON.stringify({
             at: Date.now(),
@@ -346,7 +347,7 @@ export async function checkDshLatest(force = false): Promise<void> {
       // 失败必须留痕。原来的 catch 是空的，面板永远停在「点击 ↻ 检查」——
       // 2026-10-08 用户问「为啥版本检查不出来」，面板给不出任何线索，只能猜。
       dshCheckError = err instanceof Error
-        ? (err.name === 'AbortError' ? `超时 ${DSH_CHECK_TIMEOUT_MS / 1000}s` : `${err.name}: ${err.message}`)
+        ? (err.name === 'AbortError' ? tr`超时 ${DSH_CHECK_TIMEOUT_MS / 1000}s` : `${err.name}: ${err.message}`)
         : String(err)
     } finally {
       clearTimeout(timer)
@@ -419,16 +420,16 @@ export function renderDshUpdate() {
     }
 
     if (desktopStatus?.phase === 'available') {
-      latEl.textContent = desktopStatus.version || '有新版'
-      stEl.textContent = '桌面端有可用更新'
+      latEl.textContent = desktopStatus.version || tr('有新版')
+      stEl.textContent = tr('桌面端有可用更新')
       stEl.setAttribute('data-state', 'update')
     } else if (desktopStatus?.phase === 'error') {
-      latEl.textContent = '桌面端检查失败'
-      stEl.textContent = '点「检查更新」看详情'
+      latEl.textContent = tr('桌面端检查失败')
+      stEl.textContent = tr('点「检查更新」看详情')
       stEl.setAttribute('data-state', 'err')
     } else {
-      latEl.textContent = '由桌面端检查'
-      stEl.textContent = `${runtime.updateManagedBy} 管理更新`
+      latEl.textContent = tr('由桌面端检查')
+      stEl.textContent = tr`${runtime.updateManagedBy} 管理更新`
       stEl.setAttribute('data-state', 'managed')
     }
     hintEl.hidden = true
@@ -436,10 +437,10 @@ export function renderDshUpdate() {
     if (btnRefresh) {
       btnRefresh.hidden = false
       btnRefresh.disabled = runtime.requestUpdateCheck == null
-      btnRefresh.textContent = '检查更新'
+      btnRefresh.textContent = tr('检查更新')
       btnRefresh.title = runtime.requestUpdateCheck
-        ? `打开 ${runtime.updateManagedBy} 的更新面板`
-        : `请在 ${runtime.updateManagedBy} 中检查更新`
+        ? tr`打开 ${runtime.updateManagedBy} 的更新面板`
+        : tr`请在 ${runtime.updateManagedBy} 中检查更新`
     }
     if (btnCopy) {
       btnCopy.hidden = true
@@ -450,27 +451,27 @@ export function renderDshUpdate() {
     if (btnRefresh) {
       btnRefresh.hidden = false
       btnRefresh.disabled = false
-      btnRefresh.textContent = '↻ 检查'
-      btnRefresh.title = '重新检查 DSH 最新版'
+      btnRefresh.textContent = tr('↻ 检查')
+      btnRefresh.title = tr('重新检查 DSH 最新版')
     }
     if (btnCopy) {
       btnCopy.hidden = false
       btnCopy.disabled = dshLatestVersion == null
       btnCopy.title = dshLatestVersion
-        ? `复制升级命令到剪贴板：npm i -g @deepseek-ai/dsh@${dshLatestVersion}`
-        : '检查到可用版本后复制精确升级命令'
+        ? tr`复制升级命令到剪贴板：npm i -g @deepseek-ai/dsh@${dshLatestVersion}`
+        : tr('检查到可用版本后复制精确升级命令')
     }
 
     if (dshLatestVersion == null) {
       // 失败要说出来。原来的空 catch 让这一格永远停在「点击 ↻ 检查」——
       // 用户和后来维护的人都无法区分"没触发"、"网络不通"、"registry 没有这个包"。
       if (dshCheckError) {
-        latEl.textContent = '检查失败'
+        latEl.textContent = tr('检查失败')
         stEl.textContent = dshCheckError.length > 22 ? `${dshCheckError.slice(0, 22)}…` : dshCheckError
         stEl.title = dshCheckError
         stEl.setAttribute('data-state', 'err')
       } else {
-        latEl.textContent = '点击 ↻ 检查'
+        latEl.textContent = tr('点击 ↻ 检查')
         stEl.removeAttribute('data-state')
         stEl.removeAttribute('title')
         stEl.textContent = ''
@@ -481,20 +482,20 @@ export function renderDshUpdate() {
       // 这不是错误，是能力边界：不该标红成 err，也不该说「版本未知」装作在比较。
       // 如实说读不到，并且不妨碍「填入」升级命令 —— 那条路不需要知道当前版本。
       latEl.textContent = dshLatestVersion
-      stEl.textContent = '本地版本读不到'
+      stEl.textContent = tr('本地版本读不到')
       stEl.setAttribute('data-state', 'warn')
     } else {
       stEl.removeAttribute('title')
       latEl.textContent = dshLatestVersion
       const comparison = cmpVersion(dshLatestVersion, runtime.currentVersion)
       if (comparison > 0) {
-        stEl.textContent = '↑ 可更新'
+        stEl.textContent = tr('↑ 可更新')
         stEl.setAttribute('data-state', 'update')
       } else if (comparison < 0) {
-        stEl.textContent = '当前版本较新'
+        stEl.textContent = tr('当前版本较新')
         stEl.setAttribute('data-state', 'ahead')
       } else {
-        stEl.textContent = '✓ 已是最新'
+        stEl.textContent = tr('✓ 已是最新')
         stEl.setAttribute('data-state', 'latest')
       }
     }
@@ -510,15 +511,15 @@ export function renderDshUpdate() {
       // 视线在按钮上，改别处等于没反馈。「检查中」刻意用 3 字与「↻ 检查」同宽，
       // 避免按钮宽度跳动挤压旁边的主按钮。
       const label = btnRefresh.textContent
-      btnRefresh.textContent = '检查中'
+      btnRefresh.textContent = tr('检查中')
       btnRefresh.disabled = true
-      stEl.textContent = '检查中…'
+      stEl.textContent = tr('检查中…')
       stEl.removeAttribute('data-state')
       const liveRuntime = readDshRuntimeInfo()
       if (liveRuntime.updateManagedBy) {
         liveRuntime.requestUpdateCheck?.()
         btnRefresh.disabled = liveRuntime.requestUpdateCheck == null
-        btnRefresh.textContent = '检查更新'
+        btnRefresh.textContent = tr('检查更新')
         // 用户刚让桌面端去查了 —— 清掉「已经问过」的记号和旧结果，让重试窗口
         // 重新开始，好把壳查到的结果带回来（否则这一行永远停在「由桌面端检查」）。
         for (const timer of pendingPollTimers) clearTimeout(timer)
@@ -548,7 +549,7 @@ export function renderDshUpdate() {
       // 填进去的是**给 AI 的一句话**，不是裸命令 —— 那个框是对话框，
       // 收到一行 `npm i -g ...` 它并不知道你要它干嘛（owner 2026-09-15 指出）。
       // 带上意图和命令，AI 才能直接执行并回报结果。
-      const cmd = `帮我把 DSH 升级到 ${dshLatestVersion}，执行：npm i -g @deepseek-ai/dsh@${dshLatestVersion}`
+      const cmd = tr`帮我把 DSH 升级到 ${dshLatestVersion}，执行：npm i -g @deepseek-ai/dsh@${dshLatestVersion}`
       // 一步到位：直接把这句话填进 DSH 的主输入框，用户回车就能跑
       // （owner 2026-09-15：「最好一步到位，点击后把更新命令输入到主输入框」）。
       // 复制到剪贴板只做了一半 —— 人还得自己找到输入框再粘一次。
@@ -575,7 +576,7 @@ export function renderDshUpdate() {
       // 「✓ 已复制」与「复制命令」都是 4 个字符宽，替换时布局不跳。
       const label = btnCopy.dataset.bloomLabel || btnCopy.textContent
       btnCopy.dataset.bloomLabel = label
-      btnCopy.textContent = ok ? '✓ 已填入' : '✗ 失败'
+      btnCopy.textContent = ok ? tr('✓ 已填入') : tr('✗ 失败')
       btnCopy.classList.add(ok ? 'is-done' : 'is-fail')
       clearTimeout(+(btnCopy.dataset.bloomTimer || 0))
       const t = setTimeout(() => {
@@ -586,7 +587,7 @@ export function renderDshUpdate() {
       btnCopy.dataset.bloomTimer = String(t)
 
       hintEl.hidden = false
-      hintEl.textContent = ok ? `✓ 已复制：${cmd}` : `复制失败，请手动执行：${cmd}`
+      hintEl.textContent = ok ? tr`✓ 已复制：${cmd}` : tr`复制失败，请手动执行：${cmd}`
     })
   }
 }
@@ -626,7 +627,7 @@ export function refreshUpdateBadge() {
   const el = document.querySelector<HTMLElement>('.dsh-bloom-version__update')
   if (!el) return
   el.hidden = false
-  el.setAttribute('title', '可更新到 v' + latestVersion)
+  el.setAttribute('title', tr('可更新到 v') + latestVersion)
   el.textContent = '↑ v' + latestVersion
   // 徽标本体躺在「版本与更新」折叠区里，日常是收起的 —— 只写这一处等于
   // 没人看得见（2026-09-10 owner 问"发新版用户知道吗"时发现：自更新检查
@@ -635,5 +636,5 @@ export function refreshUpdateBadge() {
   const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
   if (root) root.dataset.bloomUpdate = latestVersion
   const trigger = document.querySelector<HTMLElement>('.dsh-bloom-trigger')
-  if (trigger) trigger.title = 'Bloom 主题 · v' + PLUGIN_VERSION + '（可更新到 v' + latestVersion + '）'
+  if (trigger) trigger.title = tr('Bloom 主题 · v') + PLUGIN_VERSION + tr('（可更新到 v') + latestVersion + tr('）')
 }

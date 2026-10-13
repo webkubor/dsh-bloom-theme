@@ -151,6 +151,7 @@ lights up when a newer version is on npm (jump to the Releases page).
 | :-- | :-- |
 | **Frosted-glass panels (on by default)** | Semi-transparent fill + `backdrop-filter` blur + glass edges (top highlight / translucent stroke / soft outer glow), adaptive opacity per light/dark |
 | **8 Morandi palettes** | Mist / Cinnabar / Petal / Ripple / Sage / Stone / Lapis / Amber, each with light & dark, one-click switch |
+| **UI language** | One click in the panel to switch between 中文 / English / Русский; until you pick one it follows your browser language, exactly as before. Text only — palettes and measured contrast are untouched |
 | **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
 | **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |
 | **Theme-colored thinking animation** | `Deep diving…` flows through the current theme's three-color spectrum; auto-still under `prefers-reduced-motion` |

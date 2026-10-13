@@ -12,6 +12,7 @@ import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
 import { enableFloatingDrag, clearFloatingPos } from './drag.js'
 import { VARIANTS } from './palette.js'
+import { tr, variantName, variantPoem, langRowHTML, syncLangRow, getLang, setLang, type BloomLang } from './lang.js'
 
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
 export const dotStyle = (v) =>
@@ -48,12 +49,12 @@ export function applyVariant(variant) {
       el.setAttribute('aria-selected', String(on))
     })
     const name = root.querySelector<HTMLElement>('.dsh-bloom-trigger__name')
-    if (name) name.textContent = VARIANT_LABELS[variant].zh
+    if (name) name.textContent = variantName(variant)
     const dot = root.querySelector<HTMLElement>('.dsh-bloom-trigger .dsh-bloom-dot')
     if (dot) dot.setAttribute('style', dotStyle(variant))
     // 面板头部也有一份「当前配色」胶囊，不同步就会和列表里的对勾对不上
     const headName = root.querySelector<HTMLElement>('[data-head-name]')
-    if (headName) headName.textContent = VARIANT_LABELS[variant].zh
+    if (headName) headName.textContent = variantName(variant)
     const headDot = root.querySelector<HTMLElement>('.dsh-bloom-head__current .dsh-bloom-dot')
     if (headDot) headDot.setAttribute('style', dotStyle(variant))
   }
@@ -85,13 +86,13 @@ const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy
  *  名必须自己填（写死任何具体名字都是给一份必然过期的指令）。
  */
 const SHARE_TEXT = [
-  'Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。',
-  '装到你的 DSH：',
-  '  · 桌面端 app：在应用内的「插件管理」里搜 dsh-bloom-theme 直接装',
-  '    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）',
-  '  · 自建 CLI profile：dsh plugin --profile <你的profile名> add dsh-bloom-theme',
-  '    然后确认 "dsh-bloom-theme" 在该 profile 的 package.json 的 dsh.profile.bundles 里（plugin add 会自动加），重启 DSH',
-  '仓库：https://github.com/webkubor/dsh-bloom-theme',
+  tr('Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。'),
+  tr('装到你的 DSH：'),
+  tr('  · 桌面端 app：在应用内的「插件管理」里搜 dsh-bloom-theme 直接装'),
+  tr('    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）'),
+  tr('  · 自建 CLI profile：dsh plugin --profile <你的profile名> add dsh-bloom-theme'),
+  tr('    然后确认 "dsh-bloom-theme" 在该 profile 的 package.json 的 dsh.profile.bundles 里（plugin add 会自动加），重启 DSH'),
+  tr('仓库：https://github.com/webkubor/dsh-bloom-theme'),
 ].join('\n')
 
 /** 复制分享文案；就地把按钮文字换成「已复制」给反馈（视线在按钮上，改别处等于没反馈）。 */
@@ -110,7 +111,7 @@ async function shareInstall(btn: HTMLElement) {
     try { ok = document.execCommand('copy') } catch {}
     ta.remove()
   }
-  slot.textContent = ok ? '已复制' : '复制失败'
+  slot.textContent = ok ? tr('已复制') : tr('复制失败')
   setTimeout(() => { slot.textContent = label }, 1600)
 }
 
@@ -120,39 +121,40 @@ export function buildSwitcherHTML(currentVariant) {
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
       ` aria-selected="${on}" data-active="${on}">` +
       `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
-      `<span class="dsh-bloom-option__name">${VARIANT_LABELS[v].zh}</span>` +
-      `<span class="dsh-bloom-option__en" style="${poemStyle(v)}">${VARIANT_LABELS[v].poem}</span>` +
+      `<span class="dsh-bloom-option__name">${variantName(v)}</span>` +
+      `<span class="dsh-bloom-option__en" style="${poemStyle(v)}">${variantPoem(v)}</span>` +
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
   }).join('')
   return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
-  <button type="button" class="dsh-bloom-trigger" aria-haspopup="dialog" aria-expanded="false" title="Bloom 主题 · v${PLUGIN_VERSION}">
+  <button type="button" class="dsh-bloom-trigger" aria-haspopup="dialog" aria-expanded="false" title="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}">
     <span class="dsh-bloom-dot" style="${dotStyle(currentVariant)}"></span>
-    <span class="dsh-bloom-trigger__name">${VARIANT_LABELS[currentVariant].zh}</span>
+    <span class="dsh-bloom-trigger__name">${variantName(currentVariant)}</span>
     <svg class="dsh-bloom-chevron" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
       <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </button>
-  <div class="dsh-bloom-menu" role="dialog" aria-label="Bloom 外观设置" hidden>
+  <div class="dsh-bloom-menu" role="dialog" aria-label="${tr('Bloom 外观设置')}" hidden>
     <div class="dsh-bloom-head">
-      <span class="dsh-bloom-head__title">外观</span>
+      <span class="dsh-bloom-head__title">${tr('外观')}</span>
       <span class="dsh-bloom-head__current">
         <span class="dsh-bloom-dot" style="${dotStyle(currentVariant)}"></span>
-        <span data-head-name>${VARIANT_LABELS[currentVariant].zh}</span>
+        <span data-head-name>${variantName(currentVariant)}</span>
       </span>
-      <button type="button" class="dsh-bloom-close" aria-label="关闭">✕</button>
+      <button type="button" class="dsh-bloom-close" aria-label="${tr('关闭')}">✕</button>
     </div>
-    <div class="dsh-bloom-section">主题</div>
-    <div class="dsh-bloom-options" role="listbox" aria-label="配色">${options}</div>
-    <div class="dsh-bloom-section" data-mode-section hidden>模式</div>
-    <div class="dsh-bloom-appearance" role="group" aria-label="深浅模式" hidden>
+    <div class="dsh-bloom-section">${tr('主题')}</div>
+    <div class="dsh-bloom-options" role="listbox" aria-label="${tr('配色')}">${options}</div>
+    <div class="dsh-bloom-section" data-mode-section hidden>${tr('模式')}</div>
+    <div class="dsh-bloom-appearance" role="group" aria-label="${tr('深浅模式')}" hidden>
       <div class="dsh-bloom-appearance__seg">
-        <button type="button" class="dsh-bloom-appearance__btn" data-mode="light">浅色</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-mode="dark">深色</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">跟随系统</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="light">${tr('浅色')}</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="dark">${tr('深色')}</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
       </div>
     </div>
+    ${langRowHTML(getLang())}
     <button type="button" class="dsh-bloom-more" aria-expanded="false">
-      <span>版本与更新</span>
+      <span>${tr('版本与更新')}</span>
       <svg class="dsh-bloom-more__arrow" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
         <path d="M4 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -169,22 +171,22 @@ export function buildSwitcherHTML(currentVariant) {
           <span class="dsh-bloom-dsh-ver" data-dsh-current>—</span>
           <span class="dsh-bloom-dsh-state" data-dsh-state></span>
           <span class="dsh-bloom-dsh-spacer"></span>
-          <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="重新检查 DSH 最新版">↻</button>
-          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="检查到可用版本后，把升级命令直接填进下方输入框">填入</button>
+          <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="${tr('重新检查 DSH 最新版')}">↻</button>
+          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="${tr('检查到可用版本后，把升级命令直接填进下方输入框')}">${tr('填入')}</button>
         </div>
         <div class="dsh-bloom-dsh-row dsh-bloom-dsh-row--latest">
-          <span class="dsh-bloom-dsh-label">最新</span>
-          <span class="dsh-bloom-dsh-ver" data-dsh-latest>检查中…</span>
+          <span class="dsh-bloom-dsh-label">${tr('最新')}</span>
+          <span class="dsh-bloom-dsh-ver" data-dsh-latest>${tr('检查中…')}</span>
         </div>
         <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
       </div>
     </div>
     <div class="dsh-bloom-foot">
-      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="为你喜欢的配色点赞投票，或提议新色">${ICON_VOTE}<span>配色投票</span></a>
+      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
       <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
-      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="报问题 / 提建议">${ICON_CHAT}<span>反馈</span></a>
+      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="${tr('报问题 / 提建议')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
       <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
-      <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="复制一段话，对方贴进自己的 DSH 就能装上 Bloom">${ICON_SHARE}<span>分享</span></button>
+      <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="${tr('复制一段话，对方贴进自己的 DSH 就能装上 Bloom')}">${ICON_SHARE}<span>${tr('分享')}</span></button>
     </div>
   </div>
 </div>`
@@ -195,6 +197,40 @@ export function closeMenu(root: HTMLElement) {
   const trigger = root.querySelector<HTMLElement>('.dsh-bloom-trigger')
   if (menu) menu.hidden = true
   if (trigger) trigger.setAttribute('aria-expanded', 'false')
+}
+
+/**
+ * 换语言后重建面板文字。
+ *
+ * 不逐节点打补丁：面板文案全部来自 buildSwitcherHTML 的模板，逐个替换要么漏一处，
+ * 要么在模板改动之后悄悄失效。整块重建更短也更可靠 —— 事件是委托在根节点上的，
+ * 换掉内层不影响监听器。开合状态（菜单、版本区块）手动带过去，用户不该看见闪一下。
+ */
+function rerenderMenu(el: HTMLElement, variant: string) {
+  const holder = document.createElement('div')
+  holder.innerHTML = buildSwitcherHTML(variant)
+  const fresh = holder.querySelector<HTMLElement>('.dsh-bloom-menu')
+  const cur = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+  // 版本区块展开与否也要带过去：新模板里它默认收起
+  const moreWasOpen = el.querySelector<HTMLElement>('.dsh-bloom-more')?.getAttribute('aria-expanded') === 'true'
+  if (fresh && cur) {
+    fresh.hidden = cur.hidden
+    cur.replaceWith(fresh)
+  }
+  if (moreWasOpen) {
+    const more = el.querySelector<HTMLElement>('.dsh-bloom-more')
+    const body = el.querySelector<HTMLElement>('.dsh-bloom-more-body')
+    if (more) more.setAttribute('aria-expanded', 'true')
+    if (body) body.hidden = false
+  }
+  const name = el.querySelector<HTMLElement>('.dsh-bloom-trigger__name')
+  if (name) name.textContent = variantName(variant)
+  const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
+  if (trigger) trigger.setAttribute('title', tr('Bloom 主题 · v{0}', PLUGIN_VERSION))
+  syncAppearanceRow(el)
+  syncLangRow(el)
+  // DSH 版本区是从缓存画的，重建后补一次，否则会停在「检查中…」
+  renderDshUpdate()
 }
 
 /**
@@ -232,6 +268,7 @@ export function buildSwitcherEl(initialVariant) {
     menu.hidden = false
     trigger.setAttribute('aria-expanded', 'true')
     syncAppearanceRow(el)
+    syncLangRow(el)
     // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
     const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
       || menu.querySelector<HTMLElement>('.dsh-bloom-option')
@@ -256,11 +293,21 @@ export function buildSwitcherEl(initialVariant) {
       more.setAttribute('aria-expanded', String(open))
       return
     }
-    const modeBtn = target.closest<HTMLElement>('.dsh-bloom-appearance__btn')
+    const modeBtn = target.closest<HTMLElement>('.dsh-bloom-appearance__btn[data-mode]')
     if (modeBtn) {
       // 直接切 body 属性 + 持久化，零弹窗。同步完成，立刻刷新选中态。
       setMode(modeBtn.dataset.mode as AppearanceMode)
       syncAppearanceRow(el)
+      return
+    }
+    const langBtn = target.closest<HTMLElement>('[data-lang]')
+    if (langBtn) {
+      // 换语言只影响显示：配色、已存的 variant、颜色对比结论一概不动。
+      // stopPropagation 不能省：下面重建菜单会把被点的按钮换掉，等事件冒泡到
+      // document 上的「点外部关闭」时 el.contains(target) 已经是 false，菜单会自己关掉。
+      e.stopPropagation()
+      setLang(langBtn.dataset.lang as BloomLang)
+      rerenderMenu(el, readVariant())
       return
     }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')

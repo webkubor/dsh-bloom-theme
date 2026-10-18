@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.18.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.0...v0.18.1) (2026-10-18)
+
+
+### 🐛 Bug Fixes
+
+* **release:** 自动解除机器人 review thread 阻塞并添加定时发版巡检 ([39a792c](https://github.com/webkubor/dsh-bloom-theme/commit/39a792cba9c9e89c69092dcc1715251dcd6fe56f))
+
 ## [0.18.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.6...v0.18.0) (2026-10-18)
 
 

@@ -63,7 +63,8 @@ test('每一处 localStorage 调用都必须被 try/catch 包住 —— 隐私�
   // ⚠️ 这条最初写成「至少有一处 try/catch」，变异测试当场证明没用：
   // 把 dom.ts 的 catch 拿掉，drag.ts 里还有两处，断言照样通过。
   // 必须逐处判定 —— 漏掉任何一处都足以让整个插件在隐私模式下失效。
-  const files = ['src/dom.ts', 'src/drag.ts', 'src/switcher.ts']
+  // lang.ts 存的是界面语言，也在初始化路径上（getLang 在建菜单时就会被调到），同样逐处判定。
+  const files = ['src/dom.ts', 'src/drag.ts', 'src/switcher.ts', 'src/lang.ts']
   const unguarded = []
   for (const f of files) {
     const lines = readFileSync(join(root, f), 'utf8').split('\n')

@@ -38,6 +38,7 @@ import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync } from './appearance.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { checkUpdate } from './version.js'
+import { tr, LANG_CHANGE_EVENT } from './lang.js'
 
 /**
  * 鼠标跟随光斑（v0.15 唯一的亮点）。
@@ -187,9 +188,8 @@ function watchCursorGlow() {
    // 当前宿主是桌面端 app（profile `desktop`，app 独占托管、CLI 会被拒）—— 这条命令
    // 复制出去执行必然报错。这里给占位符：具体 profile 名由用户按自己实际的填，
    // 桌面端用户则改走 app 的插件管理（下方 release 说明里已指向 Release 页）。
-  const updateCmd = (v) => 'dsh plugin --profile <你的profile名> add ' + PLUGIN_ID + '@' + v
+  const updateCmd = (v) => tr('dsh plugin --profile <你的profile名> add ') + PLUGIN_ID + '@' + v
   const RELEASES_URL = 'https://github.com/webkubor/dsh-bloom-theme/releases'
-  const zh = (navigator.language || '').toLowerCase().startsWith('zh')
 
   /** a > b ？（major.minor.patch 数值比；release > prerelease；预发布串比字符串，够用） */
   function isNewer(a, b) {
@@ -209,12 +209,19 @@ function watchCursorGlow() {
     set(k, v) { try { window.localStorage.setItem(k, v) } catch {} },
   }
 
-  function showBanner(latest) {
-    if (document.getElementById('dsh-bloom-update-banner')) return
+  let bannerVersion: string | null = null
+  window.addEventListener(LANG_CHANGE_EVENT, () => {
+    if (bannerVersion && document.getElementById('dsh-bloom-update-banner')) showBanner(bannerVersion, true)
+  })
+
+  function showBanner(latest, refresh = false) {
+    const existing = document.getElementById('dsh-bloom-update-banner')
+    if (existing && !refresh) return
     const dismissed = ls.get(LS_DISMISSED)
     if (dismissed === latest) return
 
-    const el = document.createElement('div')
+    bannerVersion = latest
+    const el = existing || document.createElement('div')
     el.id = 'dsh-bloom-update-banner'
     el.setAttribute('role', 'status')
     el.innerHTML = `
@@ -265,14 +272,15 @@ function watchCursorGlow() {
         #dsh-bloom-update-banner .bloom-upd-x{position:absolute;top:6px;right:8px;border:none!important;
           background:none!important;padding:4px!important;font-size:14px!important;line-height:1!important}
       </style>
-      <div class="bloom-upd-x" title="${zh ? '关闭（此版本不再提醒）' : 'Dismiss'}">×</div>
-      <div>🌸 <strong>${zh ? 'Bloom 主题有新版本' : 'Bloom theme update'}</strong>
-        ${latest} ${zh ? '可用' : 'available'}<span class="bloom-upd-cur">（${zh ? '当前' : 'current'} ${PLUGIN_VERSION}）</span></div>
-      <code>${updateCmd(latest)}</code>
+      <div class="bloom-upd-x" title="${tr('关闭（此版本不再提醒）')}">×</div>
+      <div>🌸 <strong>${tr('Bloom 主题有新版本')}</strong>
+        ${latest} ${tr('可用')}<span class="bloom-upd-cur">（${tr('当前')} ${PLUGIN_VERSION}）</span></div>
+      <code></code>
       <div class="bloom-upd-actions">
-        <button data-primary data-act="copy">${zh ? '复制更新命令' : 'Copy command'}</button>
-        <button data-act="open">${zh ? '更新日志' : 'Changelog'}</button>
+        <button data-primary data-act="copy">${tr('复制更新命令')}</button>
+        <button data-act="open">${tr('更新日志')}</button>
       </div>`
+    el.querySelector('code').textContent = updateCmd(latest)
     el.querySelector<HTMLElement>('.bloom-upd-x').addEventListener('click', () => {
       ls.set(LS_DISMISSED, latest)
       el.remove()
@@ -280,8 +288,8 @@ function watchCursorGlow() {
     el.querySelector<HTMLElement>('[data-act="copy"]').addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLElement
       navigator.clipboard?.writeText(updateCmd(latest)).then(() => {
-        btn.textContent = zh ? '✓ 已复制' : '✓ Copied'
-        setTimeout(() => (btn.textContent = zh ? '复制更新命令' : 'Copy command'), 1600)
+        btn.textContent = tr('✓ 已复制')
+        setTimeout(() => (btn.textContent = tr('复制更新命令')), 1600)
       }).catch(() => {})
     })
     el.querySelector<HTMLElement>('[data-act="open"]').addEventListener('click', () => {

@@ -43,7 +43,8 @@
     "preflight": "node scripts/preflight.mjs",
     "stats": "node scripts/stats-table.mjs",
     "test": "npm run check",
-    "check:drift": "node scripts/dsh-drift.mjs"
+    "check:drift": "node scripts/dsh-drift.mjs",
+    "test:i18n": "node --test test/i18n.test.mjs"
   },
   "repository": {
     "type": "git",
@@ -90,6 +91,7 @@
     "@types/node": "^26.2.0",
     "contrast-guard": "^0.2.0",
     "esbuild": "^0.28.2",
+    "playwright": "1.62.1",
     "typescript": "^7.0.2"
   }
 }

@@ -13,6 +13,19 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.18.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.6...v0.18.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **i18n:** integrate three-language switching and regression fixes ([#53](https://github.com/webkubor/dsh-bloom-theme/issues/53)) ([768a822](https://github.com/webkubor/dsh-bloom-theme/commit/768a82246359f224dedd9d40c14b4e183c82253e))
+* 界面语言切换（中文 / English / Русский） ([2ae2b31](https://github.com/webkubor/dsh-bloom-theme/commit/2ae2b3107b626bff89fd272447978d64206c78f9))
+
+
+### 🐛 Bug Fixes
+
+* **i18n:** honor selected language across updates and sharing ([ce0e38d](https://github.com/webkubor/dsh-bloom-theme/commit/ce0e38d7bb7dabd64ad6ba13948be988bcf8a1c1))
+
 ## [0.17.6](https://github.com/webkubor/dsh-bloom-theme/compare/v0.17.5...v0.17.6) (2026-10-12)
 
 

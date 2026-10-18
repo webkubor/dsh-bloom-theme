@@ -28,6 +28,12 @@ jobs:
       - name: 自检
         run: npm run check
 
+      - name: 安装浏览器回归测试环境
+        run: npx playwright install --with-deps chromium
+
+      - name: 三语切换回归测试
+        run: npm run test:i18n
+
       # 确认发布产物完整：7 个文件，且 cordis.patch.yml 在内
       # （只声明 dsh.client 或漏掉 patch 文件，装上就不进 boot graph）
       - name: 校验发布产物

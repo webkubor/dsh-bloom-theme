@@ -27,6 +27,9 @@ export const LANG_FULL: Record<BloomLang, string> = { zh: '中文', en: 'English
 
 /** 与 dsh-bloom-variant 同一命名口径；单独一个 key，换语言不动主题 */
 export const LANG_KEY = 'dsh-bloom-lang'
+export const LANG_CHANGE_EVENT = 'dsh-bloom-lang-change'
+// Storage may be blocked; a manual choice must still work for this page.
+let volatileLang: BloomLang | null = null
 
 /** 原来的自动判断，一个字没改：中文环境 → 中文，其余 → English */
 function autoLang(): BloomLang {
@@ -35,6 +38,7 @@ function autoLang(): BloomLang {
 
 /** 读不到（无痕模式 / 配额满了）就退回自动判断，绝不抛 */
 export function getLang(): BloomLang {
+  if (volatileLang) return volatileLang
   try {
     const v = localStorage.getItem(LANG_KEY)
     if (v === 'zh' || v === 'en' || v === 'ru') return v
@@ -43,7 +47,11 @@ export function getLang(): BloomLang {
 }
 
 export function setLang(lang: BloomLang) {
-  try { localStorage.setItem(LANG_KEY, lang) } catch {}
+  try {
+    localStorage.setItem(LANG_KEY, lang)
+    volatileLang = null
+  } catch { volatileLang = lang }
+  window.dispatchEvent(new Event(LANG_CHANGE_EVENT))
   return lang
 }
 

@@ -95,6 +95,8 @@ export let dshLatestVersion: string | null = null
 
 /** 最近一次检查的失败原因（null = 没失败）。面板直接显示它，不再静默。 */
 export let dshCheckError: string | null = null
+// Keep localizable failure data until render, so changing language refreshes it.
+let localizedCheckError: (() => string) | null = null
 
 /** 桌面壳那边已经查到的状态（available / error）。 */
 let desktopStatus: DesktopUpdateStatus | null = null
@@ -309,6 +311,7 @@ export async function checkDshLatest(force = false): Promise<void> {
   if (dshCheckPromise) return dshCheckPromise
   dshCheckPromise = (async () => {
     dshCheckError = null
+    localizedCheckError = null
     // 超时是必须的：不带 signal 的 fetch 在被代理/黑洞的链路上会**永远挂着**，
     // 面板就停在初始的「检查中…」，看起来像"没触发"。8s 够 165KB 的 packument。
     const controller = new AbortController()
@@ -329,7 +332,11 @@ export async function checkDshLatest(force = false): Promise<void> {
         const tag = selectDshDistTag(distTags, runtime.currentVersion)
         const selected = tag ? distTags?.[tag] : null
         dshLatestVersion = typeof selected === 'string' ? selected : null
-        if (dshLatestVersion === null) dshCheckError = tr`registry 无可用通道（tags: ${Object.keys(distTags).join(',') || tr('无')}）`
+        if (dshLatestVersion === null) {
+          const tags = Object.keys(distTags).join(',')
+          localizedCheckError = () => tr`registry 无可用通道（tags: ${tags || tr('无')}）`
+          dshCheckError = localizedCheckError()
+        }
         try {
           sessionStorage.setItem(DSH_CACHE_KEY, JSON.stringify({
             at: Date.now(),
@@ -346,8 +353,11 @@ export async function checkDshLatest(force = false): Promise<void> {
       dshLatestVersion = null
       // 失败必须留痕。原来的 catch 是空的，面板永远停在「点击 ↻ 检查」——
       // 2026-10-08 用户问「为啥版本检查不出来」，面板给不出任何线索，只能猜。
+      if (err instanceof Error && err.name === 'AbortError') {
+        localizedCheckError = () => tr`超时 ${DSH_CHECK_TIMEOUT_MS / 1000}s`
+      }
       dshCheckError = err instanceof Error
-        ? (err.name === 'AbortError' ? tr`超时 ${DSH_CHECK_TIMEOUT_MS / 1000}s` : `${err.name}: ${err.message}`)
+        ? (localizedCheckError ? localizedCheckError() : `${err.name}: ${err.message}`)
         : String(err)
     } finally {
       clearTimeout(timer)
@@ -465,10 +475,11 @@ export function renderDshUpdate() {
     if (dshLatestVersion == null) {
       // 失败要说出来。原来的空 catch 让这一格永远停在「点击 ↻ 检查」——
       // 用户和后来维护的人都无法区分"没触发"、"网络不通"、"registry 没有这个包"。
-      if (dshCheckError) {
+      const error = localizedCheckError?.() || dshCheckError
+      if (error) {
         latEl.textContent = tr('检查失败')
-        stEl.textContent = dshCheckError.length > 22 ? `${dshCheckError.slice(0, 22)}…` : dshCheckError
-        stEl.title = dshCheckError
+        stEl.textContent = error.length > 22 ? `${error.slice(0, 22)}…` : error
+        stEl.title = error
         stEl.setAttribute('data-state', 'err')
       } else {
         latEl.textContent = tr('点击 ↻ 检查')

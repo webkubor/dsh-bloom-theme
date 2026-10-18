@@ -85,7 +85,7 @@ const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy
  *  只会得到一条报错。两条路都写出来：app 里走插件管理，自建 profile 走 CLI 且 profile
  *  名必须自己填（写死任何具体名字都是给一份必然过期的指令）。
  */
-const SHARE_TEXT = [
+const buildShareText = () => [
   tr('Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。'),
   tr('装到你的 DSH：'),
   tr('  · 桌面端 app：在应用内的「插件管理」里搜 dsh-bloom-theme 直接装'),
@@ -98,6 +98,7 @@ const SHARE_TEXT = [
 /** 复制分享文案；就地把按钮文字换成「已复制」给反馈（视线在按钮上，改别处等于没反馈）。 */
 async function shareInstall(btn: HTMLElement) {
   // 只改文字那个 span —— 直接写 btn.textContent 会把 svg 图标一起擦掉。
+  const SHARE_TEXT = buildShareText()
   const slot = btn.querySelector('span') ?? btn
   const label = slot.textContent
   let ok = false
@@ -229,6 +230,8 @@ function rerenderMenu(el: HTMLElement, variant: string) {
   if (trigger) trigger.setAttribute('title', tr('Bloom 主题 · v{0}', PLUGIN_VERSION))
   syncAppearanceRow(el)
   syncLangRow(el)
+  fresh?.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((opt) => opt.setAttribute('tabindex', '-1'))
+  refreshUpdateBadge()
   // DSH 版本区是从缓存画的，重建后补一次，否则会停在「检查中…」
   renderDshUpdate()
 }
@@ -308,6 +311,7 @@ export function buildSwitcherEl(initialVariant) {
       e.stopPropagation()
       setLang(langBtn.dataset.lang as BloomLang)
       rerenderMenu(el, readVariant())
+      el.querySelector<HTMLElement>(`[data-lang="${getLang()}"]`)?.focus()
       return
     }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')

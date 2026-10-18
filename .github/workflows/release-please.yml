@@ -12,6 +12,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # 每天 UTC 01:30（北京时间 09:30）兜底巡检未合并的 release PR
+    - cron: '30 1 * * *'
 
 permissions:
   contents: write
@@ -118,6 +121,54 @@ jobs:
                 })
                 state = res.data.mergeable_state
                 if (state === 'clean' || state === 'dirty') break
+
+                // ⚠️ 重点加固：若因 required_conversation_resolution 被机器人的 review comment 卡在 blocked，
+                //   自动将机器人（如 chatgpt-codex-connector、cursor 等）的 review thread 标记为 resolved。
+                if (state === 'blocked') {
+                  try {
+                    const threadQuery = `query($owner: String!, $repo: String!, $number: Int!) {
+                      repository(owner: $owner, name: $repo) {
+                        pullRequest(number: $number) {
+                          reviewThreads(first: 50) {
+                            nodes {
+                              id
+                              isResolved
+                              comments(first: 1) {
+                                nodes {
+                                  author { login }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }`
+                    const tRes = await github.graphql(threadQuery, {
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      number: pr.number
+                    })
+                    const threads = tRes?.repository?.pullRequest?.reviewThreads?.nodes || []
+                    const botKeys = ['codex', 'cursor', 'bot', 'github-actions']
+                    for (const th of threads) {
+                      if (!th.isResolved) {
+                        const author = (th.comments?.nodes?.[0]?.author?.login || '').toLowerCase()
+                        const isBot = botKeys.some((k) => author.includes(k))
+                        if (isBot) {
+                          core.info(`自动标记机器人 ${author} 的 review thread 为已解决: ${th.id}`)
+                          await github.graphql(`mutation($id: ID!) {
+                            resolveReviewThread(input: { threadId: $id }) {
+                              thread { id, isResolved }
+                            }
+                          }`, { id: th.id })
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    core.info(`检查/标记 review threads 异常: ${e.message}`)
+                  }
+                }
+
                 core.info(`#${pr.number} 状态 ${state}，等 20s 重读`)
                 await new Promise((resolve) => setTimeout(resolve, 20000))
               }

@@ -12,8 +12,8 @@ importers:
         specifier: ^26.2.0
         version: 26.4.0
       contrast-guard:
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.3.0
+        version: 0.3.0
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
@@ -305,8 +305,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  contrast-guard@0.2.0:
-    resolution: {integrity: sha512-pUEYReL7jo7HcOaTkIxegNfweRUH0vgYkyNG965VNc5ayQjRI8oWbgdZ5E0zEoggR2Wj0USizT5P6wKykdZZ1A==}
+  contrast-guard@0.3.0:
+    resolution: {integrity: sha512-I22vBbOTwnQfK7Bn4RjKiZPiBIn2DZ8bLv23J53f1Ichf78o/D3PCwTGWJXLXM3weugqpfIpv/MP4koMoDt3ig==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -482,7 +482,7 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  contrast-guard@0.2.0: {}
+  contrast-guard@0.3.0: {}
 
   esbuild@0.28.2:
     optionalDependencies:

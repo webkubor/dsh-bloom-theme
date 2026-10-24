@@ -455,6 +455,17 @@ pre code {
      对纯展示表格无副作用。旧名 _tableScroll 原生已是滚动容器，重复声明无害。 */
   overflow-x: auto;
 }
+
+/* 上面那条会在层叠里输给 DSH 自己的 .md-table-wide 修饰类（实测 2026-10-24：
+   ._tableScroll_哈希.md-table-wide => overflow-x:hidden，权重 (0,2,0) > 单属性选择器
+   的 (0,1,0)，宽表被无声裁掉右半边）。双写属性选择器把权重抬到 (0,2,0) 打平，
+   再靠注入序取胜 —— 插件 <style> 在 DSH <link> 之后注入，平权重时后者赢，
+   这也是本主题其它同权重覆盖能生效的同一前提。hidden 改 auto 对「本就放得下」
+   的表格零影响（无溢出就没有滚动条），只在内容实在放不下时把「裁掉」换成「可滚」。 */
+[class*="_tableScroll"][class*="_tableScroll"],
+[class*="_tablePane"][class*="_tablePane"] {
+  overflow-x: auto;
+}
 /* min-width:100% 而不是 width:100%：
    DSH 原生表格按内容定宽，而 _tableScroll 容器是块级全宽。上面刚给容器加了边框+圆角，
    两边宽度不一致立刻就看得见——实测容器 748px、表格只有 469px，右侧露出 279px 空框，

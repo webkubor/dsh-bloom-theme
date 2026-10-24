@@ -446,6 +446,14 @@ pre code {
   border: 1px solid var(--bloom-hairline);
   border-radius: 10px;
   background: rgba(var(--bloom-morandi), 0.02);
+  /* 2026-10-24 · #52/#48：容器被主题加了边框圆角，但 DSH 0.2.0 把 _tableScroll
+     改名 _tablePane 后不再保证原生横向滚动 —— 宽表格直接戳穿聊天气泡边界（#52），
+     多列表格越界后边框圆角失去裁切、格线在角部戳出读作「变形」（#48）。
+     overflow-x:auto 同时给回「滚动能力」和「圆角裁切」（auto 会裁剪并尊重 radius，
+     hidden 只裁不滚会废掉滚动，两个都不能用错）。
+     注意：overflow-x 非 visible 时另一轴的 visible 会被强制成 auto，
+     对纯展示表格无副作用。旧名 _tableScroll 原生已是滚动容器，重复声明无害。 */
+  overflow-x: auto;
 }
 /* min-width:100% 而不是 width:100%：
    DSH 原生表格按内容定宽，而 _tableScroll 容器是块级全宽。上面刚给容器加了边框+圆角，

@@ -13,6 +13,16 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.18.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.1...v0.18.2) (2026-10-24)
+
+
+### 🐛 Bug Fixes
+
+* **table:** 宽表不再越界——表格容器补 overflow-x:auto(fixes [#52](https://github.com/webkubor/dsh-bloom-theme/issues/52), fixes [#48](https://github.com/webkubor/dsh-bloom-theme/issues/48)) ([30ef10d](https://github.com/webkubor/dsh-bloom-theme/commit/30ef10d7a4b0982fd5b2c9f34d3a5f842cc95bdd))
+* **table:** 宽表不再越界([#52](https://github.com/webkubor/dsh-bloom-theme/issues/52) [#48](https://github.com/webkubor/dsh-bloom-theme/issues/48)) ([30ef10d](https://github.com/webkubor/dsh-bloom-theme/commit/30ef10d7a4b0982fd5b2c9f34d3a5f842cc95bdd))
+* **table:** 层叠加固——双写属性选择器压过 DSH 的 .md-table-wide hidden ([46adc6c](https://github.com/webkubor/dsh-bloom-theme/commit/46adc6c05c3c01ad4b55a8ecbb1c3adca7f86305))
+* **table:** 表格容器补 overflow-x:auto——宽表不再戳穿聊天气泡,多列格线不再越界变形 ([4ab9be9](https://github.com/webkubor/dsh-bloom-theme/commit/4ab9be9d12bc61a5ed0ba43830dc376080af7869))
+
 ## [0.18.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.0...v0.18.1) (2026-10-18)
 
 

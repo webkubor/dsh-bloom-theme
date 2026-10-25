@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.18.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.2...v0.18.3) (2026-10-25)
+
+
+### 📝 Documentation
+
+* README 补快速开始、徽章精简至 6，加 AGENTS.md / SECURITY.md ([7400fa5](https://github.com/webkubor/dsh-bloom-theme/commit/7400fa5a8bca60fd8259d04f823482ba8fc8b7b7))
+
 ## [0.18.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.1...v0.18.2) (2026-10-24)
 
 

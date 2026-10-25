@@ -27,17 +27,13 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/dsh-bloom-theme?style=for-the-badge&color=A873C4&logo=npm" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=for-the-badge&color=92a8b3" alt="downloads" /></a>
-  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=for-the-badge&color=cc584d" alt="Stars" />
   <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=for-the-badge&color=5fa8b2" alt="License" />
 </p>
 
 <p align="center">
+  <!-- 徽章克制在 6 个以内：只留「能用（版本/下载）· 可信（AA 实测收录）· 干净（零依赖）」三类信号 -->
   <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="Awesome DSH Plugin" /></a>
-  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=for-the-badge" alt="DSH Plugin" /></a>
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=for-the-badge" alt="dsh-plugin" /></a>
-  <img src="https://img.shields.io/badge/TypeScript-built-3178c6?style=for-the-badge" alt="TypeScript" />
   <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=for-the-badge" alt="WCAG AA" />
-  <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=for-the-badge" alt="OKLCH" />
   <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=for-the-badge" alt="zero dependency" />
 </p>
 
@@ -85,6 +81,11 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 配色是低饱和莫兰迪（OKLCH 调色、WCAG AA），全站统一克制的微动效，零运行时依赖，前端 TypeScript 构建。
 
 > 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
+
+## 快速开始
+
+- **DSH 桌面端**：应用内「插件管理」安装，重载页面即可 —— 顶栏右上角出现「黛蓝 ▾」按钮，10 套配色、明暗、壁纸都在那里切换。
+- **自建 profile（CLI / 服务器 / Web）**：`dsh plugin --profile <你的 profile> add dsh-bloom-theme`，接进 boot graph 后重启 DSH，三步细节见下方[安装](#安装)。
 
 ## 🏆 为什么用它
 

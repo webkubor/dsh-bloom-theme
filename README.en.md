@@ -20,17 +20,13 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/dsh-bloom-theme?style=flat-square&color=A873C4&logo=npm" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=flat-square&color=92a8b3" alt="downloads" /></a>
-  <img src="https://img.shields.io/github/stars/webkubor/dsh-bloom-theme?style=flat-square&color=cc584d" alt="Stars" />
   <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=flat-square&color=5fa8b2" alt="License" />
 </p>
 
 <p align="center">
+  <!-- Keep badges ≤ 6: works (version/downloads) · trusted (AA, listed) · clean (zero deps) -->
   <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="Awesome DSH Plugin" /></a>
-  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
-  <img src="https://img.shields.io/badge/TypeScript-built-3178c6?style=flat-square" alt="TypeScript" />
   <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=flat-square" alt="WCAG AA" />
-  <img src="https://img.shields.io/badge/OKLCH-color-A873C4?style=flat-square" alt="OKLCH" />
   <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=flat-square" alt="zero dependency" />
 </p>
 
@@ -86,6 +82,11 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 (OKLCH, WCAG AA); restrained, consistent micro-interactions; zero runtime deps; TypeScript front-end.
 
 > The Morandi character does not live in `--accent`. It lives in `--accent-rgb`.
+
+## Quick start
+
+- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between the 10 palettes, light/dark, and wallpapers.
+- **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
 
 ## Screenshots
 

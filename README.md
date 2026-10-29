@@ -165,7 +165,7 @@ dsh plugin --profile <你的 profile> add dsh-bloom-theme
 | **双轨配色** | 可读轨保对比度（文字/按钮），气质轨专供氛围渐变，两轨分工不混用 |
 | **微交互动效** | 菜单入场、选中态色条滑入、hover / 按压反馈；统一时长与缓动 token，全站一致 |
 | **主题色推理动效** | `Deep diving…` 以当前主题三色光谱流动，不再固定 DeepSeek 蓝；`prefers-reduced-motion` 下自动静止 |
-| **版本 / 更新提示** | 下拉底部显示当前版本；npm 有新版亮「↑ vX」；离版较旧时右下角弹更新横幅 |
+| **版本 / 更新提示** | 下拉底部显示当前版本；npm 有新版亮「↑ vX」；离版较旧时右下角弹更新横幅，桌面端提示在侧栏「插件」管理中更新 |
 | **OKLCH 调色 + WCAG AA** | 感知均匀色彩空间，明暗切换不跳变；全部明暗主色对实测 ≥ 4.5:1 |
 | **零依赖 · 纯 CSS 变量驱动** | 只注入 CSS 变量 + 少量切换逻辑，几乎零运行时开销 |
 | **不抢占原生控件** | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
@@ -236,21 +236,19 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 ## 🧩 DSH 插件全家桶
 
 <p align="center">
-  <img src="https://img.webkubor.online/projects/dsh-plugins/dsh-plugins-family.png" alt="DSH 插件全家桶：主题美化 / 模型管理 / 用户记忆 / 电脑环境" width="100%" />
+  <img src="https://img.webkubor.online/projects/dsh-plugins/dsh-plugins-family.png" alt="DSH 插件全家桶：主题美化 / 模型管理" width="100%" />
 </p>
 
 <p align="center">
   <a href="https://github.com/webkubor/dsh-bloom-theme">🎨 主题美化</a> ·
-  <a href="https://github.com/webkubor/dsh-llm-hub">⚡ 模型管理</a> ·
-  <a href="https://github.com/webkubor/dsh-mirror">🪞 用户记忆</a> ·
-  <a href="https://github.com/webkubor/dsh-env-inspector">🖥️ 电脑环境</a>
+  <a href="https://github.com/webkubor/dsh-llm-hub">⚡ 模型管理</a>
 </p>
 
 一行装齐（只需 Node.js），装完重启 DSH 即可：
 
 ```bash
 PROFILE=<你的 profile>
-npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub @dsh-plugins/dsh-user-mirror @dsh-plugins/dsh-env-inspector && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
+npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
 ```
 
 ---

@@ -220,6 +220,8 @@ function watchCursorGlow() {
     const dismissed = ls.get(LS_DISMISSED)
     if (dismissed === latest) return
 
+    const isDesktop = typeof (window as any).dshDesktop !== 'undefined' || typeof (window as any).dshDesktopBoot !== 'undefined' || location.protocol === 'dsh-app:' || /Electron/i.test(navigator.userAgent)
+
     bannerVersion = latest
     const el = existing || document.createElement('div')
     el.id = 'dsh-bloom-update-banner'
@@ -275,10 +277,16 @@ function watchCursorGlow() {
       <div class="bloom-upd-x" title="${tr('关闭（此版本不再提醒）')}">×</div>
       <div>🌸 <strong>${tr('Bloom 主题有新版本')}</strong>
         ${latest} ${tr('可用')}<span class="bloom-upd-cur">（${tr('当前')} ${PLUGIN_VERSION}）</span></div>
+      ${isDesktop ? `<div style="font-size:11px;line-height:1.4;margin:6px 0 2px;color:var(--dsw-alias-label-secondary,#666);padding:4px 8px;border-radius:6px;background:var(--bloom-code-bg,rgba(146,168,179,0.13))">${tr('桌面端 app：在侧栏「插件」管理中直接更新，无需终端命令')}</div>` : ''}
       <code></code>
       <div class="bloom-upd-actions">
-        <button data-primary data-act="copy">${tr('复制更新命令')}</button>
-        <button data-act="open">${tr('更新日志')}</button>
+        ${isDesktop ? `
+          <button data-primary data-act="open">${tr('更新日志')}</button>
+          <button data-act="copy" title="${tr('仅自建 CLI profile 需执行此命令；桌面端无需终端命令')}">${tr('复制更新命令')}</button>
+        ` : `
+          <button data-primary data-act="copy">${tr('复制更新命令')}</button>
+          <button data-act="open">${tr('更新日志')}</button>
+        `}
       </div>`
     el.querySelector('code').textContent = updateCmd(latest)
     el.querySelector<HTMLElement>('.bloom-upd-x').addEventListener('click', () => {

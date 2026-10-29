@@ -16,7 +16,7 @@ dsh plugin install @dsh-plugins/dsh-bloom-theme
 - **20+ 诗词调色变体**：含 Amber, Aurora, Cinnabar, Lapis, Lavender, Mist, Petal, Ripple, Sage, Stone 等多种高质感配色。
 - **严格对比度安全**：所有配色组合均通过 WCAG AA 级对比度自动化校验（基于 `contrast-guard`）。
 - **顶栏变体切换器**：无需刷新页面，在 DSH 客户端顶栏即可随时预览并切换色调与壁纸。
-- **生态联动**：与 LLM Hub, User Mirror, Env Inspector 构成完整的 Webkubor DSH 扩展套件。
+- **生态联动**：与 LLM Hub 深度联动。
 
 ## 仓库与社区
 - 源码: https://github.com/webkubor/dsh-bloom-theme

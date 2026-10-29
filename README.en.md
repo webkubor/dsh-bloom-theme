@@ -156,7 +156,7 @@ lights up when a newer version is on npm (jump to the Releases page).
 | **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
 | **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |
 | **Theme-colored thinking animation** | `Deep diving…` flows through the current theme's three-color spectrum; auto-still under `prefers-reduced-motion` |
-| **Version / update hints** | Current version at the bottom of the dropdown; `↑ vX` chip when npm is newer; update banner for very stale installs |
+| **Version / update hints** | Current version at the bottom of the dropdown; `↑ vX` chip when npm is newer; update banner for very stale installs, with desktop guidance to update from Plugins in the sidebar |
 | **OKLCH + WCAG AA** | Perceptually uniform color space, no jumps on light/dark switch; all accent/background pairs measured ≥ 4.5:1 |
 | **Zero deps · CSS-variable driven** | Only CSS variables + a little switch logic; near-zero runtime cost |
 | **Respects native controls** | Switcher mounts into the DSH header utilities area, side-by-side with native buttons |
@@ -225,6 +225,22 @@ the client failed to register — re-run `npx @deepseek-ai/dsh plugin --profile 
 ## Support
 
 If Bloom makes your DSH nicer to use, drop a ⭐ or buy me a coffee (sponsor link below and one entry in the panel menu).
+
+## DSH plugin suite
+
+<p align="center">
+  <a href="https://github.com/webkubor/dsh-bloom-theme">🎨 Theme</a> ·
+  <a href="https://github.com/webkubor/dsh-llm-hub">⚡ Model management</a>
+</p>
+
+Install both with Node.js, then restart DSH (replace `your-profile` with your profile name):
+
+```bash
+PROFILE=your-profile
+npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
+```
+
+---
 
 ## License
 

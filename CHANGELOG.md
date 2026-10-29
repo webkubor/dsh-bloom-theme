@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.18.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.4...v0.18.5) (2026-10-29)
+
+
+### 📝 Documentation
+
+* clone 命令改用 SSH ([ab51f99](https://github.com/webkubor/dsh-bloom-theme/commit/ab51f997e4d716a6e1e208a9c633f691d4c073e3))
+
 ## [0.18.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.3...v0.18.4) (2026-10-29)
 
 

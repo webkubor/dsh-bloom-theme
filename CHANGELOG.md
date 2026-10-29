@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.18.4](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.3...v0.18.4) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* clarify desktop plugin update guidance ([#63](https://github.com/webkubor/dsh-bloom-theme/issues/63)) ([dac4554](https://github.com/webkubor/dsh-bloom-theme/commit/dac4554cb3b676a72fd4cd7eafd5098fdc89706d))
+
 ## [0.18.3](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.2...v0.18.3) (2026-10-25)
 
 

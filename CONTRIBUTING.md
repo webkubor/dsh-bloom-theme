@@ -5,7 +5,7 @@
 ## 本地开发
 
 ```bash
-git clone https://github.com/webkubor/dsh-bloom-theme
+git clone git@github.com:webkubor/dsh-bloom-theme
 cd dsh-bloom-theme
 npm run dev      # 监听 lib/，保存即部署到 web profile 并自动刷新浏览器
 ```

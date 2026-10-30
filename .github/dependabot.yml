@@ -8,14 +8,11 @@
 #
 # 为什么分成两个 ecosystem：
 #   npm —— 运行时/开发依赖（含 contrast-guard 这个配色校验的关键依赖）。
-#   github-actions —— CI 里用的 action 有自己的发版节奏，且 playwright
-#   这类 action 的版本漂移会直接影响浏览器回归测试能不能跑起来。
+#   github-actions —— CI 里用的 checkout/setup-node 等 action 有自己的发版节奏。
 #
-# 注意锁文件：本仓库同时存在 package-lock.json 与 pnpm-lock.yaml
-# （CI 用 npm ci，本地开发也用 npm）。历史原因两套都在维护，
-# dependabot 会两套都尝试更新，可能产生互相打架的 PR ——
-# 所以这里只对 npm 生态开更新，pnpm-lock.yaml 由人按需同步。
-# 若将来确定废弃其中一套，把另一套加回并删掉这条注释。
+# 注意锁文件：仓库同时存在 package-lock.json 与 pnpm-lock.yaml，
+# CI 使用 npm ci。Dependabot 的 npm ecosystem 也支持 pnpm；
+# 收到依赖更新 PR 时，确认两个锁文件是否一致并以 CI 为准。
 
 version: 2
 updates:

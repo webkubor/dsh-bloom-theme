@@ -350,7 +350,17 @@ function watchCursorGlow() {
 function bindLocaleToHost(ctx) {
   const locale = ctx?.locale
   if (!locale || typeof locale.bind !== 'function') return
-  ctx.effect?.(() => locale.register(LOCALE_NS, DICTS), 'dsh-bloom-theme: dictionaries')
+  ctx.effect?.(() => {
+    try {
+      return locale.register(LOCALE_NS, DICTS) ?? (() => {})
+    } catch {
+      // 宿主的 locale 服务与预期不一致（旧版 DSH 的 register 签名不同、
+      // 或词条已被注册）。2026-10-30 实况：rc.5 桌面端的内嵌运行时较旧，
+      // 这一行抛过一次，整个 web boot 跟着失败 —— 皮肤插件没有资格
+      // 让宿主起不来。注册不了就注册不了，面板退回本地语言判断。
+      return () => {}
+    }
+  }, 'dsh-bloom-theme: dictionaries')
   ctx.effect?.(
     () => {
       try {
@@ -362,13 +372,24 @@ function bindLocaleToHost(ctx) {
     },
     'dsh-bloom-theme: ru language',
   )
-  bindLocale(locale)
+  try {
+    bindLocale(locale)
+  } catch {
+    // register 没成时 bind 一个未注册的 ns 是下一个会抛的点；
+    // translate 留空，tr() 退回 key（中文原文）。
+  }
   ctx.effect?.(
-    () => locale.subscribe?.(() => {
+    () => {
       try {
-        window.dispatchEvent(new Event(LANG_CHANGE_EVENT))
-      } catch {}
-    }) ?? (() => {}),
+        return locale.subscribe?.(() => {
+          try {
+            window.dispatchEvent(new Event(LANG_CHANGE_EVENT))
+          } catch {}
+        }) ?? (() => {})
+      } catch {
+        return () => {}
+      }
+    },
     'dsh-bloom-theme: follow locale',
   )
 }

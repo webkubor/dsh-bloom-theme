@@ -49,7 +49,7 @@ actively supported and will fade out.**
 
 (0.16.0 and earlier were built against the DSH Web UI. **0.17.0 is the desktop-ready release** — it
 brings the DSH 0.2.0 selector adaptation plus a drift gate that catches this class of breakage
-automatically.)
+automatically.) On desktop app 0.2.1-rc.5, the switcher's version display uses the desktop app version rather than an older bundled DSH package version; the drift gate also targets the locally installed desktop release.
 
 DSH now ships a desktop app, and it is what I use every day. A theme's value lives on top of a UI —
 when the host changes its interface, the palettes and the glass have to follow — so that is where

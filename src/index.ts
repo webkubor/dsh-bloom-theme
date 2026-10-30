@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 /**
@@ -37,14 +38,54 @@ const DSH_VERSION_PATH = '/api/bloom/dsh-version'
  *
  * 浏览器半侧拿不到它 —— `__DSH_BOOT__` 只给得出 7 位 commit rev，于是切换器上
  * 长期显示一串 hash 加「本地版本读不到」（owner 2026-09-15 连续两次指出）。
- * 版本号就在 `@deepseek-ai/dsh/package.json` 里，node 半侧一读即得。
+ * 桌面端的应用版本在 app.asar/dsh/package.json；Web/CLI 环境则读取
+ * `@deepseek-ai/dsh/package.json`。两者可能不同，不能拿内嵌 DSH 包版本冒充桌面应用版本。
  *
  * 这不违反本仓库「不引入 client↔node 实时桥」的定位：那条说的是 /bloom stats
  * 那种需要持续同步本地 git 状态的功能；读一个静态版本号是一次性的、只读的、
  * 零状态的，和实时桥不是一回事。判断标准是「要不要持续同步」，不是「有没有端点」。
  */
-function readDshVersion(): { version: string; error?: undefined } | { version?: undefined; error: string } {
+/**
+ * 判断宿主是桌面端 app 还是 Web UI / CLI。
+ *
+ * 判据用**能力**而不是某个字符串常量 —— 那类常量换过名（0.2.0 换过桥，
+ * 详见 src/version.ts 的注释）。这里用两个互相独立的证据：
+ *   · 进程跑在 .app 里 —— 桌面端由 Electron 启动，execPath 必然含 .app/Contents/
+ *   · 桌面运行时清单存在且自称 dsh-desktop-runtime
+ * 两者同时成立才算桌面端：单看任一条都可能误判（Electron 也可能跑 CLI 工具，
+ * 而 .app 目录也可能只是恰好在磁盘上）。
+ *
+ * ⚠️ 判不出时返回 'unknown'，**不要**默认当成 web：
+ *   跑在 .app 里却读不到运行时清单，多半是桌面端，只是这份清单读不出来
+ *   （打包结构变了、或 fs 读不了归档）。此时报 'web' 会在真实桌面端上
+ *   显示「Web」标签 —— 恰好在版本号已经回退到内嵌包的时候，误导性最强。
+ *   交给浏览器侧按桌面桥兜底，兜不住就不显示标签。
+ */
+type HostPlatform = 'desktop' | 'web' | 'unknown'
+
+function detectPlatform(): { platform: HostPlatform; desktopVersion?: string } {
+  const appMarker = '.app/Contents/'
+  const appIndex = process.execPath.indexOf(appMarker)
+  if (process.platform === 'darwin' && appIndex !== -1) {
+    try {
+      const appRoot = process.execPath.slice(0, appIndex + '.app'.length)
+      const runtimePath = join(appRoot, 'Contents/Resources/app.asar/dsh/package.json')
+      const runtime: { name?: unknown; version?: unknown } = JSON.parse(readFileSync(runtimePath, 'utf8'))
+      if (runtime.name === '@deepseek-ai/dsh-desktop-runtime' && typeof runtime.version === 'string') {
+        return { platform: 'desktop', desktopVersion: runtime.version }
+      }
+    } catch { /* 清单读不出来 —— 形态未知，交给浏览器侧兜底 */ }
+    return { platform: 'unknown' }
+  }
+  return { platform: 'web' }
+}
+
+function readDshVersion(detected: { platform: HostPlatform; desktopVersion?: string }): { version: string; error?: undefined } | { version?: undefined; error: string } {
   try {
+    // 桌面宿主由 Electron 启动：它的 fs 可读取 app.asar 内的文件。
+    // 内嵌的 @deepseek-ai/dsh 包可能比桌面应用落后（实测 rc.5 桌面端旧端点报 rc.3），
+    // 版本提示必须读取桌面运行时清单；读不到时才沿用原来的 npm 包版本。
+    if (detected.desktopVersion) return { version: detected.desktopVersion }
     const require = createRequire(import.meta.url)
     const pkgPath = require.resolve('@deepseek-ai/dsh/package.json')
     const pkg: { version?: unknown } = JSON.parse(readFileSync(pkgPath, 'utf8'))
@@ -78,11 +119,15 @@ function apply(ctx: BloomCtx) {
         response.end()
         return
       }
-      const result = readDshVersion()
+      const detected = detectPlatform()
+      const result = readDshVersion(detected)
+      // 形态未知时**不下发** platform：浏览器侧还能用桌面桥兜底。
+      // 下发一个错的 'web' 反而会把桌面端标成 Web（Codex PR #72 P2）。
+      const platform = detected.platform === 'unknown' ? {} : { platform: detected.platform }
       const body = JSON.stringify(
         result.version !== undefined
-          ? { ok: true as const, version: result.version }
-          : { ok: false as const, reason: result.error ?? 'unknown' }
+          ? { ok: true as const, version: result.version, ...platform }
+          : { ok: false as const, reason: result.error ?? 'unknown', ...platform }
       )
       response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
       response.end(body)

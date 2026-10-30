@@ -22,7 +22,7 @@ const expected = {
   en: { heading: 'Appearance', banner: 'A new Bloom version is out', share: 'Install Bloom into your DSH:', error: 'No usable channel in the registry (tags: none)', badge: 'update available: v' },
   ru: { heading: 'Внешний вид', banner: 'Новая версия Bloom', share: 'Установите к себе в DSH:', error: 'В registry нет доступных каналов (теги: нет)', badge: 'доступна v' },
 }
-async function setup(locale, saved, mode = 'dark', variant = 'petal') {
+async function setup(locale, saved, mode = 'dark', variant = 'petal', hostBody = null) {
   const context = await browser.newContext({ locale, colorScheme: 'dark' })
   const page = await context.newPage()
   const errors = []
@@ -30,6 +30,10 @@ async function setup(locale, saved, mode = 'dark', variant = 'petal') {
   await page.route('**/*', route => {
     const url = route.request().url()
     if (url === 'https://bloom.test/') return route.fulfill({ contentType: 'text/html', body: '<html data-dsh-runtime-version="0.2.0-rc.2"><body><header></header></body></html>' })
+    // host 半的版本端点：测试要能指定它回什么（含 platform 字段）。
+    if (url.includes('/api/bloom/dsh-version')) {
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify(hostBody ?? { ok: false, reason: 'no host' }) })
+    }
     const body = url.includes('@deepseek-ai') ? { 'dist-tags': {} } : { version: '99.0.0' }
     return route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) })
   })
@@ -238,5 +242,71 @@ test('an update check completing after a language switch uses the new language',
     await page.evaluate(() => window.finishCheck())
     await page.waitForFunction(() => !window.bloomTest.version.dshCheckPromise)
     assert.equal(await page.locator('[data-dsh-state]').getAttribute('title'), expected.ru.error)
+  } finally { await context.close() }
+})
+
+// 宿主形态标签（桌面端 / Web）—— 用户装的是哪一版宿主，面板上一眼可见。
+test('host platform tag shows desktop or web', async () => {
+  for (const [platform, label] of [['desktop', '桌面端'], ['web', 'Web']]) {
+    const { page, context } = await setup('zh-CN', 'zh', 'dark', 'petal',
+      { ok: true, version: '0.2.1-rc.5', platform })
+    try {
+      await click(page, '.dsh-bloom-trigger')
+      await click(page, '.dsh-bloom-more')
+      await page.waitForFunction(() => {
+        const el = document.querySelector('[data-dsh-platform]')
+        return el && !el.hidden
+      })
+      assert.equal(await text(page, '[data-dsh-platform]'), label)
+      assert.equal(await page.locator('[data-dsh-platform]').getAttribute('data-platform'), platform)
+    } finally { await context.close() }
+  }
+})
+
+// host 半拿不到 platform 时不该乱猜 —— 标签隐藏，而不是显示错的形态。
+test('host platform tag stays hidden when the host cannot tell', async () => {
+  const { page, context } = await setup('zh-CN', 'zh', 'dark', 'petal',
+    { ok: true, version: '0.2.1-rc.5' })
+  try {
+    await click(page, '.dsh-bloom-trigger')
+    await click(page, '.dsh-bloom-more')
+    // 版本已经取到，说明这次请求走完了；此时标签必须仍然是隐藏的。
+    await page.waitForFunction(() => document.querySelector('[data-dsh-current]').textContent === '0.2.1-rc.5')
+    assert.equal(await page.locator('[data-dsh-platform]').evaluate(el => el.hidden), true)
+  } finally { await context.close() }
+})
+
+// host 答了形态但没答出版本（ok:false）时，形态标签也要露出来。
+// Web 宿主没有桌面桥兜底，少了这一步重绘，标签会一直藏着（Codex PR #72 P2）。
+test('host platform tag appears even when only the platform is answered', async () => {
+  const { page, context } = await setup('zh-CN', 'zh', 'dark', 'petal',
+    { ok: false, reason: 'dsh package not found', platform: 'web' })
+  try {
+    await click(page, '.dsh-bloom-trigger')
+    await click(page, '.dsh-bloom-more')
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-dsh-platform]')
+      return el && !el.hidden
+    })
+    assert.equal(await text(page, '[data-dsh-platform]'), 'Web')
+  } finally { await context.close() }
+})
+
+// 第一次向 host 半问版本失败（端点还没起来）后，后面还能重试 ——
+// 不能因为一次失败就把整个会话锁死在旧版本上（Codex PR #72 P2）。
+test('a failed host-version request can be retried', async () => {
+  const { page, context } = await setup('zh-CN', 'zh', 'dark', 'petal',
+    { ok: true, version: '0.2.1-rc.5', platform: 'desktop' })
+  try {
+    // 第一次请求直接失败（模拟端点还没起来）。
+    await page.route('**/api/bloom/dsh-version', route => route.abort())
+    await click(page, '.dsh-bloom-trigger')
+    await click(page, '.dsh-bloom-more')
+    await page.waitForTimeout(300)
+    // 撤掉拦截后点刷新 —— 应该能重新问出来。
+    await page.unroute('**/api/bloom/dsh-version')
+    await click(page, '[data-act="refresh"]')
+    await page.waitForFunction(() => document.querySelector('[data-dsh-current]').textContent === '0.2.1-rc.5')
+    assert.equal(await text(page, '[data-dsh-platform]'), '桌面端')
   } finally { await context.close() }
 })

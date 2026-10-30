@@ -11,13 +11,16 @@
 #   github-actions —— CI 里用的 checkout/setup-node 等 action 有自己的发版节奏。
 #
 # 注意锁文件：仓库同时存在 package-lock.json 与 pnpm-lock.yaml，
-# CI 使用 npm ci。Dependabot 的 npm ecosystem 也支持 pnpm；
-# 收到依赖更新 PR 时，确认两个锁文件是否一致并以 CI 为准。
+# CI 使用 npm ci。若 Dependabot 扫到 pnpm-workspace.yaml，会改走 pnpm 工作区
+# 更新路径并跳过 package-lock.json；排除工作区文件后走普通锁文件更新路径。
+# 收到依赖更新 PR 时仍须检查两个锁文件和 CI 的结果。
 
 version: 2
 updates:
   - package-ecosystem: npm
     directory: "/"
+    exclude-paths:
+      - "pnpm-workspace.yaml"
     schedule:
       interval: weekly
       day: monday

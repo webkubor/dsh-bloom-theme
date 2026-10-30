@@ -26,7 +26,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         with:
           # 用 personal PAT（cs vault: secret://github/personal-pat，仓库 secret 名 PR_PAT），
           # 而不是默认 GITHUB_TOKEN —— 后者要仓库额外勾

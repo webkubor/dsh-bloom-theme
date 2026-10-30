@@ -17,7 +17,7 @@
  *
  * 用法：
  *   node scripts/dsh-drift.mjs                # 自动探测 DSH 版本
- *   node scripts/dsh-drift.mjs --dsh 0.2.0-rc.2
+ *   node scripts/dsh-drift.mjs --dsh 0.2.1-rc.5
  *   node scripts/dsh-drift.mjs --offline      # 只用缓存（CI 无网/快速本地循环）
  *   node scripts/dsh-drift.mjs --update-baseline   # 把当前缺失写进基线（谨慎）
  */
@@ -34,12 +34,24 @@ const args = process.argv.slice(2)
 const offline = args.includes('--offline')
 const updateBaseline = args.includes('--update-baseline')
 
-/** 目标 DSH 版本：--dsh > 环境变量 > 桌面 profile 的声明 > 兜底。 */
+/** 目标 DSH 版本：--dsh > 环境变量 > 本机桌面应用 > profile 声明 > 兜底。 */
 function targetVersion () {
   const i = args.indexOf('--dsh')
   if (i !== -1 && args[i + 1]) return args[i + 1]
   if (process.env.DSH_VERSION) return process.env.DSH_VERSION
-  // 本机桌面 profile 的依赖里带着 DSH 版本（app 独占托管，但文件可读）
+  // 桌面 profile 在新版本里只声明插件，不再带宿主版本；优先读应用自身的清单。
+  // Node 的 fs 不识别 asar 虚拟目录，macOS Info.plist 的版本可直接用 plutil 读取。
+  if (process.platform === 'darwin') {
+    const app = '/Applications/DeepSeek Harness.app/Contents/Info.plist'
+    if (existsSync(app)) {
+      try {
+        const version = execFileSync('/usr/libexec/PlistBuddy',
+          ['-c', 'Print :CFBundleShortVersionString', app], { encoding: 'utf8' }).trim()
+        if (/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(version)) return version
+      } catch { /* 应用清单不可读，试 profile */ }
+    }
+  }
+  // 兼容旧版 profile 的宿主依赖声明。
   for (const p of ['desktop', 'desktop-local']) {
     const f = resolve(homedir(), '.dsh/profiles', p, 'package.json')
     if (!existsSync(f)) continue
@@ -55,7 +67,7 @@ function targetVersion () {
       }
     } catch { /* 读不动就下一个 */ }
   }
-  return '0.2.0-rc.2'
+  return '0.2.1-rc.5'
 }
 
 /**

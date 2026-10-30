@@ -394,6 +394,30 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   background: color-mix(in oklch, oklch(48% 0.17 28), transparent 88%);
   color: oklch(48% 0.17 28);
 }
+/* 宿主形态标签（桌面端 / Web）：与状态 chip 同风格，但用中性色 ——
+   它不是「有更新」那种状态提示，只是告诉用户自己装的是哪一版宿主。
+   对比度同状态 chip 的明暗分档：亮色 45%、暗色 78%，都过 AA。 */
+.dsh-bloom-dsh-platform {
+  flex: none;
+  white-space: nowrap;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklch, oklch(45% 0.06 250), transparent 88%);
+  color: oklch(45% 0.06 250);
+}
+.dsh-bloom-dsh-platform[data-platform="desktop"] {
+  background: color-mix(in oklch, oklch(45% 0.13 150), transparent 88%);
+  color: oklch(45% 0.13 150);
+}
+body[data-ds-dark-theme] .dsh-bloom-dsh-platform {
+  background: color-mix(in oklch, oklch(78% 0.05 250), transparent 88%);
+  color: oklch(78% 0.05 250);
+}
+body[data-ds-dark-theme] .dsh-bloom-dsh-platform[data-platform="desktop"] {
+  background: color-mix(in oklch, oklch(78% 0.14 150), transparent 88%);
+  color: oklch(78% 0.14 150);
+}
 body[data-ds-dark-theme] .dsh-bloom-dsh-state[data-state="latest"] {
   background: color-mix(in oklch, oklch(78% 0.14 150), transparent 88%);
   color: oklch(78% 0.14 150);

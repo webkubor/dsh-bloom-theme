@@ -170,6 +170,7 @@ export function buildSwitcherHTML(currentVariant) {
         <div class="dsh-bloom-dsh-row">
           <span class="dsh-bloom-dsh-label">DSH</span>
           <span class="dsh-bloom-dsh-ver" data-dsh-current>—</span>
+          <span class="dsh-bloom-dsh-platform" data-dsh-platform hidden></span>
           <span class="dsh-bloom-dsh-state" data-dsh-state></span>
           <span class="dsh-bloom-dsh-spacer"></span>
           <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="${tr('重新检查 DSH 最新版')}">↻</button>

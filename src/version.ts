@@ -186,19 +186,49 @@ function normalizeSemver(value: unknown): string | null {
  */
 /** host 半侧读到的 DSH 版本（见 src/index.ts 的 /api/bloom/dsh-version）。 */
 let dshVersionFromHost: string | null = null
+let dshVersionRequest: Promise<string | null> | null = null
+let dshVersionAsked = false
+/** host 半侧读到的宿主形态：desktop = 桌面端 app，web = Web UI / CLI。 */
+let dshPlatformFromHost: 'desktop' | 'web' | null = null
 
 /**
  * 向 host 半要一次 DSH 版本号，成功则刷新面板。
  * 浏览器侧只有 7 位 commit rev，拿它没法和 npm 上的 semver 比较。
  */
 export async function fetchDshVersionFromHost(): Promise<string | null> {
+  if (dshVersionRequest) return dshVersionRequest
+  if (dshVersionAsked) return dshVersionFromHost
+  dshVersionAsked = true
+  dshVersionRequest = (async () => {
+    try {
+      const res = await fetch('/api/bloom/dsh-version', { headers: { accept: 'application/json' } })
+      const body = await res.json()
+      if (body?.platform === 'desktop' || body?.platform === 'web') {
+        dshPlatformFromHost = body.platform
+      }
+      if (body?.ok === true && typeof body.version === 'string') {
+        dshVersionFromHost = body.version
+        return dshVersionFromHost
+      }
+    } catch {}
+    return null
+  })()
+  try { return await dshVersionRequest } finally { dshVersionRequest = null }
+}
+
+/**
+ * 宿主形态标签：面板上显示「桌面端」还是「Web」。
+ *
+ * 判据分两层：
+ *   · host 半给的 platform 最准 —— 它知道自己在 Electron 里还是普通 Node 进程里。
+ *   · 桌面壳桥（window.dshDesktop）是桌面端独有的，拿它兜底。
+ * 都拿不到就返回 null（面板不显示标签，而不是猜一个）。
+ */
+export function readHostPlatform(): 'desktop' | 'web' | null {
+  if (dshPlatformFromHost) return dshPlatformFromHost
   try {
-    const res = await fetch('/api/bloom/dsh-version', { headers: { accept: 'application/json' } })
-    const body = await res.json()
-    if (body?.ok === true && typeof body.version === 'string') {
-      dshVersionFromHost = body.version
-      return dshVersionFromHost
-    }
+    const hostWindow = window as any
+    if (hostWindow.dshDesktop || hostWindow.dshDesktopBoot) return 'desktop'
   } catch {}
   return null
 }
@@ -211,7 +241,7 @@ export function readDshRuntimeInfo(): DshRuntimeInfo {
     const updates = desktop.updates
     const boot = hostWindow.__DSH_BOOT__ || {}
     const dataVersion = document.documentElement?.dataset?.dshRuntimeVersion
-    // host 半读到的排第一 —— 它直接来自 @deepseek-ai/dsh/package.json，是唯一权威来源；
+    // host 半读到的排第一：桌面端读应用运行时清单，Web/CLI 读 DSH 包清单；
     // 其余几个在实测里要么没有、要么只是 commit rev。
     const currentVersion = [dshVersionFromHost, bridge.runtimeVersion, dataVersion, boot.version, boot.rev]
       .map(normalizeSemver)
@@ -375,16 +405,29 @@ export function renderDshUpdate() {
   const latEl = document.querySelector<HTMLElement>('[data-dsh-latest]')
   const stEl = document.querySelector<HTMLElement>('[data-dsh-state]')
   const hintEl = document.querySelector<HTMLElement>('[data-dsh-hint]')
+  const platEl = document.querySelector<HTMLElement>('[data-dsh-platform]')
   if (!root || !curEl || !latEl || !stEl || !hintEl) return
 
   const runtime = readDshRuntimeInfo()
   const cur = runtime.currentVersion || runtime.buildRev || '?'
   curEl.textContent = cur
 
-  // 首次渲染时浏览器侧只有 commit rev；异步向 host 半要一次真版本号，到了就重画。
-  // 只问一次 —— 版本号在运行期不会变。
-  if (!runtime.currentVersion && dshVersionFromHost === null) {
+  // 桌面桥暴露的是更新能力，未必暴露应用版本；host 半会读桌面运行时清单。
+  // 即使 boot 有语义版本也请求一次：那可能只是内嵌 DSH 包的版本。
+  if (dshVersionFromHost === null) {
     void fetchDshVersionFromHost().then((v) => { if (v) renderDshUpdate() })
+  }
+
+  // 宿主形态标签：桌面端还是 Web。判不出就不显示，不猜。
+  if (platEl) {
+    const platform = readHostPlatform()
+    if (platform) {
+      platEl.hidden = false
+      platEl.textContent = platform === 'desktop' ? tr('桌面端') : tr('Web')
+      platEl.dataset.platform = platform
+    } else {
+      platEl.hidden = true
+    }
   }
 
   const btnRefresh = document.querySelector<HTMLButtonElement>('[data-act="refresh"]')

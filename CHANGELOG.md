@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.19.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.5...v0.19.0) (2026-10-30)
+
+
+### ✨ Features
+
+* **version:** 版本提示改读桌面应用版本，并加宿主形态标签 ([#72](https://github.com/webkubor/dsh-bloom-theme/issues/72)) ([c94b89e](https://github.com/webkubor/dsh-bloom-theme/commit/c94b89ef8eb38df6fc3a9e2238d38830acf3e523))
+
 ## [0.18.5](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.4...v0.18.5) (2026-10-29)
 
 

@@ -1,0 +1,56 @@
+# Dependabot —— 依赖漏洞与版本更新。
+#
+# 为什么要装这个（2026-10-30 补记）：
+#   这个仓库此前没有 dependabot 配置，等于**依赖漏洞和上游破坏性变更
+#   不会主动通知任何人**。上面那些踩坑（contrast-guard 接进 CI 时 CI 立刻
+#   报 not found、playwright 版本与 DSH 0.2.0 的适配）都是靠人肉发现的 ——
+#   依赖更新必须能被「推着走」，而不是靠谁想起来去看。
+#
+# 为什么分成两个 ecosystem：
+#   npm —— 运行时/开发依赖（含 contrast-guard 这个配色校验的关键依赖）。
+#   github-actions —— CI 里用的 checkout/setup-node 等 action 有自己的发版节奏。
+#
+# 注意锁文件：仓库同时存在 package-lock.json 与 pnpm-lock.yaml，
+# CI 使用 npm ci。若 Dependabot 扫到 pnpm-workspace.yaml，会改走 pnpm 工作区
+# 更新路径并跳过 package-lock.json；排除工作区文件后走普通锁文件更新路径。
+# 收到依赖更新 PR 时仍须检查两个锁文件和 CI 的结果。
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    exclude-paths:
+      - "pnpm-workspace.yaml"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+    groups:
+      # 同类依赖合一个 PR：配色校验与打包工具升级往往要配套调，
+      # 拆成多个 PR 反而不好review。
+      dev-deps:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(ci)"
+    labels:
+      - dependencies
+      - ci

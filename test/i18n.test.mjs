@@ -275,3 +275,38 @@ test('host platform tag stays hidden when the host cannot tell', async () => {
     assert.equal(await page.locator('[data-dsh-platform]').evaluate(el => el.hidden), true)
   } finally { await context.close() }
 })
+
+// host 答了形态但没答出版本（ok:false）时，形态标签也要露出来。
+// Web 宿主没有桌面桥兜底，少了这一步重绘，标签会一直藏着（Codex PR #72 P2）。
+test('host platform tag appears even when only the platform is answered', async () => {
+  const { page, context } = await setup('zh-CN', 'zh', 'dark', 'petal',
+    { ok: false, reason: 'dsh package not found', platform: 'web' })
+  try {
+    await click(page, '.dsh-bloom-trigger')
+    await click(page, '.dsh-bloom-more')
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-dsh-platform]')
+      return el && !el.hidden
+    })
+    assert.equal(await text(page, '[data-dsh-platform]'), 'Web')
+  } finally { await context.close() }
+})
+
+// 第一次向 host 半问版本失败（端点还没起来）后，后面还能重试 ——
+// 不能因为一次失败就把整个会话锁死在旧版本上（Codex PR #72 P2）。
+test('a failed host-version request can be retried', async () => {
+  const { page, context } = await setup('zh-CN', 'zh', 'dark', 'petal',
+    { ok: true, version: '0.2.1-rc.5', platform: 'desktop' })
+  try {
+    // 第一次请求直接失败（模拟端点还没起来）。
+    await page.route('**/api/bloom/dsh-version', route => route.abort())
+    await click(page, '.dsh-bloom-trigger')
+    await click(page, '.dsh-bloom-more')
+    await page.waitForTimeout(300)
+    // 撤掉拦截后点刷新 —— 应该能重新问出来。
+    await page.unroute('**/api/bloom/dsh-version')
+    await click(page, '[data-act="refresh"]')
+    await page.waitForFunction(() => document.querySelector('[data-dsh-current]').textContent === '0.2.1-rc.5')
+    assert.equal(await text(page, '[data-dsh-platform]'), '桌面端')
+  } finally { await context.close() }
+})

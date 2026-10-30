@@ -187,18 +187,23 @@ function normalizeSemver(value: unknown): string | null {
 /** host 半侧读到的 DSH 版本（见 src/index.ts 的 /api/bloom/dsh-version）。 */
 let dshVersionFromHost: string | null = null
 let dshVersionRequest: Promise<string | null> | null = null
-let dshVersionAsked = false
+let dshVersionAnswered = false
 /** host 半侧读到的宿主形态：desktop = 桌面端 app，web = Web UI / CLI。 */
 let dshPlatformFromHost: 'desktop' | 'web' | null = null
 
 /**
  * 向 host 半要一次 DSH 版本号，成功则刷新面板。
  * 浏览器侧只有 7 位 commit rev，拿它没法和 npm 上的 semver 比较。
+ *
+ * ⚠️ 三种状态要分清，不能合并成一个「问过了」：
+ *   · 拿到了可用响应（含形态）→ dshVersionAnswered = true，不再重问，避免死循环。
+ *   · 请求失败 / 响应不是 JSON → 保持未答，下一次渲染能重试
+ *     （端点可能还没起来、或第一次网络抖动；锁死会让整个会话都停在旧版本上）。
+ *   · 答了但没有版本（ok:false）→ 算「答过了」（有形态），但版本仍可后补。
  */
 export async function fetchDshVersionFromHost(): Promise<string | null> {
   if (dshVersionRequest) return dshVersionRequest
-  if (dshVersionAsked) return dshVersionFromHost
-  dshVersionAsked = true
+  if (dshVersionAnswered) return dshVersionFromHost
   dshVersionRequest = (async () => {
     try {
       const res = await fetch('/api/bloom/dsh-version', { headers: { accept: 'application/json' } })
@@ -206,11 +211,15 @@ export async function fetchDshVersionFromHost(): Promise<string | null> {
       if (body?.platform === 'desktop' || body?.platform === 'web') {
         dshPlatformFromHost = body.platform
       }
+      // 只要 host 给出了任何有效响应（含形态），就不再重复问。
+      dshVersionAnswered = true
       if (body?.ok === true && typeof body.version === 'string') {
         dshVersionFromHost = body.version
         return dshVersionFromHost
       }
-    } catch {}
+    } catch {
+      // 失败不置 dshVersionAnswered —— 允许重试。
+    }
     return null
   })()
   try { return await dshVersionRequest } finally { dshVersionRequest = null }
@@ -414,8 +423,14 @@ export function renderDshUpdate() {
 
   // 桌面桥暴露的是更新能力，未必暴露应用版本；host 半会读桌面运行时清单。
   // 即使 boot 有语义版本也请求一次：那可能只是内嵌 DSH 包的版本。
-  if (dshVersionFromHost === null) {
-    void fetchDshVersionFromHost().then((v) => { if (v) renderDshUpdate() })
+  //
+  // 只在「还没问过」时问 —— 问过就不会再问，避免
+  // 请求→无版本→重绘→请求 的死循环。重绘的触发条件在回调里：
+  // 版本或形态任一有变化就重画（Codex PR #72 P2）。
+  if (!dshVersionAnswered) {
+    void fetchDshVersionFromHost().then((v) => {
+      if (v || dshPlatformFromHost) renderDshUpdate()
+    })
   }
 
   // 宿主形态标签：桌面端还是 Web。判不出就不显示，不猜。
@@ -585,6 +600,13 @@ export function renderDshUpdate() {
         return
       }
       try { await checkDshLatest(true) } finally {
+        // 之前那次向 host 半问版本的请求若失败了（端点还没起来、网络抖了一下），
+        // 这里解锁，让用户点刷新能再试一次，而不是整个会话都停在旧版本上
+        // （Codex PR #72 P2）。
+        dshVersionAnswered = false
+        void fetchDshVersionFromHost().then((v) => {
+          if (v || dshPlatformFromHost) renderDshUpdate()
+        })
         btnRefresh.disabled = false
         btnRefresh.textContent = label
       }

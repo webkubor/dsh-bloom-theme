@@ -54,8 +54,16 @@ const DSH_VERSION_PATH = '/api/bloom/dsh-version'
  *   · 桌面运行时清单存在且自称 dsh-desktop-runtime
  * 两者同时成立才算桌面端：单看任一条都可能误判（Electron 也可能跑 CLI 工具，
  * 而 .app 目录也可能只是恰好在磁盘上）。
+ *
+ * ⚠️ 判不出时返回 'unknown'，**不要**默认当成 web：
+ *   跑在 .app 里却读不到运行时清单，多半是桌面端，只是这份清单读不出来
+ *   （打包结构变了、或 fs 读不了归档）。此时报 'web' 会在真实桌面端上
+ *   显示「Web」标签 —— 恰好在版本号已经回退到内嵌包的时候，误导性最强。
+ *   交给浏览器侧按桌面桥兜底，兜不住就不显示标签。
  */
-function detectPlatform(): { platform: 'desktop' | 'web'; desktopVersion?: string } {
+type HostPlatform = 'desktop' | 'web' | 'unknown'
+
+function detectPlatform(): { platform: HostPlatform; desktopVersion?: string } {
   const appMarker = '.app/Contents/'
   const appIndex = process.execPath.indexOf(appMarker)
   if (process.platform === 'darwin' && appIndex !== -1) {
@@ -66,12 +74,13 @@ function detectPlatform(): { platform: 'desktop' | 'web'; desktopVersion?: strin
       if (runtime.name === '@deepseek-ai/dsh-desktop-runtime' && typeof runtime.version === 'string') {
         return { platform: 'desktop', desktopVersion: runtime.version }
       }
-    } catch { /* 不是桌面端就当 Web */ }
+    } catch { /* 清单读不出来 —— 形态未知，交给浏览器侧兜底 */ }
+    return { platform: 'unknown' }
   }
   return { platform: 'web' }
 }
 
-function readDshVersion(detected: { platform: 'desktop' | 'web'; desktopVersion?: string }): { version: string; error?: undefined } | { version?: undefined; error: string } {
+function readDshVersion(detected: { platform: HostPlatform; desktopVersion?: string }): { version: string; error?: undefined } | { version?: undefined; error: string } {
   try {
     // 桌面宿主由 Electron 启动：它的 fs 可读取 app.asar 内的文件。
     // 内嵌的 @deepseek-ai/dsh 包可能比桌面应用落后（实测 rc.5 桌面端旧端点报 rc.3），
@@ -112,20 +121,13 @@ function apply(ctx: BloomCtx) {
       }
       const detected = detectPlatform()
       const result = readDshVersion(detected)
+      // 形态未知时**不下发** platform：浏览器侧还能用桌面桥兜底。
+      // 下发一个错的 'web' 反而会把桌面端标成 Web（Codex PR #72 P2）。
+      const platform = detected.platform === 'unknown' ? {} : { platform: detected.platform }
       const body = JSON.stringify(
         result.version !== undefined
-          ? {
-              ok: true as const,
-              version: result.version,
-              // 宿主形态：desktop = 桌面端 app，web = Web UI / CLI。
-              // 用户装的是哪个版本，这一个字段说了算（2026-10-30 加）。
-              platform: detected.platform,
-            }
-          : {
-              ok: false as const,
-              reason: result.error ?? 'unknown',
-              platform: detected.platform,
-            }
+          ? { ok: true as const, version: result.version, ...platform }
+          : { ok: false as const, reason: result.error ?? 'unknown', ...platform }
       )
       response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
       response.end(body)

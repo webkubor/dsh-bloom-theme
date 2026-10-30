@@ -12,7 +12,7 @@ import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
 import { enableFloatingDrag, clearFloatingPos } from './drag.js'
 import { VARIANTS } from './palette.js'
-import { tr, variantName, variantPoem, langRowHTML, syncLangRow, getLang, setLang, type BloomLang } from './lang.js'
+import { tr, variantName, variantPoem, langRowHTML, syncLangRow, getLang, setLang, LANG_CHANGE_EVENT, type BloomLang } from './lang.js'
 
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
 export const dotStyle = (v) =>
@@ -265,6 +265,14 @@ export function buildSwitcherEl(initialVariant) {
   const wrapper = document.createElement('div')
   wrapper.innerHTML = buildSwitcherHTML(initialVariant)
   const el = wrapper.firstElementChild as HTMLElement
+
+  // 语言现在是 DSH 的偏好（locale.preference）。在 DSH 设置里换语言时，
+  // 面板要跟着重画 —— 否则会出现「DSH 是中文、面板还是英文」的割裂。
+  // 监听挂在 window 上：面板可能被替换掉，但事件源始终在。
+  window.addEventListener(LANG_CHANGE_EVENT, () => {
+    if (!el.isConnected) return
+    rerenderMenu(el, readVariant())
+  })
 
   const openMenu = () => {
     const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')

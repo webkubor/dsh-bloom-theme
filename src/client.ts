@@ -38,7 +38,7 @@ import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync } from './appearance.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { checkUpdate } from './version.js'
-import { tr, LANG_CHANGE_EVENT } from './lang.js'
+import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS, RU_LANGUAGE } from './lang.js'
 
 /**
  * 鼠标跟随光斑（v0.15 唯一的亮点）。
@@ -333,6 +333,47 @@ function watchCursorGlow() {
 })()
 
 /**
+ * 把本插件的语言接到 DSH 的 locale 服务上。
+ *
+ * 这是「体系配置走 DSH」的落地点，做三件事：
+ *
+ *  1. 注册词条 `{zh, en, ru}`（key 是中文原文）。zh 必须是全量恒等表 ——
+ *     DSH 的回落链是「当前语言 → 声明 fallback → en」，zh 缺一条就会在中文
+ *     界面里漏出英文。
+ *  2. 用 `addLanguage` 把俄语补进 DSH 的语言目录。DSH 自带只有 zh/en，
+ *     不补的话 `setLocale('ru')` 会抛 `locale "ru" is not registered`。
+ *  3. `bindLocale` 绑定 + 订阅变化：在 DSH 设置里换语言，面板立刻跟着换。
+ *
+ * 宿主没提供 locale 服务时（旧版 DSH / 单测 / 独立运行）安静跳过，
+ * 退回 lang.ts 里那套本地判断 —— 面板不能因为拿不到服务就整块消失。
+ */
+function bindLocaleToHost(ctx) {
+  const locale = ctx?.locale
+  if (!locale || typeof locale.bind !== 'function') return
+  ctx.effect?.(() => locale.register(LOCALE_NS, DICTS), 'dsh-bloom-theme: dictionaries')
+  ctx.effect?.(
+    () => {
+      try {
+        return locale.addLanguage?.(RU_LANGUAGE) ?? (() => {})
+      } catch {
+        // 已经被别的来源注册过：DSH 只有一个 ru，谁先注册都一样
+        return () => {}
+      }
+    },
+    'dsh-bloom-theme: ru language',
+  )
+  bindLocale(locale)
+  ctx.effect?.(
+    () => locale.subscribe?.(() => {
+      try {
+        window.dispatchEvent(new Event(LANG_CHANGE_EVENT))
+      } catch {}
+    }) ?? (() => {}),
+    'dsh-bloom-theme: follow locale',
+  )
+}
+
+/**
  * 向 DSH 的 client loader 注册。
  *
  * ⚠️ 契约（踩过坑，别再改错地方）：factory 的返回值会被 cordis 当插件 apply，
@@ -346,11 +387,12 @@ window.__ModuleLoader__.load({
   factory: () => {
     const exports: Record<string, unknown> = {}
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
-
-    exports.apply = function apply() {
+    exports.apply = function apply(ctx) {
       // 顶层 IIFE 已注入；此处兜底：cordis materialize 时再确认一次。
       if (typeof document === 'undefined') return
       const variant = readVariant()
+      // 语言是体系配置，走 DSH 的 locale 服务 —— 必须在任何 tr() 渲染之前接上。
+      bindLocaleToHost(ctx)
       if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/bloom.css"]')) {
         injectCSS(buildBloomCSS(), 'bloom.css')
       }

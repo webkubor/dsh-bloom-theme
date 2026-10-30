@@ -7,9 +7,44 @@ import { fileURLToPath } from 'node:url'
 
 const {version: currentVersion} = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
 
+/**
+ * DSH locale 服务的最小替身。
+ *
+ * 按 DSH 的真实契约实现（dsh-client-locale）：注册词条、bind 取词（回落链
+ * 当前语言 → 声明的 fallback → en → key 本身）、setLocale 改偏好并广播、
+ * subscribe 订阅变化。
+ *
+ * @param active - 起始语言（对应 DSH 的 locale.preference）。
+ */
+const makeLocale = (active) => ({
+  active,
+  dicts: {},
+  listeners: new Set(),
+  register(ns, dicts) { this.dicts[ns] = dicts },
+  bind(ns) {
+    const dicts = this.dicts[ns] ?? {}
+    return (key) => {
+      for (const loc of [this.active, 'en']) {
+        const v = dicts[loc]?.[key]
+        if (v !== undefined) return v
+      }
+      return key
+    }
+  },
+  getSnapshot() { return { active: this.active } },
+  subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn) },
+  setLocale(id) { this.active = id; for (const fn of this.listeners) fn() },
+  addLanguage() { return () => {} },
+})
+
 // Exercise the real client and its DOM event handlers; all network traffic is mocked.
 const { outputFiles } = await build({
-  stdin: { contents: `import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts'; window.bloomTest = {lang, version};`, resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
+  stdin: { contents: `import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts';
+    window.bloomTest = {lang, version};
+    // 宿主注入 locale 服务后，cordis 会 materialize 插件的 apply(ctx)。
+    // 测试里手动调它，走和真实宿主同一条路径。
+    window.bloomTest.applyWithLocale = () => window.__ModuleLoader__?._module?.apply({ locale: window.__dshLocale, effect: (fn) => fn() });`,
+    resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })
 const browser = await chromium.launch({
@@ -22,6 +57,9 @@ const expected = {
   en: { heading: 'Appearance', banner: 'A new Bloom version is out', share: 'Install Bloom into your DSH:', error: 'No usable channel in the registry (tags: none)', badge: 'update available: v' },
   ru: { heading: 'Внешний вид', banner: 'Новая версия Bloom', share: 'Установите к себе в DSH:', error: 'В registry нет доступных каналов (теги: нет)', badge: 'доступна v' },
 }
+/**
+ * DSH locale 服务的最小替身见文件头的 makeLocale —— 浏览器里用的是它序列化过去的副本。
+ */
 async function setup(locale, saved, mode = 'dark', variant = 'petal', hostBody = null) {
   const context = await browser.newContext({ locale, colorScheme: 'dark' })
   const page = await context.newPage()
@@ -38,16 +76,30 @@ async function setup(locale, saved, mode = 'dark', variant = 'petal', hostBody =
     return route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) })
   })
   await page.goto('https://bloom.test/')
-  await page.evaluate(({saved, mode, variant}) => {
+  await page.evaluate(({saved, mode, variant, locale, localeSrc}) => {
     if (saved) localStorage.setItem('dsh-bloom-lang', saved)
     localStorage.setItem('dsh-bloom-variant', variant)
     localStorage.setItem('bloom-appearance-mode', mode)
-    window.__ModuleLoader__ = { load() {} }
+    // DSH 的 ModuleLoader 真的会调 factory 并 materialize 出来的模块 ——
+    // 测试里要照抄这个行为，否则拿不到插件的 apply(ctx)。
+    window.__ModuleLoader__ = {
+      _module: null,
+      load(def) { this._module = def.factory() },
+    }
     window.copied = ''
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: async text => { window.copied = text } } })
-  }, {saved, mode, variant})
+    // ── DSH locale 服务的最小替身 ──────────────────────────────────────
+    // 语言是体系配置，真源在 DSH（2026-10-30 改）。测试里不能只改 localStorage ——
+    // 那样测的就不是新架构了。这里按 DSH 的真实契约实现一份：注册词条、bind 取词、
+    // setLocale 改偏好并广播、subscribe 订阅变化。
+    window.__dshLocale = new Function('return (' + localeSrc + ')')()(saved || (locale.startsWith('zh') ? 'zh' : 'en'))
+    // 宿主把 locale 服务交给插件：apply(ctx) 会从这里取
+    window.__dshApply = (ctx) => window.__dshApplyModule?.apply(ctx)
+  }, {saved, mode, variant, locale, localeSrc: makeLocale.toString()})
   await page.clock.install()
   await page.addScriptTag({ content: outputFiles[0].text })
+  // 让插件走 apply(ctx) 这条真实路径（宿主注入 locale 后才会 bind 上）
+  await page.evaluate(() => window.bloomTest.applyWithLocale?.())
   await page.waitForFunction(() => window.bloomTest.version.dshCheckError)
   await page.clock.fastForward(4100)
   await page.waitForSelector('#dsh-bloom-update-banner')
@@ -89,7 +141,10 @@ for (const mode of ['light', 'dark', 'system']) {
         assert.equal(await page.locator(`[data-mode="${mode}"]`).getAttribute('aria-pressed'), 'true')
         assert.equal(await page.locator(`[data-lang="${lang}"]`).getAttribute('aria-pressed'), 'true')
         const after = await page.evaluate(() => ({storage: {...localStorage}, session: {...sessionStorage}, variant: document.body.dataset.bloomVariant, dark: document.body.hasAttribute('data-ds-dark-theme')}))
-        assert.deepEqual(after, {...before, storage: {...before.storage, 'dsh-bloom-lang': lang}})
+        // 语言不再写自己的 localStorage —— 真源是 DSH 的 locale.preference。
+        // 其余持久化状态（配色/模式/版本）一律不变。
+        assert.deepEqual(after, before)
+        assert.equal(await page.evaluate(() => window.__dshLocale.active), lang)
         await click(page, '.dsh-bloom-share')
         await page.waitForFunction(() => window.copied)
         assert.ok((await page.evaluate(() => window.copied)).includes(expected[lang].share))
@@ -181,14 +236,24 @@ test('saved language and appearance replay on reload; invalid language falls bac
   try {
     await click(page, '.dsh-bloom-trigger')
     await click(page, '[data-lang="ru"]')
+    // 语言写在 DSH 的 locale.preference 上（不再是自己存 localStorage）。
+    // 模拟「重启后 DSH 把偏好还给插件」：active 仍是 ru。
+    assert.equal(await page.evaluate(() => window.__dshLocale.active), 'ru')
     await page.reload()
-    await page.evaluate(() => { window.__ModuleLoader__ = {load(){}} })
+    // 重载后宿主重新注入 locale 服务，并把偏好（ru）交给插件。
+    // 这正是新架构：语言状态在 DSH 那边，不在插件的 localStorage。
+    await page.evaluate(([src, active]) => {
+      window.__dshLocale = new Function('return (' + src + ')')()(active)
+      window.__ModuleLoader__ = { _module: null, load(def) { this._module = def.factory() } }
+    }, [makeLocale.toString(), 'ru'])
     await page.addScriptTag({content: outputFiles[0].text})
+    await page.evaluate(() => window.bloomTest.applyWithLocale?.())
     assert.equal(await text(page, '.dsh-bloom-head__title'), expected.ru.heading)
     assert.equal(await page.evaluate(() => document.body.dataset.bloomVariant), 'lapis')
     assert.equal(await page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme')), true)
-    await page.evaluate(() => localStorage.setItem('dsh-bloom-lang', 'invalid'))
-    assert.equal(await page.evaluate(() => window.bloomTest.lang.getLang()), 'zh')
+    // 旧版自己存的那份语言从此不再生效（架构已改：真源只有 DSH）
+    await page.evaluate(() => localStorage.setItem('dsh-bloom-lang', 'zh'))
+    assert.equal(await page.evaluate(() => window.bloomTest.lang.getLang()), 'ru')
   } finally { await context.close() }
 })
 

@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.19.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.19.1...v0.19.2) (2026-10-31)
+
+
+### 🐛 Bug Fixes
+
+* **locale:** ctx.locale 是 Proxy 属性，未声明 inject 时读取直接抛 ([50bae91](https://github.com/webkubor/dsh-bloom-theme/commit/50bae91d872795fc5d9a82b7660a9afb222f6dc3))
+
 ## [0.19.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.19.0...v0.19.1) (2026-10-31)
 
 

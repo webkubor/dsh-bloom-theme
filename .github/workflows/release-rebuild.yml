@@ -34,7 +34,7 @@ jobs:
     if: startsWith(github.event.pull_request.head.ref, 'release-please--')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # 必须是 PR 的头分支。默认 checkout 在 merge commit 上，
           # 在那里提交推不到 PR 分支。

@@ -115,7 +115,7 @@ DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。has
 
 **版本号与 CHANGELOG 由 release-please 独占。人只写 commit。**
 
-1. 改完 `npm run deploy`，在真实 DSH 里验证
+1. 改完 `npm run deploy`（自带宿主契约门禁，不过不部署），⌘Q 重开桌面端验证；起不来就 `npm run rollback`
 2. `npm run check` 通过
 3. 跑一遍**视觉审计**（下一节），`verdict: PASS`
 4. 用 Conventional Commits 提交、推 main
@@ -224,7 +224,7 @@ git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时
 所以有一个浏览器端脚本补这一层：
 
 ```bash
-npm run deploy   # 先部署到 desktop-local（桌面端由 app 独占托管，CLI 装不进 desktop）
+npm run deploy   # 门禁 → 装进 desktop（桌面端唯一会读的 profile）
 # 然后在 ego-browser 里打开 http://127.0.0.1:19387，注入并运行：
 #   scripts/visual-audit.browser.js  →  window.__bloomAudit()
 ```

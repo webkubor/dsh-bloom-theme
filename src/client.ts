@@ -346,18 +346,38 @@ function watchCursorGlow() {
  *
  * 宿主没提供 locale 服务时（旧版 DSH / 单测 / 独立运行）安静跳过，
  * 退回 lang.ts 里那套本地判断 —— 面板不能因为拿不到服务就整块消失。
+ *
+ * ⚠️ 契约（2026-10-30 事故，别再改回 `ctx.locale`）：
+ * cordis 的 ctx 是 Proxy，**读一个没在 inject 里声明的服务会直接抛**
+ * `cannot get property "locale" without inject` —— 连 `ctx?.locale` 都会抛，
+ * 可选链和 try/catch 包后面的调用都救不了（抛在取值这一步）。
+ * apply 一抛，web boot 报 `dsh-bloom-theme: failed`，整个桌面端起不来。
+ *
+ * 两种合法写法：
+ *   A. 顶层 `exports.inject = ['locale']` —— 硬依赖，locale 不在时整个插件挂起，
+ *      皮肤也不会注入。皮肤插件不该这样。
+ *   B. `ctx.inject(['locale'], scope => …)` —— 可选依赖（本实现）。皮肤照常注入，
+ *      locale 就绪时才绑定；locale 卸载时 scope 内的 effect 自动回收。
+ * 门禁：`node ../scripts/dsh-dev.mjs check` 用真 cordis 内核跑 apply，会拦住 A/B 以外的写法。
  */
 function bindLocaleToHost(ctx) {
-  const locale = ctx?.locale
+  if (typeof ctx?.inject !== 'function') return
+  ctx.inject(['locale'], (scope) => attachLocale(scope))
+}
+
+/** 在已声明 locale 的 scope 里接线 —— 这里读 `scope.locale` 是合法的。 */
+function attachLocale(ctx) {
+  const locale = ctx.locale
   if (!locale || typeof locale.bind !== 'function') return
   ctx.effect?.(() => {
     try {
       return locale.register(LOCALE_NS, DICTS) ?? (() => {})
     } catch {
       // 宿主的 locale 服务与预期不一致（旧版 DSH 的 register 签名不同、
-      // 或词条已被注册）。2026-10-30 实况：rc.5 桌面端的内嵌运行时较旧，
-      // 这一行抛过一次，整个 web boot 跟着失败 —— 皮肤插件没有资格
-      // 让宿主起不来。注册不了就注册不了，面板退回本地语言判断。
+      // 或词条已被注册）。皮肤插件没有资格让宿主起不来：注册不了就注册不了，
+      // 面板退回本地语言判断。
+      // （注：2026-10-30 那次启动失败**不是**这里抛的，是读 ctx.locale 时没声明 inject，
+      //   见 bindLocaleToHost 上方的契约说明。）
       return () => {}
     }
   }, 'dsh-bloom-theme: dictionaries')

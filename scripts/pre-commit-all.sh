@@ -12,4 +12,10 @@ node --check lib/index.js
 # 打包契约 + contrast-guard
 npm run check
 
+# DSH 宿主契约门禁（2026-10-30 加）：只在本次提交动了产物时跑，用真 cordis 内核试跑 apply。
+# 单测绿 ≠ 宿主能起：那天单测 29/29 全绿，桌面端照样起不来。
+if git diff --cached --name-only | grep -qE '^(lib/|package\.json$)'; then
+  node ../scripts/dsh-dev.mjs check
+fi
+
 echo "✓ pre-commit checks passed"

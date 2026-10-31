@@ -31,7 +31,7 @@
     "build": "npm run typecheck && tsc -p tsconfig.json && node scripts/bundle.mjs",
     "build:watch": "node scripts/bundle.mjs --watch",
     "sync-version": "node scripts/sync-version.mjs",
-    "deploy": "node scripts/sync-version.mjs && npm run build && rsync -av --delete lib/ ~/.dsh/profiles/${DSH_PROFILE:-desktop}/node_modules/dsh-bloom-theme/lib/ && rsync -av package.json ~/.dsh/profiles/${DSH_PROFILE:-desktop}/node_modules/dsh-bloom-theme/",
+    "deploy": "node scripts/sync-version.mjs && npm run build && node ../scripts/dsh-dev.mjs deploy",
     "dev": "node scripts/sync-version.mjs && npm run build && (npm run build:watch &) && node scripts/watch-deploy.js",
     "preview": "npm run deploy && echo '部署完成 —— 到桌面端应用里重载页面（它不是浏览器，没有可 open 的 URL）'",
     "package": "npm run build && npm pack",
@@ -46,7 +46,11 @@
     "stats": "node scripts/stats-table.mjs",
     "test": "npm run check",
     "check:drift": "node scripts/dsh-drift.mjs",
-    "test:i18n": "node --test test/i18n.test.mjs"
+    "test:i18n": "node --test test/i18n.test.mjs",
+    "check:dsh": "node ../scripts/dsh-dev.mjs check",
+    "rollback": "node ../scripts/dsh-dev.mjs rollback",
+    "rollback:npm": "node ../scripts/dsh-dev.mjs rollback --npm",
+    "dsh:status": "node ../scripts/dsh-dev.mjs status"
   },
   "repository": {
     "type": "git",

@@ -56,6 +56,16 @@ function deploy({ reload = true } = {}) {
     // package.json 版本号先同步进 client.js（PLUGIN_VERSION），再 rsync ——
     // 发版后本地 watch 到 version 变更时自动跟上，避免「新版发布、提示还是旧号」
     try { syncVersion() } catch {}
+    // 2026-10-30：dev 模式也必须过门禁。不过的产物同步进 desktop，下次启动桌面端就起不来。
+    // 门禁失败 → 不同步，profile 里保持上一份能用的产物。
+    try {
+      execSync('node ../scripts/dsh-dev.mjs check', { cwd: root, stdio: 'pipe', env: { ...process.env, DSH_PROFILE: PROFILE } })
+    } catch (e) {
+      const out = String(e.stdout ?? '').replace(/\x1b\[[0-9;]*m/g, '')
+      console.error('\n⛔ 门禁不通过，本次未同步（profile 里仍是上一份能用的产物）：')
+      console.error(out.split('\n').filter((l) => /✘|原因|修法/.test(l)).join('\n'))
+      return
+    }
     execSync(
       `rsync -av --delete lib/ "${DEST}/lib/" && rsync -av package.json "${DEST}/"`,
       { cwd: root, stdio: 'pipe' },

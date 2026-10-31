@@ -43,7 +43,22 @@ const { outputFiles } = await build({
     window.bloomTest = {lang, version};
     // 宿主注入 locale 服务后，cordis 会 materialize 插件的 apply(ctx)。
     // 测试里手动调它，走和真实宿主同一条路径。
-    window.bloomTest.applyWithLocale = () => window.__ModuleLoader__?._module?.apply({ locale: window.__dshLocale, effect: (fn) => fn() });`,
+    // ⚠️ ctx 必须是「严格」的：cordis 的 ctx 是 Proxy，读没在 inject 里声明的服务会抛
+    //    \`cannot get property "x" without inject\`。2026-10-30 这里曾给了个普通对象
+    //    {locale, effect}，测试全绿、桌面端启动失败 —— 替身比宿主宽松，等于没测。
+    const strictCtx = (services, declared) => new Proxy({}, {
+      get(_, key) {
+        if (key === 'effect') return (fn) => fn()
+        if (key === 'inject') return (names, cb) => cb(strictCtx(services, [...declared, ...names]))
+        if (typeof key === 'symbol' || key === 'then') return undefined
+        if (!declared.includes(key)) throw new Error('cannot get property "' + String(key) + '" without inject')
+        return services[key]
+      },
+    })
+    window.bloomTest.applyWithLocale = () => {
+      const mod = window.__ModuleLoader__?._module
+      mod?.apply(strictCtx({ locale: window.__dshLocale }, mod.inject ?? []))
+    };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })

@@ -183,8 +183,9 @@ keeps accent/background contrast honest.
 npm install
 npm run typecheck    # tsc --noEmit, full type check
 npm run build        # typecheck → tsc emits lib/index.js → esbuild emits lib/client.js
-npm run deploy       # one-click deploy to local DSH (sync-version → build → rsync)
-npm run preview      # deploy to desktop-local (the desktop host is an app, not a browser tab)
+npm run deploy       # gate → backup → install into the desktop profile (refuses if the gate fails)
+npm run rollback     # if the app won't start: restore the pre-deploy copy (rollback:npm = npm latest)
+npm run dsh:status   # what's installed, whether it's a dev build, crashes in the last 24h
 npm run dev          # build + watch (recompile+deploy on src change)
 npm run package      # one-click package (npm pack → .tgz)
 npm run check        # 6 static gates + contrast-guard (runs on every commit)

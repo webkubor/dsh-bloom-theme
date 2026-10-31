@@ -191,9 +191,10 @@ Bloom 的核心不是「换个颜色」，而是一套**莫兰迪质感语言**�
 npm install
 npm run typecheck    # tsc --noEmit，全量类型检查
 npm run build        # typecheck → tsc 出 lib/index.js → esbuild 出 lib/client.js
-npm run deploy       # 一键部署到本机 DSH（sync-version → build → rsync）
-npm run preview      # 部署到 desktop-local（桌面端是 app 不是浏览器，没有可 open 的 URL）
-npm run dev          # build + watch（改 src 自动编译+部署）
+npm run deploy       # 门禁 → 备份 → 装进桌面端 desktop profile（不过门禁不部署）
+npm run rollback     # 起不来时：恢复上一次 deploy 前 / rollback:npm 装回正式版
+npm run dsh:status   # 现在装的是哪个版本、是不是开发版、近 24h 崩溃
+npm run dev          # build + watch（每次保存先过门禁，不过不同步）
 npm run package      # 一键打包（npm pack → .tgz）
 npm run check        # 6 组静态闸门 + contrast-guard（每次提交都跑）
 npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收录同步

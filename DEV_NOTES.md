@@ -3,7 +3,7 @@
 > ⚠️ **2026-10-02 迁移说明（只加指针，不改下面的历史正文）**
 > 本文是流水账，早年的条目里 `~/.dsh/profiles/web/...` 是**当时的事实**，保留不动。
 > 现状：宿主已从 web（3080）迁到**桌面端 app**（19387，profile `desktop`）；
-> 本地开发 profile 是 `desktop-local`（官方 Electron 端独占 `desktop`）；
+> 本地开发直接部署到 `desktop`（`npm run deploy`，带门禁与回滚，见 ../SOP.md；`desktop-local` 桌面端不读）；
 > 旧的常驻 web 服务与 `restart.sh` 的那套机制都已下线。
 > 看到本文里的 `profiles/web` 或 `:3080`，按迁移后的名字读即可。
 

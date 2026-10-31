@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.19.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.19.0...v0.19.1) (2026-10-31)
+
+
+### 🐛 Bug Fixes
+
+* **i18n:** 语言改走 DSH 的 locale 服务，不再自建一套 ([#75](https://github.com/webkubor/dsh-bloom-theme/issues/75)) ([eef0b22](https://github.com/webkubor/dsh-bloom-theme/commit/eef0b22edc9ec3c484236b35b480cab4ebe7c9d3))
+
 ## [0.19.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.18.5...v0.19.0) (2026-10-30)
 
 

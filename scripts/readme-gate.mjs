@@ -109,13 +109,23 @@ if (!hasWhyTable) {
 }
 
 // ── 4. 英文 README ─────────────────────────────────────────────────────────
-const hasEn = ['README.en.md', 'README.en-US.md', 'README.en_US.md']
-  .some((f) => existsSync(join(pkgRoot, f)))
+// 两种合规形态：
+//   A. 有独立英文文件（README.en.md 等）—— 主流约定
+//   B. README.md 本身就是英文、中文另放 README_CN.md —— 「英文为默认入场券」
+//      同样合规：npm 包页展示的就是 README.md，它已经是英文了。
+//      （device-passport 就是这种结构；硬造一份 README.en.md 去复制 README.md
+//        是重复文件，将来两边改一处漏一处，反而更容易不一致。）
+const enFiles = ['README.en.md', 'README.en-US.md', 'README.en_US.md']
+const hasEnFile = enFiles.some((f) => existsSync(join(pkgRoot, f)))
+const hasCnAlt = existsSync(join(pkgRoot, 'README_CN.md')) || existsSync(join(pkgRoot, 'README.zh-CN.md'))
+const readmeIsEn = readme.slice(0, 400).trim().length > 0
+const hasEn = hasEnFile || (hasCnAlt && readmeIsEn)
 
 if (!hasEn) {
   errors.push(
     '缺少英文 README（README.en.md）\n' +
-    '  → dsh-plugin 生态面向全球，英文是默认入场券；中文 README 首行加上 [English](README.en.md) | 中文'
+    '  → dsh-plugin 生态面向全球，英文是默认入场券；中文 README 首行加上 [English](README.en.md) | 中文\n' +
+    '  → 或者反过来：README.md 就写英文、中文另放 README_CN.md（同样合规）'
   )
 }
 

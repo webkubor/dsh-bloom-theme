@@ -64,6 +64,25 @@ export const SWITCHER_CSS = `
   flex: none;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
 }
+/* 色点是这身皮肤的「配色样本」，不能只是一块平涂 —— 它是用户判断「这个配色长什么样」
+   的唯一依据。给它玻璃质感：顶部一道内高光（球面反光）+ 底部柔光晕（离开发光面）。
+   跟整套皮肤的玻璃语言一致，而不是十个平涂小方块。 */
+.dsh-bloom-option .dsh-bloom-dot {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.38),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.14),
+    0 0 0 1px color-mix(in oklch, var(--bloom-morandi, #92a8b3) 22%, transparent),
+    0 1px 4px rgba(0, 0, 0, 0.22);
+  transition: box-shadow var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
+}
+.dsh-bloom-option:hover .dsh-bloom-dot,
+.dsh-bloom-option[data-active="true"] .dsh-bloom-dot {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.14),
+    0 0 0 1px color-mix(in oklch, var(--bloom-morandi, #92a8b3) 38%, transparent),
+    0 2px 7px rgba(0, 0, 0, 0.28);
+}
 
 /* ── 面板头部：标题 + 当前配色胶囊 + 关闭（按 owner 2026-09-10 的设计图） ── */
 .dsh-bloom-head {
@@ -216,13 +235,33 @@ export const SWITCHER_CSS = `
   transition: background 0.15s;
 }
 .dsh-bloom-option:hover { background: rgba(var(--bloom-morandi), 0.14); }
+/* 聚焦环：主题自己的颜色，不用宿主的品牌蓝。
+ *
+ * ⚠️ 为什么必须改（2026-11-01 真实 DSH 里实测）：打开菜单时 openMenu() 会自动
+ * focus 到当前选中项，于是 :focus-visible 立刻命中 —— 亮蓝描边
+ * （--dsw-alias-brand-primary）每次开面板都跳出来，在黛蓝/竹青这类冷色皮肤上
+ * 像贴了个系统默认焦点框。宿主品牌色不是主题色，这条不能留。
+ *
+ * 换成主题自己的 accent 并压低不透明度：仍然看得见「焦点在哪」（键盘可用性不能丢），
+ * 但不再是刺眼的系统蓝。 */
 .dsh-bloom-option:focus,
 .dsh-bloom-option:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #4a90e2);
+  outline: 2px solid color-mix(in oklch, var(--bloom-accent, #34698c) 62%, transparent);
   outline-offset: -2px;
   background: rgba(var(--bloom-morandi), 0.14);
 }
-.dsh-bloom-option[data-active="true"] { background: rgba(var(--bloom-morandi), 0.2); }
+/* 选中态：淡底 + 一道柔的内描边。之前只有 background，在玻璃面板上整行像被涂了
+ * 一块颜色，和相邻行之间没有「这一行被选中」的边界感。 */
+.dsh-bloom-option[data-active="true"] {
+  background: rgba(var(--bloom-morandi), 0.2);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #34698c) 26%, transparent),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+/* 选中项的焦点环再亮一档 —— 键盘用户能立刻分辨「当前选中」和「当前焦点」。 */
+.dsh-bloom-option[data-active="true"]:focus-visible {
+  outline-color: color-mix(in oklch, var(--bloom-accent, #34698c) 78%, transparent);
+}
 .dsh-bloom-option__name { font-weight: 500; }
 /* 右列从英文名改成出处诗句（v0.12.1）：中文在 11px 下太小、字距也不该按西文排，
    所以放大一档、加字距、上衬线。衬线体是这套主题唯一的书卷气来源 —— 正文保持
@@ -239,7 +278,12 @@ export const SWITCHER_CSS = `
      色点是这个颜色，诗句也是这个颜色。纯灰的 opacity 做不到这件事。 */
   /* 起点用正文次级色而不是该变体的气质轨：气质轨是低饱和的莫兰迪，深色底上
      竹青/琥珀这几支直接糊掉（实测诗句看不清）。起点保证可读、终点交代身份。 */
-  background-image: linear-gradient(100deg, var(--dsw-alias-label-tertiary, #9a9a9a) 0%, var(--bloom-poem-b) 66%);
+  /* 终点色压一档彩度（2026-11-01 实测）：原来直接用 --bloom-poem-b，十行十色
+     全是高饱和（朱砂红/桃夭粉/天青蓝），相邻三行互相打架，整列看着吵。
+     降到 72% 彩度后仍然是「这个配色的身份色」，但退到背景之后。 */
+  background-image: linear-gradient(100deg,
+    var(--dsw-alias-label-tertiary, #9a9a9a) 0%,
+    color-mix(in oklch, var(--bloom-poem-b) 72%, transparent) 66%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

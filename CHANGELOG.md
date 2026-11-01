@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.20.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.19.2...v0.20.0) (2026-11-01)
+
+
+### ✨ Features
+
+* **motion:** 面板入场可重播、版本区块同框滑动、补回弹曲线 ([#81](https://github.com/webkubor/dsh-bloom-theme/issues/81)) ([2a7ebd3](https://github.com/webkubor/dsh-bloom-theme/commit/2a7ebd36baef39a03322e8f4b562a7f9692e1690))
+
 ## [0.19.2](https://github.com/webkubor/dsh-bloom-theme/compare/v0.19.1...v0.19.2) (2026-10-31)
 
 

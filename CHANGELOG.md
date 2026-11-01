@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.20.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.20.0...v0.20.1) (2026-11-01)
+
+
+### 🐛 Bug Fixes
+
+* **switcher:** 打开面板时的系统蓝焦点框、色点玻璃质感、诗句收敛 ([#83](https://github.com/webkubor/dsh-bloom-theme/issues/83)) ([20b4ebe](https://github.com/webkubor/dsh-bloom-theme/commit/20b4ebe12c06a2f802768629db9dfa57eb919e8b))
+
 ## [0.20.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.19.2...v0.20.0) (2026-11-01)
 
 

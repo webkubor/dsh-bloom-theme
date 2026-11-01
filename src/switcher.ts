@@ -160,7 +160,8 @@ export function buildSwitcherHTML(currentVariant) {
         <path d="M4 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <div class="dsh-bloom-more-body" hidden>
+    <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">
+      <div class="dsh-bloom-more-inner">
       <div class="dsh-bloom-version" role="separator">
         <a class="dsh-bloom-version__name" href="https://github.com/webkubor/dsh-bloom-theme" target="_blank" rel="noopener">Bloom</a>
         <span class="dsh-bloom-version__current">v${PLUGIN_VERSION}</span>
@@ -182,6 +183,7 @@ export function buildSwitcherHTML(currentVariant) {
         </div>
         <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
       </div>
+      </div>
     </div>
     <div class="dsh-bloom-foot">
       <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
@@ -197,8 +199,50 @@ export function buildSwitcherHTML(currentVariant) {
 export function closeMenu(root: HTMLElement) {
   const menu = root.querySelector<HTMLElement>('.dsh-bloom-menu')
   const trigger = root.querySelector<HTMLElement>('.dsh-bloom-trigger')
-  if (menu) menu.hidden = true
+  if (menu) {
+    menu.hidden = true
+    menu.classList.remove('is-entering')
+  }
   if (trigger) trigger.setAttribute('aria-expanded', 'false')
+}
+
+/**
+ * 播放入场动画 —— 必须可重播。
+ *
+ * 只靠 CSS 的 `.is-entering { animation }` 不行：同一个元素第二次拿到这个类时，
+ * 动画已经处于结束态，浏览器认为「没有变化」就不重播，表现是第一次开有动画、
+ * 后面几次硬弹出来。所以要先摘类、强制一次重排把动画状态清掉，再加回来。
+ *
+ * `void el.offsetWidth` 是这里的关键：读布局属性会强制同步重排，
+ * 浏览器必须在重排前把「没有 animation」这一帧确定下来，动画才会真的重来。
+ */
+function playEnter(menu: HTMLElement) {
+  menu.classList.remove('is-entering')
+  void menu.offsetWidth
+  menu.classList.add('is-entering')
+}
+
+/**
+ * 「版本与更新」展开/收起。
+ *
+ * 用 data-open 驱动 CSS 的 grid-template-rows 过渡（0fr ↔ 1fr），
+ * 高度自己撑开、不需要测量，也不会像 display 切换那样「瞬间跳一下」。
+ * `hidden` 只用于无障碍与首帧（屏幕阅读器不该读到收起的内容）。
+ */
+function setMoreOpen(root: HTMLElement, open: boolean) {
+  const more = root.querySelector<HTMLElement>('.dsh-bloom-more')
+  const body = root.querySelector<HTMLElement>('.dsh-bloom-more-body')
+  if (!more || !body) return
+  body.dataset.instant = 'false'
+  body.hidden = false
+  body.dataset.open = String(open)
+  more.setAttribute('aria-expanded', String(open))
+  if (!open) {
+    // 收起动画跑完再真正 hidden，否则内容会在滑动中途消失
+    window.setTimeout(() => {
+      if (body.dataset.open !== 'true') body.hidden = true
+    }, 300)
+  }
 }
 
 /**
@@ -223,7 +267,12 @@ function rerenderMenu(el: HTMLElement, variant: string) {
     const more = el.querySelector<HTMLElement>('.dsh-bloom-more')
     const body = el.querySelector<HTMLElement>('.dsh-bloom-more-body')
     if (more) more.setAttribute('aria-expanded', 'true')
-    if (body) body.hidden = false
+    if (body) {
+      // 重画时不能播展开动画（用户没做展开动作，只是换了语言）
+      body.dataset.instant = 'true'
+      body.hidden = false
+      body.dataset.open = 'true'
+    }
   }
   const name = el.querySelector<HTMLElement>('.dsh-bloom-trigger__name')
   if (name) name.textContent = variantName(variant)
@@ -278,6 +327,8 @@ export function buildSwitcherEl(initialVariant) {
     const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
     const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
     menu.hidden = false
+    // 每次打开都重播入场：不这么做，第二次之后就是硬弹出来
+    playEnter(menu)
     trigger.setAttribute('aria-expanded', 'true')
     syncAppearanceRow(el)
     syncLangRow(el)
@@ -299,10 +350,9 @@ export function buildSwitcherEl(initialVariant) {
     const more = target.closest<HTMLElement>('.dsh-bloom-more')
     if (more) {
       // 版本与更新默认收起：日常用不到，摊开会把面板撑长（设计图里它就是一行入口）
-      const body = el.querySelector<HTMLElement>('.dsh-bloom-more-body')
-      const open = body?.hidden ?? false
-      if (body) body.hidden = !open
-      more.setAttribute('aria-expanded', String(open))
+      // 展开走 grid-template-rows 过渡（同框滑动），不再 hidden 硬切
+      const nowOpen = more.getAttribute('aria-expanded') === 'true'
+      setMoreOpen(el, !nowOpen)
       return
     }
     const modeBtn = target.closest<HTMLElement>('.dsh-bloom-appearance__btn[data-mode]')

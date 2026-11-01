@@ -163,15 +163,42 @@ export const SWITCHER_CSS = `
   gap: 2px;
 }
 .dsh-bloom-menu[hidden] { display: none; }
-/* 菜单入场：从右上角 scale+fade 打开（hidden 移除触发；只在打开时播放一次） */
+/* 菜单入场：从右上角 scale+fade 打开。
+ *
+ * ⚠️ 重播靠的是 JS 里的 playEnter()（见 switcher.ts）：先摘掉 .is-entering、
+ * 读一次 offsetWidth 强制重排、再加回来。只靠 :not([hidden]) 这个选择器不行 ——
+ * 同一个元素第二次显示时，animation 已经处于结束态，浏览器不会重播，
+ * 表现就是「第一次打开有动画，后面几次都是硬弹出来」。 */
 .dsh-bloom-menu { transform-origin: top right; }
 @keyframes bloom-menu-in {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to { opacity: 1; transform: none; }
 }
-.dsh-bloom-menu:not([hidden]) {
-  animation: bloom-menu-in var(--bloom-dur-slow, 280ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
+.dsh-bloom-menu.is-entering {
+  animation: bloom-menu-in var(--bloom-dur-slow, 280ms) var(--bloom-ease-back, cubic-bezier(0.34,1.56,0.64,1));
 }
+
+/* 「版本与更新」展开：同框上下滑动（对齐 whale-widget 的做法）。
+ * 不用 display:none 硬切 —— 高度用 grid-template-rows 0fr→1fr 过渡，
+ * 容器高度自然撑开，内部内容整块 translateY 滑入，末段带一点回弹。 */
+.dsh-bloom-more-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    grid-template-rows var(--bloom-dur-slow, 280ms) var(--bloom-ease-back, cubic-bezier(0.34,1.56,0.64,1)),
+    opacity var(--bloom-dur, 200ms) var(--bloom-ease-out, cubic-bezier(0.22,1,0.36,1)),
+    transform var(--bloom-dur-slow, 280ms) var(--bloom-ease-back, cubic-bezier(0.34,1.56,0.64,1));
+}
+.dsh-bloom-more-body > * { min-height: 0; overflow: hidden; }
+.dsh-bloom-more-body[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: none;
+}
+/* 首帧之前不能有过渡：否则初始渲染会从 0fr 播一次莫名其妙的展开 */
+.dsh-bloom-more-body[data-instant="true"] { transition: none; }
 
 .dsh-bloom-option {
   display: flex;
@@ -558,6 +585,9 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
 
 @media (prefers-reduced-motion: reduce) {
   .dsh-bloom-trigger, .dsh-bloom-chevron, .dsh-bloom-option { transition: none !important; }
+  /* 设计约束④：减弱动效时一律瞬间到位，不留任何位移/回弹 */
+  .dsh-bloom-menu.is-entering { animation: none; }
+  .dsh-bloom-more-body { transition: none; transform: none; }
 }
 
 /* 窄屏降级：DSH 顶栏在 < 900px 时空间紧张，隐藏中文名只留色点+chevron，

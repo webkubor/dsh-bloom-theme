@@ -670,6 +670,10 @@ ol[data-bloom-think-body] {
 body {
   --bloom-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --bloom-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* 回弹曲线：入场末端微微过冲再落回（.34,1.56,.64,1 是 Material 的经典回弹）。
+     只给「有明确触发动作」的过渡用 —— 面板滑入、按钮按下。
+     纯 hover 反馈仍走 --bloom-ease：回弹用在 hover 上会显得黏。 */
+  --bloom-ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   --bloom-dur-fast: 130ms;
   --bloom-dur: 200ms;
   --bloom-dur-slow: 280ms;

@@ -7,7 +7,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 themes</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>12 palettes · current</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>14 palettes · current</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>color guardrail</sub></td>
 </tr>
 </table>
@@ -38,7 +38,7 @@
   Bringing the Morandi feel of <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a> (a 90★ Typora theme)
   to <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>.
   <br />
-  <b>Glass + Morandi</b>: 8 light/dark palettes, frosted-glass panels, one-click switching from the top bar —
+  <b>Glass + Morandi</b>: 14 light/dark palettes, frosted-glass panels, one-click switching from the top bar —
   even the waiting state breathes with the theme.
 </p>
 
@@ -77,7 +77,7 @@ Two clarifications, so you do not have to guess from the heading:
 ## The gist
 
 A **glass + Morandi** theme for DeepSeek Harness.
-Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
+Fourteen light/dark palettes, adaptive by light/dark; panels are real frosted glass
 (semi-transparent + backdrop blur + glass edges); colors are low-saturation Morandi
 (OKLCH, WCAG AA); restrained, consistent micro-interactions; zero runtime deps; TypeScript front-end.
 
@@ -85,7 +85,11 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 
 ## Quick start
 
-- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between the 12 palettes, light/dark, and wallpapers.
+> The menu features 9 palettes: Mist, Petal, Ripple, Lapis, Afterglow, Mint, Tangerine, Silver Rose, and Dawn.
+> All 14 palette keys remain valid; a selected legacy color remains visible until another is chosen.
+> Optional auto rotation defaults to off, offers 5 / 15 / 30 / 60-minute intervals, and pauses in hidden tabs.
+
+- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 9 featured palettes, light/dark, and auto rotation.
 - **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
 
 ## Screenshots
@@ -95,7 +99,7 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
   <sub>Sage · light — frosted-glass panels + the selected session row tints with the active theme</sub>
 </p>
 
-**12 palettes (light)**: click any one and the whole accent / background / glass / motion hue switches together.
+**Palette examples (light)**: click a featured color and the whole accent / background / glass / motion hue switches together.
 
 <table align="center">
 <tr>
@@ -143,7 +147,7 @@ npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme
 </details>
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
-**12 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
+**9 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
 ## Features
@@ -151,7 +155,7 @@ lights up when a newer version is on npm (jump to the Releases page).
 | Feature | Description |
 | :-- | :-- |
 | **Frosted-glass panels (on by default)** | Semi-transparent fill + `backdrop-filter` blur + glass edges (top highlight / translucent stroke / soft outer glow), adaptive opacity per light/dark |
-| **8 Morandi palettes** | Mist / Cinnabar / Petal / Ripple / Sage / Stone / Lapis / Amber, each with light & dark, one-click switch |
+| **14 supported Morandi palettes** | 9 featured choices: Mist / Petal / Ripple / Lapis / Afterglow / Mint / Tangerine / Silver Rose / Dawn; older saved colors stay supported, each with light and dark modes |
 | **UI language** | One click in the panel to switch between 中文 / English / Русский; until you pick one it follows your browser language, exactly as before. Text only — palettes and measured contrast are untouched |
 | **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
 | **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |
@@ -218,7 +222,7 @@ the client failed to register — re-run `npx @deepseek-ai/dsh plugin --profile 
 
 ## Contribute / open source
 
-- Add a new palette: add one entry to `PALETTE` / `VARIANTS` / `VARIANT_LABELS` in `src/client.ts`
+- Add a new palette: add one entry to `PALETTE` / `VARIANTS` / `VARIANT_LABELS` in `src/palette.ts`
   — glass, motion, selected state and the contrast guardrail all follow automatically.
 - Run `npm run build && npm run check` and make sure `contrast-guard` passes before opening a PR.
 - Issues, PRs and ideas are all welcome.

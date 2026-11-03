@@ -4,13 +4,14 @@
  * 它挂进 DSH 顶栏工具区（findSwitcherHost），找不到宿主时降级为右上角浮空。
  * 键盘可完整操作（role=radiogroup + aria-checked + 方向键），窄屏隐藏中文名。
  */
-import { OTHER_VARIANTS, VARIANT_LABELS, PALETTE } from './palette.js'
+import { FEATURED_VARIANTS, PALETTE } from './palette.js'
+import { readRotationMinutes, resetRotationTimer, ROTATION_MINUTES, setRotationMinutes, startRotation } from './rotation.js'
 import { findSwitcherHost, injectCSS, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
-import { enableFloatingDrag, clearFloatingPos } from './drag.js'
+import { enableFloatingDrag, clearFloatingPos, resetFloatingPos, disableFloatingDrag } from './drag.js'
 import { VARIANTS } from './palette.js'
 import { tr, variantName, variantPoem, LANG_CHANGE_EVENT } from './lang.js'
 
@@ -41,6 +42,7 @@ export function applyVariant(variant) {
   const apply = () => {
     document.body.dataset.bloomVariant = variant
     try { window.localStorage.setItem(STORAGE_KEY, variant) } catch {}
+    resetRotationTimer()
     const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
     if (!root) return
     root.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((el) => {
@@ -86,7 +88,7 @@ const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy
  *  名必须自己填（写死任何具体名字都是给一份必然过期的指令）。
  */
 const buildShareText = () => [
-  tr('Bloom —— DSH 的中国风配色主题：12 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。'),
+  tr('Bloom —— DSH 的中国风配色主题：{0} 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。', VARIANTS.length),
   tr('装到你的 DSH：'),
   tr('  · 桌面端 app：在应用内的「插件管理」里搜 dsh-bloom-theme 直接装'),
   tr('    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）'),
@@ -117,10 +119,16 @@ async function shareInstall(btn: HTMLElement) {
 }
 
 export function buildSwitcherHTML(currentVariant) {
-  const options = VARIANTS.map((v) => {
+  // Hidden-from-menu legacy colors remain valid in storage; show the active legacy
+  // choice until its owner deliberately selects a featured replacement.
+  const shown = FEATURED_VARIANTS.includes(currentVariant)
+    ? FEATURED_VARIANTS : [currentVariant, ...FEATURED_VARIANTS]
+  const rotationOptions = ROTATION_MINUTES.map((m) =>
+    `<option value="${m}"${readRotationMinutes() === m ? ' selected' : ''}>${m ? tr('{0} 分钟', m) : tr('关闭自动换色')}</option>`).join('')
+  const options = shown.map((v) => {
     const on = v === currentVariant
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
-      ` aria-selected="${on}" data-active="${on}">` +
+      ` aria-selected="${on}" data-active="${on}" title="${variantName(v)} · ${variantPoem(v)}">` +
       `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
       `<span class="dsh-bloom-option__name">${variantName(v)}</span>` +
       // 目录引导点：配色名与诗句之间原来是一大片空白（margin-left:auto 把诗句顶到
@@ -157,6 +165,11 @@ export function buildSwitcherHTML(currentVariant) {
         <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
       </div>
     </div>
+    <label class="dsh-bloom-rotation">${tr('自动换色')}
+      <select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">
+        ${rotationOptions}
+      </select>
+    </label>
     <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">
       <div class="dsh-bloom-more-inner">
       <div class="dsh-bloom-version" role="separator">
@@ -188,6 +201,7 @@ export function buildSwitcherHTML(currentVariant) {
         </svg>
       </button>
       <span class="dsh-bloom-foot__links">
+      <button type="button" class="dsh-bloom-foot__link dsh-bloom-reset-position" title="${tr('恢复浮窗位置')}" aria-label="${tr('恢复浮窗位置')}">↺</button>
       <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
       <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="${tr('报问题 / 提建议')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
       <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="${tr('复制一段话，对方贴进自己的 DSH 就能装上 Bloom')}">${ICON_SHARE}<span>${tr('分享')}</span></button>
@@ -323,7 +337,13 @@ export function buildSwitcherEl(initialVariant) {
     rerenderMenu(el, readVariant())
   })
 
+  startRotation(applyVariant)
   const openMenu = () => {
+    const wanted = readVariant()
+    const options = el.querySelectorAll<HTMLElement>('.dsh-bloom-option')
+    const currentlyShown = [...options].map((opt) => opt.dataset.variant)
+    const expected = FEATURED_VARIANTS.includes(wanted) ? FEATURED_VARIANTS : [wanted, ...FEATURED_VARIANTS]
+    if (expected.some((v, i) => v !== currentlyShown[i]) || currentlyShown.length !== expected.length) rerenderMenu(el, wanted)
     const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
     const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
     menu.hidden = false
@@ -337,8 +357,18 @@ export function buildSwitcherEl(initialVariant) {
     active?.focus()
   }
 
+  el.addEventListener('change', (e) => {
+    const control = (e.target as HTMLElement).closest<HTMLSelectElement>('.dsh-bloom-rotation__select')
+    if (control) setRotationMinutes(Number(control.value))
+  })
+
   el.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
+    if (target.closest('.dsh-bloom-reset-position')) {
+      resetFloatingPos(el)
+      closeMenu(el)
+      return
+    }
     if (target.closest('.dsh-bloom-close')) { closeMenu(el); return }
     const share = target.closest<HTMLElement>('.dsh-bloom-share')
     if (share) {
@@ -383,8 +413,11 @@ export function buildSwitcherEl(initialVariant) {
     const options = [...menu.querySelectorAll<HTMLElement>('.dsh-bloom-option')]
     const idx = options.indexOf(document.activeElement as HTMLElement)
 
-    // 氛围区的文本框/滑杆里，键盘交给输入框本身（只保留 Escape 收起）
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+    // 面板内的表单控件里，键盘交给控件本身（只保留 Escape 收起）
+    // ⚠️ 自动换色是 <select>：方向键 / Home / End 必须留给下拉框，
+    // 否则用户用键盘调整间隔时焦点会被配色列表抢走。
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+      || e.target instanceof HTMLSelectElement) {
       if (e.key === 'Escape') { closeMenu(el); trigger?.focus() }
       return
     }
@@ -495,11 +528,14 @@ export function watchSwitcher(variant) {
     document.body.dataset.bloomVariant = document.body.dataset.bloomVariant || variant
     injectSwitcher(readVariant())
   }
+  let previous = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
   const obs = new MutationObserver(() => {
+    if (previous && !previous.isConnected) disableFloatingDrag(previous)
     const el = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
     const host = findSwitcherHost()
     // 节点没了，或宿主已就绪但切换器还浮着 → 重挂
     if (!el || (host && !host.contains(el))) reattach()
+    previous = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
   })
   obs.observe(document.body, { childList: true, subtree: true })
   window.__dshBloomObserver__ = obs

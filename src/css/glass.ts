@@ -78,7 +78,7 @@ body[data-bloom-variant="aurora"]::before {
 
    玻璃需要面积才成立。窄条带该做的是「分界」而不是「面」,所以只留一条
    morandi 发丝底边,底色完全交给 body 的氛围渐变。 */
-body[data-bloom-variant] div[class*="_tabs"] {
+body[data-bloom-variant] header[class*="_header"] > div[class*="_tabs"] {
   background-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -181,8 +181,7 @@ body[data-ds-dark-theme] [class*="_sidebarCol"]::before {
 /* v0.6.2: 「对话 / 轨迹」tab 字号上限保护 —— 用户在窄屏 / 浏览器 zoom>100% 下
    反馈 tab 视觉上被放大、撑得过宽。DSH 原生 tab 是 wSkVaW_tab（默认 13px），
    这里兜底 clamp 到 14px，避免任何状态下字号异常撑开。 */
-div[class*="_tabs"] button[class*="_tab"],
-div[class*="_tabs"] [class*="_tab"] {
+header[class*="_header"] > div[class*="_tabs"] [class*="_tab"] {
   font-size: clamp(13px, 0.9vw, 14px) !important;
   font-weight: 500 !important;
   letter-spacing: normal !important;
@@ -386,18 +385,33 @@ body[data-bloom-variant] button[class*="_themeCube"][class*="_selected"] {
   border-color: var(--bloom-accent);
 }
 
-body[data-bloom-variant] .md-code-block,
-body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) {
+body[data-bloom-variant] .md-code-block {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 70%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
 }
-body[data-ds-dark-theme] .md-code-block,
-body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) {
+body[data-ds-dark-theme] .md-code-block {
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #101010), transparent 56%);
 }
 body[data-bloom-variant] .md-code-block pre,
 body[data-bloom-variant] .md-code-block code { background: transparent; }
+
+/* #76: the viewport must stay unpainted. Avoid backdrop-filter on the
+   scrolling wrapper: it turns fixed descendants into locally positioned ones. */
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) > table {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1), transparent 70%);
+}
+body[data-bloom-variant][data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) > table {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1), transparent 56%);
+}
+
+/* Host HoverCard preview has BOTH card and preview classes. The general card
+   hover wash made file/diff previews transparent (#57). Keep this overlay
+   opaque in both states, without changing regular cards or queue previews. */
+body[data-bloom-variant] div[class*="_card"][class*="_preview"],
+body[data-bloom-variant] div[class*="_card"][class*="_preview"]:hover {
+  background: var(--dsw-alias-bg-layer-1);
+}
 
 /* ═══ 表格内部分隔线加强（v0.9.0）用户截图反馈列线几乎不可见 ═══
    原 CSS 用 var(--bloom-hairline)（莫兰迪 30% alpha）做列分隔，

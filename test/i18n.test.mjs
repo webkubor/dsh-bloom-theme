@@ -39,8 +39,8 @@ const makeLocale = (active) => ({
 
 // Exercise the real client and its DOM event handlers; all network traffic is mocked.
 const { outputFiles } = await build({
-  stdin: { contents: `import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts';
-    window.bloomTest = {lang, version};
+  stdin: { contents: `import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts'; import * as switcher from './src/switcher.ts';
+    window.bloomTest = {lang, version, switcher};
     // 宿主注入 locale 服务后，cordis 会 materialize 插件的 apply(ctx)。
     // 测试里手动调它，走和真实宿主同一条路径。
     // ⚠️ ctx 必须是「严格」的：cordis 的 ctx 是 Proxy，读没在 inject 里声明的服务会抛
@@ -138,6 +138,27 @@ for (const locale of ['zh-CN', 'en-US', 'ru-RU']) {
     })
   }
 }
+for (const language of ['zh', 'en', 'ru']) {
+  test(`${language}: fixed leader tracks align long translated names without overflow`, async () => {
+    const { page, context } = await setup('en-US', language)
+    try {
+      await click(page, '.dsh-bloom-trigger')
+      await page.clock.fastForward(500)
+      const geometry = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-option')].map(row => {
+        const leader = row.querySelector('.dsh-bloom-leader').getBoundingClientRect()
+        const box = row.getBoundingClientRect()
+        const poem = row.querySelector('.dsh-bloom-option__en')
+        return { width: leader.width, left: leader.left - box.left,
+          overflows: row.scrollWidth > row.clientWidth + 1,
+          titleContainsPoem: row.title.includes(poem.textContent) }
+      }))
+      assert.equal(geometry.length, 9)
+      assert.ok(geometry.every(row => Math.abs(row.width - 24) < 1))
+      assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))
+      assert.ok(geometry.every(row => !row.overflows && row.titleContainsPoem))
+    } finally { await context.close() }
+  })
+}
 for (const mode of ['light', 'dark', 'system']) {
   test(`live switching preserves ${mode}, palette, menu, update cache and clipboard actions`, async () => {
     const { page, context, errors } = await setup('en-US', 'en', mode)
@@ -225,10 +246,10 @@ for (const [name, check] of [
 test('all palettes retain computed colors and selection after switching language', async () => {
   const {page, context} = await setup('en-US', 'en')
   try {
-    const variants = ['mist','cinnabar','petal','ripple','sage','stone','lapis','amber','aurora','lavender','mint','tangerine']
+    const variants = ['mist','cinnabar','petal','ripple','sage','stone','lapis','amber','aurora','lavender','mint','tangerine','silverrose','dawn']
     for (const variant of variants) {
-      await click(page, '.dsh-bloom-trigger')
-      await click(page, `[data-variant="${variant}"]`)
+      // Legacy preferences remain supported even though their colors leave the featured menu.
+      await page.evaluate(v => window.bloomTest.switcher.applyVariant(v), variant)
       await page.waitForFunction(v => document.body.dataset.bloomVariant === v, variant)
       await click(page, '.dsh-bloom-trigger')
       const colors = () => page.evaluate(() => {

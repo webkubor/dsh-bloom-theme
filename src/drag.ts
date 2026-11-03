@@ -1,33 +1,15 @@
-/**
- * 兜底浮动形态的拖动与位置记忆（issue #14）。
- *
- * 为什么只给 floating 形态：挂进 header 的正常形态跟着顶栏布局走，
- * 侧边栏一开顶栏就缩，按钮自然让位、压不到谁。而 floating 是
- * 「找不到宿主容器」的降级路径 —— 它 position:fixed 钉在
- * top:84px / right:16px，会挡住什么完全取决于用户装了哪些插件：
- * #14 是侧边栏展开后顶部那排按钮，下一个可能是别人的浮层。
- * 与其穷举「避让某个具体元素」，不如让用户拖一次、我们记住。
- *
- * 位置只在 floating 时读写；一旦宿主出现、切换器被迁回 header
- * （injectSwitcher 会把 data-floating 置回 false），内联的 left/top
- * 必须清掉，否则 fixed 的坐标会残留在 inline-flex 元素上把它顶歪。
- */
+/** Floating switcher dragging and position recovery (#14, #50, #61, #87). */
 import { STORAGE_KEY } from './meta.js'
 
 const POS_KEY = `${STORAGE_KEY}-float-pos`
-/** 小于这个位移算点击、不算拖动 —— 否则轻微手抖就打不开菜单 */
 const DRAG_THRESHOLD = 4
-/** 离视口边缘至少留这么多，别让按钮贴边贴到抓不住 */
 const MARGIN = 8
+const TITLEBAR_MIN_TOP = 84
 
 type Pos = { left: number; top: number }
+const bindings = new WeakMap<HTMLElement, () => void>()
 
-/**
- * 把位置夹回视口内。三种情况都靠它兜：存的是上次大窗口下的坐标、
- * 用户中途缩小了窗口、外接屏拔掉后分辨率变了。
- * 用 Math.max(MARGIN, ...) 兜住「视口比元素还小」的极端情形，
- * 那时至少保证 left/top 不是负数。
- */
+/** Keep the generic viewport clamp independent of the desktop titlebar. */
 export function clampPos(p: Pos, w: number, h: number, vw: number, vh: number): Pos {
   return {
     left: Math.min(Math.max(p.left, MARGIN), Math.max(MARGIN, vw - w - MARGIN)),
@@ -37,18 +19,24 @@ export function clampPos(p: Pos, w: number, h: number, vw: number, vh: number): 
 
 function readPos(): Pos | null {
   try {
-    const raw = localStorage.getItem(POS_KEY)
-    if (!raw) return null
-    const p = JSON.parse(raw)
-    return typeof p?.left === 'number' && typeof p?.top === 'number' ? p : null
-  } catch { return null }   // 隐私模式 / 存了脏值：当没存过
+    const p = JSON.parse(localStorage.getItem(POS_KEY) || 'null')
+    return Number.isFinite(p?.left) && Number.isFinite(p?.top) ? p : null
+  } catch { return null }
 }
 
 function savePos(p: Pos) {
-  try { localStorage.setItem(POS_KEY, JSON.stringify(p)) } catch { /* 存不了就算了，不影响本次拖动 */ }
+  try { localStorage.setItem(POS_KEY, JSON.stringify(p)) } catch { /* Storage is optional. */ }
 }
 
-/** 落位：写 inline 样式 + 按左右半屏决定菜单朝哪边展开（否则拖到左侧菜单会溢出屏幕） */
+function safePos(el: HTMLElement, p: Pos): Pos {
+  const height = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dsh-windows-titlebar-height'))
+  const floor = Math.max(TITLEBAR_MIN_TOP, Number.isFinite(height) ? height + MARGIN : 0)
+  const pos = clampPos(p, el.offsetWidth, el.offsetHeight, window.innerWidth, window.innerHeight)
+  // In a tiny viewport retain as much of the control as possible below the titlebar.
+  pos.top = Math.max(pos.top, Math.min(floor, Math.max(MARGIN, window.innerHeight - el.offsetHeight - MARGIN)))
+  return pos
+}
+
 function apply(el: HTMLElement, p: Pos) {
   el.style.left = `${p.left}px`
   el.style.top = `${p.top}px`
@@ -56,69 +44,114 @@ function apply(el: HTMLElement, p: Pos) {
   el.dataset.menuSide = p.left + el.offsetWidth / 2 > window.innerWidth / 2 ? 'right' : 'left'
 }
 
-/** 清掉浮动坐标 —— 切换器迁回 header 时必须调，见文件头注释 */
+export function disableFloatingDrag(el: HTMLElement) {
+  bindings.get(el)?.()
+}
+
+/** Called when migrating back into the host header. */
 export function clearFloatingPos(el: HTMLElement) {
+  disableFloatingDrag(el)
   el.style.left = el.style.top = el.style.right = ''
   delete el.dataset.menuSide
 }
 
+/** Explicit recovery also clears storage, including an old offscreen position. */
+export function resetFloatingPos(el: HTMLElement) {
+  try { localStorage.removeItem(POS_KEY) } catch { /* Storage is optional. */ }
+  clearFloatingPos(el)
+  if (el.dataset.floating === 'true') enableFloatingDrag(el)
+}
+
 export function enableFloatingDrag(el: HTMLElement) {
-  if (el.dataset.dragBound === 'true') return   // 重挂时不重复绑
+  if (bindings.has(el)) return
   el.dataset.dragBound = 'true'
+  let start: { id: number; x: number; y: number; left: number; top: number } | null = null
+  let moved = false
+  let suppressClick = false
 
   const restore = () => {
-    const saved = readPos()
-    if (!saved) return
-    apply(el, clampPos(saved, el.offsetWidth, el.offsetHeight, window.innerWidth, window.innerHeight))
-  }
-  restore()
-  window.addEventListener('resize', () => { if (el.dataset.floating === 'true') restore() })
-
-  let start: { x: number; y: number; left: number; top: number } | null = null
-  let moved = false
-
-  el.addEventListener('pointerdown', (e) => {
     if (el.dataset.floating !== 'true') return
-    if ((e as PointerEvent).button !== 0) return
-    // 菜单里的选项/链接不参与拖动，否则选变体要先躲开拖拽判定
-    if ((e.target as HTMLElement).closest('.dsh-bloom-menu')) return
     const r = el.getBoundingClientRect()
-    start = { x: e.clientX, y: e.clientY, left: r.left, top: r.top }
-    moved = false
-    el.setPointerCapture(e.pointerId)
-  })
-
-  el.addEventListener('pointermove', (e) => {
+    apply(el, safePos(el, readPos() || { left: r.left, top: r.top }))
+  }
+  const stopListening = () => {
+    document.removeEventListener('pointermove', move, true)
+    document.removeEventListener('pointerup', finish, true)
+    document.removeEventListener('pointercancel', cancel, true)
+    window.removeEventListener('blur', cancel)
+  }
+  const end = (suppress: boolean) => {
     if (!start) return
+    const id = start.id
+    start = null
+    stopListening()
+    delete el.dataset.dragging
+    if (el.hasPointerCapture(id)) el.releasePointerCapture(id)
+    if (moved) {
+      const r = el.getBoundingClientRect()
+      const p = safePos(el, { left: r.left, top: r.top })
+      apply(el, p)
+      savePos(p)
+    }
+    suppressClick = moved && suppress
+    moved = false
+    // Keep this through an interrupted gesture's eventual pointerup. A fresh press
+    // resets it, and keyboard clicks (detail=0) are never suppressed.
+  }
+  const finish = (e: PointerEvent) => { if (e.pointerId === start?.id) end(true) }
+  const cancel = (e: Event) => {
+    if (e instanceof PointerEvent && e.pointerId !== start?.id) return
+    end(true)
+  }
+  const move = (e: PointerEvent) => {
+    if (!start || e.pointerId !== start.id) return
+    if (el.dataset.floating !== 'true' || !el.isConnected) { end(false); return }
+    if (e.buttons === 0) { end(false); return }
     const dx = e.clientX - start.x
     const dy = e.clientY - start.y
     if (!moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return
-    moved = true
+    if (!moved) {
+      moved = true
+      // Capture only a real drag: capturing the wrapper on press retargets button clicks.
+      try { el.setPointerCapture(e.pointerId) } catch { /* Document listeners remain a fallback. */ }
+    }
     el.dataset.dragging = 'true'
-    apply(el, clampPos(
-      { left: start.left + dx, top: start.top + dy },
-      el.offsetWidth, el.offsetHeight, window.innerWidth, window.innerHeight,
-    ))
-  })
-
-  const finish = (e: PointerEvent) => {
-    if (!start) return
-    if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)
-    start = null
-    delete el.dataset.dragging
-    if (!moved) return
-    const r = el.getBoundingClientRect()
-    savePos({ left: r.left, top: r.top })
-  }
-  el.addEventListener('pointerup', finish)
-  el.addEventListener('pointercancel', finish)
-
-  // 拖完那一下浏览器还会派发 click —— 不拦住的话松手即弹菜单。
-  // capture 阶段拦，早于 switcher 自己那个 click 处理器。
-  el.addEventListener('click', (e) => {
-    if (!moved) return
-    moved = false
-    e.stopPropagation()
     e.preventDefault()
-  }, true)
+    apply(el, safePos(el, { left: start.left + dx, top: start.top + dy }))
+  }
+  const down = (e: PointerEvent) => {
+    if (start) return
+    suppressClick = false
+    if (el.dataset.floating !== 'true' || e.button !== 0 || !e.isPrimary) return
+    if ((e.target as Element).closest('.dsh-bloom-menu')) return
+    const r = el.getBoundingClientRect()
+    start = { id: e.pointerId, x: e.clientX, y: e.clientY, left: r.left, top: r.top }
+    document.addEventListener('pointermove', move, true)
+    document.addEventListener('pointerup', finish, true)
+    document.addEventListener('pointercancel', cancel, true)
+    window.addEventListener('blur', cancel)
+  }
+  const click = (e: MouseEvent) => {
+    if (!suppressClick || e.detail === 0) return
+    suppressClick = false
+    e.stopImmediatePropagation()
+    e.preventDefault()
+  }
+  const lost = (e: PointerEvent) => { if (e.pointerId === start?.id) end(true) }
+  const cleanup = () => {
+    end(false)
+    suppressClick = false
+    window.removeEventListener('resize', restore)
+    el.removeEventListener('pointerdown', down)
+    el.removeEventListener('lostpointercapture', lost)
+    el.removeEventListener('click', click, true)
+    bindings.delete(el)
+    delete el.dataset.dragBound
+  }
+  bindings.set(el, cleanup)
+  el.addEventListener('pointerdown', down)
+  el.addEventListener('lostpointercapture', lost)
+  el.addEventListener('click', click, true)
+  window.addEventListener('resize', restore)
+  restore()
 }

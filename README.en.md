@@ -243,6 +243,16 @@ npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plu
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/#webkubor/dsh-bloom-theme&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=webkubor/dsh-bloom-theme&amp;type=Date&amp;theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=webkubor/dsh-bloom-theme&amp;type=Date" />
+    <img alt="Star History Chart for webkubor/dsh-bloom-theme" src="https://api.star-history.com/svg?repos=webkubor/dsh-bloom-theme&amp;type=Date" width="100%" />
+  </picture>
+</a>
+
 ## License
 
 [MIT](LICENSE) — keep the copyright notice on borrow/modify. Palette inspiration from [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme).

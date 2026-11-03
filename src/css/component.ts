@@ -267,7 +267,7 @@ body[data-bloom-variant] [class*="_sidebarCol"] {
 /* 顶栏下沿冷光线 —— 标题区与消息流之间的分界，比实色 border 轻。
    只给 tabs 这一条真正的分界线：_header 会同时命中 headerActions /
    headerUtilities 等右上角子容器，给它们加投影会凭空多出几个浮块。 */
-div[class*="_tabs"] {
+header[class*="_header"] > div[class*="_tabs"] {
   box-shadow: 0 1px 0 var(--bloom-hairline), 0 6px 20px -12px var(--bloom-glow);
 }
 
@@ -364,6 +364,19 @@ div[class*="_bubble"] {
     var(--bloom-shadow-sm);
 }
 
+/* TurnTriggerNodeView uses these aliases for its root and hover state.
+   Resolve them from the active palette so a variant switch repaints the card. */
+body[data-bloom-variant] [data-turn-trigger] {
+  --dsw-alias-turn-trigger-bg: color-mix(in oklch, var(--bloom-accent) 6%, var(--dsw-alias-bg-layer-1));
+  --dsw-alias-turn-trigger-bg-hover: color-mix(in oklch, var(--bloom-accent) 10%, var(--dsw-alias-bg-layer-1));
+}
+/* ReasoningRow's expanded sticky disclosure header uses bg-base natively.
+   An opaque palette surface avoids both the default block (#66) and text
+   showing through the sticky header while the reasoning body scrolls. */
+body[data-bloom-variant] [data-variant="think"][data-expanded] [data-open] [data-disclosure-header] {
+  background: color-mix(in oklch, var(--bloom-accent) 4%, var(--dsw-alias-bg-layer-1));
+}
+
 /* ═══ 3. Markdown 排版质感 ═════════════════════════════════════════
    照搬原版手法：标题渐变短横、hr 两端消隐、引用块左侧主色条。 */
 [class*="_markdown"] h1,
@@ -443,9 +456,11 @@ pre code {
    :is() 的权重取最具体的那一项，和单个 [class*=] 相同，所以这次改动
    没有动任何规则的权重。 */
 :is([class*="_tableScroll"], [class*="_tablePane"]) {
-  border: 1px solid var(--bloom-hairline);
-  border-radius: 10px;
-  background: rgba(var(--bloom-morandi), 0.02);
+  /* #76/#62: the scroll viewport may be wider than its table (native wide-table
+     lead padding). Paint the table, otherwise this creates an empty framed tail. */
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   /* 2026-10-24 · #52/#48：容器被主题加了边框圆角，但 DSH 0.2.0 把 _tableScroll
      改名 _tablePane 后不再保证原生横向滚动 —— 宽表格直接戳穿聊天气泡边界（#52），
      多列表格越界后边框圆角失去裁切、格线在角部戳出读作「变形」（#48）。
@@ -466,17 +481,32 @@ pre code {
 [class*="_tablePane"][class*="_tablePane"] {
   overflow-x: auto;
 }
-/* min-width:100% 而不是 width:100%：
-   DSH 原生表格按内容定宽，而 _tableScroll 容器是块级全宽。上面刚给容器加了边框+圆角，
-   两边宽度不一致立刻就看得见——实测容器 748px、表格只有 469px，右侧露出 279px 空框，
-   表头底色和行分隔线都在半路截断（截图里那种「表格缩在左边」）。
-   用 min-width 而非 width 是因为 _tableScroll 本来就是横向滚动容器：
-   窄表格撑满对齐边框，宽表格仍能超出并滚动；写 width:100% 会把宽表格压缩换行，
-   把这个容器的滚动能力废掉。 */
-:is([class*="_tableScroll"], [class*="_tablePane"]) table {
+/* DSH 0.2.1: >=4 columns uses md-table-wide, otherwise tableFill.
+   Keep the wide branch intrinsic, including short four-column tables (#62).
+   Match the native hover/focus specificity so its hidden/scroll + padding
+   swap cannot change the viewport height or expose a bottom white band (#76). */
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]).md-table-wide,
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]).md-table-wide:is(:hover, :focus-visible) {
+  overflow-x: auto;
+  padding-bottom: 0;
+  scrollbar-gutter: stable;
+}
+:is([class*="_tableScroll"], [class*="_tablePane"]) > table {
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 100%;
+  border: 1px solid var(--bloom-hairline);
+  border-radius: 10px;
+  background: rgba(var(--bloom-morandi), 0.02);
+  overflow: clip;
+}
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]).md-table-wide > table {
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+}
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]):not(.md-table-wide) > table {
+  width: 100%;
+  max-width: none;
 }
 body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) th,
 body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]) td {

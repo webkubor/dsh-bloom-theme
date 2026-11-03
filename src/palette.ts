@@ -8,9 +8,11 @@
  * 拿可读轨铺大面积、或拿气质轨做文字色，都会失去莫兰迪质感。
  */
 
-export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine']
-
-export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine']
+// Keep every historical key valid for persisted preferences and direct API callers.
+export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine', 'silverrose', 'dawn']
+// The menu is curated using the poll's 👍 votes; zero-vote variants stay supported.
+export const FEATURED_VARIANTS = ['mist', 'petal', 'ripple', 'lapis', 'aurora', 'mint', 'tangerine', 'silverrose', 'dawn']
+export const OTHER_VARIANTS = VARIANTS.filter((v) => v !== 'mist')
 
 /**
  * Bloom 色板 —— 双轨制（这是从 typora-Bloom-theme 继承来的关键设计，别退回单轨）。
@@ -195,6 +197,31 @@ export const PALETTE = {
     motionL: ['oklch(55% 0.16 47)', 'oklch(56% 0.15 30)', 'oklch(57% 0.13 65)'],
     motionD: ['oklch(73% 0.17 50)', 'oklch(74% 0.16 32)', 'oklch(78% 0.14 66)'],
   },
+  /* 银红：银灰底配低彩度玫红（hue 320），与高彩度藕粉桃夭(350)拉开 30°。
+     「银」靠低彩度（C 0.10）与偏灰的底色表达，不靠提亮 ——
+     一提亮就变成另一种粉了。 */
+  silverrose: {
+    accentL: 'oklch(50% 0.10 320)',    accentD: 'oklch(78% 0.10 320)',
+    morandi: '168, 145, 170',
+    bgL: 'oklch(97.5% 0.004 320)',     bgD: 'oklch(23% 0.010 320)',
+    txL: 'oklch(24% 0.012 320)',       txD: 'oklch(96% 0.006 320)',
+    sfL: 'oklch(95.3% 0.006 320)',     sfD: 'oklch(30% 0.015 320)',
+    sf2L: 'oklch(92% 0.008 320)',      sf2D: 'oklch(36% 0.018 320)',
+    motionL: ['oklch(50% 0.10 320)', 'oklch(51% 0.07 340)', 'oklch(50% 0.07 24)'],
+    motionD: ['oklch(78% 0.10 320)', 'oklch(79% 0.08 340)', 'oklch(78% 0.08 24)'],
+  },
+  /* 粉霞：暖珊瑚粉(20)，与桃夭(350)、橙黄(47/50)均拉开约 30°。
+     草色与橙黄按用户已有色值原样保留。 */
+  dawn: {
+    accentL: 'oklch(51% 0.15 20)',    accentD: 'oklch(78% 0.13 20)',
+    morandi: '219, 147, 151',
+    bgL: 'oklch(98% 0.006 20)',       bgD: 'oklch(24% 0.012 20)',
+    txL: 'oklch(24% 0.013 20)',       txD: 'oklch(96% 0.007 20)',
+    sfL: 'oklch(95.8% 0.009 20)',     sfD: 'oklch(30% 0.017 20)',
+    sf2L: 'oklch(93% 0.011 20)',      sf2D: 'oklch(36% 0.021 20)',
+    motionL: ['oklch(51% 0.15 20)', 'oklch(52% 0.12 20)', 'oklch(52% 0.11 50)'],
+    motionD: ['oklch(78% 0.13 20)', 'oklch(79% 0.12 20)', 'oklch(79% 0.11 50)'],
+  },
 }
 
 export const VARIANT_LABELS = {
@@ -216,6 +243,8 @@ export const VARIANT_LABELS = {
   lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉', ru: 'Сирень', poemRu: 'Лотос из ясной воды', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
   mint:     { zh: '草色', en: 'Mint',      poem: '草色遥看近却无', ru: 'Мята', poemRu: 'Издали — зелень, вблизи — нет', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
   tangerine:{ zh: '橙黄', en: 'Tangerine', poem: '最是橙黄橘绿时', ru: 'Мандарин', poemRu: 'Лучшая пора — рыжие плоды', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
+  silverrose:{ zh: '银红', en: 'Silver Rose', poem: '银烛秋光冷画屏', ru: 'Серебряная роза', poemRu: 'Серебряный свет осенней свечи', poemEn: 'Silver candle, autumn glow' }, // hue 320 · 杜牧《秋夕》
+  dawn:      { zh: '粉霞', en: 'Dawn', poem: '晓看红湿处', ru: 'Заря', poemRu: 'Утром цветы блестят от росы', poemEn: 'At dawn, blossoms glow' }, // hue 20 · 杜甫《春夜喜雨》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

@@ -5,7 +5,10 @@ export const SWITCHER_CSS = `
   align-items: center;
   font: 12px/1.2 -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   user-select: none;
+  /* The macOS/Windows frameless header must let its own controls receive clicks. */
+  -webkit-app-region: no-drag;
 }
+.dsh-bloom-switcher * { -webkit-app-region: no-drag; }
 /* 兜底形态：挂不进 DSH header 时才浮起来。位置放在 header 下方，
    避开右上角原生控件（Session log 等）—— 决不能再压住它们。 */
 .dsh-bloom-switcher[data-floating="true"] {
@@ -252,11 +255,10 @@ export const SWITCHER_CSS = `
    用 radial-gradient 平铺圆点，比 border-bottom:dotted 更好控制点径与间距，
    也不会因为行高变化把点拉成虚线。颜色走当前配色的莫兰迪，与整行同一调子。 */
 .dsh-bloom-leader {
-  flex: 1 1 auto;
   align-self: center;
+  width: 24px;
   height: 2px;
-  min-width: 10px;
-  margin: 0 9px;
+  margin: 0;
   background-image: radial-gradient(circle, rgba(var(--bloom-morandi), 0.5) 1px, transparent 1px);
   background-size: 5px 2px;
   background-repeat: repeat-x;
@@ -289,10 +291,35 @@ export const SWITCHER_CSS = `
 /* 首帧之前不能有过渡：否则初始渲染会从 0fr 播一次莫名其妙的展开 */
 .dsh-bloom-more-body[data-instant="true"] { transition: none; }
 
-.dsh-bloom-option {
+.dsh-bloom-rotation {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 14px;
+  color: var(--dsw-alias-label-secondary, #555);
+}
+.dsh-bloom-rotation__select {
+  font: inherit;
+  color: var(--dsw-alias-label-primary, #222);
+  background: var(--dsw-alias-bg-layer-2, #fff);
+  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.15));
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+.dsh-bloom-rotation__select:focus-visible {
+  outline: 2px solid var(--bloom-accent, #34698c);
+  outline-offset: 2px;
+}
+.dsh-bloom-switcher:not([data-floating="true"]) .dsh-bloom-reset-position { display: none; }
+
+.dsh-bloom-option {
+  display: grid;
+  /* Fixed name/leader tracks keep Mint and Tangerine aligned in all locales.
+     Long translated poems truncate inside their track; title retains the full text. */
+  grid-template-columns: 14px 5.75em 24px minmax(0, 1fr) 12px;
+  align-items: center;
+  gap: 6px;
   width: 100%;
   padding: 8px 14px;
   border: 0;
@@ -332,15 +359,20 @@ export const SWITCHER_CSS = `
 .dsh-bloom-option[data-active="true"]:focus-visible {
   outline-color: color-mix(in oklch, var(--bloom-accent, #34698c) 78%, transparent);
 }
-.dsh-bloom-option__name { font-weight: 500; }
+.dsh-bloom-option__name {
+  font-weight: 500;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* 右列从英文名改成出处诗句（v0.12.1）：中文在 11px 下太小、字距也不该按西文排，
    所以放大一档、加字距、上衬线。衬线体是这套主题唯一的书卷气来源 —— 正文保持
    无衬线保可读性，只在这一列用宋体，克制但立得住。 */
 .dsh-bloom-option__en {
-  /* 不再用 margin-left:auto 把诗句顶到最右 —— 那段空白交给 .dsh-bloom-leader
-     的目录点线去填。auto 在这里等于「中间空 100 多 px」，是面板看起来没排完版的
-     直接原因。 */
-  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12.5px;
   letter-spacing: 0.08em;

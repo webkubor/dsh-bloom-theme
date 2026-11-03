@@ -57,6 +57,25 @@ async function physicalDrag(page, dx, dy) {
   await page.mouse.up()
 }
 
+test('undragged and reset controls remain docked right while saved drags keep their coordinates', async t => {
+  const page = await setup(t)
+  for (const width of [1200, 800]) {
+    await page.setViewportSize({ width, height: 700 })
+    await page.waitForFunction(() => {
+      const e = document.querySelector('.dsh-bloom-switcher')
+      return Math.abs(innerWidth - e.getBoundingClientRect().right - 16) < 1
+    })
+    assert.equal(await root(page).evaluate(el => el.style.left), '')
+  }
+  await physicalDrag(page, -150, 90)
+  const dragged = await position(page)
+  await page.setViewportSize({ width: 1200, height: 700 })
+  assert.ok(Math.abs((await position(page)).x - dragged.x) < 1)
+  await page.evaluate(() => window.fixture.resetFloatingPos(document.querySelector('.dsh-bloom-switcher')))
+  await page.setViewportSize({ width: 1400, height: 700 })
+  await page.waitForFunction(() => Math.abs(innerWidth - document.querySelector('.dsh-bloom-switcher').getBoundingClientRect().right - 16) < 1)
+})
+
 test('physical mouse clicks retain button target; drag suppresses only its trailing click', async t => {
   const page = await setup(t)
   // Mouse input matters here: dispatchEvent/click() in page JS bypass pointer capture retargeting.

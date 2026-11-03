@@ -72,7 +72,17 @@ export function enableFloatingDrag(el: HTMLElement) {
   const restore = () => {
     if (el.dataset.floating !== 'true') return
     const r = el.getBoundingClientRect()
-    apply(el, safePos(el, readPos() || { left: r.left, top: r.top }))
+    const saved = readPos()
+    if (saved || el.style.left) {
+      apply(el, safePos(el, saved || { left: r.left, top: r.top }))
+    } else {
+      // An undragged control follows the right edge on resize. Keep `left` unset;
+      // converting the CSS docking rule to pixels would strand it in the content.
+      const p = safePos(el, { left: window.innerWidth - el.offsetWidth - 16, top: r.top })
+      el.style.top = `${p.top}px`
+      el.style.right = `${window.innerWidth - el.offsetWidth - p.left}px`
+      el.dataset.menuSide = 'right'
+    }
   }
   const stopListening = () => {
     document.removeEventListener('pointermove', move, true)

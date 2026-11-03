@@ -123,6 +123,10 @@ export function buildSwitcherHTML(currentVariant) {
       ` aria-selected="${on}" data-active="${on}">` +
       `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
       `<span class="dsh-bloom-option__name">${variantName(v)}</span>` +
+      // 目录引导点：配色名与诗句之间原来是一大片空白（margin-left:auto 把诗句顶到
+      // 最右），每行中段空 100 多 px，看着像没排完版。用书籍目录那种点线把两者连
+      // 起来 —— 既填了空白，又正好是这套主题的书卷气。
+      `<span class="dsh-bloom-leader" aria-hidden="true"></span>` +
       `<span class="dsh-bloom-option__en" style="${poemStyle(v)}">${variantPoem(v)}</span>` +
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
   }).join('')

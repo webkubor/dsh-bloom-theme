@@ -66,12 +66,18 @@ export const SWITCHER_CSS = `
 }
 /* 色点是这身皮肤的「配色样本」，不能只是一块平涂 —— 它是用户判断「这个配色长什么样」
    的唯一依据。给它玻璃质感：顶部一道内高光（球面反光）+ 底部柔光晕（离开发光面）。
-   跟整套皮肤的玻璃语言一致，而不是十个平涂小方块。 */
+   跟整套皮肤的玻璃语言一致，而不是十个平涂小方块。
+ *
+ * ⚠️ 不要在这里用 color-mix 配 var(--bloom-morandi)：
+ * --bloom-morandi 存的是 RGB 三元组（"146, 168, 179"，供 rgba(var(...)) 用），
+ * 不是色值 —— 塞进 oklch 语法非法，**整条 box-shadow 一起失效**（computed 变 none）。
+ * 实测踩过：规则命中、优先级也对，但画面上一点影子都没有。
+ * （--bloom-poem-b / --bloom-accent 才是色值，可以用 color-mix。） */
 .dsh-bloom-option .dsh-bloom-dot {
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.38),
     inset 0 -1px 1px rgba(0, 0, 0, 0.14),
-    0 0 0 1px color-mix(in oklch, var(--bloom-morandi, #92a8b3) 22%, transparent),
+    0 0 0 1px rgba(146, 168, 179, 0.22),
     0 1px 4px rgba(0, 0, 0, 0.22);
   transition: box-shadow var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
 }
@@ -80,7 +86,7 @@ export const SWITCHER_CSS = `
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.45),
     inset 0 -1px 1px rgba(0, 0, 0, 0.14),
-    0 0 0 1px color-mix(in oklch, var(--bloom-morandi, #92a8b3) 38%, transparent),
+    0 0 0 1px rgba(146, 168, 179, 0.38),
     0 2px 7px rgba(0, 0, 0, 0.28);
 }
 
@@ -189,13 +195,65 @@ export const SWITCHER_CSS = `
  * 同一个元素第二次显示时，animation 已经处于结束态，浏览器不会重播，
  * 表现就是「第一次打开有动画，后面几次都是硬弹出来」。 */
 .dsh-bloom-menu { transform-origin: top right; }
+/* 面板入场。原来只有 translateY(-6px) + scale(0.98)，位移 6px 太小 —— owner
+   2026-11-01 的反馈是「其实并没有动画」。同一套参数在 0.28s 内走 6px，肉眼
+   基本接收不到。位移加到 12px、缩放压到 0.96，配合回弹曲线才有「弹出来」的
+   手感；它仍然很克制（没有旋转、没有模糊），但因为够快够明显，能被看见。 */
 @keyframes bloom-menu-in {
-  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
 .dsh-bloom-menu.is-entering {
-  animation: bloom-menu-in var(--bloom-dur-slow, 280ms) var(--bloom-ease-back, cubic-bezier(0.34,1.56,0.64,1));
+  animation: bloom-menu-in 320ms var(--bloom-ease-back, cubic-bezier(0.34,1.56,0.64,1));
 }
+
+/* 逐行错峰滑入 —— whale-widget / wallpaper-engine 那种「有产品感」的关键手法：
+   不是整块一起淡入，而是条列依次落位，观感上是一次有节奏的展开而不是一次闪烁。
+   纯 CSS 实现（nth-child 给延迟），不需要 rAF、不需要 JS 量高度。
+
+   animation-fill-mode: backwards 是必须的：延迟期间元素要先停在起始态（透明），
+   否则会出现「先整块亮一下、再逐行重播」的鬼影。 */
+@keyframes bloom-row-in {
+  from { opacity: 0; transform: translateY(-7px); }
+  to { opacity: 1; transform: none; }
+}
+.dsh-bloom-menu.is-entering .dsh-bloom-option,
+.dsh-bloom-menu.is-entering .dsh-bloom-section,
+.dsh-bloom-menu.is-entering .dsh-bloom-appearance {
+  animation: bloom-row-in 240ms var(--bloom-ease-out, cubic-bezier(0.22,1,0.36,1)) backwards;
+}
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(1) { animation-delay: 30ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(2) { animation-delay: 42ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(3) { animation-delay: 54ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(4) { animation-delay: 66ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(5) { animation-delay: 78ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(6) { animation-delay: 90ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(7) { animation-delay: 102ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(8) { animation-delay: 114ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(9) { animation-delay: 126ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(10) { animation-delay: 138ms; }
+/* 色块之后的区段跟着最后一档走，形成「一行一行落下来、再整体收尾」的节奏 */
+.dsh-bloom-menu.is-entering .dsh-bloom-section,
+.dsh-bloom-menu.is-entering .dsh-bloom-appearance { animation-delay: 150ms; }
+
+/* 目录引导点：填充配色名与诗句之间的空白（详见 buildSwitcherHTML 的说明）。
+   用 radial-gradient 平铺圆点，比 border-bottom:dotted 更好控制点径与间距，
+   也不会因为行高变化把点拉成虚线。颜色走当前配色的莫兰迪，与整行同一调子。 */
+.dsh-bloom-leader {
+  flex: 1 1 auto;
+  align-self: center;
+  height: 2px;
+  min-width: 10px;
+  margin: 0 9px;
+  background-image: radial-gradient(circle, rgba(var(--bloom-morandi), 0.5) 1px, transparent 1px);
+  background-size: 5px 2px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  opacity: 0.65;
+  transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
+}
+.dsh-bloom-option:hover .dsh-bloom-leader,
+.dsh-bloom-option[data-active="true"] .dsh-bloom-leader { opacity: 1; }
 
 /* 「版本与更新」展开：同框上下滑动（对齐 whale-widget 的做法）。
  * 不用 display:none 硬切 —— 高度用 grid-template-rows 0fr→1fr 过渡，
@@ -267,7 +325,9 @@ export const SWITCHER_CSS = `
    所以放大一档、加字距、上衬线。衬线体是这套主题唯一的书卷气来源 —— 正文保持
    无衬线保可读性，只在这一列用宋体，克制但立得住。 */
 .dsh-bloom-option__en {
-  margin-left: auto;
+  /* 不再用 margin-left:auto 把诗句顶到最右 —— 那段空白交给 .dsh-bloom-leader
+     的目录点线去填。auto 在这里等于「中间空 100 多 px」，是面板看起来没排完版的
+     直接原因。 */
   flex: 0 0 auto;
   white-space: nowrap;
   font-size: 12.5px;
@@ -631,7 +691,11 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   .dsh-bloom-trigger, .dsh-bloom-chevron, .dsh-bloom-option { transition: none !important; }
   /* 设计约束④：减弱动效时一律瞬间到位，不留任何位移/回弹 */
   .dsh-bloom-menu.is-entering { animation: none; }
+  .dsh-bloom-menu.is-entering .dsh-bloom-option,
+  .dsh-bloom-menu.is-entering .dsh-bloom-section,
+  .dsh-bloom-menu.is-entering .dsh-bloom-appearance { animation: none; }
   .dsh-bloom-more-body { transition: none; transform: none; }
+  .dsh-bloom-leader { transition: none; }
 }
 
 /* 窄屏降级：DSH 顶栏在 < 900px 时空间紧张，隐藏中文名只留色点+chevron，

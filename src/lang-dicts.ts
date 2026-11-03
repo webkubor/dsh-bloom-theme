@@ -6,6 +6,21 @@
  * 变体名字和诗句不在这里，它们在 palette.ts 的 VARIANT_LABELS（ru / poemRu 字段）。
  */
 export const DICT_RU: Record<string, string> = {
+  "在应用内点「立即更新」即可，无需终端命令": "Нажмите «Обновить сейчас» прямо здесь — терминал не нужен",
+  "立即更新": "Обновить сейчас",
+  "更新中…": "Обновление…",
+  "已更新到 v{0}，重载页面后生效": "Обновлено до v{0} — перезагрузите страницу",
+  "已更新到 v{0}，需要重启 DSH 才生效": "Обновлено до v{0} — перезапустите DSH",
+  "立即重载": "Перезагрузить",
+  "稍后": "Позже",
+  "应用内更新失败：{0}": "Не удалось обновить в приложении: {0}",
+  "重试": "Повторить",
+  "宿主未返回有效的更新结果": "DSH не вернул корректный результат обновления",
+  "当前环境不支持直接更新，请在「插件」管理中更新": "В этой среде прямое обновление недоступно — откройте «Плагины»",
+  "更新已取消，当前版本保持不变": "Обновление отменено, текущая версия не изменена",
+  "安装配置被覆盖，请在「插件」管理中检查": "Настройки установки переопределены — проверьте раздел «Плагины»",
+  "宿主未确认更新成功": "DSH не подтвердил успешное обновление",
+  "请在侧栏「插件」管理中检查更新；桌面端无需执行终端命令": "Проверьте обновления в разделе «Плагины» на боковой панели; в приложении терминал не нужен",
   "    然后确认 \"dsh-bloom-theme\" 在该 profile 的 package.json 的 dsh.profile.bundles 里（plugin add 会自动加），重启 DSH": "    затем проверьте, что «dsh-bloom-theme» попал в dsh.profile.bundles в package.json этого профиля (plugin add добавляет его сам), и перезапустите DSH",
   "  · 自建 CLI profile：dsh plugin --profile <你的profile名> add dsh-bloom-theme": "  · Свой CLI-профиль: dsh plugin --profile <имя-профиля> add dsh-bloom-theme",
   "    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）": "    (профилем desktop ведает только приложение, «dsh plugin --profile desktop» отклоняется)",
@@ -90,6 +105,21 @@ export const DICT_RU: Record<string, string> = {
 }
 
 export const DICT_EN: Record<string, string> = {
+  "在应用内点「立即更新」即可，无需终端命令": "Click “Update now” right here — no terminal needed",
+  "立即更新": "Update now",
+  "更新中…": "Updating…",
+  "已更新到 v{0}，重载页面后生效": "Updated to v{0} — reload the page to apply",
+  "已更新到 v{0}，需要重启 DSH 才生效": "Updated to v{0} — restart DSH to apply",
+  "立即重载": "Reload now",
+  "稍后": "Later",
+  "应用内更新失败：{0}": "In-app update failed: {0}",
+  "重试": "Retry",
+  "宿主未返回有效的更新结果": "DSH did not return a valid update result",
+  "当前环境不支持直接更新，请在「插件」管理中更新": "Direct updates are unavailable here; update from Plugins",
+  "更新已取消，当前版本保持不变": "Update cancelled; the current version is unchanged",
+  "安装配置被覆盖，请在「插件」管理中检查": "Installation settings were overridden; check Plugins",
+  "宿主未确认更新成功": "DSH did not confirm a successful update",
+  "请在侧栏「插件」管理中检查更新；桌面端无需执行终端命令": "Check updates in Plugins on the sidebar; the desktop app does not need terminal commands",
   "    然后确认 \"dsh-bloom-theme\" 在该 profile 的 package.json 的 dsh.profile.bundles 里（plugin add 会自动加），重启 DSH": "    then make sure \"dsh-bloom-theme\" is in dsh.profile.bundles of that profile's package.json (plugin add puts it there), and restart DSH",
   "  · 自建 CLI profile：dsh plugin --profile <你的profile名> add dsh-bloom-theme": "  · Your own CLI profile: dsh plugin --profile <profile-name> add dsh-bloom-theme",
   "    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）": "    (the app owns the desktop profile; `dsh plugin --profile desktop` is rejected)",

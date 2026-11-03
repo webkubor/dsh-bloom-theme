@@ -38,7 +38,7 @@ import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync } from './appearance.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { checkUpdate } from './version.js'
-import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS, RU_LANGUAGE } from './lang.js'
+import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS } from './lang.js'
 
 /**
  * 鼠标跟随光斑（v0.15 唯一的亮点）。
@@ -335,14 +335,12 @@ function watchCursorGlow() {
 /**
  * 把本插件的语言接到 DSH 的 locale 服务上。
  *
- * 这是「体系配置走 DSH」的落地点，做三件事：
+ * 这是「体系配置走 DSH」的落地点，做两件事（只读，不改 DSH 的语言目录）：
  *
  *  1. 注册词条 `{zh, en, ru}`（key 是中文原文）。zh 必须是全量恒等表 ——
  *     DSH 的回落链是「当前语言 → 声明 fallback → en」，zh 缺一条就会在中文
  *     界面里漏出英文。
- *  2. 用 `addLanguage` 把俄语补进 DSH 的语言目录。DSH 自带只有 zh/en，
- *     不补的话 `setLocale('ru')` 会抛 `locale "ru" is not registered`。
- *  3. `bindLocale` 绑定 + 订阅变化：在 DSH 设置里换语言，面板立刻跟着换。
+ *  2. `bindLocale` 绑定 + 订阅变化：在 DSH 设置里换语言，面板立刻跟着换。
  *
  * 宿主没提供 locale 服务时（旧版 DSH / 单测 / 独立运行）安静跳过，
  * 退回 lang.ts 里那套本地判断 —— 面板不能因为拿不到服务就整块消失。
@@ -381,17 +379,6 @@ function attachLocale(ctx) {
       return () => {}
     }
   }, 'dsh-bloom-theme: dictionaries')
-  ctx.effect?.(
-    () => {
-      try {
-        return locale.addLanguage?.(RU_LANGUAGE) ?? (() => {})
-      } catch {
-        // 已经被别的来源注册过：DSH 只有一个 ru，谁先注册都一样
-        return () => {}
-      }
-    },
-    'dsh-bloom-theme: ru language',
-  )
   try {
     bindLocale(locale)
   } catch {

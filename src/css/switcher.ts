@@ -147,17 +147,27 @@ export const SWITCHER_CSS = `
 }
 .dsh-bloom-section[hidden] { display: none; }
 
-/* 「版本与更新 ›」：默认收起，日常用不到的信息不占版面 */
+/* 「Bloom v0.x ›」：版本与更新的入口，2026-11-03 起住进底栏左侧。
+   原来它独占一行居中 + 上方一道分隔阴影，加上「语言」行和快链行，面板底部是
+   三条带子两道线（owner：「底部是不是不美观」）。现在底部只有一行：
+   左边版本入口、右边快链，展开体出现在这一行**上方**。 */
 .dsh-bloom-more {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  width: 100%; appearance: none; border: 0; background: transparent; cursor: pointer;
-  margin-top: 8px; padding: 9px 14px;
-  box-shadow: 0 -6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
-  font: inherit; font-size: 12px;
-  color: var(--dsw-alias-label-secondary, #777);
+  display: inline-flex; align-items: center; gap: 5px;
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: 0;
+  font: inherit; font-size: 11px; line-height: 1;
+  color: var(--dsw-alias-label-tertiary, #999);
+  transition: color .15s ease;
 }
-.dsh-bloom-more:hover { color: var(--dsw-alias-label-primary, #222); }
-.dsh-bloom-more[aria-expanded="true"] .dsh-bloom-more__arrow { transform: rotate(90deg); }
+.dsh-bloom-more__name { font-weight: 600; color: var(--dsw-alias-label-secondary, #777); }
+.dsh-bloom-more__ver { font-variant-numeric: tabular-nums; }
+.dsh-bloom-more:hover, .dsh-bloom-more:hover .dsh-bloom-more__name { color: var(--dsw-alias-label-primary, #222); }
+.dsh-bloom-more:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.dsh-bloom-more[aria-expanded="true"] .dsh-bloom-more__arrow { transform: rotate(-90deg); }
 .dsh-bloom-more__arrow { transition: transform .16s ease; }
 .dsh-bloom-more-body[hidden] { display: none; }
 
@@ -461,6 +471,11 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   font-weight: 600;
   text-decoration: none;
 }
+/* display:inline-flex 会压掉 [hidden] 的 display:none —— 没有新版时这里
+   原本留着一颗空胶囊（截图里版本行右侧那条灰短线）。 */
+.dsh-bloom-version__update[hidden] { display: none; }
+/* 版本行现在只剩「↑ 可更新」徽标（名字和版本号已在底栏），没新版时整行不占位 */
+.dsh-bloom-version:not(:has(.dsh-bloom-version__update:not([hidden]))) { display: none; }
 .dsh-bloom-version__update:hover { color: color-mix(in oklch, var(--dsw-alias-brand-primary, #4a90e2), black 15%); }
 
 /* ── DSH 升级检查区块（紧贴 Bloom 版本行下方）── */
@@ -506,6 +521,8 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   background: color-mix(in oklch, var(--dsw-alias-label-tertiary, #999), transparent 88%);
   color: var(--dsw-alias-label-secondary, #666);
 }
+/* 没有状态时（检查中）chip 只剩背景，截图里是「DSH —」后面一条灰短线 */
+.dsh-bloom-dsh-state:empty { display: none; }
 .dsh-bloom-dsh-state[data-state="update"] {
   background: color-mix(in oklch, var(--bloom-accent, #c47b4a), transparent 78%);
   color: var(--bloom-accent, #c47b4a);
@@ -626,6 +643,14 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-btn.is-fail {
 /* 按压反馈 —— 之前点下去毫无变化,连「点到了」都要靠猜 */
 .dsh-bloom-dsh-btn:active { transform: scale(0.97); }
 .dsh-bloom-dsh-btn:disabled { opacity: 0.6; cursor: default; }
+/* 主按钮按内容宽度，不再吃满剩余空间：查到版本前它是禁用的，
+   原来却是一大块实心 accent，比真正有用的信息还抢眼。禁用时退回描边样式。 */
+.dsh-bloom-dsh-btn--primary { flex: 0 0 auto; }
+.dsh-bloom-dsh-btn--primary:disabled {
+  background: transparent;
+  border-color: var(--bloom-hairline, rgba(0,0,0,.08));
+  color: var(--dsw-alias-label-tertiary, #999);
+}
 
 /* hint 的绿必须明暗分档:oklch(60%) 是「中间亮度」,实测在暗色菜单底上只有
    3.3:1(而且是 10px 字)。这与 state chip 那次是同一个硬编码色值,当时漏了这处。 */
@@ -649,7 +674,7 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
 .dsh-bloom-foot {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 10px;
   margin-top: 2px;
   padding: 7px 14px 9px;
@@ -687,7 +712,9 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   outline-offset: 2px;
   border-radius: 4px;
 }
-.dsh-bloom-foot__sep { color: var(--dsw-alias-label-tertiary, #999); opacity: .6; }
+/* 底栏一行装「版本入口 + 三个快链」，任何语言都不许折行（英文原文案曾把投票挤成两行） */
+.dsh-bloom-foot__links { display: inline-flex; align-items: center; gap: 12px; white-space: nowrap; }
+.dsh-bloom-more { white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
   .dsh-bloom-trigger, .dsh-bloom-chevron, .dsh-bloom-option { transition: none !important; }

@@ -12,7 +12,7 @@ import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
 import { enableFloatingDrag, clearFloatingPos } from './drag.js'
 import { VARIANTS } from './palette.js'
-import { tr, variantName, variantPoem, langRowHTML, syncLangRow, getLang, setLang, LANG_CHANGE_EVENT, type BloomLang } from './lang.js'
+import { tr, variantName, variantPoem, LANG_CHANGE_EVENT } from './lang.js'
 
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
 export const dotStyle = (v) =>
@@ -157,18 +157,9 @@ export function buildSwitcherHTML(currentVariant) {
         <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
       </div>
     </div>
-    ${langRowHTML(getLang())}
-    <button type="button" class="dsh-bloom-more" aria-expanded="false">
-      <span>${tr('版本与更新')}</span>
-      <svg class="dsh-bloom-more__arrow" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-        <path d="M4 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
     <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">
       <div class="dsh-bloom-more-inner">
       <div class="dsh-bloom-version" role="separator">
-        <a class="dsh-bloom-version__name" href="https://github.com/webkubor/dsh-bloom-theme" target="_blank" rel="noopener">Bloom</a>
-        <span class="dsh-bloom-version__current">v${PLUGIN_VERSION}</span>
         <span class="dsh-bloom-version__update" hidden></span>
       </div>
       <div class="dsh-bloom-dsh-update" role="separator">
@@ -190,11 +181,17 @@ export function buildSwitcherHTML(currentVariant) {
       </div>
     </div>
     <div class="dsh-bloom-foot">
+      <button type="button" class="dsh-bloom-more" aria-expanded="false" title="${tr('版本与更新')}">
+        <span class="dsh-bloom-more__name">Bloom</span><span class="dsh-bloom-more__ver">v${PLUGIN_VERSION}</span>
+        <svg class="dsh-bloom-more__arrow" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M4 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <span class="dsh-bloom-foot__links">
       <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
-      <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
       <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="${tr('报问题 / 提建议')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
-      <span class="dsh-bloom-foot__sep" aria-hidden="true">·</span>
       <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="${tr('复制一段话，对方贴进自己的 DSH 就能装上 Bloom')}">${ICON_SHARE}<span>${tr('分享')}</span></button>
+      </span>
     </div>
   </div>
 </div>`
@@ -283,7 +280,6 @@ function rerenderMenu(el: HTMLElement, variant: string) {
   const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
   if (trigger) trigger.setAttribute('title', tr('Bloom 主题 · v{0}', PLUGIN_VERSION))
   syncAppearanceRow(el)
-  syncLangRow(el)
   fresh?.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((opt) => opt.setAttribute('tabindex', '-1'))
   refreshUpdateBadge()
   // DSH 版本区是从缓存画的，重建后补一次，否则会停在「检查中…」
@@ -335,8 +331,7 @@ export function buildSwitcherEl(initialVariant) {
     playEnter(menu)
     trigger.setAttribute('aria-expanded', 'true')
     syncAppearanceRow(el)
-    syncLangRow(el)
-    // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
+      // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
     const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
       || menu.querySelector<HTMLElement>('.dsh-bloom-option')
     active?.focus()
@@ -364,17 +359,6 @@ export function buildSwitcherEl(initialVariant) {
       // 直接切 body 属性 + 持久化，零弹窗。同步完成，立刻刷新选中态。
       setMode(modeBtn.dataset.mode as AppearanceMode)
       syncAppearanceRow(el)
-      return
-    }
-    const langBtn = target.closest<HTMLElement>('[data-lang]')
-    if (langBtn) {
-      // 换语言只影响显示：配色、已存的 variant、颜色对比结论一概不动。
-      // stopPropagation 不能省：下面重建菜单会把被点的按钮换掉，等事件冒泡到
-      // document 上的「点外部关闭」时 el.contains(target) 已经是 false，菜单会自己关掉。
-      e.stopPropagation()
-      setLang(langBtn.dataset.lang as BloomLang)
-      rerenderMenu(el, readVariant())
-      el.querySelector<HTMLElement>(`[data-lang="${getLang()}"]`)?.focus()
       return
     }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')

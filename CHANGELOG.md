@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.21.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.20.1...v0.21.0) (2026-11-03)
+
+
+### ✨ Features
+
+* **switcher:** 逐行错峰入场 + 目录引导点填掉中段空白 ([#88](https://github.com/webkubor/dsh-bloom-theme/issues/88)) ([36f1c12](https://github.com/webkubor/dsh-bloom-theme/commit/36f1c12391127858cbc404a30dfd10fc06d19790))
+
 ## [0.20.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.20.0...v0.20.1) (2026-11-01)
 
 

@@ -25,7 +25,7 @@ function schedule() {
   if (!minutes || document.hidden || !applyNext) return
   timer = setTimeout(() => {
     timer = undefined
-    const current = readVariant()
+    const current = document.body.dataset.bloomVariant || readVariant()
     const choices = FEATURED_VARIANTS.filter((v) => v !== current)
     if (choices.length) applyNext?.(choices[Math.floor(Math.random() * choices.length)])
     else schedule()
@@ -37,8 +37,8 @@ export function startRotation(apply: (variant: string) => void) {
   if (!started) {
     document.addEventListener('visibilitychange', schedule)
     started = true
+    schedule()
   }
-  schedule()
 }
 
 export function setRotationMinutes(minutes: number) {

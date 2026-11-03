@@ -95,6 +95,35 @@ test('denied storage writes do not prevent turning rotation off', async t => {
   assert.equal(await page.locator('.dsh-bloom-rotation__select').inputValue(), '0')
 })
 
+test('rotation excludes the live palette when storage still contains an older choice', async t => {
+  const page = await setup(t)
+  await page.locator('.dsh-bloom-trigger').click()
+  await page.locator('.dsh-bloom-rotation__select').selectOption('5')
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => { throw new DOMException('Denied', 'QuotaExceededError') }
+    Math.random = () => 0
+    window.fixture.applyVariant('petal')
+  })
+  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'petal')
+  assert.equal(await page.evaluate(() => localStorage.getItem('dsh-bloom-variant')), 'mist')
+  await page.clock.fastForward(5 * 60_000 + 5)
+  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'mist')
+  await page.clock.fastForward(5 * 60_000 + 5)
+  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'petal')
+})
+
+test('rebuilding a session header preserves the remaining rotation interval', async t => {
+  const page = await setup(t)
+  await page.locator('.dsh-bloom-trigger').click()
+  await page.locator('.dsh-bloom-rotation__select').selectOption('5')
+  await page.clock.fastForward(4 * 60_000)
+  await page.evaluate(() => {
+    document.querySelector('.dsh-bloom-switcher').replaceWith(window.fixture.buildSwitcherEl('mist'))
+  })
+  await page.clock.fastForward(60_000 + 5)
+  await page.waitForFunction(() => document.body.dataset.bloomVariant !== 'mist')
+})
+
 test('rotation select retains native Arrow and Home/End keyboard handling', async t => {
   const page = await setup(t)
   await page.locator('.dsh-bloom-trigger').click()

@@ -146,8 +146,12 @@ body[data-bloom-variant] [class*="_sidebarCol"] {
     /* 右缘冷光必须走 box-shadow：侧栏 overflow:hidden，伪元素画的光带只能落在
        容器内侧，看上去是「向内发光」（owner 2026-09-10 反馈）；外阴影不受自身
        overflow 裁剪，是唯一真正往外散的做法。offset 与 spread 同量（24/-24），
-       让光只出现在右侧，不糊到上下边。 */
-    24px 0 40px -24px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 45%),
+       让光只出现在右侧，不糊到上下边。
+       2026-11-03：原 transparent 45%（≈55% accent）在朱砂浅色截图里实测是一条
+       ~45px 宽的玫红带（边缘 (219,183,181) vs 侧栏底 (236,232,231)），像渲染残影
+       不像分界线。收窄到 16/-16 + 28px 模糊、浓度降到 ≈20%：仍能读出「侧栏有边」，
+       但不再是左半屏最亮的东西。 */
+    16px 0 28px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 80%),
     0 14px 44px -16px rgba(0,0,0,0.22);
 }
 body[data-bloom-variant] [class*="_sidebarCol"]::before {
@@ -166,7 +170,8 @@ body[data-ds-dark-theme] [class*="_sidebarCol"] {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 0 0 1px rgba(255,255,255,0.05),
-    24px 0 40px -24px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 35%),
+    /* 暗色同步收：35%（≈65% accent）→ 72%（≈28%），深底上光更显眼，所以留得比浅色多一点 */
+    16px 0 28px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 72%),
     0 16px 48px -18px rgba(0,0,0,0.5);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"]::before {
@@ -206,9 +211,11 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
     inset 0 1px 0 rgba(255,255,255,0.28),
     0 1px 2px -1px rgba(0, 0, 0, 0.18),
     0 18px 52px -20px rgba(0,0,0,0.26),
-    /* 外晕浓度由 --bloom-halo 驱动（component.ts §7 的呼吸动画在推它）：
-       halo=0.73 时等于原来的 78%，0.3 时淡到 91%，0.85 时浓到 74.5%。 */
-    0 0 48px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent calc(100% - var(--bloom-halo, 0.73) * 30%));
+    /* 外晕浓度由 --bloom-halo 驱动（component.ts §7 的呼吸动画在推它）。
+       这条只在**浅色**生效（暗色由下方 data-ds-dark-theme 规则整条覆盖）。
+       原系数 ×30%：截图实测朱砂浅色卡片周围一圈粉晕 + 粉描边 (221,158,154) +
+       红发送键，三层同色相，主角成了光晕（2026-11-03 评审）。降到 ×16%。 */
+    0 0 48px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent calc(100% - var(--bloom-halo, 0.73) * 16%));
 }
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
   content: '';
@@ -238,7 +245,22 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:focus-withi
     0 1px 2px -1px rgba(0, 0, 0, 0.18),
     0 0 0 2px color-mix(in oklch, var(--bloom-accent) 25%, transparent),
     0 18px 52px -20px rgba(0,0,0,0.26),
-    0 0 56px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 74%);
+    /* 同上只在浅色生效：聚焦信号交给 2px accent 环，外晕不再跟着加浓（26% → 16%） */
+    0 0 56px -16px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 84%);
+}
+/* 浅色输入卡描边走中性色。--bloom-hairline 是 rgba(morandi, .3)，浅底上读成主题色相
+   的淡粉/淡绿边。浅色下主题色只留给「发送键 + 聚焦环」两个有语义的位置，描边改用
+   正文字色的低比例混合（各变体 txL 都是近黑，跨变体是一致的灰）。暗色不动。
+   特异性：base (0,4,3) 高于 COMPONENT_CSS 描边 (0,2,2)；:hover / :focus-within 版
+   (0,5,3) 高于 COMPONENT_CSS :hover (0,3,2) 与上面玻璃 :focus-within (0,4,3)。 */
+body[data-bloom-variant]:not([data-ds-dark-theme]) div[class*="_composer"] div[class*="_card"] {
+  border-color: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 12%, transparent);
+}
+body[data-bloom-variant]:not([data-ds-dark-theme]) div[class*="_composer"] div[class*="_card"]:hover {
+  border-color: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 20%, transparent);
+}
+body[data-bloom-variant]:not([data-ds-dark-theme]) div[class*="_composer"] div[class*="_card"]:focus-within {
+  border-color: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 26%, transparent);
 }
 body[data-ds-dark-theme] div[class*="_composer"] div[class*="_card"]:focus-within {
   box-shadow:

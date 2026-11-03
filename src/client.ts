@@ -141,6 +141,59 @@ function watchCursorGlow() {
   check()                                            // 首次记录基线；成功才开 3 秒轮询
 })()
 
+/**
+ * 宿主「插件管理」服务句柄 —— 让更新横幅能在**应用内直接更新**，不用终端。
+ *
+ * 为什么要有（2026-10-31 owner「能不能做到自动更新」）：
+ *   横幅原来只有「复制更新命令」。但桌面端 profile 由 Electron 应用独占托管，
+ *   `dsh plugin --profile desktop` 会被 CLI 直接拒绝（bin.js:36），
+ *   也就是说**桌面端用户复制到的命令必然报错** —— 主按钮是死的。
+ *   DSH 把插件管理能力作为普通服务暴露（remote.pluginManager），
+ *   installBundle 不允许覆盖已有主题（HMR 下返回 already-installed）。新版宿主
+ *   提供 updateBundle(name, version) 来负责卸载、安装和失败恢复；旧宿主没有此
+ *   API 时只引导插件管理。结果先解 RemoteResult，再读 PluginUpdateResult.result；
+ *   绝不能把 Promise 正常完成或已恢复旧版显示成更新成功。
+ *
+ * ⚠️ 契约：cordis 的 ctx 是 Proxy，读没在 inject 里声明的服务会直接抛
+ *   （2026-10-30 事故）。所以这里一律走 `ctx.inject([...], cb)` 可选注入，
+ *   旧版桌面端指向插件管理，非桌面宿主继续提供复制命令。
+ */
+/** A failure whose text is one of our own dictionary keys; host diagnostics stay verbatim. */
+class UpdateFailure extends Error {
+  constructor(readonly key: string, readonly localizable: boolean) { super(key) }
+}
+type UpdateOutcome = {
+  application: 'applied' | 'restart-required' | 'failed' | 'cancelled' | 'overridden'
+  error?: { code: string; diagnostic?: string }
+}
+type PluginUpdateResult = { to: string; step: 'check' | 'remove' | 'install'; result: UpdateOutcome; restore?: UpdateOutcome }
+type RemoteUpdateResult = { ok: true; value: PluginUpdateResult } | { ok: false; error: { message: string } }
+let pluginManager: {
+  updateBundle?: (name: string, version: string) => Promise<RemoteUpdateResult>
+} | null = null
+let refreshUpdateCapability: (() => void) | undefined
+
+function bindPluginManager(ctx: any) {
+  if (typeof ctx?.inject !== 'function') return
+  // ⚠️ 两个名字都要声明：cordis 里 `remote.pluginManager` 不会顺带声明父服务 `remote`，
+  //   只写后者时 `scope.remote` 会抛 without inject（宿主自己的插件面板也是两个都列）。
+  ctx.inject(['remote', 'remote.pluginManager'], (scope: any) => {
+    const service = scope?.remote?.pluginManager
+    if (service && typeof service.updateBundle === 'function') {
+      scope.effect(() => {
+        pluginManager = service
+        refreshUpdateCapability?.()
+        return () => {
+          if (pluginManager === service) {
+            pluginManager = null
+            refreshUpdateCapability?.()
+          }
+        }
+      })
+    }
+  })
+}
+
 /** ── 更新检测：npm 有新版本时提醒老用户 ─────────────────────────────────────
  *
  * 背景：主题插件装在 DSH profile 的 node_modules 里，用户不会主动升级；
@@ -209,7 +262,14 @@ function watchCursorGlow() {
     set(k, v) { try { window.localStorage.setItem(k, v) } catch {} },
   }
 
+  const isDesktopHost = () => typeof (window as any).dshDesktop !== 'undefined'
+    || typeof (window as any).dshDesktopBoot !== 'undefined'
+    || location.protocol === 'dsh-app:' || /Electron/i.test(navigator.userAgent)
   let bannerVersion: string | null = null
+  let outcome: { kind: 'available' | 'installing' | 'installed' | 'failed'; version?: string; restart?: boolean; reason?: string; localizableReason?: boolean } = { kind: 'available' }
+  refreshUpdateCapability = () => {
+    if (outcome.kind === 'available' && bannerVersion && document.getElementById('dsh-bloom-update-banner')) showBanner(bannerVersion, true)
+  }
   window.addEventListener(LANG_CHANGE_EVENT, () => {
     if (bannerVersion && document.getElementById('dsh-bloom-update-banner')) showBanner(bannerVersion, true)
   })
@@ -220,8 +280,11 @@ function watchCursorGlow() {
     const dismissed = ls.get(LS_DISMISSED)
     if (dismissed === latest) return
 
-    const isDesktop = typeof (window as any).dshDesktop !== 'undefined' || typeof (window as any).dshDesktopBoot !== 'undefined' || location.protocol === 'dsh-app:' || /Electron/i.test(navigator.userAgent)
+    const isDesktop = isDesktopHost()
+    // Only the replacement API can update an installed bundle; legacy installBundle cannot.
+    const canUpdate = !!pluginManager?.updateBundle
 
+    if (bannerVersion !== latest) outcome = { kind: 'available' }
     bannerVersion = latest
     const el = existing || document.createElement('div')
     el.id = 'dsh-bloom-update-banner'
@@ -255,6 +318,7 @@ function watchCursorGlow() {
           display:block;margin:8px 0;padding:6px 8px;border-radius:8px;word-break:break-all;
           background:var(--bloom-code-bg,rgba(146,168,179,0.13));
           color:var(--dsw-alias-label-primary,#222)}
+        #dsh-bloom-update-banner code[hidden]{display:none}
         /* 次要信息用 label-secondary 这个**已按明暗分档且过 AA** 的 token，
            不再用 opacity 硬压 —— opacity 会把对比度再乘一次，1.62 直接掉到 1.38。 */
         #dsh-bloom-update-banner .bloom-upd-cur{color:var(--dsw-alias-label-secondary,#666)}
@@ -275,35 +339,122 @@ function watchCursorGlow() {
           background:none!important;padding:4px!important;font-size:14px!important;line-height:1!important}
       </style>
       <div class="bloom-upd-x" title="${tr('关闭（此版本不再提醒）')}">×</div>
-      <div>🌸 <strong>${tr('Bloom 主题有新版本')}</strong>
+      <div class="bloom-upd-body">🌸 <strong>${tr('Bloom 主题有新版本')}</strong>
         ${latest} ${tr('可用')}<span class="bloom-upd-cur">（${tr('当前')} ${PLUGIN_VERSION}）</span></div>
-      ${isDesktop ? `<div style="font-size:11px;line-height:1.4;margin:6px 0 2px;color:var(--dsw-alias-label-secondary,#666);padding:4px 8px;border-radius:6px;background:var(--bloom-code-bg,rgba(146,168,179,0.13))">${tr('桌面端 app：在侧栏「插件」管理中直接更新，无需终端命令')}</div>` : ''}
-      <code></code>
+      ${canUpdate
+        ? `<div class="bloom-upd-hint" style="font-size:11px;line-height:1.4;margin:6px 0 2px;color:var(--dsw-alias-label-secondary,#666);padding:4px 8px;border-radius:6px;background:var(--bloom-code-bg,rgba(146,168,179,0.13))">${tr('在应用内点「立即更新」即可，无需终端命令')}</div>`
+        : isDesktop
+          ? `<div class="bloom-upd-hint" style="font-size:11px;line-height:1.4;margin:6px 0 2px;color:var(--dsw-alias-label-secondary,#666);padding:4px 8px;border-radius:6px;background:var(--bloom-code-bg,rgba(146,168,179,0.13))">${tr('当前宿主不支持一键更新，请在侧栏「插件」管理中查看')}</div>`
+          : ''}
+      <code${canUpdate || isDesktop ? ' hidden' : ''}></code>
       <div class="bloom-upd-actions">
-        ${isDesktop ? `
-          <button data-primary data-act="open">${tr('更新日志')}</button>
-          <button data-act="copy" title="${tr('仅自建 CLI profile 需执行此命令；桌面端无需终端命令')}">${tr('复制更新命令')}</button>
-        ` : `
-          <button data-primary data-act="copy">${tr('复制更新命令')}</button>
-          <button data-act="open">${tr('更新日志')}</button>
-        `}
+        ${canUpdate
+          ? `<button data-primary data-act="install">${tr('立即更新')}</button>
+             <button data-act="open">${tr('更新日志')}</button>`
+          : isDesktop
+            ? `<button data-primary data-act="open">${tr('更新日志')}</button>`
+            : `<button data-primary data-act="copy">${tr('复制更新命令')}</button>
+               <button data-act="open">${tr('更新日志')}</button>`}
       </div>`
     el.querySelector('code').textContent = updateCmd(latest)
     el.querySelector<HTMLElement>('.bloom-upd-x').addEventListener('click', () => {
       ls.set(LS_DISMISSED, latest)
       el.remove()
     })
-    el.querySelector<HTMLElement>('[data-act="copy"]').addEventListener('click', (e) => {
+    el.querySelector<HTMLElement>('[data-act="copy"]')?.addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLElement
       navigator.clipboard?.writeText(updateCmd(latest)).then(() => {
         btn.textContent = tr('✓ 已复制')
         setTimeout(() => (btn.textContent = tr('复制更新命令')), 1600)
       }).catch(() => {})
     })
+    el.querySelector<HTMLElement>('[data-act="install"]')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement
+      if (btn.disabled) return
+      if (outcome.kind === 'installing') return
+      outcome = { kind: 'installing' }
+      btn.disabled = true
+      btn.textContent = tr('更新中…')
+      try {
+        const response = await pluginManager?.updateBundle?.(PLUGIN_ID, latest)
+        // Remote calls wrap PluginUpdateResult in { ok, value }; the manager reports
+        // its own ChangeResult inside `result`, and a settled Promise alone proves nothing.
+        if (response?.ok === false) throw new UpdateFailure(response.error.message, false)
+        if (!response || response.ok !== true) throw new UpdateFailure('宿主未返回有效的更新结果', true)
+        const update = response.value
+        if (!update?.result) throw new UpdateFailure('宿主未返回有效的更新结果', true)
+        const result = update.result
+        if (result.error) throw new UpdateFailure(result.error.code + (result.error.diagnostic ? '：' + result.error.diagnostic : ''), false)
+        if (result.application === 'cancelled') throw new UpdateFailure('更新已取消，当前版本保持不变', true)
+        if (result.application === 'overridden') throw new UpdateFailure('安装配置被覆盖，请在「插件」管理中检查', true)
+        if (result.application !== 'applied' && result.application !== 'restart-required') throw new UpdateFailure('宿主未确认更新成功', true)
+        if (update.step !== 'install' || update.to !== latest || update.restore) throw new UpdateFailure('宿主未确认更新成功', true)
+        const needRestart = result.application === 'restart-required'
+        outcome = { kind: 'installed', version: latest, restart: needRestart }
+        const current = document.getElementById('dsh-bloom-update-banner')
+        if (current) showInstalled(current, latest, needRestart)
+      } catch (error) {
+        const failure = error instanceof UpdateFailure
+          ? error : new UpdateFailure(error instanceof Error ? error.message : String(error), false)
+        outcome = { kind: 'failed', reason: failure.key, localizableReason: failure.localizable }
+        const current = document.getElementById('dsh-bloom-update-banner')
+        if (current) showInstallFailed(current, latest, failure.key, failure.localizable)
+      }
+    })
     el.querySelector<HTMLElement>('[data-act="open"]').addEventListener('click', () => {
       window.open(RELEASES_URL + '/tag/v' + latest, '_blank', 'noopener')
     })
     document.body.appendChild(el)
+    if (outcome.kind === 'installing') {
+      const button = el.querySelector<HTMLButtonElement>('[data-act="install"]')
+      if (button) { button.disabled = true; button.textContent = tr('更新中…') }
+    } else if (outcome.kind === 'installed') showInstalled(el, outcome.version || latest, !!outcome.restart)
+    else if (outcome.kind === 'failed') showInstallFailed(el, latest, outcome.reason || '', !!outcome.localizableReason)
+  }
+
+  /** 装好了：把横幅换成「重载后生效」，并给一个一键重载。 */
+  function showInstalled(el: HTMLElement, version: string, needRestart: boolean) {
+    const body = el.querySelector<HTMLElement>('.bloom-upd-body')
+    const actions = el.querySelector<HTMLElement>('.bloom-upd-actions')
+    if (!body || !actions) return
+    el.querySelector('.bloom-upd-hint')?.remove()
+    body.textContent = needRestart
+      ? tr`已更新到 v${version}，需要重启 DSH 才生效`
+      : tr`已更新到 v${version}，重载页面后生效`
+    actions.innerHTML = (needRestart ? '' : `<button data-primary data-act="reload">${tr('立即重载')}</button>`)
+      + `<button data-act="dismiss">${tr('稍后')}</button>`
+    actions.querySelector<HTMLElement>('[data-act="reload"]')?.addEventListener('click', () => location.reload())
+    actions.querySelector<HTMLElement>('[data-act="dismiss"]')?.addEventListener('click', () => el.remove())
+  }
+
+  /** Report the host result honestly; desktop users must not get a CLI command that their profile rejects. */
+  function showInstallFailed(el: HTMLElement, version: string, reason: string, localizable: boolean) {
+    const body = el.querySelector<HTMLElement>('.bloom-upd-body')
+    const actions = el.querySelector<HTMLElement>('.bloom-upd-actions')
+    if (!body || !actions) return
+    el.querySelector('.bloom-upd-hint')?.remove()
+    body.style.whiteSpace = 'pre-line'
+    const detail = localizable ? tr(reason) : reason
+    body.textContent = tr`应用内更新失败：${detail}`
+      + (isDesktopHost() ? '\n' + tr('请在侧栏「插件」管理中检查更新；桌面端无需执行终端命令') : '')
+    actions.innerHTML = `<button data-act="retry">${tr('重试')}</button>`
+      + (isDesktopHost() ? '' : `<button data-act="copy">${tr('复制更新命令')}</button>`)
+      + `<button data-act="open">${tr('更新日志')}</button>`
+    actions.querySelector<HTMLElement>('[data-act="retry"]')?.addEventListener('click', () => {
+      outcome = { kind: 'available' }
+      el.remove()
+      showBanner(version)
+    })
+    actions.querySelector<HTMLElement>('[data-act="copy"]')?.addEventListener('click', (e) => {
+      const btn = e.currentTarget as HTMLElement
+      navigator.clipboard?.writeText(updateCmd(version)).then(() => {
+        btn.textContent = tr('✓ 已复制')
+        setTimeout(() => (btn.textContent = tr('复制更新命令')), 1600)
+      }).catch(() => {})
+    })
+    actions.querySelector<HTMLElement>('[data-act="open"]')?.addEventListener('click', () => {
+      window.open(RELEASES_URL + '/tag/v' + version, '_blank', 'noopener')
+    })
   }
 
   function check() {
@@ -421,6 +572,8 @@ window.__ModuleLoader__.load({
       const variant = readVariant()
       // 语言是体系配置，走 DSH 的 locale 服务 —— 必须在任何 tr() 渲染之前接上。
       bindLocaleToHost(ctx)
+      // 接上宿主的插件管理服务：横幅据此提供「应用内一键更新」。
+      bindPluginManager(ctx)
       if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/bloom.css"]')) {
         injectCSS(buildBloomCSS(), 'bloom.css')
       }

@@ -47,7 +47,7 @@
     "test": "npm run check",
     "check:drift": "node scripts/dsh-drift.mjs",
     "test:i18n": "node --test test/i18n.test.mjs",
-    "test:browser": "node --test test/i18n.test.mjs test/drag-interaction.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs",
+    "test:browser": "node --test test/i18n.test.mjs test/drag-interaction.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs",
     "check:dsh": "node ../scripts/dsh-dev.mjs check",
     "rollback": "node ../scripts/dsh-dev.mjs rollback",
     "rollback:npm": "node ../scripts/dsh-dev.mjs rollback --npm",

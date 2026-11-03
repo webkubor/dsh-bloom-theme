@@ -13,6 +13,23 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.22.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.21.1...v0.22.0) (2026-11-03)
+
+
+### ✨ Features
+
+* **palette:** 新增「草色」嫩绿薄荷与「橙黄」饱和橘两套配色 ([7515869](https://github.com/webkubor/dsh-bloom-theme/commit/751586910b08ca1bdb1b9eaf9cf66c48916d20b8))
+
+
+### 🐛 Bug Fixes
+
+* **glass:** 输入卡 hover 不再上抬、侧栏右缘光带与浅色卡片光晕收敛 ([7b2f6eb](https://github.com/webkubor/dsh-bloom-theme/commit/7b2f6ebee76fb7a1a691a10bed9acf37883b7833))
+
+
+### 🧱 重构
+
+* **switcher:** 语言只跟随 DSH，面板底部合并为一行 ([e8c404b](https://github.com/webkubor/dsh-bloom-theme/commit/e8c404b28bd20b063c31bf9962d2ef2d5a0357b9))
+
 ## [0.21.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.21.0...v0.21.1) (2026-11-03)
 
 

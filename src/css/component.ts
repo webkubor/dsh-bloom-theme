@@ -741,20 +741,22 @@ body {
 /* v0.10.x：左色条 + bloom-bar-in 动画整体删除（owner 反馈「脏」）。
    没有 ::before 了，bloom-bar-in keyframe 也跟着删。 */
 
-/* 玻璃面板 / 输入卡片 hover：v0.15 让 hover 真的"光起来"——在已有
-   transition 链上加 transform，hover 时同时切 border、抬一格、
-   投影从 --bloom-shadow-sm 升到 --bloom-shadow(更长/更厚)。
-   微抬 -1px 配合 S 曲线进退，体感上像是「面板轻轻浮起」。 */
+/* 输入卡片 hover：只提描边，不抬、不换阴影。
+   v0.15 曾在这里加 transform: translateY(-1px) + box-shadow: var(--bloom-shadow)
+   想让卡片"浮起来"，实际两半都不对：
+   ① box-shadow 从没生效 —— GLASS_CSS 的 body[data-bloom-variant] … _card
+      特异性 (0,3,3) 高于这里的 :hover (0,3,2)，阴影永远是玻璃那套；
+   ② transform 生效了，但它违反 glass.ts 侧栏注释里的判据：输入卡的
+      conversation.input.overlay 槽会注入 fixed 元素（dsh-convmap，issue #15），
+      transform 会让卡片成为它们的 containing block —— hover 时浮层跟着错位。
+      而且输入框是打字的地方，不是按钮，光标停上去就抖一下只会分神。 */
 div[class*="_composer"] div[class*="_card"] {
   transition:
     border-color var(--bloom-dur) var(--bloom-ease),
-    box-shadow var(--bloom-dur) var(--bloom-ease),
-    transform var(--bloom-dur) var(--bloom-ease);
+    box-shadow var(--bloom-dur) var(--bloom-ease);
 }
 div[class*="_composer"] div[class*="_card"]:hover {
   border-color: var(--bloom-hairline-strong);
-  box-shadow: var(--bloom-shadow);
-  transform: translateY(-1px);
 }
 
 /* 主题自己的按钮：按下微缩（明确「点到了」） */

@@ -86,7 +86,7 @@ const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy
  *  名必须自己填（写死任何具体名字都是给一份必然过期的指令）。
  */
 const buildShareText = () => [
-  tr('Bloom —— DSH 的中国风配色主题：10 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。'),
+  tr('Bloom —— DSH 的中国风配色主题：12 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。'),
   tr('装到你的 DSH：'),
   tr('  · 桌面端 app：在应用内的「插件管理」里搜 dsh-bloom-theme 直接装'),
   tr('    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）'),

@@ -242,7 +242,7 @@
   function auditTokens() {
     // 变体清单必须与 palette.ts 的 VARIANTS 对齐：少两个就等于有两个变体的
     // 配色从来没被 token 层验过。2026-09-29 实测正好漏了 aurora / lavender。
-    const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender']
+    const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine']
     const TEXT_TOKENS = {
       'state-error-primary': '--dsw-alias-state-error-primary',
       'state-success-primary': '--dsw-alias-state-success-primary',
@@ -411,7 +411,7 @@
   const DEAD_EXEMPT = {
     pseudo: (s) => s.includes('::'),
     interaction: (s) => /:(hover|focus|focus-visible|focus-within|active|visited|target)\b/.test(s),
-    variant: (s) => /^body\[data-bloom-variant="(mist|aurora|cinnabar|petal|ripple|sage|stone|lapis|amber|lavender)"\]/.test(s.trim()),
+    variant: (s) => /^body\[data-bloom-variant="(mist|aurora|cinnabar|petal|ripple|sage|stone|lapis|amber|lavender|mint|tangerine)"\]/.test(s.trim()),
     mode: (s) => s.includes('[data-ds-dark-theme]'),
     // 主题自己的组件：dsh-bloom-* 的状态选择器（[data-floating] / [data-state] /
     // [data-dragging]…）按定义就只在那个状态下存在，0 命中是正常的。

@@ -225,7 +225,7 @@ for (const [name, check] of [
 test('all palettes retain computed colors and selection after switching language', async () => {
   const {page, context} = await setup('en-US', 'en')
   try {
-    const variants = ['mist','cinnabar','petal','ripple','sage','stone','lapis','amber','aurora','lavender']
+    const variants = ['mist','cinnabar','petal','ripple','sage','stone','lapis','amber','aurora','lavender','mint','tangerine']
     for (const variant of variants) {
       await click(page, '.dsh-bloom-trigger')
       await click(page, `[data-variant="${variant}"]`)

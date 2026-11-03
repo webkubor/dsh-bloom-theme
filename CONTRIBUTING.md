@@ -19,7 +19,7 @@ npm run dev      # 监听 lib/，保存即部署到 web profile 并自动刷新�
 
 ```
 meta.ts        插件 ID / 版本号 / localStorage key —— 最底层，不 import 任何东西
-palette.ts     10 套配色的色板与标签 + mix()  —— 纯数据，无依赖
+palette.ts     12 套配色的色板与标签 + mix()  —— 纯数据，无依赖
    ↓
 tokens.ts      色板 → CSS 变量（borderStack / labelStack / sharedDswTokens / 三个变体块）
 css/           component.ts · glass.ts · switcher.ts —— 纯 CSS 字符串常量，零插值

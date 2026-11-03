@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.21.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.21.0...v0.21.1) (2026-11-03)
+
+
+### 📝 Documentation
+
+* add theme-aware Star History charts to bilingual READMEs ([fb81f4d](https://github.com/webkubor/dsh-bloom-theme/commit/fb81f4d81aa57854d6450d4bc9b87f6d4df9b711))
+
 ## [0.21.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.20.1...v0.21.0) (2026-11-03)
 
 

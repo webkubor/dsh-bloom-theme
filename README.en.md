@@ -7,7 +7,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 themes</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>10 palettes · current</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>12 palettes · current</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>color guardrail</sub></td>
 </tr>
 </table>
@@ -85,7 +85,7 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
 
 ## Quick start
 
-- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between the 10 palettes, light/dark, and wallpapers.
+- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between the 12 palettes, light/dark, and wallpapers.
 - **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
 
 ## Screenshots
@@ -95,7 +95,7 @@ Eight light/dark palettes, adaptive by light/dark; panels are real frosted glass
   <sub>Sage · light — frosted-glass panels + the selected session row tints with the active theme</sub>
 </p>
 
-**10 palettes (light)**: click any one and the whole accent / background / glass / motion hue switches together.
+**12 palettes (light)**: click any one and the whole accent / background / glass / motion hue switches together.
 
 <table align="center">
 <tr>
@@ -143,7 +143,7 @@ npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme
 </details>
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
-**10 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
+**12 palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
 ## Features

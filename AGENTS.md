@@ -4,7 +4,7 @@
 
 ## 这是什么
 
-Bloom for DSH —— DeepSeek Harness 的「玻璃 + 莫兰迪」主题插件。10 套明暗双配色
+Bloom for DSH —— DeepSeek Harness 的「玻璃 + 莫兰迪」主题插件。12 套明暗双配色
 （OKLCH 调色、全部实测 WCAG AA），顶栏一键切换，零运行时依赖。npm 包名 `dsh-bloom-theme`。
 
 ## 关键文件

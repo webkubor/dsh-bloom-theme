@@ -232,9 +232,11 @@ export const SWITCHER_CSS = `
 .dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(8) { animation-delay: 114ms; }
 .dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(9) { animation-delay: 126ms; }
 .dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(10) { animation-delay: 138ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(11) { animation-delay: 150ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-option:nth-child(12) { animation-delay: 162ms; }
 /* 色块之后的区段跟着最后一档走，形成「一行一行落下来、再整体收尾」的节奏 */
 .dsh-bloom-menu.is-entering .dsh-bloom-section,
-.dsh-bloom-menu.is-entering .dsh-bloom-appearance { animation-delay: 150ms; }
+.dsh-bloom-menu.is-entering .dsh-bloom-appearance { animation-delay: 174ms; }
 
 /* 目录引导点：填充配色名与诗句之间的空白（详见 buildSwitcherHTML 的说明）。
    用 radial-gradient 平铺圆点，比 border-bottom:dotted 更好控制点径与间距，

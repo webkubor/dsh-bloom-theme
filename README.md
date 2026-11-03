@@ -5,7 +5,7 @@
 <h1 align="center">🌊 Bloom for DSH</h1>
 
 <p align="center">
-  <strong>10 套莫兰迪中国风主题，配色全部实测达 WCAG AA</strong><br/>
+  <strong>12 套莫兰迪中国风主题，配色全部实测达 WCAG AA</strong><br/>
   <sub>Ten Morandi palettes for DeepSeek Harness — every one measured against WCAG AA.</sub>
 </p>
 
@@ -14,7 +14,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 套主题</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>10 套配色 · 当前</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>12 套配色 · 当前</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>配色护栏</sub></td>
 </tr>
 </table>
@@ -45,7 +45,7 @@
   把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
   <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />
-  <b>玻璃 + 莫兰迪</b>：10 套明暗双主题，磨砂玻璃面板，顶栏一键切换，
+  <b>玻璃 + 莫兰迪</b>：12 套明暗双主题，磨砂玻璃面板，顶栏一键切换，
   连 AI 思考的等待也跟主题一起呼吸。
 </p>
 
@@ -77,21 +77,21 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 ## 一句话
 
 **给 DeepSeek Harness 的「玻璃 + 莫兰迪」主题。**
-10 套配色，明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
+12 套配色，明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
 配色是低饱和莫兰迪（OKLCH 调色、WCAG AA），全站统一克制的微动效，零运行时依赖，前端 TypeScript 构建。
 
 > 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
 
 ## 快速开始
 
-- **DSH 桌面端**：应用内「插件管理」安装，重载页面即可 —— 顶栏右上角出现「黛蓝 ▾」按钮，10 套配色、明暗、壁纸都在那里切换。
+- **DSH 桌面端**：应用内「插件管理」安装，重载页面即可 —— 顶栏右上角出现「黛蓝 ▾」按钮，12 套配色、明暗、壁纸都在那里切换。
 - **自建 profile（CLI / 服务器 / Web）**：`dsh plugin --profile <你的 profile> add dsh-bloom-theme`，接进 boot graph 后重启 DSH，三步细节见下方[安装](#安装)。
 
 ## 🏆 为什么用它
 
 | | DSH 原生 | 普通主题插件 | **Bloom for DSH** |
 | :-- | :-- | :-- | :-- |
-| 配色数量 | 1 套 | 3-5 套 | **10 套莫兰迪，明暗各一套** |
+| 配色数量 | 1 套 | 3-5 套 | **12 套莫兰迪，明暗各一套** |
 | 配色依据 | 手工挑色 | 手工挑色 | **OKLCH 感知均匀调色** |
 | 对比度 | 未声明 | 未声明 | **明暗主色对全部实测 ≥ 4.5:1（WCAG AA）** |
 | 面板质感 | 实色 | 实色 / 简单半透 | **真磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘）** |
@@ -106,7 +106,7 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
   <sub>竹青·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
 </p>
 
-**10 套配色（亮色）**：点击任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
+**12 套配色（亮色）**：点击任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
 
 <table align="center">
 <tr>
@@ -152,7 +152,7 @@ dsh plugin --profile <你的 profile> add dsh-bloom-theme
 
 </details>
 
-装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **10 套配色**间切换，
+装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **12 套配色**间切换，
 下拉底部显示当前版本号；npm 上有更新的版本时会亮一个 `↑ vX` 徽标（点它跳 Release 页）。
 
 ## 特性
@@ -160,7 +160,7 @@ dsh plugin --profile <你的 profile> add dsh-bloom-theme
 | 特性 | 说明 |
 | :-- | :-- |
 | **磨砂玻璃面板（默认常开）** | 半透底 + `backdrop-filter` 模糊 + 玻璃边缘（顶部亮高光 / 半透描边 / 柔和外辉），明暗两档透明度自适应 |
-| **10 套莫兰迪配色** | 黛蓝 / 朱砂 / 桃夭 / 天青 / 竹青 / 赭石 / 青金 / 琥珀 / 落霞 / 青莲，每套明暗双主题，一键切换 |
+| **12 套莫兰迪配色** | 黛蓝 / 朱砂 / 桃夭 / 天青 / 竹青 / 赭石 / 青金 / 琥珀 / 落霞 / 青莲 / 草色 / 橙黄，每套明暗双主题，一键切换 |
 | **界面语言** | 面板里 中文 / English / Русский 一键切换，没手动选过时沿用原来的浏览器语言自动判断；只换文案，配色与对比度结论一概不动 |
 | **双轨配色** | 可读轨保对比度（文字/按钮），气质轨专供氛围渐变，两轨分工不混用 |
 | **微交互动效** | 菜单入场、选中态色条滑入、hover / 按压反馈；统一时长与缓动 token，全站一致 |

@@ -1,5 +1,5 @@
 /**
- * 10 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
+ * 12 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
  *
  * **双轨制不能退回单轨**（见 CONTRIBUTING「改配色时注意」）：
  *   accentL / accentD  可读轨 —— 文字、按钮填充、边框，必须过 WCAG AA
@@ -8,9 +8,9 @@
  * 拿可读轨铺大面积、或拿气质轨做文字色，都会失去莫兰迪质感。
  */
 
-export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender']
+export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine']
 
-export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender']
+export const OTHER_VARIANTS = ['cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine']
 
 /**
  * Bloom 色板 —— 双轨制（这是从 typora-Bloom-theme 继承来的关键设计，别退回单轨）。
@@ -163,6 +163,38 @@ export const PALETTE = {
     motionL: ['oklch(52% 0.11 295)', 'oklch(52% 0.10 265)', 'oklch(53% 0.12 325)'],
     motionD: ['oklch(75% 0.11 295)', 'oklch(75% 0.11 265)', 'oklch(76% 0.12 325)'],
   },
+  /* v0.22：草色 —— 嫩绿薄荷（owner 2026-11-03 点名要）。hue 160 落在 sage(115, 偏黄的竹青)
+     与 ripple(195, 偏蓝的天青) 正中，三者色相各差 35~45°，并排不会读成同一个绿。
+     「嫩」靠的是暗色档的高亮度低彩度（L 82% C 0.12），不是堆彩度 —— 薄荷一上 0.15
+     就成了荧光绿。亮色 accent 必须压到 L 51% 才过 4.5:1，它在浅底上读作「松针」，
+     嫩感交给 morandi 氛围与暗色档去表达（双轨制，见文件头）。
+     底色彩度照落霞的教训压到 0.006 以内：绿底大面积铺开最容易显脏。 */
+  mint: {
+    accentL: 'oklch(51% 0.10 160)',   accentD: 'oklch(82% 0.12 160)',
+    morandi: '128, 196, 166',
+    bgL: 'oklch(97.6% 0.006 160)',    bgD: 'oklch(24% 0.012 165)',
+    txL: 'oklch(24% 0.015 165)',      txD: 'oklch(96% 0.008 160)',
+    sfL: 'oklch(95.6% 0.008 160)',    sfD: 'oklch(30% 0.015 165)',
+    sf2L: 'oklch(92.8% 0.01 160)',    sf2D: 'oklch(36% 0.018 165)',
+    motionL: ['oklch(51% 0.10 160)', 'oklch(52% 0.10 135)', 'oklch(51% 0.09 185)'],
+    motionD: ['oklch(82% 0.12 160)', 'oklch(84% 0.12 135)', 'oklch(80% 0.10 185)'],
+  },
+  /* v0.22：橙黄 —— 爱马仕橙那一档的饱和橘（owner 2026-11-03 点名要）。key / 英文名
+     不用品牌名（商标），只取色。hue 47：cinnabar 25 / stone 29 偏红，amber 70 /
+     aurora 72 偏金，47 是唯一空着的「正橙」。
+     这是全套彩度最高的暖色（暗色 C 0.17），所以底色反而要最中性（0.005），
+     橙只出现在 accent / motion 上 —— 落霞 v0.12.1 已经证明暖底会显旧、显脏。
+     亮色 accent L 55% 过 4.5:1，读作焦糖橘；鲜亮的爱马仕橙在暗色档 accentD。 */
+  tangerine: {
+    accentL: 'oklch(55% 0.16 47)',    accentD: 'oklch(73% 0.17 50)',
+    morandi: '226, 128, 64',
+    bgL: 'oklch(97.8% 0.005 60)',     bgD: 'oklch(24% 0.01 50)',
+    txL: 'oklch(24% 0.014 50)',       txD: 'oklch(96% 0.006 60)',
+    sfL: 'oklch(95.8% 0.006 60)',     sfD: 'oklch(30% 0.012 50)',
+    sf2L: 'oklch(93% 0.008 58)',      sf2D: 'oklch(36% 0.015 50)',
+    motionL: ['oklch(55% 0.16 47)', 'oklch(56% 0.15 30)', 'oklch(57% 0.13 65)'],
+    motionD: ['oklch(73% 0.17 50)', 'oklch(74% 0.16 32)', 'oklch(78% 0.14 66)'],
+  },
 }
 
 export const VARIANT_LABELS = {
@@ -182,6 +214,8 @@ export const VARIANT_LABELS = {
   amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光', ru: 'Янтарь', poemRu: 'В чаше янтарный свет', poemEn: 'A jade bowl of amber light' },   // hue 70  · 李白《客中行》
   aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞', ru: 'Закат', poemRu: 'Закат и одинокий полёт', poemEn: 'Sunset and a lonely flight' },   // hue 72  · 王勃《滕王阁序》
   lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉', ru: 'Сирень', poemRu: 'Лотос из ясной воды', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
+  mint:     { zh: '草色', en: 'Mint',      poem: '草色遥看近却无', ru: 'Мята', poemRu: 'Издали — зелень, вблизи — нет', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
+  tangerine:{ zh: '橙黄', en: 'Tangerine', poem: '最是橙黄橘绿时', ru: 'Мандарин', poemRu: 'Лучшая пора — рыжие плоды', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

@@ -150,13 +150,17 @@ Refresh the page and a "Mist ▾" theme button appears top-right. Click it to sw
 **9 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
+## Updates
+
+When the host provides `remote.pluginManager.updateBundle`, the update banner offers **Update now** and delegates replacement and failure recovery to DSH. A restart-required result instructs an application restart without offering an ineffective page reload; an applied result offers a page reload. Older hosts, including desktop 0.2.1-rc.5, lack this API and show Plugins guidance instead of an unusable update button. Desktop never offers a rejected terminal command; self-hosted CLI profiles retain the copy-command fallback.
+
 ## Features
 
 | Feature | Description |
 | :-- | :-- |
 | **Frosted-glass panels (on by default)** | Semi-transparent fill + `backdrop-filter` blur + glass edges (top highlight / translucent stroke / soft outer glow), adaptive opacity per light/dark |
 | **14 supported Morandi palettes** | 9 featured choices: Mist / Petal / Ripple / Lapis / Afterglow / Mint / Tangerine / Silver Rose / Dawn; older saved colors stay supported, each with light and dark modes |
-| **UI language** | One click in the panel to switch between 中文 / English / Русский; until you pick one it follows your browser language, exactly as before. Text only — palettes and measured contrast are untouched |
+| **UI language** | Follows DSH's shared language setting, with 中文 / English / Русский dictionaries. Text only — palettes and measured contrast are untouched |
 | **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
 | **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |
 | **Theme-colored thinking animation** | `Deep diving…` flows through the current theme's three-color spectrum; auto-still under `prefers-reduced-motion` |

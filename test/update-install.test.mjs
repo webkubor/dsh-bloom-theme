@@ -70,19 +70,20 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
       setLocale(next){this.active=next;for(const fn of listeners) fn()}
     }
     window.mode=mode;window.installCalls=[]
-    window.pm={installBundle:async (spec, options)=>{
-      window.installCalls.push({spec,options})
+    window.pm={updateBundle:async (name, version)=>{
+      window.installCalls.push({name,version})
       if(window.mode==='throw') throw new Error('RPC disconnected')
       if(window.mode==='pending') return new Promise(resolve=>{window.resolveInstall=resolve})
       if(window.mode==='transport') return {ok:false,error:{message:'RPC disconnected'}}
-      if(window.mode==='invalid') return {ok:true,value:{changed:true}}
-      const result={changed:true,application:'applied',stage:'install',target:spec,bundle:'dsh-bloom-theme',version:latest}
+      if(window.mode==='invalid') return {ok:true,value:{from:'0.0.1',to:version,step:'install',result:{changed:true}}}
+      const result={changed:true,application:'applied',stage:'install',target:name+'@'+version,bundle:'dsh-bloom-theme',version:latest}
       if(window.mode==='restart') Object.assign(result,{application:'restart-required',restartReason:'no-hmr'})
       if(window.mode==='failed') Object.assign(result,{changed:false,application:'failed',error:{code:'operation-error',diagnostic:'network unavailable'},packageResult:{kind:'network',exitCode:1}})
       if(window.mode==='already-installed') Object.assign(result,{changed:false,application:'failed',error:{code:'already-installed'}})
       if(window.mode==='cancelled'||window.mode==='overridden') result.application=window.mode
-      return {ok:true,value:result}
+      return {ok:true,value:{from:'0.0.1',to:version,step:'install',result}}
     }}
+    if(mode==='legacy') { delete window.pm.updateBundle; window.pm.installBundle=async()=>{throw new Error('must not call installBundle for an installed theme')} }
   }, { mode, desktop, latest: LATEST })
   await page.addScriptTag({ content: outputFiles[0].text })
   await page.evaluate(({mode,late})=>window.applyFixture(mode==='none'||late?undefined:window.pm,window.locale),{mode,late})
@@ -100,7 +101,7 @@ test('desktop update invokes exact version once and unwraps a successful host re
   assert.equal(await banner(page).locator('code').isVisible(), false)
   await banner(page).locator('[data-act="install"]').click()
   await banner(page).locator('[data-act="reload"]').waitFor()
-  assert.deepEqual(await page.evaluate(()=>window.installCalls), [{spec:`dsh-bloom-theme@${LATEST}`,options:{saveExact:true}}])
+  assert.deepEqual(await page.evaluate(()=>window.installCalls), [{name:'dsh-bloom-theme',version:LATEST}])
   await waitBody(page, `已更新到 v${LATEST}`)
   assert.deepEqual(errors, [])
 })
@@ -113,7 +114,7 @@ test('restart-required instructs application restart and never offers a page rel
   assert.equal(await banner(page).locator('[data-act="dismiss"]').count(), 1)
 })
 
-for (const [mode,reason] of [['failed','network unavailable'],['transport','RPC disconnected'],['throw','RPC disconnected'],['already-installed','不支持直接更新'],['cancelled','更新已取消'],['overridden','安装配置被覆盖'],['invalid','宿主未确认更新成功']]) {
+for (const [mode,reason] of [['failed','network unavailable'],['transport','RPC disconnected'],['throw','RPC disconnected'],['already-installed','already-installed'],['cancelled','更新已取消'],['overridden','安装配置被覆盖'],['invalid','宿主未确认更新成功']]) {
   test(`${mode}: a non-successful result never claims installation succeeded`, async t => {
     const {page,errors}=await setup(t,mode)
     await banner(page).locator('[data-act="install"]').click()
@@ -143,12 +144,30 @@ test('language changes keep an in-flight install disabled and preserve its compl
   await page.evaluate(()=>window.locale.setLocale('en'))
   assert.equal(await banner(page).locator('[data-act="install"]').isDisabled(),true)
   assert.match(await banner(page).locator('[data-act="install"]').textContent(),/Updating/)
-  await page.evaluate(latest=>window.resolveInstall({ok:true,value:{changed:true,application:'applied',stage:'install',target:'dsh-bloom-theme@'+latest,version:latest}}),LATEST)
+  await page.evaluate(latest=>window.resolveInstall({ok:true,value:{from:'0.0.1',to:latest,step:'install',result:{changed:true,application:'applied',stage:'install',target:'dsh-bloom-theme@'+latest,version:latest}}}),LATEST)
   await waitBody(page,`Updated to v${LATEST}`)
   await page.evaluate(()=>window.locale.setLocale('ru'))
   await waitBody(page,`Обновлено до v${LATEST}`)
   assert.equal(await page.evaluate(()=>window.installCalls.length),1)
   assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
+})
+
+test('a localizable failure is re-translated when the interface language changes', async t => {
+  const {page}=await setup(t,'cancelled')
+  await banner(page).locator('[data-act="install"]').click()
+  await waitBody(page,'更新已取消')
+  await page.evaluate(()=>window.locale.setLocale('en'))
+  await waitBody(page,'cancelled')
+  await page.evaluate(()=>window.locale.setLocale('ru'))
+  await waitBody(page,'отменено')
+})
+
+test('the stale update hint disappears once the outcome replaces the available state', async t => {
+  const {page}=await setup(t)
+  assert.equal(await banner(page).locator('.bloom-upd-hint').count(),1)
+  await banner(page).locator('[data-act="install"]').click()
+  await banner(page).locator('[data-act="reload"]').waitFor()
+  assert.equal(await banner(page).locator('.bloom-upd-hint').count(),0)
 })
 
 test('late optional service arrival refreshes capability and disposal removes stale install controls', async t => {
@@ -158,6 +177,12 @@ test('late optional service arrival refreshes capability and disposal removes st
   await banner(page).locator('[data-act="install"]').waitFor()
   await page.evaluate(()=>window.remoteDisposers.forEach(fn=>fn()))
   assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
+})
+
+test('legacy manager cannot advertise an update using its install-only API', async t => {
+  const {page}=await setup(t,'legacy')
+  assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
+  assert.match(await banner(page).locator('.bloom-upd-hint').textContent(),/不支持一键更新/)
 })
 
 test('desktop without the optional service points to Plugins and never offers an unusable command', async t => {

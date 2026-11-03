@@ -6,6 +6,7 @@
  * 变体名字和诗句不在这里，它们在 palette.ts 的 VARIANT_LABELS（ru / poemRu 字段）。
  */
 export const DICT_RU: Record<string, string> = {
+  "当前宿主不支持一键更新，请在侧栏「插件」管理中查看": "Эта версия DSH не поддерживает прямое обновление; откройте «Плагины» на боковой панели",
   "在应用内点「立即更新」即可，无需终端命令": "Нажмите «Обновить сейчас» прямо здесь — терминал не нужен",
   "立即更新": "Обновить сейчас",
   "更新中…": "Обновление…",
@@ -105,6 +106,7 @@ export const DICT_RU: Record<string, string> = {
 }
 
 export const DICT_EN: Record<string, string> = {
+  "当前宿主不支持一键更新，请在侧栏「插件」管理中查看": "This version of DSH does not support direct updates; check Plugins on the sidebar",
   "在应用内点「立即更新」即可，无需终端命令": "Click “Update now” right here — no terminal needed",
   "立即更新": "Update now",
   "更新中…": "Updating…",

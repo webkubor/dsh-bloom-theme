@@ -141,7 +141,7 @@ export const DICT_EN: Record<string, string> = {
   "深浅模式": "Light or dark",
   "界面语言": "Interface language",
   "跟随系统": "System",
-  "配色投票": "Vote on palettes",
+  "配色投票": "Vote",
   "已复制": "Copied",
   "有新版": "new version",
   "桌面端": "the desktop app",

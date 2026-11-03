@@ -10,11 +10,12 @@
  *
  * 现在的口径：
  *
- *  - 语言源只有一个：`ctx.locale`（`getSnapshot().active`），面板「语言」行写回的
- *    也是它（`setLocale`，落进 DSH 的 `locale.preference`）。
- *  - 词条的注册、查找、回落全部交给 DSH：本插件只提供一张 `{zh, en, ru}` 表。
- *  - 俄语在 DSH 自带目录里没有，由 `apply(ctx)` 用 `addLanguage` 补进 DSH 的语言表
- *    （fallback 指 en）。所以俄语在 DSH 设置里也是正式可选项，不再是本插件的私活。
+ *  - 语言源只有一个：`ctx.locale`（`getSnapshot().active`），**只读**。
+ *  - 2026-11-03（owner）：「dsh 用什么语言，我就什么语言」。面板里的「语言」行、
+ *    `setLang`、以及往 DSH 语言表里补俄语的 `addLanguage` 全部删除 —— 插件不再
+ *    拥有任何语言开关，也不扩展 DSH 的语言目录。换语言只在 DSH 设置里换。
+ *  - 词条的注册、查找、回落全部交给 DSH：本插件只提供 `{zh, en, ru}` 词表。
+ *    ru 表保留：DSH 自己将来带上俄语时直接生效，现在不会被选中。
  *
  * 三条设计约束不变：
  *
@@ -32,17 +33,8 @@ import { DICT_RU, DICT_EN } from './lang-dicts.js'
 
 export type BloomLang = 'zh' | 'en' | 'ru'
 
-/** 顺序就是段控件里从左到右的顺序 */
-export const LANGS: BloomLang[] = ['zh', 'en', 'ru']
-/** 段控件上一格只放两个字母：三格塞进 312px 的面板，全名会把按钮挤到换行 */
-export const LANG_SHORT: Record<BloomLang, string> = { zh: 'Zh', en: 'En', ru: 'Ru' }
-/** 全名进 title，鼠标停上去能看到自己点的是哪种语言 */
-export const LANG_FULL: Record<BloomLang, string> = { zh: '中文', en: 'English', ru: 'Русский' }
-
 /** 本插件在 DSH locale 服务里的命名空间（词条按它注册/查找）。 */
 export const LOCALE_NS = 'dsh-bloom-theme'
-/** 俄语在 DSH 语言表里的定义：label 进 DSH 的语言下拉，fallback 满足 DSH 的回落要求。 */
-export const RU_LANGUAGE = { id: 'ru', label: 'Русский', fallback: 'en' } as const
 
 export const LANG_CHANGE_EVENT = 'dsh-bloom-lang-change'
 
@@ -58,8 +50,6 @@ export interface LocaleLike {
   bind(ns: string): (key: string) => string
   getSnapshot(): { active: string }
   subscribe(fn: () => void): () => void
-  setLocale(id: string): void
-  addLanguage?(input: { id: string; label: string; fallback: string }): () => void
 }
 
 let runtime: LocaleLike | null = null
@@ -112,24 +102,6 @@ export function getLang(): BloomLang {
     return 'en'
   }
   return (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en'
-}
-
-/**
- * 切语言：写回 DSH 的偏好（`locale.preference`），不再自己存。
- *
- * 该语言没注册进 DSH 时（例如宿主不带 locale 服务）静默保持原样 —— 面板宁可不切，
- * 也不能因为一次点击把整块 UI 崩掉。
- */
-export function setLang(lang: BloomLang): BloomLang {
-  if (runtime) {
-    try {
-      runtime.setLocale(lang)
-    } catch {}
-  }
-  try {
-    window.dispatchEvent(new Event(LANG_CHANGE_EVENT))
-  } catch {}
-  return lang
 }
 
 /** 模板的 key：静态片段用 {0} {1} 串起来 —— 「超时 {0}s」 */
@@ -189,33 +161,4 @@ export const variantPoem = (v) => {
   if (lang === 'ru') return l.poemRu || l.poem
   if (lang === 'en') return l.poemEn || l.poem
   return l.poem
-}
-
-/**
- * 「语言」那一行。样式直接复用模式行（.dsh-bloom-appearance），所以 CSS 一行没加：
- * 两个三选一的分段控件长得一样是应该的，不是巧合。区分靠 data-lang / data-mode。
- *
- * 这一行仍然保留，但它不再是「本插件私有的语言开关」：点它等同于在 DSH 设置里
- * 换语言（写 `locale.preference`），选中态也从 DSH 的当前语言读。
- */
-export function langRowHTML(current: BloomLang): string {
-  const btns = LANGS.map((l) =>
-    `<button type="button" class="dsh-bloom-appearance__btn" data-lang="${l}"` +
-    ` data-active="${l === current}" aria-pressed="${l === current}" title="${LANG_FULL[l]}">${LANG_SHORT[l]}</button>`
-  ).join('')
-  return `<div class="dsh-bloom-section">${tr('语言')}</div>` +
-    `<div class="dsh-bloom-appearance dsh-bloom-lang" role="group" aria-label="${tr('界面语言')}">` +
-    `<div class="dsh-bloom-appearance__seg">${btns}</div></div>`
-}
-
-/** 选中态与 DSH 的当前语言对齐；每次打开菜单都重读（缓存必然对不上）。 */
-export function syncLangRow(el: HTMLElement) {
-  const row = el.querySelector<HTMLElement>('.dsh-bloom-lang')
-  if (!row) return
-  const cur = getLang()
-  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('[data-lang]'))) {
-    const on = btn.dataset.lang === cur
-    btn.dataset.active = String(on)
-    btn.setAttribute('aria-pressed', String(on))
-  }
 }

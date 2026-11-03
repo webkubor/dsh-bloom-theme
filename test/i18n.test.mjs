@@ -121,6 +121,8 @@ async function setup(locale, saved, mode = 'dark', variant = 'petal', hostBody =
   return { page, context, errors }
 }
 const click = (page, selector) => page.locator(selector).evaluate(el => el.click())
+// 2026-11-03：面板不再有语言开关，语言只跟随 DSH。测试里换语言 = 在 DSH 侧 setLocale。
+const hostSwitch = (page, lang) => page.evaluate(l => window.__dshLocale.setLocale(l), lang)
 const text = (page, selector) => page.locator(selector).textContent()
 for (const locale of ['zh-CN', 'en-US', 'ru-RU']) {
   for (const saved of [null, 'zh', 'en', 'ru']) {
@@ -144,7 +146,7 @@ for (const mode of ['light', 'dark', 'system']) {
       await click(page, '.dsh-bloom-more')
       const before = await page.evaluate(() => ({storage: {...localStorage}, session: {...sessionStorage}, variant: document.body.dataset.bloomVariant, dark: document.body.hasAttribute('data-ds-dark-theme')}))
       for (const lang of ['ru', 'zh', 'en']) {
-        await click(page, `[data-lang="${lang}"]`)
+        await hostSwitch(page, lang)
         assert.equal(await text(page, '.dsh-bloom-head__title'), expected[lang].heading)
         assert.equal(await text(page, '#dsh-bloom-update-banner strong'), expected[lang].banner)
         assert.equal(await page.locator('[data-dsh-state]').getAttribute('title'), expected[lang].error)
@@ -154,7 +156,6 @@ for (const mode of ['light', 'dark', 'system']) {
         assert.equal(await page.locator('.dsh-bloom-more-body').evaluate(el => el.hidden), false)
         assert.equal(await page.locator('.dsh-bloom-trigger').getAttribute('aria-expanded'), 'true')
         assert.equal(await page.locator(`[data-mode="${mode}"]`).getAttribute('aria-pressed'), 'true')
-        assert.equal(await page.locator(`[data-lang="${lang}"]`).getAttribute('aria-pressed'), 'true')
         const after = await page.evaluate(() => ({storage: {...localStorage}, session: {...sessionStorage}, variant: document.body.dataset.bloomVariant, dark: document.body.hasAttribute('data-ds-dark-theme')}))
         // 语言不再写自己的 localStorage —— 真源是 DSH 的 locale.preference。
         // 其余持久化状态（配色/模式/版本）一律不变。
@@ -177,18 +178,18 @@ for (const mode of ['light', 'dark', 'system']) {
       await page.waitForFunction(() => window.copied.includes('npm i -g @deepseek-ai/dsh@0.2.0-rc.3'))
       await click(page, '#dsh-bloom-update-banner .bloom-upd-x')
       assert.equal(await page.evaluate(() => localStorage.getItem('dsh-bloom-update-dismissed')), '99.0.0')
-      await click(page, '[data-lang="ru"]')
+      await hostSwitch(page, 'ru')
       assert.equal(await page.locator('#dsh-bloom-update-banner').count(), 0)
       assert.deepEqual(errors, [])
     } finally { await context.close() }
   })
 }
-test('manual selection works when localStorage throws', async () => {
+test('DSH language switch works when localStorage throws', async () => {
   const { page, context } = await setup('en-US', 'en')
   try {
     await page.evaluate(() => { Storage.prototype.getItem = Storage.prototype.setItem = () => { throw new DOMException('blocked', 'SecurityError') } })
     await click(page, '.dsh-bloom-trigger')
-    await click(page, '[data-lang="ru"]')
+    await hostSwitch(page, 'ru')
     assert.equal(await text(page, '.dsh-bloom-head__title'), expected.ru.heading)
     assert.equal(await text(page, '#dsh-bloom-update-banner strong'), expected.ru.banner)
   } finally { await context.close() }
@@ -207,17 +208,16 @@ for (const [name, check] of [
     assert.equal(await page.locator('.dsh-bloom-version__update').evaluate(el => el.hidden), false)
     assert.ok((await page.locator('.dsh-bloom-trigger').getAttribute('title')).includes('99.0.0'))
   }],
-  ['keyboard focus survives rerender', async page => {
-    assert.equal(await page.evaluate(() => document.activeElement?.dataset.lang), 'ru')
-    await page.keyboard.press('ArrowDown')
-    assert.equal(await page.evaluate(() => document.activeElement?.dataset.variant), 'mist')
+  ['panel has no language switch of its own', async page => {
+    assert.equal(await page.locator('[data-lang]').count(), 0)
+    assert.equal(await page.locator('.dsh-bloom-menu').evaluate(el => el.hidden), false)
   }],
 ]) {
   test(name, async () => {
     const {page, context} = await setup('en-US', 'en')
     try {
       await click(page, '.dsh-bloom-trigger')
-      await click(page, '[data-lang="ru"]')
+      await hostSwitch(page, 'ru')
       await check(page)
     } finally { await context.close() }
   })
@@ -237,7 +237,7 @@ test('all palettes retain computed colors and selection after switching language
       })
       const before = await colors()
       for (const lang of ['ru', 'zh', 'en']) {
-        await click(page, `[data-lang="${lang}"]`)
+        await hostSwitch(page, lang)
         assert.deepEqual(await colors(), before)
         assert.equal(await page.evaluate(() => localStorage.getItem('dsh-bloom-variant')), variant)
         assert.equal(await page.locator(`[data-variant="${variant}"]`).getAttribute('aria-selected'), 'true')
@@ -250,7 +250,7 @@ test('saved language and appearance replay on reload; invalid language falls bac
   const {page, context} = await setup('zh-CN', 'en', 'dark', 'lapis')
   try {
     await click(page, '.dsh-bloom-trigger')
-    await click(page, '[data-lang="ru"]')
+    await hostSwitch(page, 'ru')
     // 语言写在 DSH 的 locale.preference 上（不再是自己存 localStorage）。
     // 模拟「重启后 DSH 把偏好还给插件」：active 仍是 ru。
     assert.equal(await page.evaluate(() => window.__dshLocale.active), 'ru')
@@ -284,7 +284,7 @@ test('timeout diagnostics rerender in the selected language', async () => {
     await page.clock.fastForward(8100)
     await page.waitForFunction(() => window.bloomTest.version.dshCheckError?.startsWith('Timed out'))
     await click(page, '.dsh-bloom-trigger')
-    await click(page, '[data-lang="ru"]')
+    await hostSwitch(page, 'ru')
     assert.equal(await page.locator('[data-dsh-state]').getAttribute('title'), 'Тайм-аут (8 с)')
   } finally { await context.close() }
 })
@@ -301,7 +301,7 @@ test('desktop update bridge stays functional across language changes', async () 
     await click(page, '.dsh-bloom-trigger')
     await click(page, '.dsh-bloom-more')
     for (const lang of ['ru', 'zh', 'en']) {
-      await click(page, `[data-lang="${lang}"]`)
+      await hostSwitch(page, lang)
       await page.waitForFunction(() => document.querySelector('[data-dsh-latest]').textContent === '0.2.0-rc.3')
       assert.equal(await page.locator('[data-act="refresh"]').getAttribute('disabled'), null)
       await click(page, '[data-act="refresh"]')
@@ -318,7 +318,7 @@ test('an update check completing after a language switch uses the new language',
       void window.bloomTest.version.checkDshLatest(true)
     })
     await click(page, '.dsh-bloom-trigger')
-    await click(page, '[data-lang="ru"]')
+    await hostSwitch(page, 'ru')
     await page.evaluate(() => window.finishCheck())
     await page.waitForFunction(() => !window.bloomTest.version.dshCheckPromise)
     assert.equal(await page.locator('[data-dsh-state]').getAttribute('title'), expected.ru.error)

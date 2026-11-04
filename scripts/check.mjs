@@ -447,13 +447,15 @@ cssBlocks.length === 0
 // component.ts 15 → 16（2026-10-02）：body 的实底必须用 !important —— 让 body 透明的那条
 // 规则是桌面宿主运行时注入的（不在任何已发布的 DSH 包里），特异度压不过。理由见
 // src/css/component.ts 的 §1 注释。
-// adaptive.ts 的 12 处 !important（2026-11-04 新增，预算从 0 起）：
+// adaptive.ts 的 18 处 !important（2026-11-04 新增，预算从 0 起）：
 //   · 5 处是降级里的 backdrop-filter / background-color —— 宿主与 Bloom 自己的
 //     毛玻璃规则都在同一批元素上，必须压住，否则降级形同虚设；
 //   · 4 处是 prefers-contrast: more 里撤氛围渐变与加深发丝描边；
-//   · 3 处是 forced-colors 里把自绘开关改成系统色关键字。
-// 先试过去掉其中 7 处 —— 测试仍全通过（11/11），所以最终只留这 12 处。
-const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 7, 'switcher.ts': 1, 'adaptive.ts': 12 }
+//   · 3 处是 forced-colors 里把自绘开关改成系统色关键字；
+//   · 6 处是 @media print —— 打印样式必须压过一切屏幕样式（含其它 !important），
+//     否则打印出来还是整页色块。这是打印样式表的标准做法，不是压宿主。
+// 先试过去掉降级段里能省的 7 处 —— 测试仍全通过，所以最终只留这 18 处。
+const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 7, 'switcher.ts': 1, 'adaptive.ts': 18 }
 const overBudget = []
 for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
   const name = f.path.split('/').pop()

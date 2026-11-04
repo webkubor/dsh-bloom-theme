@@ -218,4 +218,18 @@ body[data-bloom-variant] {
 
 /* ═══ 7. 菜单滚到底不带动外层（对齐宿主滚动面板）═══════════════════════ */
 .dsh-bloom-menu { overscroll-behavior: contain; }
+
+/* ═══ 8. 打印（对齐宿主：打印时撤掉装饰层）══════════════════════════════
+   宿主在 print 下撤自己的装饰；Bloom 的氛围渐变、毛玻璃、侧栏光带
+   打印出来是整页色块 —— 费墨还盖字。打印只要内容。 */
+@media print {
+  html body[data-bloom-variant] { background: none !important; background-image: none !important; }
+  html ${DECOR.join(',\n  html ')} { display: none !important; }
+  ${scope('html body[data-bloom-variant]', [...GLASS_RULES, ...GLASS_PSEUDO])} {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  html .dsh-bloom-trigger,
+  html .dsh-bloom-menu { display: none !important; }
+}
 `

@@ -13,6 +13,23 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.24.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.23.0...v0.24.0) (2026-11-04)
+
+
+### ✨ Features
+
+* **adaptive:** 对齐宿主的全部系统适配——降低透明度、增强对比度、强制颜色、鼠标焦点环、触屏行高、打印（补齐 8 类，Bloom 原来只跟了减少动效 1 类）([8455714](https://github.com/webkubor/dsh-bloom-theme/commit/8455714))
+* **glass:** 玻璃质感做成用户可调项——面板新增「通透 / 柔和 / 实底」三档，用户显式选择优先于系统开关 ([8455714](https://github.com/webkubor/dsh-bloom-theme/commit/8455714))
+* **adaptive:** 原生控件（复选框/单选/进度条）与滚动条跟莫兰迪配色，不再停在宿主品牌蓝 ([8455714](https://github.com/webkubor/dsh-bloom-theme/commit/8455714))
+
+
+### 🩹 Fixes
+
+* **appearance:** 深浅状态交还宿主——有 ctx.theme 服务时调宿主 setTheme()，不再自己写 body 属性、不再存第二份 localStorage，消除双真源 ([8455714](https://github.com/webkubor/dsh-bloom-theme/commit/8455714))
+* **adaptive:** 鼠标操作时不再冒焦点环——原先 Bloom 的全局 :focus-visible!important 盖掉了宿主的 data-input-modality=pointer 处理 ([8455714](https://github.com/webkubor/dsh-bloom-theme/commit/8455714))
+* **css:** 触屏上可点行撑到 44px（对齐宿主）；菜单滚到底不再带动外层滚动 ([8455714](https://github.com/webkubor/dsh-bloom-theme/commit/8455714))
+
+
 ## [0.23.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.22.0...v0.23.0) (2026-11-04)
 
 

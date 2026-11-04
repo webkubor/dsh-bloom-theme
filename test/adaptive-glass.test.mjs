@@ -168,6 +168,25 @@ test('a coarse pointer grows the tappable rows', async t => {
   assert.equal(minHeight, '44px')
 })
 
+test('print emulation drops the decorations and the switcher', async t => {
+  const page = await setup(t)
+  // 切换器在 DOM 里但默认隐藏 —— 先手动摆一个可见的出来测 display:none
+  await page.evaluate(() => {
+    const el = document.createElement('div')
+    el.className = 'dsh-bloom-trigger'
+    el.textContent = 'x'
+    document.body.appendChild(el)
+  })
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Emulation.setEmulatedMedia', { features: [], media: 'print' })
+  await page.waitForTimeout(300)
+  assert.equal(await page.evaluate(() =>
+    getComputedStyle(document.querySelector('[class*="sidebarCol"]'), '::before').backdropFilter), 'none')
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundImage), 'none')
+  assert.equal(await page.evaluate(() =>
+    getComputedStyle(document.querySelector('.dsh-bloom-trigger')).display), 'none')
+})
+
 test('the effective tier reports the system downgrade to the panel', async t => {
   const page = await setup(t)
   await emulate(page, [{ name: 'prefers-reduced-transparency', value: 'reduce' }])

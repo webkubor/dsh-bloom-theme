@@ -133,7 +133,6 @@ head('展示资源（截图齐全 + README 引用不断链）')
 head('awesome-dsh-plugin 收录同步')
 {
   const ENTRY = 'https://raw.githubusercontent.com/awesome-dsh-plugin/awesome-dsh-plugin/main/data/plugins/webkubor__dsh-bloom-theme.yml'
-  const SHOTS = 'https://raw.githubusercontent.com/awesome-dsh-plugin/awesome-dsh-plugin/main/data/screenshots.json'
   // 收录信息由第三方仓库合并,不该阻塞我们自己的发版 —— 有在途 PR 就记为 pending
   const UP = 'awesome-dsh-plugin/awesome-dsh-plugin'
   const pendingPr = online
@@ -152,14 +151,25 @@ head('awesome-dsh-plugin 收录同步')
       // 于是 ten/十款 两边都不匹配 → 落进 bad，把「上游已更正」误报成
       // 「条目过时」（2026-10-28 实测：上游条目早已是 ten variants）。
       // 现在直接从变体名里数，条目报几个就跟几个比。
-      const VARIANT_COUNT = 10
-      const NUM_WORD = /\b(one|two|three|four|five|six|seven|eight|nine|ten)\b/i
-      const NUM_ZH = /([一二三四五六七八九十])/
+      // 判据从 src/palette.ts 推，别再在这里抄一份 —— 抄的那份已经过期过两轮
+      // （eight → ten → 15），每次改配色都要记得回来改这个数字。
+      // 只数 PALETTE 块里的条目 —— VARIANT_LABELS 也是 `  key: {` 形状，
+      // 一并数进去会多算 3 个（实测 15 变成 18）。
+      const paletteSource = read('src/palette.ts')
+      const paletteBlock = paletteSource.slice(
+        paletteSource.indexOf('export const PALETTE = {'),
+        paletteSource.indexOf('\nexport const VARIANTS'),
+      )
+      const VARIANT_COUNT = [...paletteBlock.matchAll(/^  ([a-z]+): \{/gm)].length
+      const NUM_WORD = /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\b/i
+      const NUM_ZH = /([一二三四五六七八九十]{1,3})/
       const claimed = entry.match(NUM_WORD)?.[1]?.toLowerCase()
         ?? entry.match(NUM_ZH)?.[1]
       const NUM_MAP = {
         one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+        eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
         一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10,
+        十一: 11, 十二: 12, 十三: 13, 十四: 14, 十五: 15,
       }
       const claimedCount = claimed === undefined ? null : (NUM_MAP[claimed] ?? null)
       claimedCount === VARIANT_COUNT
@@ -168,17 +178,15 @@ head('awesome-dsh-plugin 收录同步')
         ? skip(`条目描述还过时（写着 ${claimed ?? '未知'}），但更正 PR #${pending} 在途，等上游合并`)
         : bad(`条目描述的变体数过时（写着 ${claimed ?? '未声明'}）—— 实际已有 ${VARIANT_COUNT} 个变体，去提 PR 更正`)
     }
-    const shotsJson = sh(`curl -sf -m 8 "${SHOTS}"`)
-    if (!shotsJson) skip('拉不到 screenshots.json')
-    else {
-      let registered = []
-      try { registered = JSON.parse(shotsJson)['https://github.com/webkubor/dsh-bloom-theme'] || [] } catch {}
-      registered.length > 0
-        ? ok(`已注册 ${registered.length} 张市场截图（dsh-market 详情页用）`)
-        : pending
-        ? skip(`市场截图还没注册，但 PR #${pending} 在途，等上游合并`)
-        : bad('一张市场截图都没注册 —— dsh-market 详情页只能从 README 瞎抽，顺序和选图都不可控')
-    }
+    // ⚠️ 判据换过一次（2026-11-04）：上游**明确要求**截图留在插件自己的仓库，
+    // 由站点按条目去取；共享的 data/screenshots.json 不是条目内容，我们不该往里填。
+    // 上游在 PR #6875 里原话：「截图请放在你自己的仓库里，站点会按条目去取」。
+    // 原判据反过来去查共享文件、查不到就报「一张都没注册」—— 永远过不了，
+    // 而真正要查的是「我们的仓库里有没有可用的市场截图」。
+    const marketShots = readdirSync(resolve(root, 'assets/screenshots')).filter((f) => /^ui-.*\.png$/.test(f))
+    marketShots.length > 0
+      ? ok(`仓库里有 ${marketShots.length} 张市场截图（站点按条目去取，无需登记）`)
+      : bad('assets/screenshots 里一张 ui-*.png 都没有 —— 市场详情页没有可用缩略图')
   }
 }
 

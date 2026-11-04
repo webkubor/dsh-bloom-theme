@@ -20,11 +20,12 @@
 
 * **theme:** 修复社区反馈，新增银红与粉霞及自动换色 ([#93](https://github.com/webkubor/dsh-bloom-theme/issues/93)) ([a61ecbd](https://github.com/webkubor/dsh-bloom-theme/commit/a61ecbd854346f1f6238fe102508ef07025c6902))
 * **update:** 支持宿主原位更新接口，并兼容旧版桌面端 ([#94](https://github.com/webkubor/dsh-bloom-theme/issues/94)) ([5b61019](https://github.com/webkubor/dsh-bloom-theme/commit/5b61019b0531ecf6908ade66b9ecbda1690f6754))
-* 完善配色色系与面板功能，拆分明暗表面并清理语言与元数据 ([#96](https://github.com/webkubor/dsh-bloom-theme/issues/96)) ([a3dce9b](https://github.com/webkubor/dsh-bloom-theme/commit/a3dce9b0344310aa6bc0a5f090f3f25ad2a155ed))
+* 完善配色色系与面板功能，清理语言与元数据 ([#96](https://github.com/webkubor/dsh-bloom-theme/issues/96)) ([a3dce9b](https://github.com/webkubor/dsh-bloom-theme/commit/a3dce9b0344310aa6bc0a5f090f3f25ad2a155ed))
 
 
 ### 🐛 Bug Fixes
 
+* **theme:** 撤回未通过视觉验收的天青浅色实底试点，恢复莫兰迪渐变、玻璃卡片和柔和光晕。
 * **theme:** 修正轮换取色与会话切换重置、浮窗靠右停靠 ([#95](https://github.com/webkubor/dsh-bloom-theme/issues/95)) ([edf435b](https://github.com/webkubor/dsh-bloom-theme/commit/edf435bc9cbe8d982f92f12db131c7abade35544))
 
 ## [0.22.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.21.1...v0.22.0) (2026-11-03)

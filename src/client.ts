@@ -34,7 +34,6 @@ import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
 import { buildBloomCSS } from './tokens.js'
 import { COMPONENT_CSS } from './css/component.js'
 import { GLASS_CSS } from './css/glass.js'
-import { buildSurfaceCSS } from './surfaces.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync } from './appearance.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
@@ -77,7 +76,7 @@ function watchCursorGlow() {
   const variant = readVariant()
   injectCSS(buildBloomCSS(), 'bloom.css')
   injectCSS(COMPONENT_CSS, 'components.css')
-  injectCSS(GLASS_CSS + buildSurfaceCSS(), 'glass.css')
+  injectCSS(GLASS_CSS, 'glass.css')
   const boot = () => {
     document.body.dataset.bloomVariant = variant
     initAppearanceSync()
@@ -583,7 +582,7 @@ window.__ModuleLoader__.load({
         injectCSS(COMPONENT_CSS, 'components.css')
       }
       if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/glass.css"]')) {
-        injectCSS(GLASS_CSS + buildSurfaceCSS(), 'glass.css')
+        injectCSS(GLASS_CSS, 'glass.css')
       }
       document.body.dataset.bloomVariant = variant
       initAppearanceSync()   // 重放持久化的深浅模式（零弹窗切换的持久化侧）

@@ -146,8 +146,8 @@ test('language changes keep an in-flight install disabled and preserve its compl
   assert.match(await banner(page).locator('[data-act="install"]').textContent(),/Updating/)
   await page.evaluate(latest=>window.resolveInstall({ok:true,value:{from:'0.0.1',to:latest,step:'install',result:{changed:true,application:'applied',stage:'install',target:'dsh-bloom-theme@'+latest,version:latest}}}),LATEST)
   await waitBody(page,`Updated to v${LATEST}`)
-  await page.evaluate(()=>window.locale.setLocale('ru'))
-  await waitBody(page,`Обновлено до v${LATEST}`)
+  await page.evaluate(()=>window.locale.setLocale('zh'))
+  await waitBody(page,`已更新到 v${LATEST}`)
   assert.equal(await page.evaluate(()=>window.installCalls.length),1)
   assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
 })
@@ -158,8 +158,8 @@ test('a localizable failure is re-translated when the interface language changes
   await waitBody(page,'更新已取消')
   await page.evaluate(()=>window.locale.setLocale('en'))
   await waitBody(page,'cancelled')
-  await page.evaluate(()=>window.locale.setLocale('ru'))
-  await waitBody(page,'отменено')
+  await page.evaluate(()=>window.locale.setLocale('zh'))
+  await waitBody(page,'更新已取消')
 })
 
 test('the stale update hint disappears once the outcome replaces the available state', async t => {

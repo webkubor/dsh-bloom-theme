@@ -6,9 +6,9 @@ import { fileURLToPath } from 'node:url'
 
 const { outputFiles } = await build({
   stdin: {
-    contents: `import { FEATURED_VARIANTS, PALETTE } from './src/palette.ts';
+    contents: `import { FEATURED_VARIANTS, PALETTE, PALETTE_GROUPS, isNewVariant } from './src/palette.ts';
       import { buildBloomCSS } from './src/tokens.ts';
-      window.fixture = { FEATURED_VARIANTS, PALETTE, buildBloomCSS };`,
+      window.fixture = { FEATURED_VARIANTS, PALETTE, PALETTE_GROUPS, isNewVariant, buildBloomCSS };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
   }, bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })
@@ -38,12 +38,37 @@ test('menu covers every color family (赤橙黄绿青蓝紫)', async () => {
   assert.deepEqual(missing.map(([k]) => k), [], '缺色系')
 })
 
+test('menu order comes from color families and has no duplicate or unknown entry', async () => {
+  const { groups, featured, palette } = await page.evaluate(() => ({
+    groups: window.fixture.PALETTE_GROUPS,
+    featured: window.fixture.FEATURED_VARIANTS,
+    palette: window.fixture.PALETTE,
+  }))
+  const fromGroups = groups.flatMap(g => g.variants)
+  assert.deepEqual(featured, fromGroups, 'FEATURED_VARIANTS 必须由 PALETTE_GROUPS 推导')
+  assert.equal(new Set(featured).size, featured.length, '菜单里有重复项')
+  for (const v of featured) assert.ok(palette[v], `菜单引用了不存在的配色 ${v}`)
+})
+
+test('new-palette badges are tied to the release version', async () => {
+  const isNew = await page.evaluate(() => ({
+    current: window.fixture.isNewVariant('mint', '0.22.0'),
+    older: window.fixture.isNewVariant('mint', '0.21.0'),
+    unknown: window.fixture.isNewVariant('mist', '0.99.0'),
+    next: window.fixture.isNewVariant('osmanthus', '0.23.0'),
+  }))
+  assert.equal(isNew.current, true, '0.22.0 的新色应该有徽标')
+  assert.equal(isNew.older, false, '旧版本不该显示新色徽标')
+  assert.equal(isNew.unknown, false, '没有对应发布记录的版本不该有徽标')
+  assert.equal(isNew.next, true, '0.23.0 的新色应该有徽标')
+})
+
 test('silver rose, dawn and lavender read apart from their neighbors', async () => {
   const palette = await page.evaluate(() => window.fixture.PALETTE)
   const pairs = [['silverrose', 'petal'], ['silverrose', 'dawn'], ['dawn', 'petal'], ['dawn', 'tangerine'], ['silverrose', 'tangerine'], ['silverrose', 'mint'], ['lavender', 'silverrose'], ['lavender', 'lapis'], ['dawn', 'cinnabar'], ['osmanthus', 'aurora'], ['osmanthus', 'mint'], ['cinnabar', 'tangerine']]
   for (const [a, b] of pairs) {
     const ha = hueOf(palette[a].accentD), hb = hueOf(palette[b].accentD)
-    assert.ok(hueGap(ha, hb) >= 17, `${a} vs ${b} hue gap ${hueGap(ha, hb).toFixed(1)}° < 20°`)
+    assert.ok(hueGap(ha, hb) >= 17, `${a} vs ${b} hue gap ${hueGap(ha, hb).toFixed(1)}° < 17°`)
   }
 })
 

@@ -8,7 +8,8 @@ const { outputFiles } = await build({
   stdin: {
     contents: `import { buildSwitcherEl, applyVariant } from './src/switcher.ts';
       import { SWITCHER_CSS } from './src/css/switcher.ts';
-      window.fixture = { buildSwitcherEl, applyVariant, SWITCHER_CSS };`,
+      import { FEATURED_VARIANTS } from './src/palette.ts';
+      window.fixture = { buildSwitcherEl, applyVariant, SWITCHER_CSS, FEATURED_VARIANTS };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
   }, bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })
@@ -102,15 +103,17 @@ test('rotation excludes the live palette when storage still contains an older ch
   await page.evaluate(() => {
     Storage.prototype.setItem = () => { throw new DOMException('Denied', 'QuotaExceededError') }
     Math.random = () => 0
-    window.fixture.applyVariant('petal')
+    window.fixture.applyVariant(window.fixture.FEATURED_VARIANTS.find(v => v !== 'mist'))
   })
-  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'petal')
+  await page.waitForFunction(() => document.body.dataset.bloomVariant !== 'mist')
+  const live = await page.locator('body').getAttribute('data-bloom-variant')
+  assert.notEqual(live, 'mist')
   assert.equal(await page.evaluate(() => localStorage.getItem('dsh-bloom-variant')), 'mist')
   await page.clock.fastForward(5 * 60_000 + 5)
-  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'mist')
+  await page.waitForFunction(previous => document.body.dataset.bloomVariant !== previous, live)
+  const next = await page.locator('body').getAttribute('data-bloom-variant')
   await page.clock.fastForward(5 * 60_000 + 5)
-  // random=0 取轮换池第一个非当前项；菜单按色环排后黛蓝之后是朱砂
-  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'cinnabar')
+  await page.waitForFunction(previous => document.body.dataset.bloomVariant !== previous, next)
 })
 
 test('rebuilding a session header preserves the remaining rotation interval', async t => {

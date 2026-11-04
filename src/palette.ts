@@ -1,5 +1,5 @@
 /**
- * 12 套莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
+ * 莫兰迪配色的色板与标签 —— 纯数据 + 一个色彩工具函数，不 import 任何东西。
  *
  * **双轨制不能退回单轨**（见 CONTRIBUTING「改配色时注意」）：
  *   accentL / accentD  可读轨 —— 文字、按钮填充、边框，必须过 WCAG AA
@@ -8,14 +8,28 @@
  * 拿可读轨铺大面积、或拿气质轨做文字色，都会失去莫兰迪质感。
  */
 
-// Keep every historical key valid for persisted preferences and direct API callers.
-export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine', 'silverrose', 'dawn', 'osmanthus']
-// The menu is curated using the poll's 👍 votes; zero-vote variants stay supported.
-// 青莲 0 票也保留（owner 2026-11-04）：它是唯一的莫兰迪紫，去掉后蓝(258)与银红(320)之间空出一整段色相。
-// 2026-11-04（owner）：「每个色系一定要有一种 —— 赤橙黄绿青蓝紫」。菜单按色环排：
-// 黛蓝(默认) · 赤 朱砂 · 橙 橙黄 · 金 落霞 · 黄 轻黄 · 绿 草色 · 青 天青 · 蓝 青金 · 紫 青莲 · 银红 · 桃夭 · 粉霞
-export const FEATURED_VARIANTS = ['mist', 'cinnabar', 'tangerine', 'aurora', 'osmanthus', 'mint', 'ripple', 'lapis', 'lavender', 'silverrose', 'petal', 'dawn']
-export const OTHER_VARIANTS = VARIANTS.filter((v) => v !== 'mist')
+// Menu order is derived from color families; supported historical keys come from PALETTE.
+export const PALETTE_GROUPS = [
+  { family: 'red', variants: ['cinnabar', 'dawn'] },
+  { family: 'orange', variants: ['tangerine', 'aurora'] },
+  { family: 'yellow', variants: ['osmanthus'] },
+  { family: 'green', variants: ['mint'] },
+  { family: 'cyan', variants: ['ripple'] },
+  { family: 'blue', variants: ['mist', 'lapis'] },
+  { family: 'purple', variants: ['lavender', 'silverrose'] },
+  { family: 'pink', variants: ['petal'] },
+]
+export const FEATURED_VARIANTS = PALETTE_GROUPS.flatMap(group => group.variants)
+
+// Release-specific badges expire automatically when the release line changes.
+// Local builds of the published release do not mislabel unreleased palettes as new.
+const PALETTE_RELEASES: Record<string, string[]> = {
+  '0.22': ['mint', 'tangerine'],
+  '0.23': ['silverrose', 'dawn', 'osmanthus'],
+}
+export function isNewVariant(variant: string, version: string): boolean {
+  return (PALETTE_RELEASES[version.split('.').slice(0, 2).join('.')] || []).includes(variant)
+}
 
 /**
  * Bloom 色板 —— 双轨制（这是从 typora-Bloom-theme 继承来的关键设计，别退回单轨）。
@@ -243,6 +257,9 @@ export const PALETTE = {
   },
 }
 
+export const VARIANTS = Object.keys(PALETTE)
+export const OTHER_VARIANTS = VARIANTS.filter(v => v !== 'mist')
+
 export const VARIANT_LABELS = {
   // 中文名一律「两字 · 中国风 · 有出处」，且必须对得上实际色相（owner 2026-09-15 定）。
   // key 全部保持不动 —— key 写进了用户的本地偏好，改 key 等于把人家选好的主题弄丢。
@@ -250,21 +267,21 @@ export const VARIANT_LABELS = {
   // poem 是配色右侧那一列：原来放英文名（Mist/Cinnabar…），对中文用户没有信息量
   // （owner：「后面的英文没啥意义，不如一句诗词呢」）。换成该色的出处诗句后，
   // 中国风就从名字渗进了界面本身。en 保留给英文 locale。
-  mist:     { zh: '黛蓝', en: 'Mist',      poem: '山色有无中', ru: 'Индиго', poemRu: 'Горы — то есть их, то нет', poemEn: 'Hills half there, half gone' },   // hue 240 · 王维《汉江临泛》
-  cinnabar: { zh: '朱砂', en: 'Cinnabar',  poem: '日出江花红胜火', ru: 'Киноварь', poemRu: 'Рассвет: цветы жарче огня', poemEn: 'Blooms redder than fire' },   // hue 25  · 白居易《忆江南》
-  petal:    { zh: '桃夭', en: 'Petal',     poem: '灼灼其华', ru: 'Персик', poemRu: 'Персик пышно зацвёл', poemEn: 'Its blossoms ablaze' },     // hue 350 ·《诗经·周南·桃夭》
-  ripple:   { zh: '天青', en: 'Ripple',    poem: '雨过天青云破处', ru: 'Небесный', poemRu: 'После дождя — цвет неба', poemEn: 'After rain, sky breaks blue' },   // hue 195 · 宋徽宗品汝窑语
-  sage:     { zh: '竹青', en: 'Sage',      poem: '绿竹猗猗', ru: 'Бамбук', poemRu: 'Зелён бамбук, высок', poemEn: 'Bamboo green, growing tall' },     // hue 115 ·《诗经·卫风·淇奥》
-  stone:    { zh: '赭石', en: 'Stone',     poem: '秋山敛余照', ru: 'Охра', poemRu: 'Горы в остатнем свете', poemEn: 'Hills gather the last light' },   // hue 29  · 王维《木兰柴》
-  lapis:    { zh: '青金', en: 'Lapis',     poem: '碧海青天夜夜心', ru: 'Лазурь', poemRu: 'Море и небо — ночь за ночью', poemEn: 'Sea, sky, a heart each night' },   // hue 258 · 李商隐《嫦娥》
-  amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光', ru: 'Янтарь', poemRu: 'В чаше янтарный свет', poemEn: 'A jade bowl of amber light' },   // hue 70  · 李白《客中行》
-  aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞', ru: 'Закат', poemRu: 'Закат и одинокий полёт', poemEn: 'Sunset and a lonely flight' },   // hue 72  · 王勃《滕王阁序》
-  lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉', ru: 'Сирень', poemRu: 'Лотос из ясной воды', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
-  mint:     { zh: '草色', en: 'Mint',      poem: '草色遥看近却无', ru: 'Мята', poemRu: 'Издали — зелень, вблизи — нет', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
-  tangerine:{ zh: '橙黄', en: 'Tangerine', poem: '最是橙黄橘绿时', ru: 'Мандарин', poemRu: 'Лучшая пора — рыжие плоды', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
-  silverrose:{ zh: '银红', en: 'Silver Rose', poem: '银烛秋光冷画屏', ru: 'Серебряная роза', poemRu: 'Серебряный свет осенней свечи', poemEn: 'Silver candle, autumn glow' }, // hue 320 · 杜牧《秋夕》
-  dawn:      { zh: '粉霞', en: 'Dawn', poem: '晓看红湿处', ru: 'Заря', poemRu: 'Утром цветы блестят от росы', poemEn: 'At dawn, blossoms glow' }, // hue 8  · 杜甫《春夜喜雨》
-  osmanthus: { zh: '轻黄', en: 'Osmanthus', poem: '暗淡轻黄体性柔', ru: 'Османтус', poemRu: 'Бледно-жёлтый, нежный нрав', poemEn: 'Pale gold, gentle by nature' }, // hue 98 · 李清照《鹧鸪天·桂花》
+  mist:     { zh: '黛蓝', en: 'Mist',      poem: '山色有无中', poemEn: 'Hills half there, half gone' },   // hue 240 · 王维《汉江临泛》
+  cinnabar: { zh: '朱砂', en: 'Cinnabar',  poem: '日出江花红胜火', poemEn: 'Blooms redder than fire' },   // hue 25  · 白居易《忆江南》
+  petal:    { zh: '桃夭', en: 'Petal',     poem: '灼灼其华', poemEn: 'Its blossoms ablaze' },     // hue 350 ·《诗经·周南·桃夭》
+  ripple:   { zh: '天青', en: 'Ripple',    poem: '雨过天青云破处', poemEn: 'After rain, sky breaks blue' },   // hue 195 · 宋徽宗品汝窑语
+  sage:     { zh: '竹青', en: 'Sage',      poem: '绿竹猗猗', poemEn: 'Bamboo green, growing tall' },     // hue 115 ·《诗经·卫风·淇奥》
+  stone:    { zh: '赭石', en: 'Stone',     poem: '秋山敛余照', poemEn: 'Hills gather the last light' },   // hue 29  · 王维《木兰柴》
+  lapis:    { zh: '青金', en: 'Lapis',     poem: '碧海青天夜夜心', poemEn: 'Sea, sky, a heart each night' },   // hue 258 · 李商隐《嫦娥》
+  amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光', poemEn: 'A jade bowl of amber light' },   // hue 70  · 李白《客中行》
+  aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞', poemEn: 'Sunset and a lonely flight' },   // hue 72  · 王勃《滕王阁序》
+  lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
+  mint:     { zh: '草色', en: 'Mint',      poem: '草色遥看近却无', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
+  tangerine:{ zh: '橙黄', en: 'Tangerine', poem: '最是橙黄橘绿时', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
+  silverrose:{ zh: '银红', en: 'Silver Rose', poem: '银烛秋光冷画屏', poemEn: 'Silver candle, autumn glow' }, // hue 320 · 杜牧《秋夕》
+  dawn:      { zh: '粉霞', en: 'Dawn', poem: '晓看红湿处', poemEn: 'At dawn, blossoms glow' }, // hue 8  · 杜甫《春夜喜雨》
+  osmanthus: { zh: '轻黄', en: 'Osmanthus', poem: '暗淡轻黄体性柔', poemEn: 'Pale gold, gentle by nature' }, // hue 98 · 李清照《鹧鸪天·桂花》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

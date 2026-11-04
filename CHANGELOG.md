@@ -13,6 +13,15 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.24.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.24.0...v0.24.1) (2026-11-04)
+
+
+### 🩹 Fixes
+
+* **glass:** 系统开启「降低透明度」时提示语写的是「柔和」，实际显示的是实底——改为与实际一致
+* **glass:** 没手动选过档位时三个按钮全灰，看着像坏了——现在高亮实际生效的那一档
+
+
 ## [0.24.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.23.0...v0.24.0) (2026-11-04)
 
 

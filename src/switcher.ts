@@ -14,6 +14,7 @@ import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type Appear
 import {
   readGlassMode,
   writeGlassMode,
+  effectiveGlassMode,
   systemPrefersReducedTransparency,
   type GlassMode,
 } from './glass.js'
@@ -384,8 +385,10 @@ function syncGlassRow(el: HTMLElement) {
   const row = el.querySelector<HTMLElement>('.dsh-bloom-glass')
   if (!row) return
   const stored = readGlassMode()
+  // 没手动选过（auto）时亮「实际生效」的那一档 —— 三格全灰看着像坏了（0.24.0 UI 审核发现）
+  const shown = stored === 'auto' ? effectiveGlassMode() : stored
   for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-appearance__btn'))) {
-    const on = btn.dataset.glass === stored
+    const on = btn.dataset.glass === shown
     btn.dataset.active = String(on)
     btn.setAttribute('aria-pressed', String(on))
   }
@@ -394,7 +397,7 @@ function syncGlassRow(el: HTMLElement) {
   const systemDowngraded = stored === 'auto' && systemPrefersReducedTransparency()
   hint.hidden = !systemDowngraded
   if (systemDowngraded) {
-    hint.textContent = tr('系统已开启「降低透明度」，Bloom 已自动改为柔和。选「通透」可强制保留毛玻璃。')
+    hint.textContent = tr('系统已开启「降低透明度」，Bloom 已自动改为实底。选「通透」可强制保留毛玻璃。')
   }
 }
 

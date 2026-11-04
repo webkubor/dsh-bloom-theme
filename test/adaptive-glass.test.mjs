@@ -191,7 +191,7 @@ test('the effective tier reports the system downgrade to the panel', async t => 
   const page = await setup(t)
   await emulate(page, [{ name: 'prefers-reduced-transparency', value: 'reduce' }])
   await page.evaluate(() => window.fixture.initGlassMode())
-  assert.equal(await page.evaluate(() => window.fixture.effectiveGlassMode()), 'soft')
+  assert.equal(await page.evaluate(() => window.fixture.effectiveGlassMode()), 'solid')
   await page.evaluate(() => window.fixture.writeGlassMode('glass'))
   assert.equal(await page.evaluate(() => window.fixture.effectiveGlassMode()), 'glass')
 })

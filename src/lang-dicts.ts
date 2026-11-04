@@ -79,7 +79,7 @@ export const DICT_EN: Record<string, string> = {
   "通透": "Clear",
   "柔和": "Soft",
   "实底": "Solid",
-  "系统已开启「降低透明度」，Bloom 已自动改为柔和。选「通透」可强制保留毛玻璃。": "Your system turned on \"Reduce transparency\", so Bloom switched to Soft. Pick \"Clear\" to keep the frosted glass anyway.",
+  "系统已开启「降低透明度」，Bloom 已自动改为实底。选「通透」可强制保留毛玻璃。": "Your system turned on \"Reduce transparency\", so Bloom switched to Solid. Pick \"Clear\" to keep the frosted glass anyway.",
   "界面语言": "Interface language",
   "跟随系统": "System",
   "配色投票": "Vote",

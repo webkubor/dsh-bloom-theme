@@ -87,7 +87,8 @@ export function applyGlassMode(): void {
 export function effectiveGlassMode(): 'glass' | 'soft' | 'solid' {
   const mode = readGlassMode()
   if (mode !== 'auto') return mode
-  if (systemPrefersReducedTransparency()) return 'soft'
+  // 与 adaptive.css 一致：系统降透明时降为实底（对齐宿主），不是柔和
+  if (systemPrefersReducedTransparency()) return 'solid'
   return 'glass'
 }
 

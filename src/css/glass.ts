@@ -473,4 +473,5 @@ body[data-bloom-variant="cinnabar"]::after {
   body[data-bloom-variant="aurora"]::after,
   body[data-bloom-variant="cinnabar"]::after { display: none; }
 }
+
 `

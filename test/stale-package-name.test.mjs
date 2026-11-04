@@ -28,7 +28,12 @@ const STALE = ['@kubor', '@webkubor', '@dsh-plugins'].filter(
 // lib/ 是产物跟着源码走，test/ 自己要写旧名做断言。
 const files = execFileSync('git', ['ls-files', 'package.json', 'scripts', 'src', '*.yml', '*.yaml'], {
   cwd: root, encoding: 'utf8',
-}).split('\n').filter(Boolean).filter((f) => !f.endsWith('.test.mjs'))
+}).split('\n').filter(Boolean).filter((f) =>
+  !f.endsWith('.test.mjs') &&
+  // Shared product ledger intentionally contains other packages and their scopes.
+  // It is not a Bloom install path or selector; executable scripts remain checked.
+  f !== 'scripts/npm-products.json',
+)
 
 for (const f of files) {
   // 剥掉注释再判断 —— 注释里写旧 scope 是有价值的历史叙述（「原先写的是 @kubor，

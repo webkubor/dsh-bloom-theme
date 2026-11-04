@@ -89,7 +89,7 @@ Fourteen light/dark palettes, adaptive by light/dark; panels are real frosted gl
 > All 14 palette keys remain valid; a selected legacy color remains visible until another is chosen.
 > Optional auto rotation defaults to off, offers 5 / 15 / 30 / 60-minute intervals, and pauses in hidden tabs.
 
-- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 9 featured palettes, light/dark, and auto rotation.
+- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 12 featured palettes, light/dark, and auto rotation.
 - **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
 
 ## Screenshots
@@ -147,7 +147,7 @@ npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme
 </details>
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
-**9 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
+**12 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
 ## Updates
@@ -159,7 +159,7 @@ When the host provides `remote.pluginManager.updateBundle`, the update banner of
 | Feature | Description |
 | :-- | :-- |
 | **Frosted-glass panels (on by default)** | Semi-transparent fill + `backdrop-filter` blur + glass edges (top highlight / translucent stroke / soft outer glow), adaptive opacity per light/dark |
-| **14 supported Morandi palettes** | 9 featured choices: Mist / Petal / Ripple / Lapis / Afterglow / Mint / Tangerine / Silver Rose / Dawn; older saved colors stay supported, each with light and dark modes |
+| **15 supported Morandi palettes** | 12 featured choices, one per hue family: Mist / Cinnabar / Tangerine / Afterglow / Osmanthus / Mint / Ripple / Lapis / Lavender / Silver Rose / Petal / Dawn; older saved colors stay supported, each with light and dark modes |
 | **UI language** | Follows DSH's shared language setting, with 中文 / English / Русский dictionaries. Text only — palettes and measured contrast are untouched |
 | **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
 | **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |

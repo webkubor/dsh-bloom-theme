@@ -35,13 +35,13 @@ const current = page => page.locator('body').getAttribute('data-bloom-variant')
 test('legacy saved color stays visible until user selects a featured color', async t => {
   const page = await setup(t, 'stone')
   await page.locator('.dsh-bloom-trigger').click()
-  assert.equal(await page.locator('.dsh-bloom-option').count(), 10)
+  assert.equal(await page.locator('.dsh-bloom-option').count(), 13)
   assert.equal(await page.locator('[data-variant="stone"]').count(), 1)
   assert.equal(await page.locator('[data-variant="silverrose"]').count(), 1)
   assert.equal(await page.locator('[data-variant="dawn"]').count(), 1)
   await page.locator('.dsh-bloom-option[data-variant="dawn"]').click()
   await page.locator('.dsh-bloom-trigger').click()
-  assert.equal(await page.locator('.dsh-bloom-option').count(), 9)
+  assert.equal(await page.locator('.dsh-bloom-option').count(), 12)
   assert.equal(await page.locator('[data-variant="stone"]').count(), 0)
   assert.equal(await current(page), 'dawn')
 })
@@ -109,7 +109,8 @@ test('rotation excludes the live palette when storage still contains an older ch
   await page.clock.fastForward(5 * 60_000 + 5)
   await page.waitForFunction(() => document.body.dataset.bloomVariant === 'mist')
   await page.clock.fastForward(5 * 60_000 + 5)
-  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'petal')
+  // random=0 取轮换池第一个非当前项；菜单按色环排后黛蓝之后是朱砂
+  await page.waitForFunction(() => document.body.dataset.bloomVariant === 'cinnabar')
 })
 
 test('rebuilding a session header preserves the remaining rotation interval', async t => {

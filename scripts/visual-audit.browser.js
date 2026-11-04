@@ -242,7 +242,7 @@
   function auditTokens() {
     // 变体清单必须与 palette.ts 的 VARIANTS 对齐：少两个就等于有两个变体的
     // 配色从来没被 token 层验过。2026-09-29 实测正好漏了 aurora / lavender。
-    const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine']
+    const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine', 'silverrose', 'dawn', 'osmanthus']
     const TEXT_TOKENS = {
       'state-error-primary': '--dsw-alias-state-error-primary',
       'state-success-primary': '--dsw-alias-state-success-primary',

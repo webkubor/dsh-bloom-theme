@@ -152,7 +152,7 @@ for (const language of ['zh', 'en', 'ru']) {
           overflows: row.scrollWidth > row.clientWidth + 1,
           titleContainsPoem: row.title.includes(poem.textContent) }
       }))
-      assert.equal(geometry.length, 9)
+      assert.equal(geometry.length, 12)
       assert.ok(geometry.every(row => Math.abs(row.width - 24) < 1))
       assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))
       assert.ok(geometry.every(row => !row.overflows && row.titleContainsPoem))
@@ -246,7 +246,7 @@ for (const [name, check] of [
 test('all palettes retain computed colors and selection after switching language', async () => {
   const {page, context} = await setup('en-US', 'en')
   try {
-    const variants = ['mist','cinnabar','petal','ripple','sage','stone','lapis','amber','aurora','lavender','mint','tangerine','silverrose','dawn']
+    const variants = ['mist','cinnabar','petal','ripple','sage','stone','lapis','amber','aurora','lavender','mint','tangerine','silverrose','dawn','osmanthus']
     for (const variant of variants) {
       // Legacy preferences remain supported even though their colors leave the featured menu.
       await page.evaluate(v => window.bloomTest.switcher.applyVariant(v), variant)

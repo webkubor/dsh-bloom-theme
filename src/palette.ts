@@ -9,9 +9,12 @@
  */
 
 // Keep every historical key valid for persisted preferences and direct API callers.
-export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine', 'silverrose', 'dawn']
+export const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber', 'aurora', 'lavender', 'mint', 'tangerine', 'silverrose', 'dawn', 'osmanthus']
 // The menu is curated using the poll's 👍 votes; zero-vote variants stay supported.
-export const FEATURED_VARIANTS = ['mist', 'petal', 'ripple', 'lapis', 'aurora', 'mint', 'tangerine', 'silverrose', 'dawn']
+// 青莲 0 票也保留（owner 2026-11-04）：它是唯一的莫兰迪紫，去掉后蓝(258)与银红(320)之间空出一整段色相。
+// 2026-11-04（owner）：「每个色系一定要有一种 —— 赤橙黄绿青蓝紫」。菜单按色环排：
+// 黛蓝(默认) · 赤 朱砂 · 橙 橙黄 · 金 落霞 · 黄 轻黄 · 绿 草色 · 青 天青 · 蓝 青金 · 紫 青莲 · 银红 · 桃夭 · 粉霞
+export const FEATURED_VARIANTS = ['mist', 'cinnabar', 'tangerine', 'aurora', 'osmanthus', 'mint', 'ripple', 'lapis', 'lavender', 'silverrose', 'petal', 'dawn']
 export const OTHER_VARIANTS = VARIANTS.filter((v) => v !== 'mist')
 
 /**
@@ -212,15 +215,31 @@ export const PALETTE = {
   },
   /* 粉霞：暖珊瑚粉(20)，与桃夭(350)、橙黄(47/50)均拉开约 30°。
      草色与橙黄按用户已有色值原样保留。 */
+  /* 2026-11-04：色相 20 → 8。原来和朱砂(25)只差 5°，OKLab ΔE 0.026，并排几乎是同一个红；
+     朱砂回到菜单后粉霞往胭脂/玫瑰方向让开（ΔE ≈0.05），和桃夭(350)仍差 18°。 */
   dawn: {
-    accentL: 'oklch(51% 0.15 20)',    accentD: 'oklch(78% 0.13 20)',
+    accentL: 'oklch(51% 0.15 8)',    accentD: 'oklch(78% 0.13 8)',
     morandi: '219, 147, 151',
-    bgL: 'oklch(98% 0.006 20)',       bgD: 'oklch(24% 0.012 20)',
-    txL: 'oklch(24% 0.013 20)',       txD: 'oklch(96% 0.007 20)',
-    sfL: 'oklch(95.8% 0.009 20)',     sfD: 'oklch(30% 0.017 20)',
-    sf2L: 'oklch(93% 0.011 20)',      sf2D: 'oklch(36% 0.021 20)',
-    motionL: ['oklch(51% 0.15 20)', 'oklch(52% 0.12 20)', 'oklch(52% 0.11 50)'],
-    motionD: ['oklch(78% 0.13 20)', 'oklch(79% 0.12 20)', 'oklch(79% 0.11 50)'],
+    bgL: 'oklch(98% 0.006 8)',       bgD: 'oklch(24% 0.012 8)',
+    txL: 'oklch(24% 0.013 8)',       txD: 'oklch(96% 0.007 8)',
+    sfL: 'oklch(95.8% 0.009 8)',     sfD: 'oklch(30% 0.017 8)',
+    sf2L: 'oklch(93% 0.011 8)',      sf2D: 'oklch(36% 0.021 8)',
+    motionL: ['oklch(51% 0.15 8)', 'oklch(52% 0.12 8)', 'oklch(52% 0.11 50)'],
+    motionD: ['oklch(78% 0.13 8)', 'oklch(79% 0.12 8)', 'oklch(79% 0.11 50)'],
+  },
+  /* v0.23：轻黄 —— 补上「黄」这一档（owner 2026-11-04：赤橙黄绿青蓝紫每系一种）。
+     hue 98：离落霞(72)26°、草色(160)62°，是金与绿之间唯一空着的正黄。
+     黄色的硬伤：亮色 accent 要过 4.5:1 只能压到 L 50%，浅底上读作秋香/芥末；
+     鲜亮的鹅黄交给暗色档（L 86%）。底色彩度压到 0.006/0.008 —— 黄底一铺开最显旧。 */
+  osmanthus: {
+    accentL: 'oklch(50% 0.12 98)',    accentD: 'oklch(86% 0.14 98)',
+    morandi: '214, 186, 92',
+    bgL: 'oklch(97.8% 0.006 95)',     bgD: 'oklch(24% 0.008 95)',
+    txL: 'oklch(24% 0.014 95)',       txD: 'oklch(96% 0.008 95)',
+    sfL: 'oklch(95.8% 0.008 95)',     sfD: 'oklch(30% 0.012 95)',
+    sf2L: 'oklch(93% 0.01 95)',       sf2D: 'oklch(36% 0.015 95)',
+    motionL: ['oklch(50% 0.12 98)', 'oklch(52% 0.11 80)', 'oklch(51% 0.10 120)'],
+    motionD: ['oklch(86% 0.14 98)', 'oklch(84% 0.13 80)', 'oklch(84% 0.12 120)'],
   },
 }
 
@@ -244,7 +263,8 @@ export const VARIANT_LABELS = {
   mint:     { zh: '草色', en: 'Mint',      poem: '草色遥看近却无', ru: 'Мята', poemRu: 'Издали — зелень, вблизи — нет', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
   tangerine:{ zh: '橙黄', en: 'Tangerine', poem: '最是橙黄橘绿时', ru: 'Мандарин', poemRu: 'Лучшая пора — рыжие плоды', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
   silverrose:{ zh: '银红', en: 'Silver Rose', poem: '银烛秋光冷画屏', ru: 'Серебряная роза', poemRu: 'Серебряный свет осенней свечи', poemEn: 'Silver candle, autumn glow' }, // hue 320 · 杜牧《秋夕》
-  dawn:      { zh: '粉霞', en: 'Dawn', poem: '晓看红湿处', ru: 'Заря', poemRu: 'Утром цветы блестят от росы', poemEn: 'At dawn, blossoms glow' }, // hue 20 · 杜甫《春夜喜雨》
+  dawn:      { zh: '粉霞', en: 'Dawn', poem: '晓看红湿处', ru: 'Заря', poemRu: 'Утром цветы блестят от росы', poemEn: 'At dawn, blossoms glow' }, // hue 8  · 杜甫《春夜喜雨》
+  osmanthus: { zh: '轻黄', en: 'Osmanthus', poem: '暗淡轻黄体性柔', ru: 'Османтус', poemRu: 'Бледно-жёлтый, нежный нрав', poemEn: 'Pale gold, gentle by nature' }, // hue 98 · 李清照《鹧鸪天·桂花》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

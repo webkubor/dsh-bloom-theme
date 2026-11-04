@@ -1,0 +1,26 @@
+{
+  "$comment": [
+    "npm 产品定位台账 —— prepublish-gate 契约 0 的唯一判据。真源在 CortexOS，由 check-release-gate-sync.mjs --fix 分发到各仓 scripts/npm-products.json，各仓拷贝不许手改（sha 漂移会被查出来）。",
+    "上 npm 是业务 / 产品定位决策，不是发版流程能顺手做的事：一个包要进 products，必须说清「给谁用、为什么非 npm 不可」，并由 owner 拍板。",
+    "agent 不得为了让门禁通过而自行往 products 里加条目 —— 这等于替 owner 做了定位决策。新包要上 npm，先问 owner。",
+    "notOnNpm：owner 明确判过「不是 npm 产品」的项目，走 git 分发。命中直接拒发，并给出原因。",
+    "2026-11-04 建立：起因是 agent 把 facet（排版工具）、reel-kit（视频合成工具）当 npm 包去发版 / 绑 OIDC，owner 叫停。"
+  ],
+  "products": {
+    "ai-orb": { "for": "外部前端项目的 AI 光球组件（库）", "since": "npm 已有 OIDC 发布" },
+    "ai-sse-kit": { "for": "外部项目的 AI 流式接收库，modelgo-console-web 生产在用，月下载 ~200", "since": "2026-11-04 owner 确认发版" },
+    "im-notify-kit": { "for": "IM 通知库，被多个自家项目当依赖", "since": "npm 已有 OIDC 发布" },
+    "device-passport": { "for": "设备指纹库", "since": "npm 已发布" },
+    "dsh-bloom-theme": { "for": "DSH 主题插件，按 npm 包分发", "since": "npm 已有 OIDC 发布" },
+    "@dsh-plugins/dsh-llm-hub": { "for": "DSH 插件，按 npm 包分发", "since": "npm 已发布" },
+    "@dsh-plugins/dsh-museav-assets": { "for": "DSH 插件，按 npm 包分发", "since": "npm 已发布" },
+    "vite-plugin-agent-eyes": { "for": "Vite 插件，业务仓当依赖装", "since": "npm 已有 OIDC 发布" },
+    "vite-plugin-refresh-guard": { "for": "Vite 插件，5 个业务仓当依赖装", "since": "npm 已有 OIDC 发布" },
+    "museav-cli": { "for": "MUSE AV 中台 CLI，租户用户 npm 安装", "since": "npm 已有自动发布" },
+    "cs-mcp": { "for": "主分发为单文件二进制（npm 包已标不维护）；release.yml 仍跑三道门禁，故登记以免误拦", "since": "既有" }
+  },
+  "notOnNpm": {
+    "@webkubor/facet": "owner 2026-11-04：排版工具，不是为 npm 做的产物。git 分发：npm i -g github:webkubor/facet",
+    "@kubor/reel-kit": "owner 2026-11-04：视频合成工具，不是 npm 库、不维护 npm。git 分发：npm i -g github:webkubor/reel-kit"
+  }
+}

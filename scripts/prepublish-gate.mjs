@@ -13,6 +13,9 @@
  * 10MB，正确修法是换成图床直链而不是把 10MB 塞进每个安装包）。共同点是
  * 「约定没做成门禁」，所以把判据做成能跑的：
  *
+ *   契约 0 产品定位   —— 包名必须登记在 npm-products.json 的 products 里（owner 拍板的
+ *                       「这是 npm 产品」）；命中 notOnNpm 或未登记 → 拒发。无逃生舱。
+ *                       2026-11-04 加：facet / reel-kit 不是 npm 产品却被当成 npm 包去发。
  *   契约 1 产物完整性 —— package.json 必须在；`files` 里每个字面量条目至少命中一个文件；
  *                       main / types / exports / dsh 引用的相对路径文件必须存在。
  *   契约 2 图片引用   —— README 里以**相对路径**引用的 assets/* 必须在 tarball 里。
@@ -33,7 +36,7 @@ import { tmpdir } from 'node:os'
 import { createHash } from 'node:crypto'
 import { EXCLUDE, isRuntime, collectAllFiles, detectChangedRuntime, packEntry } from './gate-lib.mjs'
 
-const GATE_VERSION = 1
+const GATE_VERSION = 2
 
 const here = dirname(fileURLToPath(import.meta.url))
 const pkgRoot = dirname(here)
@@ -41,6 +44,36 @@ const pkgRoot = dirname(here)
 const pkg = JSON.parse(readFileSync(join(pkgRoot, 'package.json'), 'utf8'))
 const version = pkg.version
 const errors = []
+
+// ── 契约 0 产品定位（业务拦截，先于一切机械检查）─────────────────────────
+// 上 npm 是产品定位决策：得有人说清「给谁用、为什么非 npm 不可」。
+// 判据只有一个 —— owner 维护的台账 npm-products.json（真源在 CortexOS，
+// 由 check-release-gate-sync --fix 分发到本目录）。不在台账里 = 没被批准成 npm 产品。
+// 不设逃生舱：能被环境变量绕过的定位拦截等于没有。要上 npm，去台账登记（owner 拍板）。
+// 2026-11-04 起因：facet（排版工具）、reel-kit（视频合成工具）被 agent 当 npm 包去发版。
+{
+  const ledgerPath = join(here, 'npm-products.json')
+  if (!existsSync(ledgerPath)) {
+    console.error(`[prepublish-gate] ✖ 契约 0 产品定位: 缺台账 scripts/npm-products.json`)
+    console.error(`  → 在 CortexOS 跑 node scripts/check-release-gate-sync.mjs --fix 分发台账；不要手写一份`)
+    process.exit(1)
+  }
+  const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8'))
+  const denied = ledger.notOnNpm?.[pkg.name]
+  if (denied) {
+    console.error(`[prepublish-gate] ✖ 契约 0 产品定位: ${pkg.name} 已被判定为「不是 npm 产品」，拒绝发布`)
+    console.error(`  → ${denied}`)
+    console.error(`  → 建议 package.json 设 "private": true，并删掉 publish workflow / 发布脚本`)
+    process.exit(1)
+  }
+  if (!ledger.products?.[pkg.name]) {
+    console.error(`[prepublish-gate] ✖ 契约 0 产品定位: ${pkg.name} 不在 npm 产品台账里，拒绝发布`)
+    console.error(`  → 上 npm 是产品定位决策，不是发版流程能顺手做的。先问 owner：给谁用？为什么非 npm 不可？`)
+    console.error(`  → owner 同意后在 CortexOS scripts/release-gate/npm-products.json 的 products 里登记，再 --fix 分发`)
+    console.error(`  → agent 不得为了过门禁自行登记`)
+    process.exit(1)
+  }
+}
 
 // ── 0. 打包清单 ────────────────────────────────────────────────────────────
 let packFiles
@@ -250,7 +283,7 @@ if (errors.length > 0) {
   process.exit(1)
 }
 
-console.log(`[prepublish-gate] ✓ ${pkg.name}@${version} 四条契约通过（gate v${GATE_VERSION}）`)
+console.log(`[prepublish-gate] ✓ ${pkg.name}@${version} 五条契约通过（gate v${GATE_VERSION}）`)
 console.log(`[prepublish-gate]   · tarball ${packFiles.length} 个文件；运行期载荷 ${packFiles.filter(isRuntime).length} 个`)
 if (referencedAssets.size > 0) console.log(`[prepublish-gate]   · README 引用的 ${referencedAssets.size} 个 assets 均在包内`)
 console.log(`[prepublish-gate]   · CHANGELOG 含当前版本段`)

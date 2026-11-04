@@ -1,5 +1,5 @@
 {
-  "files": ["lib/client.js"],
+  "files": ["src/palette.ts"],
   "groups": true,
   "pairs": [
     { "fg": "accentL", "bg": "bgL", "min": 4.5, "label": "浅色主色" },

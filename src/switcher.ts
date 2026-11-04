@@ -4,7 +4,7 @@
  * 它挂进 DSH 顶栏工具区（findSwitcherHost），找不到宿主时降级为右上角浮空。
  * 键盘可完整操作（role=radiogroup + aria-checked + 方向键），窄屏隐藏中文名。
  */
-import { FEATURED_VARIANTS, PALETTE } from './palette.js'
+import { FEATURED_VARIANTS, isNewVariant, PALETTE, VARIANTS } from './palette.js'
 import { readRotationMinutes, resetRotationTimer, ROTATION_MINUTES, setRotationMinutes, startRotation } from './rotation.js'
 import { findSwitcherHost, injectCSS, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
@@ -12,8 +12,34 @@ import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from
 import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
 import { enableFloatingDrag, clearFloatingPos, resetFloatingPos, disableFloatingDrag } from './drag.js'
-import { VARIANTS } from './palette.js'
-import { tr, variantName, variantPoem, LANG_CHANGE_EVENT } from './lang.js'
+import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
+import { track, telemetryEnabled, setTelemetryEnabled, type PanelEvent } from './track.js'
+
+/* 「本版更新」内容在构建时由 scripts/bundle.mjs 注入（CHANGELOG.md 里当前版本那一节）；
+   tsc 单独编译时该常量不存在，走兜底分支。 */
+declare const __BLOOM_CHANGELOG__: { version: string; items: { kind: string; text: string }[] } | undefined
+const CHANGELOG = typeof __BLOOM_CHANGELOG__ !== 'undefined' ? __BLOOM_CHANGELOG__ : { version: PLUGIN_VERSION, items: [] }
+
+function escapeHTML(s: string): string {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
+}
+
+/** 「本版更新」：最多 8 条，新功能 / 修复各一个小标签 */
+function changelogHTML(): string {
+  const tag = (k: string) => k === 'feat' ? tr('新') : k === 'fix' ? tr('修') : tr('优')
+  // CHANGELOG 只有中文：非中文界面不展示条目，只留「完整日志」链接，免得英文界面冒出一段中文
+  const list = CHANGELOG.items.length && getLang() === 'zh'
+    ? `<ul class="dsh-bloom-log__list">${CHANGELOG.items.map((it, i) =>
+        `<li class="dsh-bloom-log__item" style="--i:${i}"><span class="dsh-bloom-log__tag" data-kind="${it.kind}">${tag(it.kind)}</span><span>${escapeHTML(it.text)}</span></li>`).join('')}</ul>`
+    : ''
+  return `<div class="dsh-bloom-log">
+        <div class="dsh-bloom-log__head">
+          <span class="dsh-bloom-log__title">${tr('本版更新')} · v${CHANGELOG.version}</span>
+          <a class="dsh-bloom-log__all" data-track="changelog" href="https://github.com/webkubor/dsh-bloom-theme/releases" target="_blank" rel="noopener">${tr('完整日志')} ›</a>
+        </div>
+        ${list}
+      </div>`
+}
 
 /** 变体色点：莫兰迪 → 可读色的双轨渐变，两端都有色（渐变到背景色会褪成白） */
 export const dotStyle = (v) =>
@@ -130,12 +156,12 @@ export function buildSwitcherHTML(currentVariant) {
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
       ` aria-selected="${on}" data-active="${on}" title="${variantName(v)} · ${variantPoem(v)}">` +
       `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
-      `<span class="dsh-bloom-option__name">${variantName(v)}</span>` +
+      `<span class="dsh-bloom-option__name">${variantName(v)}${isNewVariant(v, PLUGIN_VERSION) ? `<span class="dsh-bloom-option__new">${tr('新')}</span>` : ''}</span>` +
       // 目录引导点：配色名与诗句之间原来是一大片空白（margin-left:auto 把诗句顶到
       // 最右），每行中段空 100 多 px，看着像没排完版。用书籍目录那种点线把两者连
       // 起来 —— 既填了空白，又正好是这套主题的书卷气。
       `<span class="dsh-bloom-leader" aria-hidden="true"></span>` +
-      `<span class="dsh-bloom-option__en" style="${poemStyle(v)}">${variantPoem(v)}</span>` +
+      `<span class="dsh-bloom-option__en" lang="${getLang()}" style="${poemStyle(v)}">${variantPoem(v)}</span>` +
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
   }).join('')
   return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
@@ -172,6 +198,7 @@ export function buildSwitcherHTML(currentVariant) {
     </label>
     <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">
       <div class="dsh-bloom-more-inner">
+      ${changelogHTML()}
       <div class="dsh-bloom-version" role="separator">
         <span class="dsh-bloom-version__update" hidden></span>
       </div>
@@ -190,6 +217,11 @@ export function buildSwitcherHTML(currentVariant) {
           <span class="dsh-bloom-dsh-ver" data-dsh-latest>${tr('检查中…')}</span>
         </div>
         <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
+        <label class="dsh-bloom-telemetry" title="${tr('只上报按钮点击的事件名和版本，不含对话内容')}">
+          <input type="checkbox" class="dsh-bloom-telemetry__box" data-telemetry${telemetryEnabled() ? ' checked' : ''}>
+          <span class="dsh-bloom-telemetry__box-ui" aria-hidden="true"></span>
+          <span class="dsh-bloom-telemetry__text">${tr('发送匿名使用统计')}</span>
+        </label>
       </div>
       </div>
     </div>
@@ -202,8 +234,8 @@ export function buildSwitcherHTML(currentVariant) {
       </button>
       <span class="dsh-bloom-foot__links">
       <button type="button" class="dsh-bloom-foot__link dsh-bloom-reset-position" title="${tr('恢复浮窗位置')}" aria-label="${tr('恢复浮窗位置')}">↺</button>
-      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
-      <a class="dsh-bloom-foot__link" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="${tr('报问题 / 提建议')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
+      <a class="dsh-bloom-foot__link" data-track="vote" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
+      <a class="dsh-bloom-foot__link" data-track="feedback" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="${tr('报问题 / 提建议')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
       <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="${tr('复制一段话，对方贴进自己的 DSH 就能装上 Bloom')}">${ICON_SHARE}<span>${tr('分享')}</span></button>
       </span>
     </div>
@@ -359,12 +391,20 @@ export function buildSwitcherEl(initialVariant) {
 
   el.addEventListener('change', (e) => {
     const control = (e.target as HTMLElement).closest<HTMLSelectElement>('.dsh-bloom-rotation__select')
-    if (control) setRotationMinutes(Number(control.value))
+    if (control) { setRotationMinutes(Number(control.value)); return }
+    const box = (e.target as HTMLElement).closest<HTMLInputElement>('.dsh-bloom-telemetry__box')
+    if (box) {
+      setTelemetryEnabled(box.checked)
+    }
   })
 
   el.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
+    // 埋点：链接用 data-track 声明；按钮在各自分支里打。sendBeacon 不阻塞跳转。
+    const tracked = target.closest<HTMLElement>('[data-track]')
+    if (tracked?.dataset.track) track(tracked.dataset.track as PanelEvent)
     if (target.closest('.dsh-bloom-reset-position')) {
+      track('reset-position')
       resetFloatingPos(el)
       closeMenu(el)
       return
@@ -373,6 +413,7 @@ export function buildSwitcherEl(initialVariant) {
     const share = target.closest<HTMLElement>('.dsh-bloom-share')
     if (share) {
       e.stopPropagation()
+      track('share')
       void shareInstall(share)
       return
     }
@@ -381,6 +422,7 @@ export function buildSwitcherEl(initialVariant) {
       // 版本与更新默认收起：日常用不到，摊开会把面板撑长（设计图里它就是一行入口）
       // 展开走 grid-template-rows 过渡（同框滑动），不再 hidden 硬切
       const nowOpen = more.getAttribute('aria-expanded') === 'true'
+      if (!nowOpen) track('version-open')
       setMoreOpen(el, !nowOpen)
       return
     }

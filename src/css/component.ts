@@ -328,6 +328,42 @@ div[class*="_card"]:has(pre):hover {
   background: transparent;
 }
 
+
+/* ── 输入时的呼吸光（打字中）─────────────────────────────────
+   2026-11-04 owner：输入过程中要有一个渐变光效。
+   实现：卡片伪元素上一层 accent 渐变；body[data-bloom-typing="true"] 时
+   开启一道横向扫过的光带（background-position 从 120% 扫到 -20%），
+   颜色用 color-mix 跟 --bloom-typing 联动，所以「渐变」既是位置渐变也是浓度渐变。
+   reduced-motion 下光带停在中点，不做位移动画。 */
+div[class*="_composer"] div[class*="_card"]::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; opacity: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71) 34%, transparent) 42%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent) 58%,
+    transparent 100%
+  );
+  background-size: 260% 100%;
+  background-position: 120% 0;
+  transition: opacity .35s ease;
+}
+body[data-bloom-typing="true"] div[class*="_composer"] div[class*="_card"]::after {
+  opacity: 1;
+  animation: dsh-bloom-typing-sweep 1.9s var(--bloom-ease, ease) infinite;
+}
+@keyframes dsh-bloom-typing-sweep {
+  0%   { background-position: 120% 0; }
+  55%  { background-position: -20% 0; }
+  100% { background-position: -20% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-bloom-typing="true"] div[class*="_composer"] div[class*="_card"]::after {
+    animation: none; background-position: 50% 0;
+  }
+}
+
 /* 输入卡片：整个界面的视觉主角，给足纸感。
    必须限定在 composer 内 —— 裸的 [class*="_card"] 会命中 30+ 个消息卡片，
    把长距阴影糊得到处都是。 */

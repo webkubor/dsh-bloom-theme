@@ -89,7 +89,7 @@ Fourteen light/dark palettes, adaptive by light/dark; panels are real frosted gl
 > All 14 palette keys remain valid; a selected legacy color remains visible until another is chosen.
 > Optional auto rotation defaults to off, offers 5 / 15 / 30 / 60-minute intervals, and pauses in hidden tabs.
 
-- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 9 featured palettes, light/dark, and auto rotation.
+- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 12 featured palettes, light/dark, and auto rotation.
 - **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
 
 ## Screenshots
@@ -147,7 +147,7 @@ npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme
 </details>
 
 Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
-**9 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
+**12 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
 ## Updates
@@ -159,12 +159,15 @@ When the host provides `remote.pluginManager.updateBundle`, the update banner of
 | Feature | Description |
 | :-- | :-- |
 | **Frosted-glass panels (on by default)** | Semi-transparent fill + `backdrop-filter` blur + glass edges (top highlight / translucent stroke / soft outer glow), adaptive opacity per light/dark |
-| **14 supported Morandi palettes** | 9 featured choices: Mist / Petal / Ripple / Lapis / Afterglow / Mint / Tangerine / Silver Rose / Dawn; older saved colors stay supported, each with light and dark modes |
-| **UI language** | Follows DSH's shared language setting, with 中文 / English / Русский dictionaries. Text only — palettes and measured contrast are untouched |
+| **15 supported Morandi palettes** | 12 featured choices, one per hue family: Mist / Cinnabar / Tangerine / Afterglow / Osmanthus / Mint / Ripple / Lapis / Lavender / Silver Rose / Petal / Dawn; older saved colors stay supported, each with light and dark modes |
+| **UI language** | Follows DSH's shared language setting (中文 / English) without adding languages. Text only — palettes and measured contrast are untouched |
 | **Two-track colors** | A readable track for contrast (text/buttons) and a mood track for ambient gradients — never mixed |
 | **Micro-interactions** | Menu entrance, selected-row bar slide-in, hover / press feedback; shared duration & easing tokens, consistent everywhere |
 | **Theme-colored thinking animation** | `Deep diving…` flows through the current theme's three-color spectrum; auto-still under `prefers-reduced-motion` |
 | **Version / update hints** | Current version at the bottom of the dropdown; `↑ vX` chip when npm is newer; update banner for very stale installs, with desktop guidance to update from Plugins in the sidebar |
+| **In-panel changelog** | "What's new" lists the current release's changes right in the panel; "Full changelog ›" jumps to GitHub Releases |
+| **Typing glow** | A theme-colored light sweeps across the composer card while you type and fades ~1s after you stop; static under `prefers-reduced-motion` |
+| **Anonymous stats (optional)** | Only button event names + version + language are reported; one-click off in the panel — see Privacy |
 | **OKLCH + WCAG AA** | Perceptually uniform color space, no jumps on light/dark switch; all accent/background pairs measured ≥ 4.5:1 |
 | **Zero deps · CSS-variable driven** | Only CSS variables + a little switch logic; near-zero runtime cost |
 | **Respects native controls** | Switcher mounts into the DSH header utilities area, side-by-side with native buttons |
@@ -216,6 +219,12 @@ The version number is bumped by release-please inside the release PR, alongside
 `package.json` (via the `x-release-please-version` marker at the end of the line in
 `src/meta.ts`). `scripts/sync-version.mjs` is only a local-dev fallback and is not
 part of the publish path. See [CONTRIBUTING](./CONTRIBUTING.md).
+
+## Privacy
+
+The Vote / Feedback / Share buttons in the panel send **one anonymous click count** to the author's counter endpoint (`webkubor.online/api/event`). The payload is just: an event name (e.g. `share`), the plugin version, and the UI language. No conversation content, no page text, no cookies — the server only keeps per-day aggregates.
+
+Prefer to send nothing: turn off "Send anonymous usage stats" in the panel's version section, or `localStorage.setItem('bloom-telemetry','off')`.
 
 ## FAQ
 

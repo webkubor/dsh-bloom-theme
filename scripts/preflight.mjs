@@ -106,14 +106,16 @@ head('git 状态（分支 / 与远端同步 / 僵尸分支）')
 // ── 3. 展示资源完整性 ───────────────────────────────────────────
 head('展示资源（截图齐全 + README 引用不断链）')
 {
-  const VARIANTS = ['mist', 'cinnabar', 'petal', 'ripple', 'sage', 'stone', 'lapis', 'amber']
+  // 清单跟着 palette.ts 走，不要在这里再抄一份（抄的那份 2026-11-04 之前已经漏了 7 个变体）。
+  const paletteSource = read('src/palette.ts')
+  const VARIANTS = [...paletteSource.matchAll(/^  ([a-z]+): \{$/gm)].map((m) => m[1])
   const shots = existsSync(resolve(root, 'assets/screenshots')) ? readdirSync(resolve(root, 'assets/screenshots')) : []
   const missing = []
   for (const v of VARIANTS) for (const m of ['light', 'dark']) {
     if (!shots.includes(`ui-${v}-${m}.png`)) missing.push(`ui-${v}-${m}.png`)
   }
   missing.length === 0
-    ? ok(`8 变体 × 明暗 = 16 张截图齐全（另有 ${shots.length - 16} 张辅助图）`)
+    ? ok(`${VARIANTS.length} 变体 × 明暗 = ${VARIANTS.length * 2} 张截图齐全（另有 ${shots.length - VARIANTS.length * 2} 张辅助图）`)
     : bad(`缺少截图：${missing.join(', ')}`)
 
   // README 里引用的本地图必须都存在

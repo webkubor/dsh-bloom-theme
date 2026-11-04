@@ -1,7 +1,7 @@
 {
   "name": "dsh-bloom-theme",
   "version": "0.22.0",
-  "description": "Bloom for DSH — 玻璃+莫兰迪主题。14 套 OKLCH 配色（新增银红/粉霞；主菜单精选 9 套，旧配色兼容），明暗自适应；磨砂玻璃面板默认常开；微动效 + 版本/更新指示。零依赖、TypeScript、WCAG AA。",
+  "description": "Bloom for DSH — 玻璃+莫兰迪主题。15 套 OKLCH 配色（新增轻黄；主菜单精选 12 套，赤橙黄绿青蓝紫齐全，旧配色兼容），明暗自适应；磨砂玻璃面板默认常开；微动效 + 版本/更新指示。零依赖、TypeScript、WCAG AA。",
   "type": "module",
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
@@ -47,7 +47,7 @@
     "test": "npm run check",
     "check:drift": "node scripts/dsh-drift.mjs",
     "test:i18n": "node --test test/i18n.test.mjs",
-    "test:browser": "node --test test/i18n.test.mjs test/drag-interaction.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs",
+    "test:browser": "node --test test/i18n.test.mjs test/drag-interaction.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/surface-modes.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs",
     "check:dsh": "node ../scripts/dsh-dev.mjs check",
     "rollback": "node ../scripts/dsh-dev.mjs rollback",
     "rollback:npm": "node ../scripts/dsh-dev.mjs rollback --npm",

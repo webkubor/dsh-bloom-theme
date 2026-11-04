@@ -225,9 +225,14 @@ git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时
 
 ```bash
 npm run deploy   # 门禁 → 装进 desktop（桌面端唯一会读的 profile）
-# 然后在 ego-browser 里打开 http://127.0.0.1:19387，注入并运行：
+# 然后在 ego-browser 里打开 http://127.0.0.1:19387，先注入变体清单再注入脚本：
+#   window.__bloomVariants = <从 src/palette.ts 解析的键名数组>
 #   scripts/visual-audit.browser.js  →  window.__bloomAudit()
 ```
+
+变体清单由调用方注入，不在脚本里抄一份 —— 抄的那份 2026-11-04 之前已经漏了
+7 个变体（2026-09-29 漏过 aurora / lavender）。清单为空时脚本直接报错，
+不会静默变成「零项通过」。
 
 它查三件事，全都是本项目真实出过血的地方：
 

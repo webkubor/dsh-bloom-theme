@@ -34,9 +34,11 @@ import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
 import { buildBloomCSS } from './tokens.js'
 import { COMPONENT_CSS } from './css/component.js'
 import { GLASS_CSS } from './css/glass.js'
+import { buildSurfaceCSS } from './surfaces.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync } from './appearance.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
+import { initTypingGlow } from './typing.js'
 import { checkUpdate } from './version.js'
 import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS } from './lang.js'
 
@@ -75,7 +77,7 @@ function watchCursorGlow() {
   const variant = readVariant()
   injectCSS(buildBloomCSS(), 'bloom.css')
   injectCSS(COMPONENT_CSS, 'components.css')
-  injectCSS(GLASS_CSS, 'glass.css')
+  injectCSS(GLASS_CSS + buildSurfaceCSS(), 'glass.css')
   const boot = () => {
     document.body.dataset.bloomVariant = variant
     initAppearanceSync()
@@ -488,7 +490,7 @@ function bindPluginManager(ctx: any) {
  *
  * 这是「体系配置走 DSH」的落地点，做两件事（只读，不改 DSH 的语言目录）：
  *
- *  1. 注册词条 `{zh, en, ru}`（key 是中文原文）。zh 必须是全量恒等表 ——
+ *  1. 注册词条 `{zh, en}`（key 是中文原文）。zh 必须是全量恒等表 ——
  *     DSH 的回落链是「当前语言 → 声明 fallback → en」，zh 缺一条就会在中文
  *     界面里漏出英文。
  *  2. `bindLocale` 绑定 + 订阅变化：在 DSH 设置里换语言，面板立刻跟着换。
@@ -581,13 +583,14 @@ window.__ModuleLoader__.load({
         injectCSS(COMPONENT_CSS, 'components.css')
       }
       if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/glass.css"]')) {
-        injectCSS(GLASS_CSS, 'glass.css')
+        injectCSS(GLASS_CSS + buildSurfaceCSS(), 'glass.css')
       }
       document.body.dataset.bloomVariant = variant
       initAppearanceSync()   // 重放持久化的深浅模式（零弹窗切换的持久化侧）
       injectSwitcher(variant)
       watchSwitcher(variant)
       watchThinkTags()
+      ctx.effect?.(() => initTypingGlow(), 'dsh-bloom-theme: typing glow')
     }
 
     return exports

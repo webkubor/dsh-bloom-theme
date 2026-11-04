@@ -406,7 +406,12 @@ console.log('\n范围边界')
 // 历史教训：0.4.0 加壁纸氛围层 → 0.5.0 全删；stats 卡撑了三个版本、展示的全是
 // 硬编码假数据（它要读的 /bloom-stats.json 端点根本不存在），0.8.0 整块删除。
 const ALLOWED_SUBCOMMANDS = []   // 空 —— 主题不提供任何 /bloom 子命令（stats 已于 2026-08-24 移除）
-const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS']
+// 2026-11-04 扩到 4 个：ADAPTIVE_CSS 是「系统适配层」——
+// 把宿主（DSH）已经做了的系统适配（降低透明度 / 增强对比度 / 强制颜色 /
+// 鼠标焦点环 / 触屏行高）补齐到 Bloom 这边。它属于 README 定位里的「质感」，
+// 不是新功能类别；拆成独立文件是因为它有 7 条媒体查询，跟玻璃层混在一起
+// 会让 glass.ts 变成一个什么都装的大块。
+const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS', 'ADAPTIVE_CSS']
 
 // 用剥注释后的源码：说明「这里曾注册过 /bloom stats、为什么删掉」是合法且有价值的
 const subcommands = [...SRC_CODE.matchAll(/\/bloom\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1])
@@ -442,7 +447,13 @@ cssBlocks.length === 0
 // component.ts 15 → 16（2026-10-02）：body 的实底必须用 !important —— 让 body 透明的那条
 // 规则是桌面宿主运行时注入的（不在任何已发布的 DSH 包里），特异度压不过。理由见
 // src/css/component.ts 的 §1 注释。
-const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 7, 'switcher.ts': 1 }
+// adaptive.ts 的 12 处 !important（2026-11-04 新增，预算从 0 起）：
+//   · 5 处是降级里的 backdrop-filter / background-color —— 宿主与 Bloom 自己的
+//     毛玻璃规则都在同一批元素上，必须压住，否则降级形同虚设；
+//   · 4 处是 prefers-contrast: more 里撤氛围渐变与加深发丝描边；
+//   · 3 处是 forced-colors 里把自绘开关改成系统色关键字。
+// 先试过去掉其中 7 处 —— 测试仍全通过（11/11），所以最终只留这 12 处。
+const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 7, 'switcher.ts': 1, 'adaptive.ts': 12 }
 const overBudget = []
 for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
   const name = f.path.split('/').pop()

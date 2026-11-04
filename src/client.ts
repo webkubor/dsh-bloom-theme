@@ -34,8 +34,10 @@ import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
 import { buildBloomCSS } from './tokens.js'
 import { COMPONENT_CSS } from './css/component.js'
 import { GLASS_CSS } from './css/glass.js'
+import { ADAPTIVE_CSS } from './css/adaptive.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
-import { initAppearanceSync } from './appearance.js'
+import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appearance.js'
+import { initGlassMode } from './glass.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { initTypingGlow } from './typing.js'
 import { checkUpdate } from './version.js'
@@ -77,9 +79,12 @@ function watchCursorGlow() {
   injectCSS(buildBloomCSS(), 'bloom.css')
   injectCSS(COMPONENT_CSS, 'components.css')
   injectCSS(GLASS_CSS, 'glass.css')
+  // 适配层必须最后注入：它用 html 前缀提高权重，压住前面那些普通规则。
+  injectCSS(ADAPTIVE_CSS, 'adaptive.css')
   const boot = () => {
     document.body.dataset.bloomVariant = variant
     initAppearanceSync()
+    initGlassMode()
     injectSwitcher(variant)
     // header 通常晚于脚本渲染 —— 交给 observer 在宿主就绪后迁进去
     watchSwitcher(variant)
@@ -554,6 +559,38 @@ function attachLocale(ctx) {
 }
 
 /**
+ * 接上宿主的 theme 服务 —— 深浅状态归它持有。
+ *
+ * 宿主 `dsh-client-ui-theme` 提供 `ctx.theme`（ThemeRuntime）：
+ *   · `getTheme()` → 不可变快照
+ *   · `setTheme('light'|'dark'|'system')` → 唯一的偏好写入口，宿主自己持久化
+ *   · `register()` / `overrideTokens()` → 主题与 token 覆盖层
+ *
+ * 有了它，面板的深浅行就不再自己改 body 属性（v0.23.0 之前那样做等于造第二个
+ * 真源：宿主下一次 theme/change 会无声覆盖插件写的值）。
+ *
+ * ⚠️ `ctx.theme` 是**可选**依赖：
+ *   - 顶层 `exports.inject = ['theme']` 会让整个插件在老宿主上挂起 —— 皮肤不该这样。
+ *   - 走 `ctx.inject(['theme'], cb)`：theme 就绪时接上，不可用时退回旧路径
+ *     （appearance.ts 里自己写 body 属性），深浅切换仍然可用。
+ *
+ * 契约参考同仓 client.ts 里 locale 的处理，理由与风险见那里的注释。
+ */
+function bindThemeToHost(ctx) {
+  if (typeof ctx?.inject !== 'function') return
+  ctx.inject(['theme'], (scope) => {
+    const service = scope?.theme
+    if (!service || typeof service.setTheme !== 'function') return
+    scope.effect?.(() => {
+      const release = bindHostTheme(service as HostThemeService)
+      // theme 服务晚到时，重新对齐一次深浅（首屏不闪）。
+      initAppearanceSync()
+      return release
+    }, 'dsh-bloom-theme: host theme')
+  })
+}
+
+/**
  * 向 DSH 的 client loader 注册。
  *
  * ⚠️ 契约（踩过坑，别再改错地方）：factory 的返回值会被 cordis 当插件 apply，
@@ -573,6 +610,8 @@ window.__ModuleLoader__.load({
       const variant = readVariant()
       // 语言是体系配置，走 DSH 的 locale 服务 —— 必须在任何 tr() 渲染之前接上。
       bindLocaleToHost(ctx)
+      // 深浅状态交给 DSH 的 theme 服务持有，面板只做入口。
+      bindThemeToHost(ctx)
       // 接上宿主的插件管理服务：横幅据此提供「应用内一键更新」。
       bindPluginManager(ctx)
       if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/bloom.css"]')) {
@@ -583,6 +622,9 @@ window.__ModuleLoader__.load({
       }
       if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/glass.css"]')) {
         injectCSS(GLASS_CSS, 'glass.css')
+      }
+      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/adaptive.css"]')) {
+        injectCSS(ADAPTIVE_CSS, 'adaptive.css')
       }
       document.body.dataset.bloomVariant = variant
       initAppearanceSync()   // 重放持久化的深浅模式（零弹窗切换的持久化侧）

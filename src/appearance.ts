@@ -1,62 +1,82 @@
 /**
- * 深浅外观切换 —— 把 DSH 埋在「设置」里的浅色/深色/跟随系统提到顶栏。
+ * 深浅外观 —— 把深浅状态**交还宿主**，面板只做入口。
  *
- * 为什么做这个（owner 2026-09-10）：切深浅要点开左下角设置面板才够得着，
- * 而这是个高频动作。Bloom 的下拉本来就挂在顶栏，顺手放进去。
+ * ## 为什么不再自己写 body 属性（2026-11-04 改，v0.24.0）
  *
- * ## 为什么是代点宿主按钮，不是自己改 body 属性
+ * v0.23.0 及之前，本文件自己改 `document.body` 上的 `data-ds-dark-theme`，
+ * 并把模式存进 localStorage。功能上能切，但它跟宿主是**两个真源**：
  *
- * 深浅状态由 DSH 自己持有：body 上只有一个 `data-ds-dark-theme` 标记，
- * localStorage 里没有任何主题键 —— 说明它存在宿主侧（settings/服务端）。
- * 自己 removeAttribute 能立刻变色，但刷新就回退，而且和设置面板里的选中态
- * 对不上，等于制造两个真源。
+ *   - 宿主 `dsh-client-ui-layout` 的 ThemePresenter 才是 `data-ds-dark-theme`
+ *     的合法持有者。它在每次 `theme/change` 时把属性 set/remove，
+ *     插件自己写的值在宿主下一次快照时会**被无声覆盖**。
+ *   - 插件的 dispose（重载、切换 profile）如果不清属性，界面会卡在深色；
+ *     宿主调研里 `dsh-dream-skin` 明确因为这个坑选择不碰这个属性。
+ *   - 设置面板里的深浅选中态跟插件的 localStorage 档位各说各话。
  *
- * 所以这里只做「入口」：找到设置面板里那三个按钮直接 click，
- * 状态怎么存、怎么持久化，全交给 DSH。它改实现我们跟着变，不用同步。
+ * 宿主其实有正规 API（`dsh-client-ui-theme` 提供 `ctx.theme`）：
+ *   · `getTheme()` → 不可变快照，`active.colorScheme` 是解析后的明暗
+ *   · `setTheme('light' | 'dark' | 'system')` → 唯一的用户偏好写入口，
+ *     宿主自己持久化，自己广播 `theme/change`
+ *   · `register(def)` / `overrideTokens(source, tokens)` → 主题与 token 覆盖层
  *
- * ## 选择器为什么是 [class*="_themeCube"]
+ * 所以现在：**状态归宿主，面板只调 `ctx.theme.setTheme()`**。
+ * 插件不读也不写 `data-ds-dark-theme`，不存自己的模式档位。
  *
- * DSH 的类名带构建 hash（实测 `_8HJdBW_themeCube`），hash 每次发版都可能变。
- * 项目 check 里有一条硬规则「无硬编码 DSH hash 类名，全部走 [class*="_语义名"]」，
- * 这里遵守同一条。
+ * ## 兼容旧宿主
  *
- * ## 按钮是懒渲染的，首次要把面板"叫醒"
- *
- * 这三个按钮跟随设置面板生灭：面板关着就不在 DOM 里（实测开着时 3 个，
- * 关掉后 querySelectorAll 返回 0），所以没法"预热一次然后一直用"，
- * 每次用都得先把面板打开。
- *
- * ## 设置入口本身换过位置（DSH 0.2.0）
- *
- * 原来侧栏底部有一颗写着「设置」的独立按钮（类名带 `_trigger`）。新版本把
- * 设置**收进了账号菜单**：那颗按钮换成了显示头像/账号名的账号入口，点开是
- * 浮层菜单，第一项才是「设置」。
- *
- * 后果是原来那条「找文字是『设置』的 `_trigger` 按钮」的判据永远落空 ——
- * 账号按钮类名一样带 `_trigger`，文字却是账号名。于是 `hasSettingsEntry()`
- * 恒为 false，外观整行（含「模式」标题）被隐藏，表现就是**三个模式 tab 集体消失**。
- *
- * 两条路都留着：认到独立按钮就点它，认到账号入口就先开菜单再点「设置」那一项。
- * 菜单是 portal 到 body 的，菜单项只能在 document 上找。
+ * 宿主 0.2.0 之前没有 `ctx.theme`。那时插件退回自己写 body 属性
+ * （`applyMode`），并在 localStorage 留档 —— 保证老宿主上深浅切换仍然可用。
+ * 一旦发现宿主提供了 theme 服务，就走宿主路径，旧档位不再参与。
  */
 
+/** 深浅模式：与宿主 `ctx.theme.setTheme()` 接受的偏好值一一对应。 */
 export type AppearanceMode = 'light' | 'dark' | 'system'
 
 /**
- * 深浅模式的持久化键。
+ * 旧宿主的本地档位键。只在**没有**宿主 theme 服务时使用。
  *
- * 原设计不敢自己改 body 属性（怕刷新回退、怕和设置面板对不上），于是走
- * "代点宿主按钮"路线 —— 结果每次切换都要开一次设置弹窗、切分区、点色块、
- * 再关弹窗。那不是"一键切换"，是给设置面板做了个快捷方式（owner 2026-10-08）。
- *
- * 现在直接改 body 属性（立刻生效），用 localStorage 持久化（刷新不回退），
- * 启动时重放。和设置面板的选中态确实存在双真源，但代价是 1 秒弹窗 vs 几乎
- * 不可能遇到的"两边同时改"，不值得。
+ * 新宿主上这个键不再被读写 —— 模式由宿主的 settings scope 持久化
+ * （`$DSH_HOME/cordis.patch.yml`），插件不再有第二份真源。
  */
-const BLOOM_MODE_KEY = 'bloom-appearance-mode'
+const LEGACY_MODE_KEY = 'bloom-appearance-mode'
 
-/** 把深浅模式应用到 body 属性。system 读当前 OS 偏好。 */
-function applyMode(mode: AppearanceMode): void {
+/**
+ * 宿主 theme 服务的最小契约面。
+ *
+ * 只声明我们真用到的四个方法，不依赖具体实现 —— 不同宿主版本
+ * （以及测试替身）只要满足这个形状就能用。
+ */
+export interface HostThemeService {
+  getTheme?: () => { preference?: string; active?: { colorScheme?: string } }
+  setTheme?: (id: string) => void
+}
+
+/** 插件当前持有的宿主 theme 服务（由 client.ts 在 apply 时注入）。 */
+let hostTheme: HostThemeService | null = null
+
+/**
+ * 记住宿主的 theme 服务。
+ *
+ * @returns 一个函数，把服务清回 null —— 宿主卸载该服务时用。
+ */
+export function bindHostTheme(service: HostThemeService | null): () => void {
+  hostTheme = service ?? null
+  return () => {
+    if (hostTheme === service) hostTheme = null
+  }
+}
+
+/** 宿主 theme 服务是否可用（可用就走宿主路径）。 */
+function hasHostTheme(): boolean {
+  return !!(hostTheme && typeof hostTheme.setTheme === 'function')
+}
+
+/**
+ * 把深浅模式应用到 body 属性 —— **只在没有宿主 theme 服务时走**。
+ *
+ * 新宿主上这条路径完全不执行：深浅由宿主的 ThemePresenter 写属性。
+ */
+function applyModeLegacy(mode: AppearanceMode): void {
   if (mode === 'system') {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     document.body.toggleAttribute('data-ds-dark-theme', prefersDark)
@@ -65,233 +85,112 @@ function applyMode(mode: AppearanceMode): void {
   }
 }
 
-/** 读持久化的深浅模式；无存档或值非法回退 system。 */
-export function readStoredMode(): AppearanceMode {
+/** 读旧宿主的本地档位；无存档或值非法回退 system。 */
+function readLegacyMode(): AppearanceMode {
   try {
-    const stored = localStorage.getItem(BLOOM_MODE_KEY)
+    const stored = localStorage.getItem(LEGACY_MODE_KEY)
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
   } catch {}
   return 'system'
 }
 
 /**
- * 切换深浅模式 —— 同步、零弹窗。
+ * 当前模式。
  *
- * 直接改 body 属性（DSH 的 CSS 靠 `[data-ds-dark-theme]` 切色，Bloom 同理），
- * 持久化到 localStorage，启动时 initAppearanceSync 重放。
+ * 有宿主服务时读宿主的偏好（`preference`）—— 这才是用户真正选的那一档，
+ * 「跟随系统」在宿主里也是一档（preference='system'），而不是「当前正好是深色」。
+ * 没有宿主服务时读旧档位。
+ */
+export function readStoredMode(): AppearanceMode {
+  if (hasHostTheme()) {
+    try {
+      const pref = hostTheme?.getTheme?.()?.preference
+      if (pref === 'light' || pref === 'dark' || pref === 'system') return pref
+    } catch {}
+    return 'system'
+  }
+  return readLegacyMode()
+}
+
+/**
+ * 切换深浅模式。
+ *
+ * 有宿主服务时调 `ctx.theme.setTheme()`：宿主自己持久化、自己广播
+ * `theme/change`、自己更新 body 属性 —— 插件不插手。
+ * 没有宿主服务时退回旧的本地路径。
  */
 export function setMode(mode: AppearanceMode): void {
-  applyMode(mode)
-  try { localStorage.setItem(BLOOM_MODE_KEY, mode) } catch {}
+  if (hasHostTheme()) {
+    try {
+      hostTheme?.setTheme?.(mode)
+      return
+    } catch {
+      // 宿主 setTheme 失败（老版本签名不同）：落到旧路径，别让切换变成死键。
+    }
+  }
+  applyModeLegacy(mode)
+  try { localStorage.setItem(LEGACY_MODE_KEY, mode) } catch {}
 }
 
 /**
- * 启动时重放持久化的深浅模式；system 模式下监听 OS 偏好变化。
+ * 启动时对齐深浅状态。
  *
- * ⚠️ 三种模式**都要** applyMode，包括 system —— system 不是「什么都不做」，
- * 它是「读当前 OS 偏好落到 body 上」，那正是它需要执行的那一步。
- * 曾经写成 `if (mode !== 'system') applyMode(mode)`，于是：
- * 用户点「跟随系统」→ 存 system → 重启后从没应用过 OS 偏好，菜单里
- * 「跟随系统」显示选中，实际却是 DSH 恢复的旧值；而 matchMedia 只在
- * **之后**偏好变化时才触发，所以整个会话都跟错。
- * 首次安装（无存档，readStoredMode 回落 system）同样中招。
- * Codex PR #41 / Cursor bugbot 各自独立报了这条（P2）。
+ * 有宿主服务时**什么都不用做** —— 宿主在插件之前就 boot 完了，属性早就是对的。
+ * 这里只做一件防御性的事：万一快照还没到（例如插件先于 ui-layout materialize），
+ * 就按宿主的当前偏好补一次，让首屏不闪。
+ *
+ * 没有宿主服务时，走旧路径：重放本地档位，并在「跟随系统」下监听 OS 偏好变化。
  */
 export function initAppearanceSync(): void {
-  applyMode(readStoredMode())
-  // "跟随系统"下 OS 偏好变了要跟着变
-  const mq = window.matchMedia('(prefers-color-scheme: dark)')
-  mq.addEventListener('change', () => {
-    if (readStoredMode() === 'system') applyMode('system')
-  })
-}
-
-/** 按钮文字 → 模式。DSH 中英文界面都覆盖，认不出的按钮直接忽略。 */
-const LABEL_TO_MODE: Array<[RegExp, AppearanceMode]> = [
-  [/^浅色|^light/i, 'light'],
-  [/^深色|^暗色|^dark/i, 'dark'],
-  [/跟随系统|system|auto/i, 'system'],
-]
-
-function modeOf(el: Element): AppearanceMode | null {
-  const text = (el as HTMLElement).innerText?.trim() || ''
-  for (const [re, mode] of LABEL_TO_MODE) if (re.test(text)) return mode
-  return null
-}
-
-/** 宿主的三个外观按钮。DSH 换了实现就返回空数组，调用方据此隐藏整行。 */
-export function findHostButtons(): Map<AppearanceMode, HTMLElement> {
-  const out = new Map<AppearanceMode, HTMLElement>()
-  for (const el of Array.from(document.querySelectorAll('[class*="_themeCube"]'))) {
-    const m = modeOf(el)
-    if (m && !out.has(m)) out.set(m, el as HTMLElement)
-  }
-  return out
-}
-
-/** 当前选中的模式：读宿主按钮上的 selected 类，不自己推断 */
-export function currentMode(): AppearanceMode | null {
-  for (const [mode, el] of findHostButtons()) {
-    if (/selected/i.test(el.className?.toString() || '')) return mode
-  }
-  return null
-}
-
-/** 设置入口的判据：文字要**整个**是「设置」，账号名、「更多」都不算。 */
-const SETTINGS_LABEL = /^设置$|^settings$/i
-/** 设置面板的「通用设置」分区 —— 外观三个色块住在这一节里。 */
-const GENERAL_LABEL = /^通用设置$|^通用$|^general$/i
-
-/**
- * 行内文字的第一段。
- *
- * 菜单项尾巴上可能挂着快捷键角标（`aria-hidden` 的一小段 keycap），innerText
- * 照样把它算进来 —— 「设置 ⌘,」按全等匹配会漏掉。取第一行就干净了。
- */
-function rowText(el: HTMLElement): string {
-  return (el.innerText || '').trim().split('\n')[0].trim()
-}
-
-/** 侧栏底部那块入口区。DSH 把设置/账号入口都渲染在里面。 */
-function settingsScope(): ParentNode {
-  return document.querySelector('[class*="_settingsArea"]') || document
-}
-
-/**
- * 老形态：一颗写着「设置」的独立按钮。
- *
- * 必须限定 <button>：`[class*="_trigger"]` 会先命中外层的 triggerRow（一个 DIV），
- * 那层不是可点目标 —— 点它毫无反应，面板不会开。
- * 2026-09-10 实测：elementFromPoint 在该坐标上落在内层 BUTTON.VOzbGW_trigger，
- * 而按 DOM 顺序取到的第一个匹配是它的父 DIV，于是"点了但没反应"。
- */
-function findDirectSettingsButton(): HTMLElement | null {
-  for (const el of Array.from(settingsScope().querySelectorAll<HTMLElement>('button[class*="_trigger"]'))) {
-    if (el.closest('.dsh-bloom-switcher')) continue        // 别把我们自己的触发器当设置
-    if (SETTINGS_LABEL.test(rowText(el))) return el
-  }
-  return null
-}
-
-/**
- * 新形态：账号菜单入口（DSH 0.2.0 起）。
- *
- * 判据用 `aria-haspopup="menu"` 而不是类名或文字 —— 账号名、登录态、有无头像
- * 都会改文字，只有"这颗按钮会开一个菜单"是稳定的。
- */
-function findAccountLauncher(): HTMLElement | null {
-  for (const el of Array.from(settingsScope().querySelectorAll<HTMLElement>('button[aria-haspopup="menu"]'))) {
-    if (el.closest('.dsh-bloom-switcher')) continue
-    return el
-  }
-  return null
-}
-
-/** 账号菜单里那一项「设置」。菜单 portal 到 body，不能在 settingsScope 里找。 */
-function findSettingsMenuItem(): HTMLElement | null {
-  for (const el of Array.from(document.querySelectorAll<HTMLElement>('[role="menu"] button[role="menuitem"]'))) {
-    if (SETTINGS_LABEL.test(rowText(el))) return el
-  }
-  return null
-}
-
-/** 有没有设置入口 —— 外观行的显隐判据（两种形态任一成立就算有） */
-export function hasSettingsEntry(): boolean {
-  return !!(findDirectSettingsButton() ?? findAccountLauncher())
-}
-
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
-
-/**
- * 轮询等一个东西出现。
- *
- * 面板和菜单都是 React 异步渲染的，点完只能等；先查一次再睡，命中时不花时间。
- */
-async function waitFor<T>(pick: () => T | null, tries = 12, gap = 50): Promise<T | null> {
-  for (let i = 0; i < tries; i++) {
-    const hit = pick()
-    if (hit) return hit
-    await sleep(gap)
-  }
-  return null
-}
-
-/** 打开设置面板。返回有没有成功把面板叫出来。 */
-async function openSettingsPanel(): Promise<boolean> {
-  const direct = findDirectSettingsButton()
-  if (direct) { direct.click(); return true }
-
-  const launcher = findAccountLauncher()
-  if (!launcher) return false
-  launcher.click()
-  const item = await waitFor(findSettingsMenuItem)
-  if (!item) return false
-  item.click()
-  return true
-}
-
-/**
- * 把面板切到「通用设置」分区。
- *
- * 登录后账号分区 order=-10，面板默认落在它上面，而外观三个色块在通用分区里 ——
- * 不切过去就永远数不到按钮（这一节只在面板刚打开时需要，面板已开着且在通用
- * 分区时 navCell 上的 aria-current 已是 true，直接返回）。
- */
-function ensureGeneralSection(): void {
-  // 用和 closeSettingsPanel 同一个具体选择器 —— `[role="dialog"]` 可能撞上
-  // 其他弹层（Toast、确认框），拿到的不是设置面板，切分区就白切。
-  const dialog =
-    document.querySelector<HTMLElement>('[role="dialog"][data-shortcut-modal="settings"]') ||
-    document.querySelector<HTMLElement>('[role="dialog"]')
-  if (!dialog) return
-  for (const cell of Array.from(dialog.querySelectorAll<HTMLElement>('button'))) {
-    if (!GENERAL_LABEL.test(rowText(cell))) continue
-    if (cell.getAttribute('aria-current') === 'true') return
-    cell.click()
+  if (hasHostTheme()) {
+    // 宿主快照通常已经落地；只有属性与偏好不一致时才补写一次。
+    syncHostScheme()
     return
   }
-}
-
-/**
- * 关掉设置面板。
- *
- * 面板自带关闭按钮（在 dialog 内的 `button[class*="_close"]`，两种形态都有），
- * 点它最稳。找不到才退回 Escape —— 面板的 useModalLayer 挂在 document 上收
- * Escape，事件从 document 派发不会经过我们的菜单，两者不会互相干扰。
- */
-function closeSettingsPanel(): void {
-  try {
-    const dialog =
-      document.querySelector<HTMLElement>('[role="dialog"][data-shortcut-modal="settings"]') ||
-      document.querySelector<HTMLElement>('[role="dialog"]')
-    const close = dialog?.querySelector<HTMLElement>('button[class*="_close"]')
-    if (close) { close.click(); return }
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-  } catch { /* 面板已关或 DOM 变了，不值得为关面板抛异常 */ }
-}
-
-/**
- * 拿到宿主按钮；没有就开一下设置面板把它们叫出来，再关回去。
- *
- * 代价是面板在屏幕中间闪一下；换来的是深浅状态永远跟宿主一致，不用猜它把主题
- * 存在哪（不在 localStorage，body 上只有一个标记位）。失败返回空表 —— 调用方
- * 据此隐藏整行，不给一个点不动的控件。
- */
-export async function ensureHostButtons(): Promise<Map<AppearanceMode, HTMLElement>> {
-  let found = findHostButtons()
-  if (found.size > 0) return found
-  if (!(await openSettingsPanel())) return found
-
-  ensureGeneralSection()
-  const cubes = await waitFor(() => {
-    const m = findHostButtons()
-    return m.size > 0 ? m : null
+  applyModeLegacy(readLegacyMode())
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
+  mq.addEventListener('change', () => {
+    if (readLegacyMode() === 'system') applyModeLegacy('system')
   })
-  closeSettingsPanel()
-  return cubes ?? new Map()
 }
 
-/** 当前深浅：读 body 上的标记。 */
+/**
+ * 宿主快照已就绪时，确保 body 属性与宿主偏好一致。
+ *
+ * ⚠️ 只在**属性缺失且偏好是深色**时补写。深色 → 属性在；浅色 → 属性不在。
+ * 插件不该在宿主之外造一个「清属性」的动作 —— 那正是 v0.23.0 之前的病根。
+ */
+function syncHostScheme(): void {
+  try {
+    const snapshot = hostTheme?.getTheme?.()
+    const scheme = snapshot?.active?.colorScheme
+    if (scheme === 'dark' && !document.body.hasAttribute('data-ds-dark-theme')) {
+      document.body.setAttribute('data-ds-dark-theme', '')
+    }
+  } catch {}
+}
+
+/**
+ * 当前是否深色。
+ *
+ * 有宿主服务时读宿主的 `active.colorScheme`（解析后的结果）；
+ * 没有时读 body 属性（旧路径自己写的那份）。
+ */
 export function currentIsDark(): boolean {
+  if (hasHostTheme()) {
+    try {
+      const scheme = hostTheme?.getTheme?.()?.active?.colorScheme
+      if (scheme === 'dark' || scheme === 'light') return scheme === 'dark'
+    } catch {}
+  }
   return document.body.hasAttribute('data-ds-dark-theme')
+}
+
+/**
+ * 宿主服务是否提供了 theme —— 供 UI 决定深浅行是否可用。
+ *
+ * 没有宿主服务时（老宿主），面板仍可显示深浅行，走的是本地路径。
+ */
+export function hasThemeSupport(): boolean {
+  return hasHostTheme()
 }

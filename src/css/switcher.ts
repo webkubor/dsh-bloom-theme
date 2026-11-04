@@ -455,6 +455,21 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   color: var(--dsw-alias-label-secondary, #777);
 }
 .dsh-bloom-appearance[hidden] { display: none; }
+
+/* 玻璃质感行：结构与深浅模式行一致（同一套分段控件），多一行说明文字。
+ * 说明只在系统要求降透明时才出现，所以默认不占位。 */
+.dsh-bloom-glass {
+  padding: 0 14px 2px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary, #777);
+}
+.dsh-bloom-glass__hint {
+  margin: 7px 2px 2px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--dsw-alias-label-tertiary, #999);
+}
+.dsh-bloom-glass__hint[hidden] { display: none; }
 .dsh-bloom-appearance__seg {
   display: flex;
   width: 100%;                 /* 撑满面板宽度，里面三个按钮才能真正三等分

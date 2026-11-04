@@ -11,6 +11,12 @@ import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, initAppearanceSync, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
+import {
+  readGlassMode,
+  writeGlassMode,
+  systemPrefersReducedTransparency,
+  type GlassMode,
+} from './glass.js'
 import { enableFloatingDrag, clearFloatingPos, resetFloatingPos, disableFloatingDrag } from './drag.js'
 import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
 import { track, telemetryEnabled, setTelemetryEnabled, type PanelEvent } from './track.js'
@@ -191,6 +197,15 @@ export function buildSwitcherHTML(currentVariant) {
         <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
       </div>
     </div>
+    <div class="dsh-bloom-section">${tr('玻璃质感')}</div>
+    <div class="dsh-bloom-glass" role="group" aria-label="${tr('玻璃质感')}">
+      <div class="dsh-bloom-appearance__seg">
+        <button type="button" class="dsh-bloom-appearance__btn" data-glass="glass">${tr('通透')}</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-glass="soft">${tr('柔和')}</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-glass="solid">${tr('实底')}</button>
+      </div>
+      <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
+    </div>
     <label class="dsh-bloom-rotation">${tr('自动换色')}
       <select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">
         ${rotationOptions}
@@ -356,6 +371,33 @@ function syncAppearanceRow(el: HTMLElement) {
   }
 }
 
+/**
+ * 把玻璃档位行同步成当前状态。
+ *
+ * 三个要点：
+ *   1. 选中态标的是**用户选的那一档**（auto 时三格都不亮 —— 它不是用户能选的档位）。
+ *   2. 系统降级了但用户没动过时，要**说清楚**：不然用户看到界面变实底，
+ *      以为插件坏了。提示语说明「系统已开启降低透明度」，并给出「仍要毛玻璃」的做法。
+ *   3. 提示只在系统确实要求降透明、且用户没显式选过档位时出现。
+ */
+function syncGlassRow(el: HTMLElement) {
+  const row = el.querySelector<HTMLElement>('.dsh-bloom-glass')
+  if (!row) return
+  const stored = readGlassMode()
+  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-appearance__btn'))) {
+    const on = btn.dataset.glass === stored
+    btn.dataset.active = String(on)
+    btn.setAttribute('aria-pressed', String(on))
+  }
+  const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
+  if (!hint) return
+  const systemDowngraded = stored === 'auto' && systemPrefersReducedTransparency()
+  hint.hidden = !systemDowngraded
+  if (systemDowngraded) {
+    hint.textContent = tr('系统已开启「降低透明度」，Bloom 已自动改为柔和。选「通透」可强制保留毛玻璃。')
+  }
+}
+
 export function buildSwitcherEl(initialVariant) {
   const wrapper = document.createElement('div')
   wrapper.innerHTML = buildSwitcherHTML(initialVariant)
@@ -383,6 +425,7 @@ export function buildSwitcherEl(initialVariant) {
     playEnter(menu)
     trigger.setAttribute('aria-expanded', 'true')
     syncAppearanceRow(el)
+    syncGlassRow(el)
       // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
     const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
       || menu.querySelector<HTMLElement>('.dsh-bloom-option')
@@ -431,6 +474,13 @@ export function buildSwitcherEl(initialVariant) {
       // 直接切 body 属性 + 持久化，零弹窗。同步完成，立刻刷新选中态。
       setMode(modeBtn.dataset.mode as AppearanceMode)
       syncAppearanceRow(el)
+      return
+    }
+    const glassBtn = target.closest<HTMLElement>('.dsh-bloom-appearance__btn[data-glass]')
+    if (glassBtn) {
+      // 玻璃档位：写 localStorage + 落到 body 属性上，CSS 立刻生效。
+      writeGlassMode(glassBtn.dataset.glass as GlassMode)
+      syncGlassRow(el)
       return
     }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')

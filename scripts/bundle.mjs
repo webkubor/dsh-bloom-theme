@@ -25,7 +25,31 @@ import { dirname, resolve } from 'node:path'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'))
 
+/* 「本版更新」：构建时从 CHANGELOG.md 抽出**当前版本**那一节打进产物，面板里零网络展示。
+   CHANGELOG 由 release-please 生成：发版 PR 合入后 publish 再 build，顶部那节就是本版。
+   本地开发时顶部是上一个已发布版本，版本号对不上就只给空列表（面板只显示「完整日志」链接），
+   免得把旧版的更新点当成新版展示。 */
+function readChangelog() {
+  let md = ''
+  try { md = readFileSync(resolve(root, 'CHANGELOG.md'), 'utf8') } catch { return { version: pkg.version, items: [] } }
+  const head = md.match(/^## \[?(\d+\.\d+\.\d+)\]?.*$/m)
+  if (!head || head[1] !== pkg.version) return { version: pkg.version, items: [] }
+  const start = head.index + head[0].length
+  const next = md.slice(start).search(/^## /m)
+  const section = next < 0 ? md.slice(start) : md.slice(start, start + next)
+  const items = []
+  let kind = ''
+  for (const line of section.split('\n')) {
+    const h = line.match(/^### (.+)$/)
+    if (h) { kind = /feature/i.test(h[1]) ? 'feat' : /fix/i.test(h[1]) ? 'fix' : /perf|性能/i.test(h[1]) ? 'perf' : ''; continue }
+    const b = line.match(/^\* (?:\*\*[^*]+:\*\* )?(.+?)(?: \(\[[0-9a-f]{7}\]\(.*)?$/)
+    if (b && kind) items.push({ kind, text: b[1].replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim() })
+  }
+  return { version: pkg.version, items: items.slice(0, 8) }
+}
+
 const result = await build({
+  define: { __BLOOM_CHANGELOG__: JSON.stringify(readChangelog()) },
   entryPoints: [resolve(root, 'src/client.ts')],
   outfile: resolve(root, 'lib/client.js'),
   bundle: true,

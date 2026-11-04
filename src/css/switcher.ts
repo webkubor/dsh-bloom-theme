@@ -359,6 +359,20 @@ export const SWITCHER_CSS = `
 .dsh-bloom-option[data-active="true"]:focus-visible {
   outline-color: color-mix(in oklch, var(--bloom-accent, #34698c) 78%, transparent);
 }
+/* 「新」小标签（本版新上的配色）：只占一个字宽，贴在名字后面。
+   用 accent 色不抢行焦点；悬停整行时不变化，它是个状态不是按钮。 */
+.dsh-bloom-option__new {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-left: 5px;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent);
+  color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 78%, var(--dsw-alias-label-primary, #222));
+}
 .dsh-bloom-option__name {
   font-weight: 500;
   min-width: 0;
@@ -392,6 +406,14 @@ export const SWITCHER_CSS = `
   background-clip: text;
   color: transparent;
   opacity: 0.8;
+}
+/* 西文诗句：宋体 + 0.08em 字距是给中文排的，英文/俄文套上去一行只放得下半句
+   （截图里连默认的黛蓝都被截断）。西文收一档字号、去字距，完整句在行 title 里。 */
+.dsh-bloom-option__en:not(:lang(zh)) {
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  font-family: 'Iowan Old Style', 'Palatino', Georgia, serif;
+  font-style: italic;
 }
 body[data-ds-dark-theme] .dsh-bloom-option__en {
   background-image: linear-gradient(100deg, var(--dsw-alias-label-tertiary, #8d8d8d) 0%, var(--bloom-poem-bd) 66%);
@@ -510,6 +532,86 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
 .dsh-bloom-version:not(:has(.dsh-bloom-version__update:not([hidden]))) { display: none; }
 .dsh-bloom-version__update:hover { color: color-mix(in oklch, var(--dsw-alias-brand-primary, #4a90e2), black 15%); }
 
+
+/* ── 本版更新（CHANGELOG 注入）─────────────────────────────────
+   展开体里的第一块。条目按 --i 错峰入场（每条 18ms），读起来像一行行落下，
+   而不是一次全亮。 */
+.dsh-bloom-log {
+  /* 和 .dsh-bloom-version / DSH 行同一套 14px 左右内边距，不然贴边 */
+  padding: 6px 14px 8px;
+  border-bottom: 1px solid var(--bloom-hairline, rgba(0,0,0,.08));
+  margin-bottom: 6px;
+}
+.dsh-bloom-log__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px; margin-bottom: 6px;
+}
+.dsh-bloom-log__title {
+  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  color: var(--dsw-alias-label-secondary, #777);
+}
+.dsh-bloom-log__all {
+  font-size: 10.5px; color: var(--dsw-alias-label-tertiary, #999);
+  text-decoration: none; white-space: nowrap;
+  transition: color .15s ease;
+}
+.dsh-bloom-log__all:hover { color: var(--bloom-accent, #6b8f71); text-decoration: underline; }
+.dsh-bloom-log__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.dsh-bloom-log__item {
+  display: flex; gap: 6px; align-items: flex-start;
+  font-size: 11px; line-height: 1.45;
+  color: var(--dsw-alias-label-secondary, #777);
+  animation: dsh-bloom-log-in .26s var(--bloom-ease, ease) both;
+  animation-delay: calc(var(--i, 0) * 18ms);
+}
+@keyframes dsh-bloom-log-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.dsh-bloom-log__tag {
+  flex: 0 0 auto; margin-top: 1px;
+  font-size: 9.5px; line-height: 1.5; padding: 0 4px; border-radius: 3px;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent);
+  color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 78%, var(--dsw-alias-label-primary, #222));
+}
+.dsh-bloom-log__tag[data-kind="fix"] {
+  background: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 9%, transparent);
+  color: var(--dsw-alias-label-secondary, #777);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsh-bloom-log__item { animation: none; }
+}
+
+/* ── 遥测开关 ──────────────────────────────────────────────── */
+.dsh-bloom-telemetry {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 8px; cursor: pointer; width: fit-content;
+  font-size: 11px; color: var(--dsw-alias-label-tertiary, #999);
+}
+.dsh-bloom-telemetry__box {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+.dsh-bloom-telemetry__box-ui {
+  width: 22px; height: 12px; border-radius: 6px; flex: 0 0 auto;
+  background: var(--dsw-alias-label-primary, #222);
+  opacity: .16; position: relative;
+  transition: opacity .18s ease, background .18s ease;
+}
+.dsh-bloom-telemetry__box-ui::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  transition: transform .18s var(--bloom-ease, ease);
+}
+.dsh-bloom-telemetry__box:checked + .dsh-bloom-telemetry__box-ui {
+  background: var(--bloom-accent, #6b8f71); opacity: .85;
+}
+.dsh-bloom-telemetry__box:checked + .dsh-bloom-telemetry__box-ui::after { transform: translateX(10px); }
+.dsh-bloom-telemetry__box:focus-visible + .dsh-bloom-telemetry__box-ui {
+  outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: 2px;
+}
+.dsh-bloom-telemetry:hover .dsh-bloom-telemetry__text { color: var(--dsw-alias-label-secondary, #777); }
+
 /* ── DSH 升级检查区块（紧贴 Bloom 版本行下方）── */
 /* 版本区：两行封顶（当前+按钮 / 最新），按钮收进第一行右侧。
    原来是三行——版本、最新、两个大按钮各占一行，菜单被撑得很长（owner 反馈"太拥挤"）。 */
@@ -545,7 +647,13 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
    「版本未知」变成竖排字。推右交给 .dsh-bloom-dsh-spacer（flex:1），
    不再用 margin-left:auto，两份「吃光自由空间」会互相抵消语义。 */
 .dsh-bloom-dsh-state {
-  flex: none;
+  /* 原来 flex:none —— 报错原文一长就不肯缩，把同一行的「检查 / 填入」挤出面板
+     （2026-11-04 截图：中文下「填入」被裁掉一半）。改成可缩 + 省略号，全文在 title。 */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 132px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 10px;
   padding: 1px 6px;

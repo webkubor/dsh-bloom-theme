@@ -5,8 +5,8 @@
 <h1 align="center">🌊 Bloom for DSH</h1>
 
 <p align="center">
-  <strong>14 套莫兰迪中国风主题，配色全部实测达 WCAG AA</strong><br/>
-  <sub>Fourteen Morandi palettes for DeepSeek Harness — every one measured against WCAG AA.</sub>
+  <strong>15 套莫兰迪中国风配色，12 套精选；明暗主色均实测达 WCAG AA</strong><br/>
+  <sub>15 Morandi palettes, 12 featured — light and dark accent pairs meet WCAG AA.</sub>
 </p>
 
 <!-- bloom-series-nav -->
@@ -14,7 +14,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 套主题</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>14 套配色 · 当前</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>15 套可用 · 12 套精选</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>配色护栏</sub></td>
 </tr>
 </table>
@@ -45,7 +45,7 @@
   把 <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a>（90★ Typora 主题）的莫兰迪质感搬进
   <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>。
   <br />
-  <b>玻璃 + 莫兰迪</b>：14 套明暗双主题，磨砂玻璃面板，顶栏一键切换，
+  <b>玻璃 + 莫兰迪</b>：15 套明暗配色，主菜单精选 12 套，磨砂玻璃面板，顶栏一键切换，
   连 AI 思考的等待也跟主题一起呼吸。
 </p>
 
@@ -77,14 +77,14 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 ## 一句话
 
 **给 DeepSeek Harness 的「玻璃 + 莫兰迪」主题。**
-14 套配色，明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
+15 套配色（菜单精选 12 套），明暗自适应，顶栏一键切换；面板是真正的磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘），
 配色是低饱和莫兰迪（OKLCH 调色、WCAG AA），全站统一克制的微动效，零运行时依赖，前端 TypeScript 构建。
 
 > 莫兰迪的气质不在 `--accent`，在 `--accent-rgb`。
 
 ## 快速开始
 
-> 主菜单精选 12 套，按色环排、赤橙黄绿青蓝紫每系至少一套：黛蓝、朱砂、橙黄、落霞、轻黄、草色、天青、青金、青莲、银红、桃夭、粉霞。
+> 主菜单精选 12 套，按色系相邻排列、赤橙黄绿青蓝紫每系至少一套：朱砂、粉霞、橙黄、落霞、轻黄、草色、天青、黛蓝、青金、青莲、银红、桃夭。
 > 其余历史配色仍能读取旧偏好；若当前选中旧色，菜单会临时显示它，切走后收起。
 > 自动换色默认关闭，可设 5 / 15 / 30 / 60 分钟，休眠或隐藏时暂停。
 
@@ -95,7 +95,7 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 
 | | DSH 原生 | 普通主题插件 | **Bloom for DSH** |
 | :-- | :-- | :-- | :-- |
-| 配色数量 | 1 套 | 3-5 套 | **14 套莫兰迪，明暗各一套** |
+| 配色数量 | 1 套 | 3-5 套 | **15 套可用、12 套精选，均有明暗配色** |
 | 配色依据 | 手工挑色 | 手工挑色 | **OKLCH 感知均匀调色** |
 | 对比度 | 未声明 | 未声明 | **明暗主色对全部实测 ≥ 4.5:1（WCAG AA）** |
 | 面板质感 | 实色 | 实色 / 简单半透 | **真磨砂玻璃（半透 + backdrop 模糊 + 玻璃边缘）** |
@@ -103,37 +103,33 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 | 动效 | 固定 | 无 / 硬编码 | **跟随主题三色光谱，支持 prefers-reduced-motion** |
 | 运行时开销 | — | 常驻进程 / 依赖 | **零依赖，只注入 CSS 变量** |
 
-## 截图
+## 配色预览
 
-<p align="center">
-  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
-  <sub>竹青·亮色 —— 磨砂玻璃面板 + 莫兰迪绿，选中会话行以当前主题高亮</sub>
-</p>
+主菜单 12 套精选配色，按实际菜单顺序展示。上图依据 **v0.23.0 色板中的真实明暗色值** 绘制，是用于比较色系的配色示意，**不是 DSH 应用截图**；之前未通过验收的天青浅色实底试点不在本版中。
 
-**配色示例（亮色）**：点击主菜单里的任意一套，全站主色 / 背景 / 玻璃 / 动效色相一起切换。
+[![v0.23.0 的 12 套浅色配色示意](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)
 
-<table align="center">
-<tr>
-<td align="center" width="20%">☁️ 黛蓝 Mist<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-mist-light.png" width="100%"/></td>
-<td align="center" width="20%">🧧 朱砂 Cinnabar<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-cinnabar-light.png" width="100%"/></td>
-<td align="center" width="20%">🌸 桃夭 Petal<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-petal-light.png" width="100%"/></td>
-<td align="center" width="20%">🌊 天青 Ripple<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-ripple-light.png" width="100%"/></td>
-<td align="center" width="20%">🌿 竹青 Sage<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" width="100%"/></td>
-</tr>
-<tr>
-<td align="center" width="20%">🧱 赭石 Stone<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-stone-light.png" width="100%"/></td>
-<td align="center" width="20%">🔷 青金 Lapis<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-lapis-light.png" width="100%"/></td>
-<td align="center" width="20%">🍯 琥珀 Amber<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-light.png" width="100%"/></td>
-<td align="center" width="20%">🌅 落霞 Afterglow<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-aurora-light.png" width="100%"/></td>
-<td align="center" width="20%">🪷 青莲 Lavender<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-lavender-light.png" width="100%"/></td>
-</tr>
-</table>
+[![v0.23.0 的 12 套暗色配色示意](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)
 
-**每套都有对应暗色**（示例：琥珀·暗色）：
+**真实界面截图（v0.23.0，黛蓝）**：
 
-<p align="center">
-  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
-</p>
+| 深色 | 浅色 |
+| :-- | :-- |
+| ![黛蓝深色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-dark.png) | ![黛蓝浅色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-light.png) |
+
+**其它精选配色**：
+
+| 天青 · 浅色 | 天青 · 深色 |
+| :-- | :-- |
+| ![天青浅色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-ripple-light.png) | ![天青深色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-ripple-dark.png) |
+
+| 草色 · 深色 | 青莲 · 浅色 |
+| :-- | :-- |
+| ![草色深色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/ui-mint-dark.png) | ![青莲浅色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-lavender-light.png) |
+
+| 轻黄 · 深色 | 朱砂 · 浅色 |
+| :-- | :-- |
+| ![轻黄深色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/ui-osmanthus-dark.png) | ![朱砂浅色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-cinnabar-light.png) |
 
 ## 更新
 

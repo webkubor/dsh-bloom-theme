@@ -29,14 +29,18 @@
   // 脱敏**前**先把真名记下来 —— 下面收尾时要拿它反查有没有漏网的。
   // 用现场读到的真名当断言依据（而不是维护一份写死的黑名单），
   // 换台机器、换个工作区都不用改这份脚本。
-  const TARGETS = '[class*="_sidebarCol"] [class*="_projectRow"], [class*="_sidebarCol"] [class*="_sessionRow"],'
-    + ' [class*="_workspaceLabel"], [class*="_header"] [class*="_title"]'
+  // ⚠️ 选择器必须只按**稳定后缀**匹配，不能带 "_" 前缀。
+  // DSH 0.2.1 起类名走 CSS Modules 哈希：`_sidebarCol` → `pI_x6G_sidebarCol`，
+  // 带下划线前缀的选择器一个都匹配不上 —— 脚本看着在跑，实际什么也没脱敏
+  // （2026-11-04 实测：真实项目名「docs」「dev」原样留在页面上，闸门因此报错）。
+  const TARGETS = '[class*="sidebarCol"] [class*="projectRow"], [class*="sidebarCol"] [class*="sessionRow"],'
+    + ' [class*="workspaceLabel"], [class*="header"] [class*="title"]'
   const targetEls = [...document.querySelectorAll(TARGETS)]
   // 取样要和下面**真正会改的那个元素**对齐。原先取整行的第一行文本，于是把行内的
   // 状态徽标也当成了"真名"——会话行长这样：`[进行中] 检查项目中的wt问题 1小时`，
   // 第一行取到的是「进行中」，而改名只改标题节点，徽标原样留着 → 收尾断言必然报
   // 「脱敏不完整：进行中」，而页面其实已经干净了（2026-09-15 补拍落霞/青莲时踩到）。
-  const labelOf = (el) => el.querySelector('[class*="_projectText"], [class*="_title"]') || el
+  const labelOf = (el) => el.querySelector('[class*="title"]') || el.querySelector('[class*="projectText"]') || el
   const firstLine = (el) => (labelOf(el).innerText || '').trim().split('\n')[0].trim()
 
   // 界面自带的固定文案（"新会话""设置""工作区"…）也可能正好等于某个会话标题。
@@ -71,37 +75,50 @@
   const pick = (arr, i) => arr[i % arr.length]
 
   // 侧栏项目名
-  document.querySelectorAll('[class*="_sidebarCol"] [class*="_projectRow"]').forEach((row, i) => {
-    const label = row.querySelector('[class*="_projectText"], [class*="_title"]') || row
+  // ⚠️ 必须改**最内层的 _title 节点**，不能改 _projectText 容器 ——
+  // 容器是框架管着的：把它的 textContent 整体换掉会连带干掉内部的 title 节点，
+  // 框架下一次重绘就把原名原样恢复（2026-11-04 实测：「docs」「dev」两个真实
+  // 项目名在脱敏后仍然留在页面上，闸门因此报错）。
+  document.querySelectorAll('[class*="sidebarCol"] [class*="projectRow"]').forEach((row, i) => {
+    const label = row.querySelector('[class*="title"]') || row.querySelector('[class*="projectText"]') || row
     setText(label, pick(PROJECTS, i))
   })
 
   // 侧栏会话标题
-  document.querySelectorAll('[class*="_sidebarCol"] [class*="_sessionRow"]').forEach((row, i) => {
-    const label = row.querySelector('[class*="_title"]') || row
+  document.querySelectorAll('[class*="sidebarCol"] [class*="sessionRow"]').forEach((row, i) => {
+    const label = row.querySelector('[class*="title"]') || row
     setText(label, pick(SESSIONS, i))
   })
 
   // 顶栏当前会话标题
-  document.querySelectorAll('[class*="_header"] [class*="_title"]').forEach((el, i) => {
+  document.querySelectorAll('[class*="header"] [class*="title"]').forEach((el, i) => {
     setText(el, pick(SESSIONS, i))
   })
 
   // 输入卡上方那枚"当前工作区"胶囊 —— 它不在侧栏里，很容易漏
   // （2026-09-10 第一版脱敏就漏了它，侧栏全假、这里还写着真项目名）
-  document.querySelectorAll('[class*="_workspaceLabel"]').forEach((el) => setText(el, PROJECTS[0]))
+  document.querySelectorAll('[class*="workspaceLabel"]').forEach((el) => setText(el, PROJECTS[0]))
 
   // 正文：展示图一律用空会话（hero 态）。万一带了消息，这里兜底清掉 ——
   // 消息内容比项目名敏感得多（代码片段、路径、内部系统名都在里面）。
-  const bubbles = document.querySelectorAll('[class*="_bubble"], [class*="_scrollBody"] [class*="_markdown"]')
+  const bubbles = document.querySelectorAll('[class*="bubble"], [class*="scrollBody"] [class*="markdown"]')
   bubbles.forEach((b) => { b.textContent = '' })
 
   // ⛔ 自校验：漏网就**抛错**，不是返回一个没人看的 warning。
   // 这条是这份脚本存在的意义 —— 靠人记得"还要检查一遍"是不可靠的，
   // v0.11.0 那次就是每一处都想到了、唯独漏了输入卡上的工作区胶囊。
   // 抛错会让 js() 调用失败，调用方拿不到结果、走不到截图那一步。
-  const page = document.body.innerText
-  const leaked = [...realNames].filter((n) => page.includes(n))
+  // 判据是「整段文本**恰好等于**真名」，不是「整页文本里包含真名」。
+  // 子串匹配会把假名自己判成泄漏：假名 docs-site 含 "docs"、欢迎语
+  // "developer-related" 含 "dev" —— 2026-11-04 实测因此永远报错、图也拍不出来。
+  // 真名出现在页面上的形态就是「一个标题节点整体就是它」，所以精确比对够用。
+  const texts = new Set(
+    [...document.querySelectorAll('body *')]
+      .filter((el) => !el.children.length)
+      .map((el) => (el.textContent || '').trim())
+      .filter(Boolean),
+  )
+  const leaked = [...realNames].filter((n) => texts.has(n))
   if (leaked.length) {
     throw new Error(
       '[redact-for-shot] 脱敏不完整，以下真实名称仍出现在页面上：'
@@ -114,8 +131,8 @@
   // 再包一层 IIFE，导致这里的返回值被丢掉。调用方读 window.__bloomRedact 更稳。
   const result = {
     ok: true,
-    projects: document.querySelectorAll('[class*="_projectRow"]').length,
-    sessions: document.querySelectorAll('[class*="_sessionRow"]').length,
+    projects: document.querySelectorAll('[class*="projectRow"]').length,
+    sessions: document.querySelectorAll('[class*="sessionRow"]').length,
     clearedBubbles: bubbles.length,
     verifiedAgainst: realNames.size,
   }

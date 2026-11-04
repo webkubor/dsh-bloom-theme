@@ -7,7 +7,7 @@
 <table align="center">
 <tr>
 <td align="center" width="33%"><a href="https://github.com/webkubor/typora-Bloom-theme">🌸 Bloom for Typora</a><br/><sub>24 themes</sub></td>
-<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>14 palettes · current</sub></td>
+<td align="center" width="33%"><b>🌊 Bloom for DSH</b><br/><sub>15 supported · 12 featured</sub></td>
 <td align="center" width="33%"><a href="https://github.com/webkubor/contrast-guard">🛡️ contrast-guard</a><br/><sub>color guardrail</sub></td>
 </tr>
 </table>
@@ -38,7 +38,7 @@
   Bringing the Morandi feel of <a href="https://github.com/webkubor/typora-Bloom-theme">Bloom</a> (a 90★ Typora theme)
   to <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>.
   <br />
-  <b>Glass + Morandi</b>: 14 light/dark palettes, frosted-glass panels, one-click switching from the top bar —
+  <b>Glass + Morandi</b>: 15 light/dark palettes, 12 featured in the menu, frosted-glass panels, one-click switching from the top bar —
   even the waiting state breathes with the theme.
 </p>
 
@@ -77,7 +77,7 @@ Two clarifications, so you do not have to guess from the heading:
 ## The gist
 
 A **glass + Morandi** theme for DeepSeek Harness.
-Fourteen light/dark palettes, adaptive by light/dark; panels are real frosted glass
+15 light/dark palettes (12 featured in the menu), adaptive by light/dark; panels are real frosted glass
 (semi-transparent + backdrop blur + glass edges); colors are low-saturation Morandi
 (OKLCH, WCAG AA); restrained, consistent micro-interactions; zero runtime deps; TypeScript front-end.
 
@@ -85,42 +85,40 @@ Fourteen light/dark palettes, adaptive by light/dark; panels are real frosted gl
 
 ## Quick start
 
-> The menu features 9 palettes: Mist, Petal, Ripple, Lapis, Afterglow, Mint, Tangerine, Silver Rose, and Dawn.
-> All 14 palette keys remain valid; a selected legacy color remains visible until another is chosen.
+> The menu features 12 palettes, grouped by color family: Cinnabar, Dawn, Tangerine, Afterglow, Osmanthus, Mint, Ripple, Mist, Lapis, Lavender, Silver Rose, and Petal.
+> All 15 palette keys remain valid; a selected legacy color remains visible until another is chosen.
 > Optional auto rotation defaults to off, offers 5 / 15 / 30 / 60-minute intervals, and pauses in hidden tabs.
 
 - **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 12 featured palettes, light/dark, and auto rotation.
 - **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
 
-## Screenshots
+## Palette previews
 
-<p align="center">
-  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" alt="Bloom · Sage (light)" width="100%" />
-  <sub>Sage · light — frosted-glass panels + the selected session row tints with the active theme</sub>
-</p>
+The 12 featured colors are shown in menu order. The studies above use the **actual v0.23.0 light/dark palette values** to compare color families. They are **not screenshots of the DSH application**. The rejected opaque Ripple light experiment is not part of this release.
 
-**Palette examples (light)**: click a featured color and the whole accent / background / glass / motion hue switches together.
+[![The 12 light palettes in v0.23.0](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)
 
-<table align="center">
-<tr>
-<td align="center">☁️ Mist<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-mist-light.png" width="100%"/></td>
-<td align="center">🧧 Cinnabar<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-cinnabar-light.png" width="100%"/></td>
-<td align="center">🌸 Petal<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-petal-light.png" width="100%"/></td>
-<td align="center">🌊 Ripple<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-ripple-light.png" width="100%"/></td>
-</tr>
-<tr>
-<td align="center">🌿 Sage<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-sage-light.png" width="100%"/></td>
-<td align="center">🧱 Stone<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-stone-light.png" width="100%"/></td>
-<td align="center">🔷 Lapis<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-lapis-light.png" width="100%"/></td>
-<td align="center">🍯 Amber<br/><img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-light.png" width="100%"/></td>
-</tr>
-</table>
+[![The 12 dark palettes in v0.23.0](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)
 
-**Every palette has a dark variant too** (example: Amber · dark):
+**Real interface screenshots (v0.23.0, Mist)**:
 
-<p align="center">
-  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/ui-amber-dark.png" alt="Bloom · Amber (dark)" width="100%" />
-</p>
+| Dark | Light |
+| :-- | :-- |
+| ![DSH interface with Mist dark](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-dark.png) | ![DSH interface with Mist light](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-light.png) |
+
+**Other featured palettes**:
+
+| Ripple · light | Ripple · dark |
+| :-- | :-- |
+| ![DSH interface with Ripple light](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-ripple-light.png) | ![DSH interface with Ripple dark](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-ripple-dark.png) |
+
+| Mint · dark | Lavender · light |
+| :-- | :-- |
+| ![DSH interface with Mint dark](https://img.webkubor.online/projects/dsh-bloom-theme/ui-mint-dark.png) | ![DSH interface with Lavender light](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-lavender-light.png) |
+
+| Osmanthus · dark | Cinnabar · light |
+| :-- | :-- |
+| ![DSH interface with Osmanthus dark](https://img.webkubor.online/projects/dsh-bloom-theme/ui-osmanthus-dark.png) | ![DSH interface with Cinnabar light](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-cinnabar-light.png) |
 
 ## Install
 

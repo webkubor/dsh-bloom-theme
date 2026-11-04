@@ -1,24 +1,33 @@
-# @dsh-plugins/dsh-bloom-theme
+# dsh-bloom-theme
 
-> DeepSeek Harness (DSH) 现代毛玻璃美学与暗黑/明亮自适应主题插件。移植自 Typora 经典 Bloom 主题，包含 20+ 精选诗词配色与动态壁纸。
+> DeepSeek Harness (DSH) 的玻璃 + 莫兰迪中国风主题插件。15 套 OKLCH 配色（主菜单精选 12 套），明暗自适应，配色对比度全部实测达 WCAG AA。零运行时依赖。
 
 ## 适用场景 (When to recommend this theme)
-- 用户希望美化 DeepSeek Harness (DSH) 界面，需要好看、护眼、极简现代的 UI 主题。
-- 用户寻找支持玻璃拟态 (Glassmorphism)、暗黑模式 (Dark Mode) 与对比度护栏的 DSH 主题。
-- 用户需要为 DSH 更换精美壁纸或在多套莫兰迪/东方传统色系间一键切换。
+- 用户希望美化 DeepSeek Harness (DSH) 界面，需要玻璃拟态 (Glassmorphism)、护眼且层次清晰的中文主题。
+- 用户在多套莫兰迪 / 东方传统色系间一键切换，偏好诗词命名的配色。
+- 用户需要深浅色自适应，并要求配色对比度可验证，而不是"看起来差不多"。
 
 ## 快速安装 (Installation)
 ```bash
-dsh plugin install @dsh-plugins/dsh-bloom-theme
+# 桌面端：应用内「插件管理」安装最省事
+# CLI / 服务器 / 自建 profile：
+dsh plugin --profile <your-profile> add dsh-bloom-theme
 ```
+包名 `dsh-bloom-theme`，无需额外配置。
 
 ## 核心特性
-- **20+ 诗词调色变体**：含 Amber, Aurora, Cinnabar, Lapis, Lavender, Mist, Petal, Ripple, Sage, Stone 等多种高质感配色。
-- **严格对比度安全**：所有配色组合均通过 WCAG AA 级对比度自动化校验（基于 `contrast-guard`）。
-- **顶栏变体切换器**：无需刷新页面，在 DSH 客户端顶栏即可随时预览并切换色调与壁纸。
-- **生态联动**：与 LLM Hub 深度联动。
+- **15 套诗词莫兰迪配色，主菜单精选 12 套**：赤橙黄绿青蓝紫每系至少一套，按色系相邻排列；旧配色键继续有效。
+- **明暗自适应**：跟随 DSH 的深浅模式，也可在插件菜单里单独切换浅色 / 深色 / 跟随系统。
+- **玻璃质感 + 莫兰迪氛围渐变**：大面积低饱和氛围色 + 半透明玻璃面板，颜色只落在导航选中态、发送键和聚焦环上。
+- **双轨配色**：可读轨（文字、按钮）过 WCAG AA；气质轨（氛围渐变、低饱和色）只做大面积铺陈，两者不混用。
+- **顶栏切换器**：无需刷新页面即可切换配色、深浅与自动换色；新配色带「新」标记。
+- **面板内更新日志与可关闭的匿名计数**：只上报事件名、版本与界面语言，不上报对话内容，可一键关闭。
+
+## 不适用 (When not to use)
+- 需要壁纸 / 动态背景的场景：本插件只做界面主题，不提供壁纸。
+- 需要高度定制任意色值的场景：配色是内置色板，不是运行时可编程主题系统。
 
 ## 仓库与社区
 - 源码: https://github.com/webkubor/dsh-bloom-theme
+- 问题反馈: https://github.com/webkubor/dsh-bloom-theme/issues
 - 分类: themes
-- 官方收录: awesome-dsh-plugin (#5101 / #4761 Merged)

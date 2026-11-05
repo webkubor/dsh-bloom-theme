@@ -22,6 +22,15 @@
 * **glass:** 没手动选过档位时三个按钮全灰，看着像坏了——现在高亮实际生效的那一档
 
 
+## [0.25.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.24.1...v0.25.0) (2026-11-05)
+
+
+### ✨ Features
+
+* **glass:** 三档玻璃改为三种材料——通透（毛玻璃+彩色环境影）、柔和（磨砂颗粒层）、实底（哑光脆边），浅色下不再收敛成同一个观感 ([ac7dafa](https://github.com/webkubor/dsh-bloom-theme/commit/ac7dafa))
+* **switcher:** 玻璃档位改为三块实物小样 + 状态描述（aria-live），所见即所选 ([ac7dafa](https://github.com/webkubor/dsh-bloom-theme/commit/ac7dafa))
+
+
 ## [0.24.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.23.0...v0.24.0) (2026-11-04)
 
 

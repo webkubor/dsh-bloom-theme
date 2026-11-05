@@ -38,6 +38,7 @@ import { ADAPTIVE_CSS } from './css/adaptive.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appearance.js'
 import { initGlassMode } from './glass.js'
+import { initStarlight } from './starlight.js'
 import { injectSwitcher, watchSwitcher } from './switcher.js'
 import { initTypingGlow } from './typing.js'
 import { checkUpdate } from './version.js'
@@ -85,6 +86,7 @@ function watchCursorGlow() {
     document.body.dataset.bloomVariant = variant
     initAppearanceSync()
     initGlassMode()
+    initStarlight()
     injectSwitcher(variant)
     // header 通常晚于脚本渲染 —— 交给 observer 在宿主就绪后迁进去
     watchSwitcher(variant)
@@ -638,6 +640,7 @@ window.__ModuleLoader__.load({
       }
       document.body.dataset.bloomVariant = variant
       initAppearanceSync()   // 重放持久化的深浅模式（零弹窗切换的持久化侧）
+      initStarlight()
       injectSwitcher(variant)
       watchSwitcher(variant)
       watchThinkTags()

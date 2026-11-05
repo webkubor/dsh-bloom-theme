@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bloom-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7f9bb0"/>
+      <stop offset="1" stop-color="#8fa88f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bloom-bg)"/>
+  <g transform="translate(32 32)" fill="#fff">
+    <ellipse rx="7" ry="12" cy="-10" opacity=".82"/>
+    <ellipse rx="7" ry="12" cy="-10" opacity=".82" transform="rotate(72)"/>
+    <ellipse rx="7" ry="12" cy="-10" opacity=".82" transform="rotate(144)"/>
+    <ellipse rx="7" ry="12" cy="-10" opacity=".82" transform="rotate(216)"/>
+    <ellipse rx="7" ry="12" cy="-10" opacity=".82" transform="rotate(288)"/>
+    <circle r="5" fill="#e9d8a6"/>
+  </g>
+</svg>

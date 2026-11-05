@@ -188,6 +188,7 @@ test('legacy manager cannot advertise an update using its install-only API', asy
 test('desktop without the optional service points to Plugins and never offers an unusable command', async t => {
   const {page}=await setup(t,'none')
   assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
+  assert.equal(await banner(page).locator('[data-act="plugins"]').count(),1)
   assert.equal(await banner(page).locator('[data-act="copy"]').count(),0)
   assert.equal(await banner(page).locator('code').isVisible(),false)
   assert.equal(await banner(page).locator('[data-act="open"]').count(),1)

@@ -6,6 +6,7 @@
  * 变体名字和诗句不在这里，它们在 palette.ts 的 VARIANT_LABELS（en / poemEn 字段）。
  */
 export const DICT_EN: Record<string, string> = {
+  "打开插件管理": "Open Plugins",
   "当前宿主不支持一键更新，请在侧栏「插件」管理中查看": "This version of DSH does not support direct updates; check Plugins on the sidebar",
   "在应用内点「立即更新」即可，无需终端命令": "Click “Update now” right here — no terminal needed",
   "立即更新": "Update now",

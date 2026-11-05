@@ -358,7 +358,8 @@ function bindPluginManager(ctx: any) {
           ? `<button data-primary data-act="install">${tr('立即更新')}</button>
              <button data-act="open">${tr('更新日志')}</button>`
           : isDesktop
-            ? `<button data-primary data-act="open">${tr('更新日志')}</button>`
+            ? `<button data-primary data-act="plugins">${tr('打开插件管理')}</button>
+               <button data-act="open">${tr('更新日志')}</button>`
             : `<button data-primary data-act="copy">${tr('复制更新命令')}</button>
                <button data-act="open">${tr('更新日志')}</button>`}
       </div>`
@@ -366,6 +367,15 @@ function bindPluginManager(ctx: any) {
     el.querySelector<HTMLElement>('.bloom-upd-x').addEventListener('click', () => {
       ls.set(LS_DISMISSED, latest)
       el.remove()
+    })
+    el.querySelector<HTMLElement>('[data-act="plugins"]')?.addEventListener('click', () => {
+      const pluginBtn = document.querySelector<HTMLElement>('button[aria-label="插件"], [aria-label="Plugins"]')
+      if (pluginBtn) {
+        pluginBtn.click()
+      } else {
+        const btn = [...document.querySelectorAll('button')].find(b => b.textContent?.trim() === '插件' || b.textContent?.trim() === 'Plugins')
+        btn?.click()
+      }
     })
     el.querySelector<HTMLElement>('[data-act="copy"]')?.addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLElement

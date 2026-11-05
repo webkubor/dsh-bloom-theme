@@ -21,17 +21,13 @@ export const COMPONENT_CSS = `
    透明度从原来的 40% 提高到 55-65%，让"四角色斑"真正能看出来 —— 这是
    "光感"的主要来源，不再靠硬边光带。 */
 body[data-bloom-variant] {
-  /* 抽成变量：输入区那块不透明底板要原样复刻同一份氛围（见 §1.5），
-     两处必须逐字一致，否则底部会出现一道色阶。 */
+  /* 抽成变量：只保留顶部的极柔和微光，中下部与输入区保持完全纯净、深邃，
+     绝不在底部堆积任何大光斑、光带或彩带。 */
   --bloom-ambience:
-    /* 顶左：主色光晕（accent，给画面主调） */
-    radial-gradient(1400px circle at 6% -4%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 82%), transparent 50%),
-    /* 顶右：aurora stream 2 —— 异色相弱对比，柔和淡出 */
-    radial-gradient(1100px circle at 100% 8%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 75%), transparent 60%),
-    /* 底右：弱环境晕染，避免在深色下聚成亮彩色斑块 */
-    radial-gradient(900px circle at 96% 100%, color-mix(in oklch, var(--bloom-aurora-stream-3), transparent 78%), transparent 62%),
-    /* 底左：弱环境晕染，平滑收敛进深色背景底板 */
-    radial-gradient(1000px circle at 2% 96%, color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 78%), transparent 60%);
+    /* 顶左：微弱主色光晕（仅给顶栏微透质感） */
+    radial-gradient(1200px circle at 8% -6%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%), transparent 48%),
+    /* 顶右：极弱辅助相，柔和融进深底 */
+    radial-gradient(1000px circle at 95% -4%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 88%), transparent 45%);
   background-attachment: fixed;
   background-image: var(--bloom-ambience);
   /* ⚠️ 2026-10-02（桌面端真机诊断）：底色必须是**实色**。
@@ -102,8 +98,7 @@ body[data-bloom-variant] [class*="_root"] [class*="_composerSeat"]::before {
   z-index: -1;
   pointer-events: none;
   background-color: var(--dsw-alias-bg-layer-1, #101010);
-  background-image: var(--bloom-ambience);
-  background-attachment: fixed;
+  background-image: none;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 56px);
   mask-image: linear-gradient(to bottom, transparent 0, #000 56px);
 }

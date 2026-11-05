@@ -40,11 +40,9 @@ body[data-bloom-variant="aurora"]::before {
     linear-gradient(115deg,
       transparent 38%, var(--bloom-aurora-stream-1) 50%, transparent 62%),
     linear-gradient(70deg,
-      transparent 32%, var(--bloom-aurora-stream-2) 46%, transparent 60%),
-    radial-gradient(60% 40% at 50% 60%,
-      var(--bloom-aurora-stream-3), transparent 70%);
-  background-size: 220% 220%, 260% 240%, 100% 100%;
-  background-position: 25% 30%, 80% 15%, 50% 50%;
+      transparent 32%, var(--bloom-aurora-stream-2) 46%, transparent 60%);
+  background-size: 220% 220%, 260% 240%;
+  background-position: 25% 30%, 80% 15%;
   background-repeat: no-repeat;
   /* v0.12.1：这层是「脏」的真正来源（owner 2026-09-15）。原来 opacity .6 +
      saturate(1.2) + blur 60px 铺满整个视口 —— 三条金橙渐变糊成一片盖在界面上，
@@ -452,22 +450,10 @@ body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) tbo
    · prefers-reduced-motion 下隐藏（尊重系统设置）
    · 用 body 自身而不是 _root 或 main，因为 DSH 重渲染时这两个会被替换；
      body 是稳定的宿主，跟 sidebar 那种 fixed 一样是相对视口 */
+/* ═══ v0.15 流光反应层：已彻底停用（避免在界面底部聚集刺眼发光色块）═══ */
 body[data-bloom-variant="aurora"]::after,
 body[data-bloom-variant="cinnabar"]::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(
-    360px 360px at var(--bloom-cursor-x, 50%) var(--bloom-cursor-y, 50%),
-    color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 65%),
-    transparent 72%
-  );
-  opacity: 0.95;
-  /* GPU 合成层 —— transform / opacity 不重绘文本 */
-  transform: translate3d(0, 0, 0);
-  will-change: background;
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   body[data-bloom-variant="aurora"]::after,

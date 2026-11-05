@@ -53,6 +53,7 @@ const GLASS_RULES = [
   '[class*="_selector"]',
   '.dsh-bloom-trigger',
   '.dsh-bloom-menu',
+  '.md-code-block',
 ]
 
 /**
@@ -81,9 +82,39 @@ const scope = (scopeSel: string, rules: string[]) =>
   rules.map((r) => `${scopeSel} ${r}`).join(',\n')
 
 /**
- * 「实底」—— 关掉所有模糊，并把半透明底换成近实底。
+ * 磨砂颗粒 —— 「柔和」档的签名。
  *
- * 实底比例取 94%：宿主侧栏用 90%，我们的面板叠在氛围渐变上，再实一点文字更稳。
+ * 只调透明度和模糊，三档在浅色主题下会收敛成同一个样子（实测：侧栏都是淡紫，
+ * 输入卡都发白，2026-11-05）。真正能一眼分开的是**表面结构**，所以柔和档
+ * 加一层极淡的噪点 —— 真实磨砂玻璃的表面就是这个质感，不是「更透明一点」。
+ *
+ * 深浅色用不同方向：浅色是黑色细点（压住高光），深色是白色细点（提亮暗面）。
+ * 强度都极低（3~5%），不影响文字对比度。
+ */
+const GRAIN_LIGHT = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E\")"
+const GRAIN_DARK = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' fill='%23fff' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E\")"
+
+/** 需要铺颗粒的表面（宿主元素 + 伪元素各一份）。 */
+const GRAIN_TARGETS = [
+  'div[class*="_composer"] div[class*="_card"]::before',
+  'div[class*="_bubble"]',
+  'div[class*="_dock"]:has(> [class*="_preview"])',
+  '[class*="_sidebarCol"]::before',
+  '.dsh-bloom-menu',
+  '.dsh-bloom-trigger',
+  '[class*="_menu"]:not([class*="_menuAnchor"])',
+  '[class*="_selector"]',
+  '.md-code-block',
+]
+
+/**
+ * 「实底」—— 哑光、无透光、边缘清晰。
+ *
+ * 跟通透档的结构差异（这才是三档能一眼分开的根本）：
+ *   · 底色 100% 不透明，不再有氛围渐变透过来
+ *   · 边缘是一条**清晰可见的实线**，而不是柔和的渐隐
+ *   · 阴影收紧贴面，没有环境光晕
+ *   · 文字与底色直接对比，不再隔着模糊层
  *
  * @param scopeSel 作用域前缀。
  */
@@ -92,32 +123,64 @@ ${scope(scopeSel, [...GLASS_RULES, ...GLASS_PSEUDO])} {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-${scope(scopeSel, ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]'])} {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 94%, transparent);
+${scope(scopeSel, ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]', 'div[class*="_dock"]:has(> [class*="_preview"])', '.md-code-block'])} {
+  background-color: var(--dsw-alias-bg-layer-1, #fff);
 }
 ${scope(scopeSel, ['.dsh-bloom-menu', '.dsh-bloom-trigger', '[class*="_menu"]:not([class*="_menuAnchor"])', '[class*="_selector"]'])} {
-  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 96%, transparent);
+  background-color: var(--dsw-alias-bg-layer-2, #fff);
 }
-${scope(scopeSel, ['[class*="_sidebarCol"]::before'])} {
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 92%);
+${scope(scopeSel, ['[class*="_sidebarCol"]', '[class*="_sidebarCol"]::before'])} {
+  background-color: var(--dsw-alias-bg-layer-1, #fff);
+}
+${scope(scopeSel, ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]', 'div[class*="_dock"]:has(> [class*="_preview"])'])} {
+  /* 脆边：一条实线勾出形状，阴影收紧贴面。 */
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 26%, transparent), 0 1px 3px -1px rgba(0,0,0,0.16);
+}
+${scope(scopeSel, ['.dsh-bloom-menu', '.dsh-bloom-trigger'])} {
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent), 0 2px 6px -2px rgba(0,0,0,0.2);
+}
+${scope(scopeSel, ['[class*="_sidebarCol"]'])} {
+  box-shadow: inset -1px 0 0 color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent);
 }
 `
 
 /**
- * 「柔和」—— 保留半透明与氛围色，只把模糊半径减半、饱和度调低。
+ * 「柔和」—— 磨砂半透：表面有细微颗粒，透光被柔化，文字更稳。
  *
- * 采样成本主要来自模糊半径；半径减半、饱和度去掉，背后的干扰也小一圈。
- * 视觉上仍然是玻璃，只是更「安静」。
+ * 与通透档的结构差异：
+ *   · 模糊半径减半、饱和度压低 —— 背后的颜色不再那么跳
+ *   · 表面铺一层噪点 —— 「磨砂」这个质感来源
+ *   · 顶沿高光弱化到几乎看不出，阴影变中性
  *
  * @param scopeSel 作用域前缀。
  */
 const softSurfaces = (scopeSel: string) => `
-${scope(scopeSel, ['body[data-bloom-variant]', 'body[data-bloom-variant] *'])} {
+${scopeSel} {
   --bloom-glass-blur: 8px;
 }
-${scope(scopeSel, [...GLASS_RULES, ...GLASS_PSEUDO])} {
+${scope(scopeSel, [...GLASS_RULES, ...GLASS_PSEUDO, '.md-code-block'])} {
   -webkit-backdrop-filter: blur(8px) saturate(1.05);
   backdrop-filter: blur(8px) saturate(1.05);
+}
+${scope(scopeSel, ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]', 'div[class*="_dock"]:has(> [class*="_preview"])', '[class*="_sidebarCol"]::before', '.md-code-block'])} {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 87%, transparent);
+}
+${scope(scopeSel, ['.dsh-bloom-menu', '.dsh-bloom-trigger', '[class*="_menu"]:not([class*="_menuAnchor"])', '[class*="_selector"]'])} {
+  background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 91%, transparent);
+}
+${scope(scopeSel, ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]', 'div[class*="_dock"]:has(> [class*="_preview"])'])} {
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-label-primary, #222) 8%, transparent), 0 5px 16px -10px rgba(0,0,0,0.2);
+}
+${scope(scopeSel, ['.dsh-bloom-menu', '.dsh-bloom-trigger'])} {
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-label-primary, #222) 7%, transparent), 0 6px 18px -12px rgba(0,0,0,0.22);
+}
+/* 颗粒：浅色压高光、深色提暗面 */
+${scope(scopeSel, GRAIN_TARGETS)} {
+  background-image: ${GRAIN_LIGHT};
+  background-repeat: repeat;
+}
+${scope(scopeSel + ' body[data-ds-dark-theme]', GRAIN_TARGETS)} {
+  background-image: ${GRAIN_DARK};
 }
 `
 
@@ -132,6 +195,18 @@ export const ADAPTIVE_CSS = `
    属性不存在 = 用户没动过 = 跟随系统（见下面第 1 条）。 */
 ${softSurfaces(USER_SOFT)}
 ${solidSurfaces(USER_SOLID)}
+/* 通透：这一档的签名是「环境影 + 亮边」。
+   磨砂没有彩色环境影，实底没有透过来的光 —— 这是三档里最能一眼分辨的特征。 */
+${scope('html body[data-bloom-variant][data-bloom-glass="glass"]', ['.dsh-bloom-menu', '.dsh-bloom-trigger'])} {
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 82%, transparent), inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent), 0 18px 46px -18px rgba(0,0,0,0.26);
+}
+${scope('html body[data-bloom-variant][data-bloom-glass="glass"]', ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]', 'div[class*="_dock"]:has(> [class*="_preview"])'])} {
+  /* 彩色环境影：主题色透到玻璃边缘外面，模拟玻璃把背后的光折出去。 */
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 55%, transparent), 0 10px 30px -12px color-mix(in oklch, var(--bloom-accent, #6b8f71) 40%, transparent);
+}
+${scope('html body[data-bloom-variant][data-bloom-glass="glass"]', ['[class*="_sidebarCol"]'])} {
+  box-shadow: inset -1px 0 0 color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent), 16px 0 40px -18px color-mix(in oklch, var(--bloom-accent, #6b8f71) 45%, transparent);
+}
 
 /* ═══ 1. 降低透明度（macOS 辅助功能「降低透明度」/ Windows「透明效果」关）═══
    只在用户**没有**显式选过档位时降级（body 上没有 data-bloom-glass 属性）——
@@ -145,7 +220,7 @@ ${solidSurfaces('html body[data-bloom-variant]:not([data-bloom-glass])')}
 /* ═══ 2. 增强对比度（macOS「增加对比度」）═══════════════════════════════
    同样去掉透明；再把氛围渐变撤掉、发丝描边加深、焦点环加粗。 */
 @media (prefers-contrast: more) {
-${solidSurfaces('html body[data-bloom-variant]:not([data-bloom-glass="glass"])')}
+${solidSurfaces('html body[data-bloom-variant]:is([data-bloom-glass], :not([data-bloom-glass]))')}
   html body[data-bloom-variant] {
     --bloom-hairline: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 45%, transparent) !important;
     --bloom-hairline-strong: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 65%, transparent) !important;

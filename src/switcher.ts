@@ -200,11 +200,12 @@ export function buildSwitcherHTML(currentVariant) {
     </div>
     <div class="dsh-bloom-section">${tr('玻璃质感')}</div>
     <div class="dsh-bloom-glass" role="group" aria-label="${tr('玻璃质感')}">
-      <div class="dsh-bloom-appearance__seg">
-        <button type="button" class="dsh-bloom-appearance__btn" data-glass="glass">${tr('通透')}</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-glass="soft">${tr('柔和')}</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-glass="solid">${tr('实底')}</button>
+      <div class="dsh-bloom-glass__choices">
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="glass"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('通透')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="soft"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('柔和')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="solid"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('实底')}</span></button>
       </div>
+      <p class="dsh-bloom-glass__description" data-glass-description aria-live="polite"></p>
       <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
     </div>
     <label class="dsh-bloom-rotation">${tr('自动换色')}
@@ -376,7 +377,7 @@ function syncAppearanceRow(el: HTMLElement) {
  * 把玻璃档位行同步成当前状态。
  *
  * 三个要点：
- *   1. 选中态标的是**用户选的那一档**（auto 时三格都不亮 —— 它不是用户能选的档位）。
+ *   1. 选中态标实际生效的档位，auto 时也亮一格；状态文案说明每档改变了什么。
  *   2. 系统降级了但用户没动过时，要**说清楚**：不然用户看到界面变实底，
  *      以为插件坏了。提示语说明「系统已开启降低透明度」，并给出「仍要毛玻璃」的做法。
  *   3. 提示只在系统确实要求降透明、且用户没显式选过档位时出现。
@@ -387,10 +388,19 @@ function syncGlassRow(el: HTMLElement) {
   const stored = readGlassMode()
   // 没手动选过（auto）时亮「实际生效」的那一档 —— 三格全灰看着像坏了（0.24.0 UI 审核发现）
   const shown = stored === 'auto' ? effectiveGlassMode() : stored
-  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-appearance__btn'))) {
+  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-glass__choice'))) {
     const on = btn.dataset.glass === shown
     btn.dataset.active = String(on)
     btn.setAttribute('aria-pressed', String(on))
+  }
+  const description = row.querySelector<HTMLElement>('[data-glass-description]')
+  if (description) {
+    const descriptions = {
+      glass: '通透 · 毛玻璃透光，边缘泛亮',
+      soft: '柔和 · 细粒磨砂，反光更轻',
+      solid: '实底 · 哑光不透，边缘清晰',
+    }
+    description.textContent = tr(descriptions[shown])
   }
   const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
   if (!hint) return
@@ -479,7 +489,7 @@ export function buildSwitcherEl(initialVariant) {
       syncAppearanceRow(el)
       return
     }
-    const glassBtn = target.closest<HTMLElement>('.dsh-bloom-appearance__btn[data-glass]')
+    const glassBtn = target.closest<HTMLElement>('.dsh-bloom-glass__choice[data-glass]')
     if (glassBtn) {
       // 玻璃档位：写 localStorage + 落到 body 属性上，CSS 立刻生效。
       writeGlassMode(glassBtn.dataset.glass as GlassMode)

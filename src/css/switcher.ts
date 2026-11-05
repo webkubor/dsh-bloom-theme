@@ -470,6 +470,83 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   color: var(--dsw-alias-label-tertiary, #999);
 }
 .dsh-bloom-glass__hint[hidden] { display: none; }
+/* 三块小样就是三档的实物说明：背景同一颗莫兰迪色斑，表面处理各不同。
+   控件只用一层滤镜（通透），柔和和实底都是静态图形，避免面板开着也耗 GPU。 */
+.dsh-bloom-glass__choices { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+.dsh-bloom-glass__choice {
+  appearance: none;
+  min-width: 0;
+  min-height: 65px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.1));
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 80%, transparent);
+  color: var(--dsw-alias-label-secondary, #555);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .18s, background-color .18s, box-shadow .18s, transform .18s;
+}
+.dsh-bloom-glass__choice:hover { transform: translateY(-2px); border-color: var(--bloom-hairline-strong); }
+.dsh-bloom-glass__choice[data-active="true"] {
+  color: var(--dsw-alias-label-primary, #222);
+  font-weight: 600;
+  border-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 60%, transparent);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 8%, var(--dsw-alias-bg-layer-1, #fff));
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 20%, transparent);
+}
+.dsh-bloom-glass__choice:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: 2px; }
+.dsh-bloom-glass__sample {
+  position: relative;
+  display: block;
+  width: 33px;
+  height: 26px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(130deg, var(--bloom-accent, #6b8f71) 0 40%, var(--dsw-alias-bg-layer-1, #fff) 40% 62%, var(--bloom-accent, #6b8f71) 62%);
+}
+.dsh-bloom-glass__sample::before {
+  content: '';
+  position: absolute;
+  inset: 4px 3px 3px 6px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 78%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 80%, transparent), 0 3px 5px -2px rgba(0,0,0,.25);
+}
+.dsh-bloom-glass__choice[data-glass="glass"] .dsh-bloom-glass__sample::before {
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 30%, transparent);
+  -webkit-backdrop-filter: blur(6px) saturate(1.35);
+  backdrop-filter: blur(6px) saturate(1.35);
+}
+.dsh-bloom-glass__choice[data-glass="soft"] .dsh-bloom-glass__sample::before {
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 80%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 40%, transparent), 0 2px 3px -2px rgba(0,0,0,.2);
+}
+.dsh-bloom-glass__choice[data-glass="solid"] .dsh-bloom-glass__sample::before {
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  border-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 40%, transparent);
+  box-shadow: none;
+}
+.dsh-bloom-glass__description {
+  margin: 7px 2px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  min-height: 16px;
+  color: var(--dsw-alias-label-secondary, #777);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsh-bloom-glass__choice { transition: none; }
+  .dsh-bloom-glass__choice:hover { transform: none; }
+}
+@media (forced-colors: active) {
+  .dsh-bloom-glass__choice[data-active="true"] { border: 2px solid Highlight; }
+  .dsh-bloom-glass__sample { forced-color-adjust: none; }
+}
 .dsh-bloom-appearance__seg {
   display: flex;
   width: 100%;                 /* 撑满面板宽度，里面三个按钮才能真正三等分

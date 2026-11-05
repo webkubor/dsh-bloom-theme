@@ -83,6 +83,38 @@ test('the solid tier removes the blur entirely', async t => {
   assert.equal(await sidebarBlur(page), 'none')
 })
 
+test('three material treatments differ in blur, surface and edge', async t => {
+  const page = await setup(t, { html: `${SIDEBAR}<div class="fake_composer"><div class="fake_card"></div></div>` })
+  const cardStyle = () => page.evaluate(() => {
+    const card = document.querySelector('.fake_card')
+    const cs = getComputedStyle(card, '::before')
+    return { blur: cs.backdropFilter, bg: cs.backgroundColor, image: cs.backgroundImage, shadow: cs.boxShadow }
+  })
+  await page.evaluate(() => window.fixture.writeGlassMode('glass'))
+  const clear = await cardStyle()
+  await page.evaluate(() => window.fixture.writeGlassMode('soft'))
+  const soft = await cardStyle()
+  await page.evaluate(() => window.fixture.writeGlassMode('solid'))
+  const solid = await cardStyle()
+  assert.match(clear.blur, /blur\(24px\)/)
+  assert.match(soft.blur, /blur\(8px\)/)
+  assert.equal(solid.blur, 'none')
+  assert.equal(clear.image, 'none')
+  assert.match(soft.image, /data:image\/svg\+xml/)
+  assert.equal(solid.image, 'none')
+  assert.notEqual(clear.bg, soft.bg)
+  assert.notEqual(soft.bg, solid.bg)
+  assert.notEqual(clear.shadow, soft.shadow)
+  assert.notEqual(soft.shadow, solid.shadow)
+})
+
+test('high contrast still removes blur when Clear was chosen explicitly', async t => {
+  const page = await setup(t)
+  await page.evaluate(() => window.fixture.writeGlassMode('glass'))
+  await emulate(page, [{ name: 'prefers-contrast', value: 'more' }])
+  assert.equal(await sidebarBlur(page), 'none')
+})
+
 test('the tier is remembered across reloads', async t => {
   const page = await setup(t)
   await page.evaluate(() => window.fixture.writeGlassMode('soft'))

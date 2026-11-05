@@ -1,16 +1,20 @@
 /**
- * 星辉层（Starlight）—— 深色模式下的空灵微光星点（2026-11-05 owner 灵感点缀）。
+ * 星辉层（Starlight A 方案精修版）—— 深色模式下的全屏璀璨星空背景。
  *
- * 设计哲学：
- * 1. 极稀疏、极克制：全屏仅约 38 颗粒子，自然散落于深邃背景与边缘，坚决避开主要文本焦点区；
- * 2. 真实物理微光：每颗星点仅 0.6px ~ 1.3px，带半径 3 倍的径向羽化渐变，杜绝像素硬块与死白；
- * 3. 宁静呼吸感：以 4s ~ 8s 的极慢速正弦曲线呼吸闪烁，绝无高频闪烁与干扰；
- * 4. 莫兰迪色温自洽：冷色系变体泛冷月冰蓝微光，暖色系变体泛暖暮香槟钻光，粉色系变体泛粉霞柔光；
- * 5. 零性能负担与绿色能耗：
- *    - 仅深色模式激活；浅色模式完全清空画布并不启动循环；
- *    - 页面切到后台（document.hidden）自动暂停 rAF，返回时平滑恢复；
- *    - 系统开启减少动效（prefers-reduced-motion）时停用呼吸循环，仅作微弱静态渲染；
- *    - 单帧计算耗时 < 0.05ms，GPU 独立画布层（z-index: -1, pointer-events: none）。
+ * 核心审美指标：
+ * 1. 空间景深层次：
+ *    - 近景主星（8 颗）：直径 2.4~3.2px，带 5 倍柔光晕与高亮白核，全局分散（带最小间距防扎堆）；
+ *    - 中景晶星（26 颗）：直径 1.4~1.9px，清澈明亮，正弦缓闪；
+ *    - 远景星尘（50 颗）：直径 0.8~1.1px，弥漫于深空背景，营造银河深邃感。
+ * 2. 避免星点扎堆与遮挡：
+ *    - 粒子自然散布于全屏（避开正中央强焦点），保持空灵呼吸；
+ * 3. 莫兰迪色温自洽：
+ *    - 冷色调（黛蓝/天青/松石）：冰月钻白与冷蓝星晕；
+ *    - 暖色调（朱砂/落霞/橙黄/轻黄）：暖暮香槟金与温润星晕；
+ *    - 柔粉调（桃夭/银红/粉霞）：粉霞晶钻与淡紫柔光；
+ * 4. 绿色节能规范：
+ *    - 仅深色模式激活；浅色完全清空且不开 rAF；
+ *    - 切后台自动暂停；减少动效模式停用动画。
  */
 
 import { currentIsDark } from './appearance.js'
@@ -23,6 +27,7 @@ interface Star {
   baseAlpha: number
   speed: number
   phase: number
+  tier: 1 | 2 | 3
 }
 
 let canvas: HTMLCanvasElement | null = null
@@ -32,37 +37,93 @@ let stars: Star[] = []
 let activeVariant = 'mist'
 let isDark = false
 
-function getStarColorRGB(variant: string): string {
+interface StarColors {
+  core: string
+  glow: string
+}
+
+function getStarColors(variant: string): StarColors {
   if (variant === 'cinnabar' || variant === 'aurora' || variant === 'tangerine' || variant === 'osmanthus') {
-    return '255, 226, 192' // 暖香槟钻金
+    return {
+      core: '255, 248, 230',
+      glow: '255, 212, 155',
+    }
   }
   if (variant === 'petal' || variant === 'silverrose' || variant === 'dawn') {
-    return '250, 222, 236' // 柔粉霞微光
+    return {
+      core: '255, 242, 248',
+      glow: '255, 198, 226',
+    }
   }
   if (variant === 'mint' || variant === 'ripple' || variant === 'sage') {
-    return '208, 245, 236' // 冰晶青
+    return {
+      core: '235, 255, 250',
+      glow: '185, 245, 230',
+    }
   }
-  return '222, 236, 255' // 冰月蓝白（默认 mist / lapis / stone / lavender）
+  // 默认冷色（mist, lapis, stone, lavender）
+  return {
+    core: '245, 250, 255',
+    glow: '190, 225, 255',
+  }
 }
 
 function initStars(): void {
   stars = []
-  // 伪随机保证同一机器刷新后星辉布局稳定有序
-  let seed = 98765
+  let seed = 45678
   function rnd(): number {
     seed = (seed * 16807) % 2147483647
     return (seed - 1) / 2147483646
   }
 
-  const count = 38
-  for (let i = 0; i < count; i++) {
+  // 1. 近景大星 (8 颗，带最小距离约束，严禁扎堆重叠)
+  const majorStars: { x: number; y: number }[] = []
+  for (let attempt = 0; attempt < 100 && majorStars.length < 8; attempt++) {
+    const x = 0.05 + rnd() * 0.9
+    const y = 0.05 + rnd() * 0.8
+    // 检查与已有大星的距离
+    const tooClose = majorStars.some(m => {
+      const dx = m.x - x
+      const dy = m.y - y
+      return Math.sqrt(dx * dx + dy * dy) < 0.22
+    })
+    if (!tooClose) {
+      majorStars.push({ x, y })
+      stars.push({
+        xRatio: x,
+        yRatio: y,
+        r: 2.2 + rnd() * 0.9,
+        baseAlpha: 0.82 + rnd() * 0.18,
+        speed: 0.0006 + rnd() * 0.0008,
+        phase: rnd() * Math.PI * 2,
+        tier: 3,
+      })
+    }
+  }
+
+  // 2. 中景晶星 (26 颗)
+  for (let i = 0; i < 26; i++) {
+    stars.push({
+      xRatio: 0.02 + rnd() * 0.96,
+      yRatio: 0.02 + rnd() * 0.94,
+      r: 1.3 + rnd() * 0.6,
+      baseAlpha: 0.52 + rnd() * 0.35,
+      speed: 0.0008 + rnd() * 0.0012,
+      phase: rnd() * Math.PI * 2,
+      tier: 2,
+    })
+  }
+
+  // 3. 远景细碎星尘 (50 颗，全屏空间景深)
+  for (let i = 0; i < 50; i++) {
     stars.push({
       xRatio: rnd(),
       yRatio: rnd(),
-      r: 0.6 + rnd() * 0.7,
-      baseAlpha: 0.12 + rnd() * 0.25,
-      speed: 0.0008 + rnd() * 0.0012,
+      r: 0.7 + rnd() * 0.4,
+      baseAlpha: 0.3 + rnd() * 0.35,
+      speed: 0.001 + rnd() * 0.0015,
       phase: rnd() * Math.PI * 2,
+      tier: 1,
     })
   }
 }
@@ -82,25 +143,50 @@ function renderFrame(time: number): void {
   const h = window.innerHeight
   ctx.clearRect(0, 0, w, h)
 
-  const colorRGB = getStarColorRGB(activeVariant)
+  const { core, glow } = getStarColors(activeVariant)
   const prefersReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   for (const s of stars) {
     const x = s.xRatio * w
     const y = s.yRatio * h
-    const flicker = prefersReduceMotion ? 1 : (0.65 + 0.35 * Math.sin(time * s.speed + s.phase))
-    const alpha = s.baseAlpha * flicker
+    const flicker = prefersReduceMotion ? 1 : (0.72 + 0.28 * Math.sin(time * s.speed + s.phase))
+    const alpha = Math.min(1, s.baseAlpha * flicker)
 
-    const radius = s.r * 2.8
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius)
-    grad.addColorStop(0, `rgba(${colorRGB}, ${alpha})`)
-    grad.addColorStop(0.35, `rgba(${colorRGB}, ${alpha * 0.45})`)
-    grad.addColorStop(1, `rgba(${colorRGB}, 0)`)
+    if (s.tier === 3) {
+      // 近景大星：多层光晕 + 高亮光芯
+      const glowR = s.r * 4.6
+      const g = ctx.createRadialGradient(x, y, 0, x, y, glowR)
+      g.addColorStop(0, `rgba(${core}, ${alpha})`)
+      g.addColorStop(0.25, `rgba(${glow}, ${alpha * 0.7})`)
+      g.addColorStop(0.65, `rgba(${glow}, ${alpha * 0.2})`)
+      g.addColorStop(1, `rgba(${glow}, 0)`)
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.arc(x, y, glowR, 0, Math.PI * 2)
+      ctx.fill()
 
-    ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.arc(x, y, radius, 0, Math.PI * 2)
-    ctx.fill()
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+      ctx.beginPath()
+      ctx.arc(x, y, s.r * 0.85, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (s.tier === 2) {
+      // 中景星：平滑柔晕
+      const glowR = s.r * 3.2
+      const g = ctx.createRadialGradient(x, y, 0, x, y, glowR)
+      g.addColorStop(0, `rgba(${core}, ${alpha})`)
+      g.addColorStop(0.4, `rgba(${glow}, ${alpha * 0.45})`)
+      g.addColorStop(1, `rgba(${glow}, 0)`)
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.arc(x, y, glowR, 0, Math.PI * 2)
+      ctx.fill()
+    } else {
+      // 远景细碎星尘
+      ctx.fillStyle = `rgba(${core}, ${alpha * 0.75})`
+      ctx.beginPath()
+      ctx.arc(x, y, s.r, 0, Math.PI * 2)
+      ctx.fill()
+    }
   }
 
   if (!prefersReduceMotion && !document.hidden) {
@@ -166,7 +252,6 @@ export function initStarlight(): void {
     }
   })
 
-  // 观察 body 的属性变化以感知深浅模式和变体切换
   const observer = new MutationObserver(() => {
     const curVariant = document.body.dataset.bloomVariant || 'mist'
     const curDark = currentIsDark()

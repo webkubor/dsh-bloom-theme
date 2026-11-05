@@ -111,6 +111,7 @@ body[data-bloom-variant] [class*="_centerCol"],
    scrollBody 是孙子。写成子选择器这条一直没命中 —— 会话区一直盖着
    oklch(0.28 0.02 240) 不透明底，body 的流线在中区完全看不见（这就是
    owner 说「没光感」的真正原因）。 */
+body[data-bloom-variant] [class*="_root"],
 body[data-bloom-variant] [class*="_root"]:has([class*="_scrollBody"]),
 /* 2026-10-02：DSH 0.2.0 给会话滚动区发了语义属性 data-conversation-scroll
    （实测 0.2.0-rc.2 的 chat 包里有 \`[data-conversation-scroll] .EvIC1a_root{...}\`）。

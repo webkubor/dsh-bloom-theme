@@ -460,4 +460,57 @@ body[data-bloom-variant="cinnabar"]::after {
   body[data-bloom-variant="cinnabar"]::after { display: none; }
 }
 
+
+/* ═══ 星辉层：右上角滑出的闪烁光点（参照 ModelGo 余额桶 BucketSparkles）══════
+   DOM 由 src/starlight.ts 生成（每颗 <i> 自带 --dx/--dy/--peak/--glow 与时长相位）。
+   只在深色下出现；浅色 display:none，动画随之不跑。
+   z-index:-1 + fixed：与 body::before 氛围层同层，画在应用内容之下。 */
+.dsh-bloom-sparkles { display: none; }
+body[data-ds-dark-theme] .dsh-bloom-sparkles {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  /* 右上角一团主题色光晕，光点从这里溢出 */
+  background: radial-gradient(560px 380px at calc(100% - 140px) 0px,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%),
+    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%) 55%,
+    transparent 100%);
+}
+.dsh-bloom-sparkles > i {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  background: #fff;
+  box-shadow: 0 0 var(--glow, 3px) rgba(255, 255, 255, 0.7);
+  animation-name: bloom-spark-drift, bloom-spark-twinkle;
+  animation-timing-function: cubic-bezier(.25, .6, .35, 1), ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  will-change: transform, opacity;
+}
+.dsh-bloom-sparkles > i.t {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 40%, #fff);
+  box-shadow: 0 0 var(--glow, 3px) color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 15%);
+}
+/* 起点小而暗，滑出途中放大点亮，末端渐隐 */
+@keyframes bloom-spark-drift {
+  0%   { transform: translate(0, 0) scale(.3); }
+  25%  { transform: translate(calc(var(--dx) * .35), calc(var(--dy) * .35)) scale(.9); }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1); }
+}
+/* 叠在漂移上的不规则亮灭，峰值各不相同 */
+@keyframes bloom-spark-twinkle {
+  0%   { opacity: 0; }
+  20%  { opacity: var(--peak); }
+  35%  { opacity: calc(var(--peak) * .3); }
+  55%  { opacity: var(--peak); }
+  75%  { opacity: calc(var(--peak) * .15); }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsh-bloom-sparkles > i { animation: none; opacity: .4; }
+}
+
 `

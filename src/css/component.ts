@@ -25,13 +25,13 @@ body[data-bloom-variant] {
      两处必须逐字一致，否则底部会出现一道色阶。 */
   --bloom-ambience:
     /* 顶左：主色光晕（accent，给画面主调） */
-    radial-gradient(1400px circle at 6% -4%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 80%), transparent 50%),
-    /* 顶右：aurora stream 2 —— 异色相，跟主色形成对比 */
-    radial-gradient(1100px circle at 100% 8%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 50%), transparent 60%),
-    /* 底右：aurora stream 3 —— 再一个异色相 */
-    radial-gradient(900px circle at 96% 100%, color-mix(in oklch, var(--bloom-aurora-stream-3), transparent 50%), transparent 62%),
-    /* 底左：aurora stream 1 —— 四角各一团 */
-    radial-gradient(1000px circle at 2% 96%, color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 50%), transparent 60%);
+    radial-gradient(1400px circle at 6% -4%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 82%), transparent 50%),
+    /* 顶右：aurora stream 2 —— 异色相弱对比，柔和淡出 */
+    radial-gradient(1100px circle at 100% 8%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 75%), transparent 60%),
+    /* 底右：弱环境晕染，避免在深色下聚成亮彩色斑块 */
+    radial-gradient(900px circle at 96% 100%, color-mix(in oklch, var(--bloom-aurora-stream-3), transparent 78%), transparent 62%),
+    /* 底左：弱环境晕染，平滑收敛进深色背景底板 */
+    radial-gradient(1000px circle at 2% 96%, color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 78%), transparent 60%);
   background-attachment: fixed;
   background-image: var(--bloom-ambience);
   /* ⚠️ 2026-10-02（桌面端真机诊断）：底色必须是**实色**。

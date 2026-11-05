@@ -195,17 +195,17 @@ export const ADAPTIVE_CSS = `
    属性不存在 = 用户没动过 = 跟随系统（见下面第 1 条）。 */
 ${softSurfaces(USER_SOFT)}
 ${solidSurfaces(USER_SOLID)}
-/* 通透：这一档的签名是「环境影 + 亮边」。
-   磨砂没有彩色环境影，实底没有透过来的光 —— 这是三档里最能一眼分辨的特征。 */
+/* 通透：这一档的签名是「高透毛玻璃 + 顶沿高光」。
+   去掉 0.25.0 过于浮夸的彩色环境投影（避免在桃夭/朱砂等色下在窗口底部和边缘糊出一坨高饱和彩带）。
+   保持深浅自然收敛的中性柔影与晶莹微高光。 */
 ${scope('html body[data-bloom-variant][data-bloom-glass="glass"]', ['.dsh-bloom-menu', '.dsh-bloom-trigger'])} {
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 82%, transparent), inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent), 0 18px 46px -18px rgba(0,0,0,0.26);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 82%, transparent), inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent), 0 12px 32px -12px rgba(0,0,0,0.28);
 }
 ${scope('html body[data-bloom-variant][data-bloom-glass="glass"]', ['div[class*="_composer"] div[class*="_card"]::before', 'div[class*="_bubble"]', 'div[class*="_dock"]:has(> [class*="_preview"])'])} {
-  /* 彩色环境影：主题色透到玻璃边缘外面，模拟玻璃把背后的光折出去。 */
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 55%, transparent), 0 10px 30px -12px color-mix(in oklch, var(--bloom-accent, #6b8f71) 40%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff) 55%, transparent), 0 8px 24px -10px rgba(0,0,0,0.32);
 }
 ${scope('html body[data-bloom-variant][data-bloom-glass="glass"]', ['[class*="_sidebarCol"]'])} {
-  box-shadow: inset -1px 0 0 color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent), 16px 0 40px -18px color-mix(in oklch, var(--bloom-accent, #6b8f71) 45%, transparent);
+  box-shadow: inset -1px 0 0 color-mix(in oklch, var(--bloom-hairline, #6b8f71) 30%, transparent), 12px 0 28px -14px rgba(0,0,0,0.25);
 }
 
 /* ═══ 1. 降低透明度（macOS 辅助功能「降低透明度」/ Windows「透明效果」关）═══

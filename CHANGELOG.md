@@ -22,6 +22,14 @@
 * **glass:** 没手动选过档位时三个按钮全灰，看着像坏了——现在高亮实际生效的那一档
 
 
+## [0.25.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.25.0...v0.25.1) (2026-11-05)
+
+
+### 🩹 Fixes
+
+* **switcher:** 玻璃小样重做——细条纹对照让三种材料一眼可辨：通透条纹清晰、柔和糊成雾面、实底完全不透 ([ac7dafa](https://github.com/webkubor/dsh-bloom-theme/commit/ac7dafa))
+
+
 ## [0.25.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.24.1...v0.25.0) (2026-11-05)
 
 

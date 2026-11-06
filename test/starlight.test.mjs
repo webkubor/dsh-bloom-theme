@@ -5,8 +5,8 @@ import { chromium } from 'playwright'
 import { fileURLToPath } from 'node:url'
 
 // 星辉层契约（断言计算后样式，不断言源码字符串）：
-// 1. 深色下出现、浅色下 display:none
-// 2. 层在内容之下且不吃指针
+// 1. 深浅模式都出现；浅色跟随主题色渐变，深色保留白色辉光
+// 2. 图层只占右上角，不铺满正文也不吃指针
 // 3. 光点真的在动（两条动画都挂上，且 drift 位移非零）
 // 4. 种子稳定：两次生成的布局完全一致
 
@@ -49,7 +49,7 @@ async function setup(t, dark) {
   return page
 }
 
-test('sparkle layer shows in dark mode, beneath content, without catching the pointer', async t => {
+test('sparkle layer shows in dark mode without covering content or catching the pointer', async t => {
   const page = await setup(t, true)
   const info = await page.evaluate(() => {
     const el = document.getElementById('dsh-bloom-sparkles')
@@ -67,11 +67,58 @@ test('sparkle layer shows in dark mode, beneath content, without catching the po
   assert.ok(info.dots >= 40, `expected many dots, got ${info.dots}`)
 })
 
-test('sparkle layer is hidden in light mode', async t => {
+test('light sparkles stay visible and change gradient with the theme without recreating dots', async t => {
   const page = await setup(t, false)
-  const display = await page.evaluate(() => getComputedStyle(document.getElementById('dsh-bloom-sparkles')).display)
-  assert.equal(display, 'none')
+  const result = await page.evaluate(() => {
+    const layer = document.getElementById('dsh-bloom-sparkles')
+    const dot = layer.firstElementChild
+    document.body.style.setProperty('--bloom-accent', '#b63d73')
+    const pink = getComputedStyle(dot).backgroundImage
+    document.body.style.setProperty('--bloom-accent', '#297cb5')
+    const blue = getComputedStyle(dot).backgroundImage
+    return { display: getComputedStyle(layer).display, pink, blue,
+      same: dot === layer.firstElementChild, names: getComputedStyle(dot).animationName,
+      pointer: getComputedStyle(layer).pointerEvents }
+  })
+  assert.equal(result.display, 'block')
+  assert.match(result.pink, /linear-gradient/)
+  assert.match(result.blue, /linear-gradient/)
+  assert.notEqual(result.pink, result.blue)
+  assert.equal(result.same, true)
+  assert.match(result.names, /bloom-spark-drift/)
+  assert.equal(result.pointer, 'none')
 })
+
+test('switching to dark preserves white highlights and both animation timelines', async t => {
+  const page = await setup(t, false)
+  const result = await page.evaluate(() => {
+    const dot = document.querySelector('#dsh-bloom-sparkles > i:not(.t)')
+    const before = getComputedStyle(dot).animationDuration
+    document.body.setAttribute('data-ds-dark-theme', '')
+    const cs = getComputedStyle(dot)
+    return { bg: cs.backgroundColor, image: cs.backgroundImage,
+      before, after: cs.animationDuration, display: getComputedStyle(dot.parentElement).display }
+  })
+  assert.equal(result.bg, 'rgb(255, 255, 255)')
+  assert.equal(result.image, 'none')
+  assert.equal(result.before, result.after)
+  assert.equal(result.display, 'block')
+})
+
+for (const dark of [false, true]) {
+  test(`reduced motion keeps ${dark ? 'dark' : 'light'} sparkles visible and static`, async t => {
+    const page = await setup(t, dark)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const state = await page.locator('#dsh-bloom-sparkles > i').first().evaluate(dot => ({
+      animation: getComputedStyle(dot).animationName,
+      opacity: getComputedStyle(dot).opacity,
+      display: getComputedStyle(dot.parentElement).display,
+    }))
+    assert.equal(state.animation, 'none')
+    assert.ok(Number(state.opacity) > 0)
+    assert.equal(state.display, 'block')
+  })
+}
 
 test('dots actually animate: drift + twinkle with a non-zero offset', async t => {
   const page = await setup(t, true)

@@ -8,14 +8,15 @@ import { fileURLToPath } from 'node:url'
 const LATEST = '99.0.0'
 const { outputFiles } = await build({
   stdin: {
-    contents: `import './src/client.ts';
-      const services = {}; const pending = [];
-      window.remoteDisposers = [];
+    contents: `import './test/slot-fixture.mjs'; import './src/client.ts';
+      const services = { slots: window.fixtureSlots }; const pending = [];
+      window.remoteDisposers = []; window.layoutDisposers = [];
       const strictCtx = (declared = []) => new Proxy({}, {
         get(_, key) {
           if (key === 'effect') return fn => {
             const dispose = fn();
             if (declared.includes('remote.pluginManager') && typeof dispose === 'function') window.remoteDisposers.push(dispose);
+             if (declared.includes('layout') && typeof dispose === 'function') window.layoutDisposers.push(dispose);
             return dispose;
           };
           if (key === 'inject') return (names, cb) => {
@@ -31,8 +32,13 @@ const { outputFiles } = await build({
         services.remote = {pluginManager:pm}; services['remote.pluginManager'] = pm;
         for (let i=pending.length-1;i>=0;i--) if(pending[i].names.every(n => services[n] !== undefined)) pending.splice(i,1)[0].run();
       };
-      window.applyFixture = (pm, locale) => {
+      window.activateLayout = service => {
+         services.layout=service;
+         for (let i=pending.length-1;i>=0;i--) if(pending[i].names.every(n => services[n] !== undefined)) pending.splice(i,1)[0].run();
+       };
+       window.applyFixture = (pm, locale) => {
         services.locale=locale;
+         if(window.layoutService) services.layout=window.layoutService;
         if(pm) {services.remote={pluginManager:pm};services['remote.pluginManager']=pm;}
         const mod=window.__ModuleLoader__._module;
         mod.apply(strictCtx(mod.inject ?? []));
@@ -43,7 +49,7 @@ const { outputFiles } = await build({
 const browser = await chromium.launch({ executablePath: process.env.BLOOM_CHROMIUM_PATH || undefined, args: ['--no-sandbox'] })
 test.after(() => browser.close())
 
-async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
+async function setup(t, mode = 'ok', { desktop = true, late = false, layout = true } = {}) {
   const context = await browser.newContext({ locale: 'zh-CN', colorScheme: 'dark' })
   t.after(() => context.close())
   const page = await context.newPage()
@@ -57,8 +63,8 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
   })
   await page.goto('https://bloom.test/')
   await page.clock.install()
-  await page.evaluate(({mode, desktop, latest}) => {
-    window.__ModuleLoader__ = { _module: null, load(def) { this._module=def.factory() } }
+  await page.evaluate(({mode, desktop, latest, layout}) => {
+    window.layoutCalls=[];window.layoutService=layout?{selectPanel:id=>window.layoutCalls.push(id)}:undefined;
     if (desktop) window.dshDesktopBoot = {}
     window.copied = ''
     Object.defineProperty(navigator, 'clipboard', { configurable:true, value:{writeText:async text=>{window.copied=text}} })
@@ -84,7 +90,7 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
       return {ok:true,value:{from:'0.0.1',to:version,step:'install',result}}
     }}
     if(mode==='legacy') { delete window.pm.updateBundle; window.pm.installBundle=async()=>{throw new Error('must not call installBundle for an installed theme')} }
-  }, { mode, desktop, latest: LATEST })
+  }, { mode, desktop, latest: LATEST, layout })
   await page.addScriptTag({ content: outputFiles[0].text })
   await page.evaluate(({mode,late})=>window.applyFixture(mode==='none'||late?undefined:window.pm,window.locale),{mode,late})
   await page.clock.fastForward(4100)
@@ -92,6 +98,7 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
   return { page, errors }
 }
 const banner = page => page.locator('#dsh-bloom-update-banner')
+const bodyText = page => page.locator('#dsh-bloom-update-banner .bloom-upd-body').textContent()
 async function waitBody(page, text) {
   await page.waitForFunction(text => document.querySelector('#dsh-bloom-update-banner .bloom-upd-body')?.textContent.includes(text), text)
 }
@@ -100,16 +107,31 @@ test('desktop update invokes exact version once and unwraps a successful host re
   const { page, errors } = await setup(t)
   assert.equal(await banner(page).locator('code').isVisible(), false)
   await banner(page).locator('[data-act="install"]').click()
-  await banner(page).locator('[data-act="reload"]').waitFor()
-  assert.deepEqual(await page.evaluate(()=>window.installCalls), [{name:'dsh-bloom-theme',version:LATEST}])
   await waitBody(page, `已更新到 v${LATEST}`)
+  assert.deepEqual(await page.evaluate(()=>window.installCalls), [{name:'dsh-bloom-theme',version:LATEST}])
+  // applied: the host already activated the new version; a page reload proves nothing and is not offered.
+  assert.equal(await bodyText(page), `已更新到 v${LATEST}`)
+  assert.equal(await banner(page).locator('[data-act="reload"]').count(), 0)
+  assert.equal(await banner(page).locator('[data-act="dismiss"]').count(), 1)
   assert.deepEqual(errors, [])
+})
+
+test('English applied and restart-required results use the translated exact messages', async t => {
+  for (const [mode, message] of [['ok', `Updated to v${LATEST}`], ['restart', `Updated to v${LATEST} — restart DSH to apply`]]) {
+    const {page} = await setup(t, mode)
+    await page.evaluate(()=>window.locale.setLocale('en'))
+    await banner(page).locator('[data-act="install"]').click()
+    await waitBody(page, 'Updated to v')
+    assert.equal(await bodyText(page), message)
+    assert.equal(await banner(page).locator('[data-act="reload"]').count(), 0)
+  }
 })
 
 test('restart-required instructs application restart and never offers a page reload', async t => {
   const {page} = await setup(t, 'restart')
   await banner(page).locator('[data-act="install"]').click()
   await waitBody(page, '需要重启 DSH')
+  assert.equal(await bodyText(page), `已更新到 v${LATEST}，需要重启 DSH 才生效`)
   assert.equal(await banner(page).locator('[data-act="reload"]').count(), 0)
   assert.equal(await banner(page).locator('[data-act="dismiss"]').count(), 1)
 })
@@ -133,7 +155,8 @@ test('failed update can retry through a fresh install button', async t => {
   await page.evaluate(()=>{window.mode='ok'})
   await banner(page).locator('[data-act="retry"]').click()
   await banner(page).locator('[data-act="install"]').click()
-  await banner(page).locator('[data-act="reload"]').waitFor()
+  await waitBody(page, `已更新到 v${LATEST}`)
+  assert.equal(await banner(page).locator('[data-act="reload"]').count(),0)
   assert.equal(await page.evaluate(()=>window.installCalls.length),2)
 })
 
@@ -166,7 +189,7 @@ test('the stale update hint disappears once the outcome replaces the available s
   const {page}=await setup(t)
   assert.equal(await banner(page).locator('.bloom-upd-hint').count(),1)
   await banner(page).locator('[data-act="install"]').click()
-  await banner(page).locator('[data-act="reload"]').waitFor()
+  await waitBody(page, `已更新到 v${LATEST}`)
   assert.equal(await banner(page).locator('.bloom-upd-hint').count(),0)
 })
 
@@ -199,4 +222,17 @@ test('self-hosted profile without the service keeps the exact-version copy fallb
   assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
   await banner(page).locator('[data-act="copy"]').click()
   assert.match(await page.evaluate(()=>window.copied),new RegExp(`dsh-bloom-theme@${LATEST}`))
+})
+
+
+test('desktop hides Plugins until layout arrives and removes it when layout is disposed', async t => {
+  const {page,errors}=await setup(t,'none',{layout:false})
+  assert.equal(await banner(page).locator('[data-act="plugins"]').count(),0)
+  assert.ok((await banner(page).textContent()).includes('侧栏「插件」'))
+  await page.evaluate(()=>window.activateLayout({selectPanel:id=>window.layoutCalls.push(id)}))
+  await banner(page).locator('[data-act="plugins"]').click()
+  assert.deepEqual(await page.evaluate(()=>window.layoutCalls),['plugins'])
+  await page.evaluate(()=>window.layoutDisposers.forEach(dispose=>dispose()))
+  assert.equal(await banner(page).locator('[data-act="plugins"]').count(),0)
+  assert.deepEqual(errors,[])
 })

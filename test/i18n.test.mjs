@@ -46,7 +46,7 @@ const makeLocale = (active) => ({
 
 // Exercise the real client and its DOM event handlers; all network traffic is mocked.
 const { outputFiles } = await build({
-  stdin: { contents: `import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts'; import * as switcher from './src/switcher.ts';
+  stdin: { contents: `import './test/slot-fixture.mjs'; import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts'; import * as switcher from './src/switcher.ts';
     window.bloomTest = {lang, version, switcher};
     // 宿主注入 locale 服务后，cordis 会 materialize 插件的 apply(ctx)。
     // 测试里手动调它，走和真实宿主同一条路径。
@@ -56,7 +56,7 @@ const { outputFiles } = await build({
     const strictCtx = (services, declared) => new Proxy({}, {
       get(_, key) {
         if (key === 'effect') return (fn) => fn()
-        if (key === 'inject') return (names, cb) => cb(strictCtx(services, [...declared, ...names]))
+        if (key === 'inject') return (names, cb) => names.every(name => services[name] !== undefined) ? cb(strictCtx(services, [...declared, ...names])) : undefined
         if (typeof key === 'symbol' || key === 'then') return undefined
         if (!declared.includes(key)) throw new Error('cannot get property "' + String(key) + '" without inject')
         return services[key]
@@ -64,7 +64,7 @@ const { outputFiles } = await build({
     })
     window.bloomTest.applyWithLocale = () => {
       const mod = window.__ModuleLoader__?._module
-      mod?.apply(strictCtx({ locale: window.__dshLocale }, mod.inject ?? []))
+      mod?.apply(strictCtx({ locale: window.__dshLocale, slots: window.fixtureSlots }, mod.inject ?? []))
     };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
@@ -101,12 +101,7 @@ async function setup(locale, active, mode = 'dark', variant = 'petal', hostBody 
     localStorage.setItem('dsh-bloom-lang', legacy)
     localStorage.setItem('dsh-bloom-variant', variant)
     localStorage.setItem('bloom-appearance-mode', mode)
-    // DSH 的 ModuleLoader 真的会调 factory 并 materialize 出来的模块 ——
-    // 测试里要照抄这个行为，否则拿不到插件的 apply(ctx)。
-    window.__ModuleLoader__ = {
-      _module: null,
-      load(def) { this._module = def.factory() },
-    }
+    // __ModuleLoader__ 由 test/slot-fixture.mjs 提供：factory(require) 拿到真实 React。
     window.copied = ''
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: async text => { window.copied = text } } })
     // ── DSH locale 服务的最小替身 ──────────────────────────────────────
@@ -174,25 +169,104 @@ for (const locale of ['zh-CN', 'en-US', 'fr-FR']) {
   }
 }
 for (const language of ['zh', 'en']) {
-  test(`${language}: fixed leader tracks align long translated names without overflow`, async () => {
+  test(`${language}: poem column aligns across rows without overflow`, async () => {
     const { page, context } = await setup('en-US', language)
     try {
       await click(page, '.dsh-bloom-trigger')
       await page.clock.fastForward(500)
       const geometry = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-option')].map(row => {
-        const leader = row.querySelector('.dsh-bloom-leader').getBoundingClientRect()
         const box = row.getBoundingClientRect()
         const poem = row.querySelector('.dsh-bloom-option__en')
-        return { width: leader.width, left: leader.left - box.left,
+        return { left: poem.getBoundingClientRect().left - box.left,
           overflows: row.scrollWidth > row.clientWidth + 1,
           titleContainsPoem: row.title.includes(poem.textContent) }
       }))
       assert.equal(geometry.length, 12)
-      assert.ok(geometry.every(row => Math.abs(row.width - 24) < 1))
       assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))
       assert.ok(geometry.every(row => !row.overflows && row.titleContainsPoem))
     } finally { await context.close() }
   })
+}
+// 对齐不等于看得见：量像素宽度、行内垂直包含、名称不被截断、渐变首端合成后的对比度。
+// 页面 <html lang> 故意和 DSH 语言相反 —— 列宽必须跟 DSH 语言走，不能继承页面 lang。
+const measureRows = () => {
+  const toRGBA = css => {
+    const c = document.createElement('canvas').getContext('2d')
+    c.fillStyle = css; c.fillRect(0, 0, 1, 1)
+    const e = c.getImageData(0, 0, 1, 1).data
+    return [e[0], e[1], e[2], e[3] / 255]
+  }
+  // 从 html 往下逐层 source-over 合成背景，得到诗句真实压在上面的底色。
+  const backdrop = el => {
+    const chain = []; for (let n = el; n; n = n.parentElement) chain.unshift(n)
+    let rgb = [255, 255, 255]
+    for (const n of chain) {
+      const [r, g, b, a] = toRGBA(getComputedStyle(n).backgroundColor)
+      rgb = [r * a + rgb[0] * (1 - a), g * a + rgb[1] * (1 - a), b * a + rgb[2] * (1 - a)]
+    }
+    return rgb
+  }
+  const lum = ([r, g, b]) => { const f = v => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b) }
+  const contrast = (fg, bg) => { const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x); return (a + 0.05) / (b + 0.05) }
+  return [...document.querySelectorAll('.dsh-bloom-option')].map(row => {
+    const poem = row.querySelector('.dsh-bloom-option__en')
+    const name = row.querySelector('.dsh-bloom-option__name')
+    const check = row.querySelector('.dsh-bloom-check')
+    const rb = row.getBoundingClientRect(), pb = poem.getBoundingClientRect(), cb = check.getBoundingClientRect()
+    const cs = getComputedStyle(poem)
+    const stops = [...cs.backgroundImage.matchAll(/(?:rgba?|oklch|oklab|color|lab|lch)\([^()]*(?:\([^()]*\)[^()]*)*\)/g)].map(m => m[0])
+    const bg = backdrop(row)
+    const comp = css => { const [r, g, b, a] = toRGBA(css); return [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)] }
+    return {
+      variant: row.dataset.variant, poemLang: poem.lang,
+      poemWidth: pb.width, poemText: poem.textContent, poemFull: poem.scrollWidth,
+      poemTop: pb.top - rb.top, poemBottom: rb.bottom - pb.bottom, poemHeight: pb.height,
+      nameText: name.textContent, nameWidth: name.clientWidth, nameNeeded: name.scrollWidth,
+      checkRight: rb.right - cb.right, checkCenter: (cb.top + cb.bottom) / 2 - (rb.top + rb.bottom) / 2,
+      opacity: Number(cs.opacity), clip: cs.webkitBackgroundClip || cs.backgroundClip, color: cs.color,
+      stops, firstContrast: stops[0] ? contrast(comp(stops[0]), bg) : 0,
+      lastContrast: stops.at(-1) ? contrast(comp(stops.at(-1)), bg) : 0,
+    }
+  })
+}
+for (const language of ['zh', 'en']) {
+  for (const mode of ['light', 'dark']) {
+    test(`${language}/${mode}: poems are visible, names fit, checks align, all gradient endpoints reach 4.5:1`, async () => {
+      const { page, context } = await setup('en-US', language, mode)
+      try {
+        await page.evaluate(l => { document.documentElement.lang = l === 'zh' ? 'en' : 'zh-CN' }, language)
+        await click(page, '.dsh-bloom-trigger')
+        await page.clock.fastForward(500)
+        assert.equal(await page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme')), mode === 'dark')
+        const rows = await page.evaluate(measureRows)
+        assert.equal(rows.length, 12)
+        for (const r of rows) {
+          const at = `${language}/${mode} ${r.variant}`
+          assert.equal(r.poemLang, language, `${at}: poem carries the DSH language`)
+          assert.ok(r.poemText.trim().length > 0, `${at}: poem has text`)
+          assert.ok(r.poemWidth >= 60, `${at}: poem column ${r.poemWidth}px is too narrow to read`)
+          assert.ok(r.poemHeight >= 10 && r.poemTop >= 0 && r.poemBottom >= 0, `${at}: poem text box ${JSON.stringify([r.poemTop, r.poemHeight, r.poemBottom])} sits inside the row`)
+          assert.equal(r.opacity, 1, `${at}: no whole-line fade`)
+          assert.equal(r.clip, 'text', `${at}: gradient is clipped to glyphs`)
+          assert.ok(r.stops.length >= 2, `${at}: gradient has two endpoints (${r.stops})`)
+        }
+        // Small text (11.5–12.5px): every gradient endpoint must meet WCAG AA 4.5:1. Collect all
+        // offenders so one run names every failing palette instead of stopping at the first.
+        const weak = rows.flatMap(r => [
+          r.firstContrast < 4.5 && `${r.variant} start ${r.stops[0]} = ${r.firstContrast.toFixed(2)}`,
+          r.lastContrast < 4.5 && `${r.variant} end ${r.stops.at(-1)} = ${r.lastContrast.toFixed(2)}`,
+        ].filter(Boolean))
+        assert.deepEqual(weak, [], `${language}/${mode}: gradient endpoints below 4.5:1`)
+        const clipped = rows.filter(r => r.nameNeeded > r.nameWidth + 1).map(r => `${r.nameText} needs ${r.nameNeeded}px, has ${r.nameWidth}px`)
+        assert.deepEqual(clipped, [], `${language}/${mode}: palette names truncated`)
+        assert.ok(rows.every(r => Math.abs(r.checkRight - rows[0].checkRight) < 1 && Math.abs(r.checkCenter) < 1.5), 'check marks share one column and are vertically centred')
+        if (language === 'en') {
+          const tangerine = rows.find(r => r.variant === 'tangerine')
+          assert.equal(tangerine.nameText.replace(/新|New/, '').trim(), 'Tangerine')
+        }
+      } finally { await context.close() }
+    })
+  }
 }
 for (const mode of ['light', 'dark', 'system']) {
   test(`live switching preserves ${mode}, palette, menu, update cache and clipboard actions`, async () => {
@@ -315,7 +389,6 @@ test('DSH language and appearance replay on reload; legacy preference is ignored
     // 这正是新架构：语言状态在 DSH 那边，不在插件的 localStorage。
     await page.evaluate(([src, active]) => {
       window.__dshLocale = new Function('return (' + src + ')')()(active)
-      window.__ModuleLoader__ = { _module: null, load(def) { this._module = def.factory() } }
     }, [makeLocale.toString(), 'zh'])
     await page.addScriptTag({content: outputFiles[0].text})
     await page.evaluate(() => window.bloomTest.applyWithLocale?.())

@@ -3,10 +3,12 @@ export {}
 declare global {
   interface Window {
     __ModuleLoader__: {
-      load(opts: { id: string; factory: () => Record<string, unknown> }): void
+      load(opts: { id: string; factory: (require: (name: string) => unknown) => Record<string, unknown> }): void
     }
-    __dshBloomObserver__?: MutationObserver
     __dshBloomThinkObserver__?: MutationObserver
+    __dshBloomThinkOff__?: () => void
     __dshBloomCursorBound__?: boolean
+    __dshBloomCursorOff__?: () => void
+    __dshBloomGlassOff__?: () => void
   }
 }

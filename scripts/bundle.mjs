@@ -17,7 +17,7 @@
  * node 半侧的 lib/index.js 反过来**必须**是 ESM（cordis loader 按 ESM 读它），
  * 由 tsc 单独编译，不走这里。
  */
-import { build } from 'esbuild'
+import { build, context } from 'esbuild'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
@@ -48,7 +48,7 @@ function readChangelog() {
   return { version: pkg.version, items: items.slice(0, 8) }
 }
 
-const result = await build({
+const options = {
   define: { __BLOOM_CHANGELOG__: JSON.stringify(readChangelog()) },
   entryPoints: [resolve(root, 'src/client.ts')],
   outfile: resolve(root, 'lib/client.js'),
@@ -67,23 +67,40 @@ const result = await build({
     js: `/* ${pkg.name} v${pkg.version} —— 由 scripts/bundle.mjs 从 src/*.ts 打包生成，请勿直接编辑。\n`
       + `   源码入口 src/client.ts；改完跑 npm run build。 */`,
   },
-})
-
-// 产物自检：classic script 里绝不能出现顶层 import/export
-const out = readFileSync(resolve(root, 'lib/client.js'), 'utf8')
-const bad = []
-if (/^\s*import[\s{*]/m.test(out)) bad.push('顶层 import')
-if (/^\s*export[\s{]/m.test(out)) bad.push('顶层 export')
-if (/\brequire\(/.test(out)) bad.push('require() 调用')
-if (bad.length) {
-  console.error(`✗ 产物不是 classic-safe：出现 ${bad.join(' / ')}`)
-  process.exit(1)
-}
-if (!out.includes('window.__ModuleLoader__')) {
-  console.error('✗ 产物里找不到 window.__ModuleLoader__.load —— DSH 不会注册这个插件')
-  process.exit(1)
 }
 
-const inputs = Object.keys(result.metafile.inputs).filter((f) => f.endsWith('.ts')).length
-const kb = (out.length / 1024).toFixed(1)
-console.log(`✔ lib/client.js  ${kb} kB  ← ${inputs} 个源文件，classic-safe`)
+function verifyBundle(result) {
+  if (result.errors.length) return
+  // 产物自检：classic script 里绝不能出现顶层 import/export
+  const out = readFileSync(resolve(root, 'lib/client.js'), 'utf8')
+  const bad = []
+  if (/^\s*import[\s{*]/m.test(out)) bad.push('顶层 import')
+  if (/^\s*export[\s{]/m.test(out)) bad.push('顶层 export')
+  if (/\brequire\(/.test(out)) bad.push('require() 调用')
+  if (bad.length) {
+    console.error(`✗ 产物不是 classic-safe：出现 ${bad.join(' / ')}`)
+    process.exit(1)
+  }
+  if (!out.includes('window.__ModuleLoader__')) {
+    console.error('✗ 产物里找不到 window.__ModuleLoader__.load —— DSH 不会注册这个插件')
+    process.exit(1)
+  }
+
+  const inputs = Object.keys(result.metafile.inputs).filter((f) => f.endsWith('.ts')).length
+  const kb = (out.length / 1024).toFixed(1)
+  console.log(`✔ lib/client.js  ${kb} kB  ← ${inputs} 个源文件，classic-safe`)
+}
+
+if (process.argv.includes('--watch')) {
+  const ctx = await context({
+    ...options,
+    plugins: [{ name: 'verify-bloom-bundle', setup(build) { build.onEnd(verifyBundle) } }],
+  })
+  const stop = async () => { await ctx.dispose(); process.exit(0) }
+  process.once('SIGINT', stop)
+  process.once('SIGTERM', stop)
+  await ctx.watch()
+  console.log('Watching browser source; lib/ only. Install changes through DSH plugin management.')
+} else {
+  verifyBundle(await build(options))
+}

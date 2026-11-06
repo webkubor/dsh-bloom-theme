@@ -463,34 +463,43 @@ body[data-bloom-variant="cinnabar"]::after {
 
 /* ═══ 星辉层：右上角滑出的闪烁光点（参照 ModelGo 余额桶 BucketSparkles）══════
    DOM 由 src/starlight.ts 生成（每颗 <i> 自带 --dx/--dy/--peak/--glow 与时长相位）。
-   只在深色下出现；浅色 display:none，动画随之不跑。
-   z-index:-1 + fixed：与 body::before 氛围层同层，画在应用内容之下。 */
-.dsh-bloom-sparkles { display: none; }
-body[data-ds-dark-theme] .dsh-bloom-sparkles {
+   深浅模式共用同一组光点与动画；浅色使用主题色渐变，深色保留白色辉光。
+   挂在 shell.overlay，只占右上角、不铺背景，避免盖住正文。 */
+.dsh-bloom-sparkles {
   display: block;
   position: fixed;
-  inset: 0;
-  z-index: -1;
+  /* Lives in shell.overlay (above content): only the top-right corner, never a full-screen wash. */
+  top: 0; right: 0; width: 360px; height: 220px;
+  z-index: 0;
+  opacity: 0.95;
   overflow: hidden;
   pointer-events: none;
-  /* 右上角一团主题色光晕，光点从这里溢出 */
-  background: radial-gradient(560px 380px at calc(100% - 140px) 0px,
-    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%),
-    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%) 55%,
-    transparent 100%);
+  background: none;
 }
+body[data-ds-dark-theme] .dsh-bloom-sparkles { opacity: 0.7; }
 .dsh-bloom-sparkles > i {
   position: absolute;
   border-radius: 50%;
   opacity: 0;
-  background: #fff;
-  box-shadow: 0 0 var(--glow, 3px) rgba(255, 255, 255, 0.7);
+  min-width: 2px;
+  min-height: 2px;
+  background: linear-gradient(135deg, color-mix(in oklch, var(--bloom-accent, #6b8f71) 80%, #fff), var(--bloom-accent, #6b8f71));
+  box-shadow: 0 0 var(--glow, 3px) color-mix(in oklch, var(--bloom-accent, #6b8f71) 55%, transparent);
   animation-name: bloom-spark-drift, bloom-spark-twinkle;
   animation-timing-function: cubic-bezier(.25, .6, .35, 1), ease-in-out;
   animation-iteration-count: infinite, infinite;
   will-change: transform, opacity;
 }
 .dsh-bloom-sparkles > i.t {
+  background: linear-gradient(135deg, var(--bloom-accent, #6b8f71), color-mix(in oklch, var(--bloom-accent, #6b8f71) 90%, #fff));
+}
+body[data-ds-dark-theme] .dsh-bloom-sparkles > i {
+  min-width: 0;
+  min-height: 0;
+  background: #fff;
+  box-shadow: 0 0 var(--glow, 3px) rgba(255, 255, 255, 0.7);
+}
+body[data-ds-dark-theme] .dsh-bloom-sparkles > i.t {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 40%, #fff);
   box-shadow: 0 0 var(--glow, 3px) color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 15%);
 }

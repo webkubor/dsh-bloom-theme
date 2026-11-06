@@ -47,9 +47,7 @@
 **Short version: Bloom's next iterations target the DSH desktop app first. The Web UI is no longer
 actively supported and will fade out.**
 
-(0.16.0 and earlier were built against the DSH Web UI. **0.17.0 is the desktop-ready release** — it
-brings the DSH 0.2.0 selector adaptation plus a drift gate that catches this class of breakage
-automatically.) On desktop app 0.2.1-rc.5, the switcher's version display uses the desktop app version rather than an older bundled DSH package version; the drift gate also targets the locally installed desktop release.
+Desktop-first since 0.17.0. This update uses the host-provided header and overlay Slots and requires DSH 0.2.2-rc.1 or newer. Version hints read the desktop application version.
 
 DSH now ships a desktop app, and it is what I use every day. A theme's value lives on top of a UI —
 when the host changes its interface, the palettes and the glass have to follow — so that is where
@@ -68,11 +66,11 @@ Two clarifications, so you do not have to guess from the heading:
 - If the Web UI is your only option, please open an issue and describe your setup — real demand
   changes my judgement. That is not a formality.
 
-> **What the previous version (0.16.0) changed**: running steps now take on the theme color (the sweep went from grey to the
-> three Bloom tones); the round-status spectrum is wired back up (it vanished silently when DSH was
-> renamed); the message-bubble glass edge that never drew in light mode is fixed; substring-selector
-> self-overlap ("box inside a box", the square black chip) is fixed; the pill background on running
-> steps is gone — state should not have to shout from a box.
+### This update · 2026-11-06 🌸
+
+Light mode now has a gentle theme-coloured edge gradient while keeping the reading area clear. Its top-right sparkles are easier to see and follow palette changes; dark mode keeps its white highlights.
+
+The palette menu is aligned more neatly, with the poem gradients preserved. The controls and decoration use official Slots, with cleanup on navigation, disable and re-enable. Thanks to everyone who tried Bloom and sent feedback and screenshots. Those small details made this update possible.
 
 ## The gist
 
@@ -89,8 +87,7 @@ A **glass + Morandi** theme for DeepSeek Harness.
 > All 15 palette keys remain valid; a selected legacy color remains visible until another is chosen.
 > Optional auto rotation defaults to off, offers 5 / 15 / 30 / 60-minute intervals, and pauses in hidden tabs.
 
-- **DSH desktop app**: install from the in-app plugin manager and reload — a 「黛蓝 ▾」 button appears in the top bar to switch between 12 featured palettes, light/dark, and auto rotation.
-- **Custom profiles (CLI / server / web)**: `dsh plugin --profile <profile> add dsh-bloom-theme`, wire it into the boot graph, restart DSH — see [Install](#install) below.
+Install from DSH's in-app plugin manager and follow the returned application or restart instructions. The 「黛蓝 ▾」 header button provides 12 featured palettes, light/dark, and auto rotation. See [Install](#install) for the official `plugin_manager` path.
 
 ## Palette previews
 
@@ -122,35 +119,17 @@ The 12 featured colors are shown in menu order. The studies above use the **actu
 
 ## Install
 
-> **Desktop app**: install and update from the plugin manager inside the app. The desktop profile is
-> owned exclusively by the application — running `dsh plugin --profile desktop ...` from a shell fails
-> with `profile "desktop" is managed exclusively by the Electron application`. That is by design, not
-> a permissions problem.
+Open Plugins in the running DSH application and install `dsh-bloom-theme`. Alternatively, ask the current DSH session to use the official `plugin_manager`: list existing bundles first, then use `install_bundle` with an explicit version, or the absolute path of a built checkout for local development.
 
-<details>
-<summary>Self-managed profile (CLI / server / web)</summary>
+Follow the installation result's `application` / `nextStep`. Replacing an installed package may require an application restart; refreshing the page cannot replace that step. DSH owns installation and updates, so no manual profile dependency edits or `node_modules` copies are needed.
 
-> Only Node.js is required — **no global dsh install**; upstream's official entry is `npx @deepseek-ai/dsh`. If dsh is installed globally, use `dsh` instead.
-
-```bash
-# 1) install into your profile (use your own profile name)
-npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme
-
-# 2) wire it into the boot graph: add "dsh-bloom-theme" to the
-#    dsh.profile.bundles array in ~/.dsh/profiles/<your-profile>/package.json
-
-# 3) restart DSH
-```
-
-</details>
-
-Refresh the page and a "Mist ▾" theme button appears top-right. Click it to switch between
+Once installation has been applied, the theme button appears at the conversation header, positioned using its official Slot anchor. Click it to switch between
 **12 featured palettes**; the current version sits at the bottom of the dropdown, and a `↑ vX` badge
 lights up when a newer version is on npm (jump to the Releases page).
 
 ## Updates
 
-When the host provides `remote.pluginManager.updateBundle`, the update banner offers **Update now** and delegates replacement and failure recovery to DSH. A restart-required result instructs an application restart without offering an ineffective page reload; an applied result offers a page reload. Older hosts, including desktop 0.2.1-rc.5, lack this API and show Plugins guidance instead of an unusable update button. Desktop never offers a rejected terminal command; self-hosted CLI profiles retain the copy-command fallback.
+When the host provides `remote.pluginManager.updateBundle`, the update banner offers **Update now** and delegates replacement and failure recovery to DSH. A restart-required result instructs an application restart; an applied result displays “Updated to v{version}” without a page reload button. Hosts without this API show Plugins guidance instead of an unusable update button. Desktop never offers a rejected terminal command; self-hosted CLI profiles retain the copy-command fallback.
 
 ## Features
 
@@ -169,7 +148,7 @@ When the host provides `remote.pluginManager.updateBundle`, the update banner of
 | **OKLCH + WCAG AA** | Perceptually uniform color space, no jumps on light/dark switch; all accent/background pairs measured ≥ 4.5:1 |
 | **Zero deps · CSS-variable driven** | Only CSS variables + a little switch logic; near-zero runtime cost |
 | **Respects native controls** | Switcher mounts into the DSH header utilities area, side-by-side with native buttons |
-| **TypeScript build** | `src/` 10 modules → `tsc` (ESM) for node + `esbuild` (single-file IIFE) for browser; one-command `build / deploy / check / preflight` |
+| **TypeScript build** | `src/` modules → `tsc` (ESM) for node + `esbuild` (single-file IIFE) for browser; one-command `build / dev / check / preflight` |
 
 ## Design: two-track colors
 
@@ -189,19 +168,18 @@ keeps accent/background contrast honest.
 ## Develop / build (TypeScript)
 
 ```bash
-npm install
+npm ci
 npm run typecheck    # tsc --noEmit, full type check
 npm run build        # typecheck → tsc emits lib/index.js → esbuild emits lib/client.js
-npm run deploy       # gate → backup → install into the desktop profile (refuses if the gate fails)
-npm run rollback     # if the app won't start: restore the pre-deploy copy (rollback:npm = npm latest)
-npm run dsh:status   # what's installed, whether it's a dev build, crashes in the last 24h
-npm run dev          # build + watch (recompile+deploy on src change)
+npm run dev          # full build, then watch browser source; writes only this checkout's lib/
 npm run package      # one-click package (npm pack → .tgz)
 npm run check        # 6 static gates + contrast-guard (runs on every commit)
 npm run preflight    # pre-release: version consistency / git state / listing sync
 ```
 
-`src/` is 10 modules (`meta` · `appearance` · `palette` · `tokens` · `css/` · `dom` · `drag` · `version` · `switcher` · `client`); DSH loads the artifacts in `lib/`.
+`src/` is split by responsibility; DSH loads the artifacts in `lib/`. The watcher rebuilds browser source only. After changing the Host entry, version, or CHANGELOG, run a full build again. Install the built checkout through official plugin management, follow the returned restart instructions, and verify the loaded version. Development scripts do not deploy or trigger browser refresh shortcuts.
+
+The root `conversation.header.leading` Slot provides Bloom's own positioning anchor. The complete switcher, menu, starlight, and update hints mount in the root `shell.overlay` Slot to avoid clipping by the host header. Positioning measures only Bloom's anchor. Host DOM discovery, node reparenting, and the floating drag fallback have been removed.
 
 **The build is dual-track** — the two halves want opposite module formats:
 
@@ -215,8 +193,16 @@ into one self-contained file.
 
 The version number is bumped by release-please inside the release PR, alongside
 `package.json` (via the `x-release-please-version` marker at the end of the line in
-`src/meta.ts`). `scripts/sync-version.mjs` is only a local-dev fallback and is not
-part of the publish path. See [CONTRIBUTING](./CONTRIBUTING.md).
+`src/meta.ts`). `scripts/sync-version.mjs` only synchronizes source to the existing
+package version for artifact rebuilds and prepublish checks; it does not select the next version.
+
+Main pushes, scheduled runs, and default manual dispatches only prepare a Release PR; `auto_merge_release` defaults to false. After real desktop installation acceptance, CI on the reviewed head, independent review, and `preflight`, the release owner may run this command from this repository to allow Release PR merging and trigger publication:
+
+```bash
+gh workflow run release-please.yml -f auto_merge_release=true
+```
+
+Do not run it when only preparing a candidate. Merging follows GitHub branch protection, without automatically resolving review threads or falling back to direct merge. See [CONTRIBUTING](./CONTRIBUTING.md) for the full procedure.
 
 ## Privacy
 
@@ -226,8 +212,7 @@ Prefer to send nothing: turn off "Send anonymous usage stats" in the panel's ver
 
 ## FAQ
 
-**Theme not applying?** Hard-refresh once (`Cmd/Ctrl + Shift + R`). If the page says `Failed to load plugins`,
-the client failed to register — re-run `npx @deepseek-ai/dsh plugin --profile <your-profile> add dsh-bloom-theme` or upgrade to the latest version.
+**Theme not applying?** Confirm that the bundle is enabled and inspect its installation result. If a restart is required, restart the application and verify the loaded version. For `Failed to load plugins`, check host compatibility and client registration errors, then restore a compatible version through official plugin management.
 
 **Can I customize colors?** For now you pick a whole palette via variants; per-color customization is on the roadmap.
 
@@ -249,12 +234,7 @@ If Bloom makes your DSH nicer to use, drop a ⭐ or buy me a coffee (sponsor lin
   <a href="https://github.com/webkubor/dsh-llm-hub">⚡ Model management</a>
 </p>
 
-Install both with Node.js, then restart DSH (replace `your-profile` with your profile name):
-
-```bash
-PROFILE=your-profile
-npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
-```
+Install `dsh-bloom-theme` and `@dsh-plugins/dsh-llm-hub` separately through DSH plugin management, then follow each installation result. DSH manages bundle registration and dependencies; no shell profile edits are needed.
 
 ---
 

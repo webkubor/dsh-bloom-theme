@@ -3,6 +3,9 @@
   "version": "0.25.1",
   "description": "Bloom for DSH — 玻璃+莫兰迪主题。15 套 OKLCH 配色（新增轻黄；主菜单精选 12 套，赤橙黄绿青蓝紫齐全，旧配色兼容），明暗自适应；磨砂玻璃面板默认常开；微动效 + 版本/更新指示。零依赖、TypeScript、WCAG AA。",
   "type": "module",
+  "engines": {
+    "dsh": ">=0.2.2-rc.1"
+  },
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
   "exports": {
@@ -23,6 +26,7 @@
     },
     "client": {
       "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
         "@deepseek-ai/dsh-client-locale"
       ],
       "platform": "web",
@@ -33,13 +37,9 @@
     "build": "npm run typecheck && tsc -p tsconfig.json && node scripts/bundle.mjs",
     "build:watch": "node scripts/bundle.mjs --watch",
     "sync-version": "node scripts/sync-version.mjs",
-    "deploy": "node scripts/sync-version.mjs && npm run build && node ../scripts/dsh-dev.mjs deploy",
-    "dev": "node scripts/sync-version.mjs && npm run build && (npm run build:watch &) && node scripts/watch-deploy.js",
-    "preview": "npm run deploy && echo '部署完成 —— 到桌面端应用里重载页面（它不是浏览器，没有可 open 的 URL）'",
+    "dev": "npm run build && npm run build:watch",
     "package": "npm run build && npm pack",
-    "desktop:link": "node scripts/desktop-profile.mjs link",
-    "desktop:production": "node scripts/desktop-profile.mjs production",
-    "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && node scripts/check-drag.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs",
+    "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs test/readme-package-name.test.mjs",
     "check:contrast": "contrast-guard",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs && node scripts/version-sync-gate.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",
@@ -49,11 +49,7 @@
     "test": "npm run check",
     "check:drift": "node scripts/dsh-drift.mjs",
     "test:i18n": "node --test test/i18n.test.mjs",
-    "test:browser": "node --test test/i18n.test.mjs test/drag-interaction.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs test/adaptive-glass.test.mjs test/appearance-host-theme.test.mjs test/starlight.test.mjs",
-    "check:dsh": "node ../scripts/dsh-dev.mjs check",
-    "rollback": "node ../scripts/dsh-dev.mjs rollback",
-    "rollback:npm": "node ../scripts/dsh-dev.mjs rollback --npm",
-    "dsh:status": "node ../scripts/dsh-dev.mjs status"
+    "test:browser": "node --test test/lifecycle.test.mjs test/i18n.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs test/adaptive-glass.test.mjs test/appearance-host-theme.test.mjs test/starlight.test.mjs"
   },
   "repository": {
     "type": "git",
@@ -103,6 +99,8 @@
     "contrast-guard": "^0.3.0",
     "esbuild": "^0.28.2",
     "playwright": "1.64.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "typescript": "^7.0.2"
   }
 }

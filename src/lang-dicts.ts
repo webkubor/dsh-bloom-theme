@@ -11,7 +11,7 @@ export const DICT_EN: Record<string, string> = {
   "在应用内点「立即更新」即可，无需终端命令": "Click “Update now” right here — no terminal needed",
   "立即更新": "Update now",
   "更新中…": "Updating…",
-  "已更新到 v{0}，重载页面后生效": "Updated to v{0} — reload the page to apply",
+  "已更新到 v{0}": "Updated to v{0}",
   "已更新到 v{0}，需要重启 DSH 才生效": "Updated to v{0} — restart DSH to apply",
   "立即重载": "Reload now",
   "稍后": "Later",

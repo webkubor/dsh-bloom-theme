@@ -53,7 +53,7 @@
 
 **结论：Bloom 接下来的迭代优先兼容 DSH 桌面端；Web UI 不再主动适配，会逐步淡出。**
 
-（0.16.0 及更早的版本是按 DSH Web UI 做的；**0.17.0 起适配桌面端**——这一版补上了 DSH 0.2.0 的选择器适配，并加了能自动发现这类失效的漂移门禁。）当前桌面应用使用 0.2.1-rc.5 时，切换器的版本提示读取桌面应用版本，而不是内嵌 DSH 包的旧版本；漂移门禁也优先检查本机已安装的桌面版本。
+0.17.0 起优先适配桌面端。本次更新使用当前宿主提供的顶栏与全局覆盖层 Slot，最低支持 DSH 0.2.2-rc.1；插件版本提示读取桌面应用版本。
 
 DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东西的价值长在 UI 上——宿主怎么改界面，
 配色和玻璃就得跟着长——所以迭代重心跟着挪到桌面端。
@@ -70,9 +70,11 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 - **已经装上的版本不会失效。** 停的是「跟着新界面继续长」，不是「把你现在能用的弄坏」。
 - 如果你只能用 Web UI，欢迎开 issue 把场景说清楚——真实需求会改变我的判断，这句不是客套。
 
-> **上一个版本（0.16.0）改了什么**：在跑的步骤接管主题色（扫光从灰换成 Bloom 三色）；
-> 轮次状态的三色光谱重新接上（DSH 改名后它静默消失了）；修浅色模式下消息气泡没画出来的玻璃边；
-> 修子串选择器自叠造成的「盒中盒」与「直角黑块 chip」；撤掉在跑步骤上的胶囊底色——状态不该靠盒子说话。
+### 这次更新 · 2026-11-06 🌸
+
+浅色模式补了点层次：边缘有淡淡的主题色，正文区依旧干净。右上角的星点也更清楚了，换配色时会一起变色，深色原有的白色星辉保留。
+
+配色菜单重新对齐，诗句的渐变颜色还在；入口和装饰层改走官方 Slot，切换页面、停用和重新启用时的资源清理也一起补齐。谢谢大家一直试用、截图提意见，这些细节都是一点点磨出来的。
 
 ## 一句话
 
@@ -88,8 +90,7 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 > 其余历史配色仍能读取旧偏好；若当前选中旧色，菜单会临时显示它，切走后收起。
 > 自动换色默认关闭，可设 5 / 15 / 30 / 60 分钟，休眠或隐藏时暂停。
 
-- **DSH 桌面端**：应用内「插件管理」安装，重载页面即可 —— 顶栏右上角出现「黛蓝 ▾」按钮，12 套精选配色、明暗与自动换色都在那里切换。
-- **自建 profile（CLI / 服务器 / Web）**：`dsh plugin --profile <你的 profile> add dsh-bloom-theme`，接进 boot graph 后重启 DSH，三步细节见下方[安装](#安装)。
+在 DSH 应用内「插件管理」安装，按返回提示完成应用或重启。顶栏「黛蓝 ▾」按钮提供 12 套精选配色、明暗与自动换色设置。官方 `plugin_manager` 安装方式见下方[安装](#安装)。
 
 ## 🏆 为什么用它
 
@@ -133,30 +134,15 @@ DSH 有了桌面端应用，我自己日常已经切过去了。主题这类东�
 
 ## 更新
 
-检测到新版后，支持 `remote.pluginManager.updateBundle` 的宿主会在更新横幅中显示「立即更新」，由宿主完成原位更新与失败恢复。若宿主返回需要重启，横幅只提示重启应用；普通应用成功后提供页面重载。旧宿主（包括当前桌面端 0.2.1-rc.5）缺少此接口，不显示无效的一键更新按钮，仍指向侧栏「插件」管理。桌面端不提供会被拒绝的终端更新命令；自建 CLI profile 保留复制命令。
+检测到新版后，支持 `remote.pluginManager.updateBundle` 的宿主会在更新横幅中显示「立即更新」，由宿主完成原位更新与失败恢复。若宿主返回需要重启，横幅提示重启应用；已应用成功时显示「已更新到 v{版本}」，不提供页面重载按钮。缺少此接口的旧宿主，不显示无效的一键更新按钮，仍指向侧栏「插件」管理。桌面端不提供会被拒绝的终端更新命令；自建 CLI profile 保留复制命令。
 
 ## 安装
 
-> **桌面端**：在应用内的插件管理里安装、升级。桌面 profile 由应用独占托管，
-> 命令行的 `dsh plugin --profile desktop ...` 会直接报
-> `profile "desktop" is managed exclusively by the Electron application` —— 不是权限问题，是设计如此。
+在正在运行的 DSH 中打开「插件」管理，安装 `dsh-bloom-theme`。也可以让当前 DSH 会话使用官方 `plugin_manager`：先列出已有 bundle，再通过 `install_bundle` 安装明确版本；本地开发使用构建完成的仓库绝对路径。
 
-<details>
-<summary>自建 profile（CLI / 服务器 / web）的装法</summary>
+按安装返回的 `application` / `nextStep` 完成后续操作；替换已有包时可能需要重启应用，页面刷新不能替代宿主重启。安装与升级由宿主管理，无需手改 profile 依赖或复制 `node_modules`。
 
-```bash
-# 1) 装进你的 profile（profile 名按自己的改）
-dsh plugin --profile <你的 profile> add dsh-bloom-theme
-
-# 2) 接进 boot graph：把 "dsh-bloom-theme" 加进
-#    ~/.dsh/profiles/<你的 profile>/package.json 的 dsh.profile.bundles 数组
-
-# 3) 重启 DSH
-```
-
-</details>
-
-装完刷新页面，顶栏右上角会出现「黛蓝 ▾」主题按钮。点击展开即可在 **12 套精选配色**间切换，
+应用安装结果后，主题按钮通过官方 Slot 提供的锚点定位在 DSH 对话顶栏。点击展开即可在 **12 套精选配色**间切换，
 下拉底部显示当前版本号；npm 上有更新的版本时会亮一个 `↑ vX` 徽标（点它跳 Release 页）。
 
 ## 特性
@@ -176,7 +162,7 @@ dsh plugin --profile <你的 profile> add dsh-bloom-theme
 | **OKLCH 调色 + WCAG AA** | 感知均匀色彩空间，明暗切换不跳变；全部明暗主色对实测 ≥ 4.5:1 |
 | **零依赖 · 纯 CSS 变量驱动** | 只注入 CSS 变量 + 少量切换逻辑，几乎零运行时开销 |
 | **不抢占原生控件** | 切换器挂进 DSH 顶栏工具区，与原生按钮并排共存 |
-| **TypeScript 构建** | `src/` 按职责拆分 → node 侧 `tsc`（ESM）+ 浏览器侧 `esbuild`（IIFE 单文件）；`build / deploy / check / preflight` 一键脚本 |
+| **TypeScript 构建** | `src/` 按职责拆分 → node 侧 `tsc`（ESM）+ 浏览器侧 `esbuild`（IIFE 单文件）；`build / dev / check / preflight` 一键脚本 |
 
 ## 设计原理：双轨色
 
@@ -195,19 +181,18 @@ Bloom 的核心不是「换个颜色」，而是一套**莫兰迪质感语言**�
 ## 开发 / 构建（TypeScript）
 
 ```bash
-npm install
+npm ci
 npm run typecheck    # tsc --noEmit，全量类型检查
 npm run build        # typecheck → tsc 出 lib/index.js → esbuild 出 lib/client.js
-npm run deploy       # 门禁 → 备份 → 装进桌面端 desktop profile（不过门禁不部署）
-npm run rollback     # 起不来时：恢复上一次 deploy 前 / rollback:npm 装回正式版
-npm run dsh:status   # 现在装的是哪个版本、是不是开发版、近 24h 崩溃
-npm run dev          # build + watch（每次保存先过门禁，不过不同步）
+npm run dev          # 完整构建后监听浏览器源码，仅更新本仓 lib/
 npm run package      # 一键打包（npm pack → .tgz）
 npm run check        # 6 组静态闸门 + contrast-guard（每次提交都跑）
 npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收录同步
 ```
 
-源码 `src/` 按职责拆分（`meta` · `appearance` · `rotation` · `palette` · `tokens` · `css/` · `dom` · `drag` · `version` · `switcher` · `client`），DSH 加载的是 `lib/` 里的产物。
+源码 `src/` 按职责拆分，DSH 加载的是 `lib/` 里的产物。`dev` 只编译浏览器侧源码；修改 Host 入口、版本或 CHANGELOG 后重新运行完整构建。构建完成后通过官方插件管理安装，按返回状态完成重启并核对实际版本。开发脚本不自动部署、不触发浏览器快捷键刷新。
+
+根 `conversation.header.leading` Slot 提供本插件自己的定位锚点；完整切换器、菜单、星光与更新提示挂载在根 `shell.overlay` Slot，避免宿主顶栏裁剪。定位只测量自己的锚点，移除了宿主 DOM 找位、重挂与悬浮拖拽兜底。
 
 **构建是双轨的**，两侧对模块格式的要求正好相反：
 
@@ -220,7 +205,15 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 
 版本号由 release-please 在 release PR 里连同 `package.json` 一起 bump（靠
 `src/meta.ts` 行尾的 `x-release-please-version` 标记）；`scripts/sync-version.mjs`
-只是本地 dev 的兜底同步，不在发布路径上。改动详见 [CONTRIBUTING](./CONTRIBUTING.md)。
+只按现有包版本同步源码，供产物重建和发布前校验使用，不决定下一版本。
+
+main push、定时巡检和默认手动触发只准备 Release PR，`auto_merge_release` 默认关闭。完成真实桌面安装验收、当前 head 的 CI、独立评审和 `preflight` 后，发布负责人才可在本仓执行以下命令，允许 Release PR 合并并触发正式发布：
+
+```bash
+gh workflow run release-please.yml -f auto_merge_release=true
+```
+
+准备候选版时不执行此命令。合并遵守 GitHub 分支保护，不自动解决评审线程，不使用直接合并兜底；完整步骤见 [CONTRIBUTING](./CONTRIBUTING.md)。
 
 ## 隐私
 
@@ -230,8 +223,7 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
 
 ## 常见问题
 
-**主题没生效？** 先硬刷新一次（`Cmd/Ctrl + Shift + R`）。若页面提示 `Failed to load plugins`，
-说明该版本的 client 没能注册，请确认 `dsh plugin --profile <name> add` 那步无误，或换用最新版。
+**主题没生效？** 先在插件管理中确认包已启用及安装结果；若返回需要重启，完成应用重启后再核对版本。若页面提示 `Failed to load plugins`，检查宿主兼容性及 client 注册错误，并通过官方插件管理恢复兼容版本。
 
 **能自定义颜色吗？** 目前通过「变体」选择整套色系；单色自定义在规划中（见 Roadmap）。
 
@@ -258,12 +250,7 @@ npm run preflight    # 发版前检查：版本五方一致 / git 状态 / 收�
   <a href="https://github.com/webkubor/dsh-llm-hub">⚡ 模型管理</a>
 </p>
 
-一行装齐（只需 Node.js），装完重启 DSH 即可：
-
-```bash
-PROFILE=<你的 profile>
-npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
-```
+在 DSH 插件管理中分别安装 `dsh-bloom-theme` 和 `@dsh-plugins/dsh-llm-hub`，各自按安装结果完成后续操作。让宿主管理 bundle 注册与依赖，不需要 shell 改写 profile。
 
 ---
 

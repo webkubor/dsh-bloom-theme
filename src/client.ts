@@ -27,9 +27,7 @@
  */
 
 
-/** 顶层立即注入 —— 不依赖 factory materialize（dsh-client-modules 的 lazy CJS 在
- *  没有 import 的情况下 factory 不会被调用，CSS/switcher 永远不跑）。所以：
- * script 一加载就跑（同时给 factory 留 fallback）。 */
+/** package.json 的 immediately 保证 loader 激活；所有页面副作用由 apply 的 effect 持有。 */
 import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
 import { buildBloomCSS } from './tokens.js'
 import { COMPONENT_CSS } from './css/component.js'
@@ -38,10 +36,10 @@ import { ADAPTIVE_CSS } from './css/adaptive.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appearance.js'
 import { initGlassMode } from './glass.js'
-import { initStarlight } from './starlight.js'
-import { injectSwitcher, watchSwitcher } from './switcher.js'
+import { createBloomComponents, type HostReact } from './ui.js'
 import { initTypingGlow } from './typing.js'
-import { checkUpdate } from './version.js'
+import { checkUpdate, setVersionUpdatesActive } from './version.js'
+import { teardownBloom } from './teardown.js'
 import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS } from './lang.js'
 
 /**
@@ -72,82 +70,41 @@ function watchCursorGlow() {
     write(e.clientX / window.innerWidth, e.clientY / window.innerHeight)
   }
   window.addEventListener('pointermove', onMove, { passive: true })
+  window.__dshBloomCursorOff__ = () => {
+    window.removeEventListener('pointermove', onMove)
+    if (raf) cancelAnimationFrame(raf)
+    window.__dshBloomCursorBound__ = false
+    window.__dshBloomCursorOff__ = undefined
+  }
 }
 
-;(function() {
-  if (typeof document === 'undefined') return
-  const variant = readVariant()
-  injectCSS(buildBloomCSS(), 'bloom.css')
-  injectCSS(COMPONENT_CSS, 'components.css')
-  injectCSS(GLASS_CSS, 'glass.css')
-  // 适配层必须最后注入：它用 html 前缀提高权重，压住前面那些普通规则。
-  injectCSS(ADAPTIVE_CSS, 'adaptive.css')
+function installSkin(): () => void {
+  let disposed = false
+  const controller = new AbortController()
   const boot = () => {
+    if (disposed) return
+    const variant = readVariant()
+    injectCSS(buildBloomCSS(), 'bloom.css')
+    injectCSS(COMPONENT_CSS, 'components.css')
+    injectCSS(GLASS_CSS, 'glass.css')
+    injectCSS(ADAPTIVE_CSS, 'adaptive.css')
     document.body.dataset.bloomVariant = variant
     initAppearanceSync()
-    initGlassMode()
-    initStarlight()
-    injectSwitcher(variant)
-    // header 通常晚于脚本渲染 —— 交给 observer 在宿主就绪后迁进去
-    watchSwitcher(variant)
+    window.__dshBloomGlassOff__ ??= initGlassMode()
+    setVersionUpdatesActive(true)
+    void checkUpdate(controller.signal)
     watchThinkTags()
-    checkUpdate()
     watchCursorGlow()
   }
   if (document.body) boot()
-  else document.addEventListener('DOMContentLoaded', boot)
-})()
-
-/** 开发期自动刷新 —— 仅在本地 localhost 启用，线上用户不受影响。
- *
- * 解决痛点：bloom 插件的 client.js 一旦加载进浏览器就常驻 JS 上下文，
- * 我本地 rsync 部署后页面不会自动拿新代码，必须 hard reload 才能验证。
- *
- * 实现：找到加载本插件的 <script> 标签，HEAD 请求同一 URL，对比
- * Last-Modified / ETag —— 不一致就 location.reload()。?noreload=1 关掉。
- *
- * 不放在 watchSwitcher 里：切换器是可选组件；reload 是纯文件监控，跟切换器无关。
- */
-;(function installAutoReload() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return
-  // 仅本地开发；线上用户用 bloom 不该被自动 reload 打断。
-  const host = location.hostname
-  if (host !== '127.0.0.1' && host !== 'localhost') return
-  // 一键关
-  if (location.search.includes('noreload=1')) return
-
-  // DSH 走 module loader 注入，页面上通常没有带包名的 <script src> —— 不去扫 script。
-  // 而且 DSH 的 web 服务 HEAD 不返回 etag / content-length，所以直接 GET 自己插件的
-  // 官方 URL（${origin}/plugins/<包名>/client.js），对整个 body 算指纹比对：
-  // 变了 = 你部署了新版，location.reload()。这套不依赖 import.meta / script 扫描，
-  // vanilla 和 ESM 都安全。~85KB / 3s 在本地无所谓；线上不启用（localhost 才生效）。
-  const myUrl = `${location.origin}/plugins/${PLUGIN_ID}/client.js`
-  let initialKey: string | null = null
-
-  // 极简 FNV-1a 32-bit，避免引 crypto / 异步 SubtleCrypto
-  const fnv1a = (s: string) => {
-    let h = 2166136261 >>> 0
-    for (let i = 0; i < s.length; i++) { h = (h ^ s.charCodeAt(i)) * 16777619 >>> 0 }
-    return h.toString(36)
+  else document.addEventListener('DOMContentLoaded', boot, { once: true })
+  return () => {
+    disposed = true
+    controller.abort()
+    document.removeEventListener('DOMContentLoaded', boot)
+    teardownBloom()
   }
-
-  // 2026-09-28 修 #31「控制台刷 404」：宿主已改走合并路由 /plugins/??<id>/client.js&rev=…，
-  // 单包路径 /plugins/<包名>/client.js 一律 404（curl 实测，dsh-client-modules 的 comboUrl）。
-  // 原来 !r.ok 只是 return，于是每 3 秒一条 404 永不停。现在：拿不到基线就停表，不再轮询。
-  let timer: ReturnType<typeof setInterval> | undefined
-  const stop = () => { if (timer !== undefined) clearInterval(timer); timer = undefined }
-  const check = async () => {
-    try {
-      const r = await fetch(`${myUrl}?t=${Date.now()}`, { cache: 'no-store' })
-      if (!r.ok) { if (initialKey === null) stop(); return }
-      const text = await r.text()
-      const key = fnv1a(text) + ':' + text.length
-      if (initialKey === null) { initialKey = key; timer ??= setInterval(check, 3000); return }
-      if (key !== initialKey) location.reload()
-    } catch (_) { /* 网络抖动忽略 */ }
-  }
-  check()                                            // 首次记录基线；成功才开 3 秒轮询
-})()
+}
 
 /**
  * 宿主「插件管理」服务句柄 —— 让更新横幅能在**应用内直接更新**，不用终端。
@@ -179,6 +136,7 @@ type RemoteUpdateResult = { ok: true; value: PluginUpdateResult } | { ok: false;
 let pluginManager: {
   updateBundle?: (name: string, version: string) => Promise<RemoteUpdateResult>
 } | null = null
+let layout: { selectPanel(id: string): void } | null = null
 let refreshUpdateCapability: (() => void) | undefined
 
 function bindPluginManager(ctx: any) {
@@ -217,8 +175,19 @@ function bindPluginManager(ctx: any) {
  *   4. 用户关掉的版本不再弹（新版本号出现后重新弹一次）
  *   5. 一切失败静默：断网/CORS 被拦/registry 抽风都不影响主题本身
  */
-;(function installUpdateCheck() {
+function installUpdateCheck(host: HTMLElement) {
   if (typeof window === 'undefined' || typeof fetch !== 'function') return
+  let disposed = false
+  const controller = new AbortController()
+  const timers = new Set<ReturnType<typeof setTimeout>>()
+  const later = (fn: () => void, ms: number) => {
+    const timer = setTimeout(() => {
+      timers.delete(timer)
+      if (!disposed) fn()
+    }, ms)
+    timers.add(timer)
+    return timer
+  }
 
   const REGISTRY = 'https://registry.npmjs.org/' + PLUGIN_ID + '/latest'
   const CHECK_TTL_MS = 24 * 60 * 60 * 1000
@@ -275,14 +244,17 @@ function bindPluginManager(ctx: any) {
     || location.protocol === 'dsh-app:' || /Electron/i.test(navigator.userAgent)
   let bannerVersion: string | null = null
   let outcome: { kind: 'available' | 'installing' | 'installed' | 'failed'; version?: string; restart?: boolean; reason?: string; localizableReason?: boolean } = { kind: 'available' }
-  refreshUpdateCapability = () => {
+  const refreshCapability = () => {
     if (outcome.kind === 'available' && bannerVersion && document.getElementById('dsh-bloom-update-banner')) showBanner(bannerVersion, true)
   }
-  window.addEventListener(LANG_CHANGE_EVENT, () => {
+  refreshUpdateCapability = refreshCapability
+  const onLanguageChange = () => {
     if (bannerVersion && document.getElementById('dsh-bloom-update-banner')) showBanner(bannerVersion, true)
-  })
+  }
+  window.addEventListener(LANG_CHANGE_EVENT, onLanguageChange)
 
   function showBanner(latest, refresh = false) {
+    if (disposed || !document.body) return
     const existing = document.getElementById('dsh-bloom-update-banner')
     if (existing && !refresh) return
     const dismissed = ls.get(LS_DISMISSED)
@@ -291,6 +263,7 @@ function bindPluginManager(ctx: any) {
     const isDesktop = isDesktopHost()
     // Only the replacement API can update an installed bundle; legacy installBundle cannot.
     const canUpdate = !!pluginManager?.updateBundle
+    const canOpenPlugins = typeof layout?.selectPanel === 'function'
 
     if (bannerVersion !== latest) outcome = { kind: 'available' }
     bannerVersion = latest
@@ -360,7 +333,7 @@ function bindPluginManager(ctx: any) {
           ? `<button data-primary data-act="install">${tr('立即更新')}</button>
              <button data-act="open">${tr('更新日志')}</button>`
           : isDesktop
-            ? `<button data-primary data-act="plugins">${tr('打开插件管理')}</button>
+            ? `${canOpenPlugins ? `<button data-primary data-act="plugins">${tr('打开插件管理')}</button>` : ''}
                <button data-act="open">${tr('更新日志')}</button>`
             : `<button data-primary data-act="copy">${tr('复制更新命令')}</button>
                <button data-act="open">${tr('更新日志')}</button>`}
@@ -371,19 +344,14 @@ function bindPluginManager(ctx: any) {
       el.remove()
     })
     el.querySelector<HTMLElement>('[data-act="plugins"]')?.addEventListener('click', () => {
-      const pluginBtn = document.querySelector<HTMLElement>('button[aria-label="插件"], [aria-label="Plugins"]')
-      if (pluginBtn) {
-        pluginBtn.click()
-      } else {
-        const btn = [...document.querySelectorAll('button')].find(b => b.textContent?.trim() === '插件' || b.textContent?.trim() === 'Plugins')
-        btn?.click()
-      }
+      layout?.selectPanel('plugins')
     })
     el.querySelector<HTMLElement>('[data-act="copy"]')?.addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLElement
       navigator.clipboard?.writeText(updateCmd(latest)).then(() => {
+        if (disposed) return
         btn.textContent = tr('✓ 已复制')
-        setTimeout(() => (btn.textContent = tr('复制更新命令')), 1600)
+        later(() => (btn.textContent = tr('复制更新命令')), 1600)
       }).catch(() => {})
     })
     el.querySelector<HTMLElement>('[data-act="install"]')?.addEventListener('click', async (e) => {
@@ -395,6 +363,7 @@ function bindPluginManager(ctx: any) {
       btn.textContent = tr('更新中…')
       try {
         const response = await pluginManager?.updateBundle?.(PLUGIN_ID, latest)
+        if (disposed) return
         // Remote calls wrap PluginUpdateResult in { ok, value }; the manager reports
         // its own ChangeResult inside `result`, and a settled Promise alone proves nothing.
         if (response?.ok === false) throw new UpdateFailure(response.error.message, false)
@@ -412,6 +381,7 @@ function bindPluginManager(ctx: any) {
         const current = document.getElementById('dsh-bloom-update-banner')
         if (current) showInstalled(current, latest, needRestart)
       } catch (error) {
+        if (disposed) return
         const failure = error instanceof UpdateFailure
           ? error : new UpdateFailure(error instanceof Error ? error.message : String(error), false)
         outcome = { kind: 'failed', reason: failure.key, localizableReason: failure.localizable }
@@ -422,7 +392,7 @@ function bindPluginManager(ctx: any) {
     el.querySelector<HTMLElement>('[data-act="open"]').addEventListener('click', () => {
       window.open(RELEASES_URL + '/tag/v' + latest, '_blank', 'noopener')
     })
-    document.body.appendChild(el)
+    host.appendChild(el)
     if (outcome.kind === 'installing') {
       const button = el.querySelector<HTMLButtonElement>('[data-act="install"]')
       if (button) { button.disabled = true; button.textContent = tr('更新中…') }
@@ -430,7 +400,7 @@ function bindPluginManager(ctx: any) {
     else if (outcome.kind === 'failed') showInstallFailed(el, latest, outcome.reason || '', !!outcome.localizableReason)
   }
 
-  /** 装好了：把横幅换成「重载后生效」，并给一个一键重载。 */
+  /** Reflect the manager's activation result without claiming that page reload loads host modules. */
   function showInstalled(el: HTMLElement, version: string, needRestart: boolean) {
     const body = el.querySelector<HTMLElement>('.bloom-upd-body')
     const actions = el.querySelector<HTMLElement>('.bloom-upd-actions')
@@ -438,10 +408,8 @@ function bindPluginManager(ctx: any) {
     el.querySelector('.bloom-upd-hint')?.remove()
     body.textContent = needRestart
       ? tr`已更新到 v${version}，需要重启 DSH 才生效`
-      : tr`已更新到 v${version}，重载页面后生效`
-    actions.innerHTML = (needRestart ? '' : `<button data-primary data-act="reload">${tr('立即重载')}</button>`)
-      + `<button data-act="dismiss">${tr('稍后')}</button>`
-    actions.querySelector<HTMLElement>('[data-act="reload"]')?.addEventListener('click', () => location.reload())
+      : tr`已更新到 v${version}`
+    actions.innerHTML = `<button data-act="dismiss">${tr('稍后')}</button>`
     actions.querySelector<HTMLElement>('[data-act="dismiss"]')?.addEventListener('click', () => el.remove())
   }
 
@@ -466,8 +434,9 @@ function bindPluginManager(ctx: any) {
     actions.querySelector<HTMLElement>('[data-act="copy"]')?.addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLElement
       navigator.clipboard?.writeText(updateCmd(version)).then(() => {
+        if (disposed) return
         btn.textContent = tr('✓ 已复制')
-        setTimeout(() => (btn.textContent = tr('复制更新命令')), 1600)
+        later(() => (btn.textContent = tr('复制更新命令')), 1600)
       }).catch(() => {})
     })
     actions.querySelector<HTMLElement>('[data-act="open"]')?.addEventListener('click', () => {
@@ -482,24 +451,34 @@ function bindPluginManager(ctx: any) {
       if (last && Date.now() - last.at < CHECK_TTL_MS && last.latest === PLUGIN_VERSION) return
     } catch {}
 
-    const ctrl = typeof AbortController === 'function' ? new AbortController() : null
-    const timer = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null
+    if (disposed) return
+    const timer = later(() => controller.abort(), 5000)
 
-    fetch(REGISTRY, { cache: 'no-store', signal: ctrl?.signal })
+    fetch(REGISTRY, { cache: 'no-store', signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then((manifest) => {
+        if (disposed) return
         const latest = manifest && manifest.version
         if (typeof latest !== 'string') return
         ls.set(LS_LAST, JSON.stringify({ at: Date.now(), latest }))
         if (isNewer(latest, PLUGIN_VERSION)) showBanner(latest)
       })
       .catch(() => {}) // 断网 / 超时 / 被拦 —— 静默，绝不影响主题
-      .finally(() => timer && clearTimeout(timer))
+      .finally(() => { clearTimeout(timer); timers.delete(timer) })
   }
 
   // 不抢首屏：等 DSH 壳渲染完再查
-  setTimeout(check, 4000)
-})()
+  later(check, 4000)
+  return () => {
+    disposed = true
+    controller.abort()
+    for (const timer of timers) clearTimeout(timer)
+    timers.clear()
+    window.removeEventListener(LANG_CHANGE_EVENT, onLanguageChange)
+    if (refreshUpdateCapability === refreshCapability) refreshUpdateCapability = undefined
+    document.getElementById('dsh-bloom-update-banner')?.remove()
+  }
+}
 
 /**
  * 把本插件的语言接到 DSH 的 locale 服务上。
@@ -548,11 +527,15 @@ function attachLocale(ctx) {
       return () => {}
     }
   }, 'dsh-bloom-theme: dictionaries')
+  let unbindLocale: (() => void) | undefined
   try {
-    bindLocale(locale)
+    unbindLocale = bindLocale(locale)
   } catch {
     // register 没成时 bind 一个未注册的 ns 是下一个会抛的点；
     // translate 留空，tr() 退回 key（中文原文）。
+  }
+  if (unbindLocale) {
+    ctx.effect?.(() => unbindLocale, 'dsh-bloom-theme: bind locale')
   }
   ctx.effect?.(
     () => {
@@ -613,37 +596,40 @@ function bindThemeToHost(ctx) {
  */
 window.__ModuleLoader__.load({
   id: PLUGIN_ID,
-  factory: () => {
+  factory: (require: (name: string) => unknown) => {
+    const React = require('react') as HostReact
+    const { Switcher, Decorations } = createBloomComponents(React, installUpdateCheck)
     const exports: Record<string, unknown> = {}
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
+    exports.inject = ['slots']
     exports.apply = function apply(ctx) {
-      // 顶层 IIFE 已注入；此处兜底：cordis materialize 时再确认一次。
       if (typeof document === 'undefined') return
-      const variant = readVariant()
       // 语言是体系配置，走 DSH 的 locale 服务 —— 必须在任何 tr() 渲染之前接上。
       bindLocaleToHost(ctx)
       // 深浅状态交给 DSH 的 theme 服务持有，面板只做入口。
       bindThemeToHost(ctx)
       // 接上宿主的插件管理服务：横幅据此提供「应用内一键更新」。
       bindPluginManager(ctx)
-      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/bloom.css"]')) {
-        injectCSS(buildBloomCSS(), 'bloom.css')
-      }
-      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/components.css"]')) {
-        injectCSS(COMPONENT_CSS, 'components.css')
-      }
-      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/glass.css"]')) {
-        injectCSS(GLASS_CSS, 'glass.css')
-      }
-      if (!document.querySelector<HTMLElement>('style[data-plugin-css="' + PLUGIN_ID + '/adaptive.css"]')) {
-        injectCSS(ADAPTIVE_CSS, 'adaptive.css')
-      }
-      document.body.dataset.bloomVariant = variant
-      initAppearanceSync()   // 重放持久化的深浅模式（零弹窗切换的持久化侧）
-      initStarlight()
-      injectSwitcher(variant)
-      watchSwitcher(variant)
-      watchThinkTags()
+      ctx.inject(['layout'], (scope) => {
+        scope.effect(() => {
+          const service = scope.layout
+          layout = service
+          refreshUpdateCapability?.()
+          return () => {
+            if (layout === service) {
+              layout = null
+              refreshUpdateCapability?.()
+            }
+          }
+        }, 'dsh-bloom-theme: plugin navigation')
+      })
+      ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')
+      ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({
+        name: 'conversation.header.leading',
+      }, Switcher))
+      ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+        name: 'shell.overlay', id: 'dsh-bloom-theme.decorations', order: -100,
+      }, Decorations))
       ctx.effect?.(() => initTypingGlow(), 'dsh-bloom-theme: typing glow')
     }
 

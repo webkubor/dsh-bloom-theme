@@ -1,5 +1,5 @@
 /**
- * 星辉层 —— 深色模式下，从窗口右上角「滑出来」的闪烁光点。
+ * 星辉层 —— 深浅模式共用，从窗口右上角「滑出来」的闪烁光点。
  *
  * 做法照搬 ModelGo 控制台账单余额桶的 BucketSparkles（owner 指定的参照物），
  * 不是画布星空：
@@ -9,11 +9,11 @@
  *     滑出途中放大点亮，末端渐隐），twinkle 叠一层不规则亮灭；
  *   · 距离用平方分布：大多数光点停在角附近，少数滑得很远 —— 这就是
  *     「从角里溢出来」的观感来源，不是均匀撒满屏；
- *   · 两种色：主题色提亮的一档 + 白，各自带 box-shadow 光晕。
+ *   · 浅色：主题色深浅渐变；深色：主题色提亮的一档 + 白，各自带光晕。
  *
  * 为什么不用 canvas / rAF：纯 CSS 动画由合成器跑，切后台浏览器自动节流，
  * 不需要任何 JS 循环；深浅切换也只靠 CSS 选择器，不需要监听。
- * 显隐与样式见 css/glass.ts「星辉层」一节，只在 body[data-ds-dark-theme] 下出现。
+ * 样式见 css/glass.ts「星辉层」一节；切换模式或配色时不重建光点。
  */
 
 const LAYER_ID = 'dsh-bloom-sparkles'
@@ -67,12 +67,4 @@ export function buildSparkles(doc: Document, seed = 7, count = COUNT): HTMLEleme
     layer.appendChild(dot)
   }
   return layer
-}
-
-export function initStarlight(): void {
-  if (typeof document === 'undefined' || !document.body) return
-  if (document.getElementById(LAYER_ID)) return
-  // 旧版 canvas 若因热更新残留，一并清掉
-  document.getElementById('dsh-bloom-starlight')?.remove()
-  document.body.prepend(buildSparkles(document))
 }

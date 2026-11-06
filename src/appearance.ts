@@ -132,6 +132,17 @@ export function setMode(mode: AppearanceMode): void {
   try { localStorage.setItem(LEGACY_MODE_KEY, mode) } catch {}
 }
 
+let legacyMq: MediaQueryList | null = null
+let legacyMqHandler: (() => void) | null = null
+
+export function clearAppearanceSync(): void {
+  if (legacyMq && legacyMqHandler) {
+    legacyMq.removeEventListener('change', legacyMqHandler)
+    legacyMq = null
+    legacyMqHandler = null
+  }
+}
+
 /**
  * 启动时对齐深浅状态。
  *
@@ -147,11 +158,13 @@ export function initAppearanceSync(): void {
     syncHostScheme()
     return
   }
+  clearAppearanceSync()
   applyModeLegacy(readLegacyMode())
-  const mq = window.matchMedia('(prefers-color-scheme: dark)')
-  mq.addEventListener('change', () => {
+  legacyMq = window.matchMedia('(prefers-color-scheme: dark)')
+  legacyMqHandler = () => {
     if (readLegacyMode() === 'system') applyModeLegacy('system')
-  })
+  }
+  legacyMq.addEventListener('change', legacyMqHandler)
 }
 
 /**

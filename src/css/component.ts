@@ -46,6 +46,15 @@ body[data-bloom-variant] {
   background-color: var(--dsw-alias-bg-base) !important;
 }
 
+/* 浅色：让边缘有主题色的纵深，中心保留干净的阅读底色。
+   所有层随当前主题变化，避免大片无层次的近白色；深色沿用原有氛围。 */
+body[data-bloom-variant]:not([data-ds-dark-theme]) {
+  --bloom-ambience:
+    radial-gradient(ellipse at 100% 0%, color-mix(in oklch, var(--bloom-accent, #6b8f71) 20%, transparent), transparent 58%),
+    radial-gradient(ellipse at 0% 100%, rgba(var(--bloom-morandi), 0.12), transparent 58%),
+    linear-gradient(130deg, rgba(var(--bloom-morandi), 0.06), transparent 45%, rgba(var(--bloom-morandi), 0.035));
+}
+
 /* 氛围层：另挂一个固定层，不再只靠 body 的 background-image。
    为什么必须另挂：body 上的 background-image 会被宿主的 \`background:\` 简写重置
    （真机实测计算值 = none，而 --bloom-ambience 变量本身有值），

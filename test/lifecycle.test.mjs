@@ -230,6 +230,8 @@ test('menu escapes a clipped, lower-stacked host header and tracks Bloom\'s own 
   const before = await page.evaluate(() => document.body.dataset.bloomVariant)
   const target = await page.evaluate(cur => [...document.querySelectorAll('.dsh-bloom-option')].map(o => o.dataset.variant).find(v => v !== cur), before)
   await page.click(`.dsh-bloom-option[data-variant="${target}"]`)
+  // ViewTransition applies the palette asynchronously after capturing the old frame.
+  await page.waitForFunction(expected => document.body.dataset.bloomVariant === expected, target)
   assert.equal(await page.evaluate(() => document.body.dataset.bloomVariant), target, `option below the header edge is clickable (before ${before}, target ${target})`)
 
   // Inner scroll container moves the header: capture-phase scroll listener re-anchors.

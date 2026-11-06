@@ -17,8 +17,9 @@ const { outputFiles } = await build({
       import { createBloomComponents } from './src/ui.ts';
       import { buildSparkles } from './src/starlight.ts';
       import { GLASS_CSS } from './src/css/glass.ts';
+      import { COMPONENT_CSS } from './src/css/component.ts';
       const { Decorations } = createBloomComponents(React, () => () => {});
-      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS };`,
+      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS, COMPONENT_CSS };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
     loader: 'ts',
   },
@@ -143,4 +144,43 @@ test('layout is seed-stable and React remount keeps one layer', async t => {
     return a === b && document.querySelectorAll('#dsh-bloom-sparkles').length === 1
   })
   assert.ok(same)
+})
+
+test('light dots have clearer cores while dark keeps its original intensity', async t => {
+  const page = await setup(t, false)
+  const result = await page.evaluate(() => {
+    const layer = document.getElementById('dsh-bloom-sparkles')
+    const dots = Array.from(layer.children)
+    const light = { opacity: Number(getComputedStyle(layer).opacity),
+      min: Math.min(...dots.map(dot => parseFloat(getComputedStyle(dot).width))) }
+    document.body.setAttribute('data-ds-dark-theme', '')
+    return { light, dark: { opacity: Number(getComputedStyle(layer).opacity),
+      min: Math.min(...dots.map(dot => parseFloat(getComputedStyle(dot).width))) } }
+  })
+  assert.ok(result.light.min >= 1.8, 'light cores remain visible on a pale surface')
+  assert.ok(result.light.opacity > result.dark.opacity)
+  assert.ok(result.dark.min < 1.8, 'dark dots preserve their original size variation')
+  assert.equal(result.dark.opacity, 0.7)
+})
+
+test('light ambience follows theme colour without changing the dark backdrop', async t => {
+  const page = await setup(t, false)
+  const result = await page.evaluate(() => {
+    const style = document.createElement('style')
+    style.textContent = window.fixture.COMPONENT_CSS
+    document.head.append(style)
+    document.body.style.setProperty('--bloom-morandi', '146,168,179')
+    document.body.style.setProperty('--bloom-aurora-stream-2', '#b0d4de')
+    document.body.style.setProperty('--bloom-accent', '#297cb5')
+    const blue = getComputedStyle(document.body, '::before').backgroundImage
+    document.body.style.setProperty('--bloom-accent', '#b63d73')
+    const pink = getComputedStyle(document.body, '::before').backgroundImage
+    document.body.setAttribute('data-ds-dark-theme', '')
+    const dark = getComputedStyle(document.body, '::before').backgroundImage
+    return { blue, pink, dark }
+  })
+  assert.match(result.blue, /linear-gradient/)
+  assert.match(result.blue, /radial-gradient/)
+  assert.notEqual(result.blue, result.pink)
+  assert.doesNotMatch(result.dark, /linear-gradient/)
 })

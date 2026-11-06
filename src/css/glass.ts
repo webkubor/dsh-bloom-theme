@@ -471,16 +471,19 @@ body[data-bloom-variant="cinnabar"]::after {
   /* Lives in shell.overlay (above content): only the top-right corner, never a full-screen wash. */
   top: 0; right: 0; width: 360px; height: 220px;
   z-index: 0;
-  opacity: 0.7;
+  opacity: 0.95;
   overflow: hidden;
   pointer-events: none;
   background: none;
 }
+body[data-ds-dark-theme] .dsh-bloom-sparkles { opacity: 0.7; }
 .dsh-bloom-sparkles > i {
   position: absolute;
   border-radius: 50%;
   opacity: 0;
-  background: linear-gradient(135deg, color-mix(in oklch, var(--bloom-accent, #6b8f71) 45%, #fff), var(--bloom-accent, #6b8f71));
+  min-width: 2px;
+  min-height: 2px;
+  background: linear-gradient(135deg, color-mix(in oklch, var(--bloom-accent, #6b8f71) 80%, #fff), var(--bloom-accent, #6b8f71));
   box-shadow: 0 0 var(--glow, 3px) color-mix(in oklch, var(--bloom-accent, #6b8f71) 55%, transparent);
   animation-name: bloom-spark-drift, bloom-spark-twinkle;
   animation-timing-function: cubic-bezier(.25, .6, .35, 1), ease-in-out;
@@ -488,9 +491,11 @@ body[data-bloom-variant="cinnabar"]::after {
   will-change: transform, opacity;
 }
 .dsh-bloom-sparkles > i.t {
-  background: linear-gradient(135deg, var(--bloom-accent, #6b8f71), color-mix(in oklch, var(--bloom-accent, #6b8f71) 65%, #fff));
+  background: linear-gradient(135deg, var(--bloom-accent, #6b8f71), color-mix(in oklch, var(--bloom-accent, #6b8f71) 90%, #fff));
 }
 body[data-ds-dark-theme] .dsh-bloom-sparkles > i {
+  min-width: 0;
+  min-height: 0;
   background: #fff;
   box-shadow: 0 0 var(--glow, 3px) rgba(255, 255, 255, 0.7);
 }

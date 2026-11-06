@@ -68,11 +68,3 @@ export function buildSparkles(doc: Document, seed = 7, count = COUNT): HTMLEleme
   }
   return layer
 }
-
-export function initStarlight(): void {
-  if (typeof document === 'undefined' || !document.body) return
-  if (document.getElementById(LAYER_ID)) return
-  // 旧版 canvas 若因热更新残留，一并清掉
-  document.getElementById('dsh-bloom-starlight')?.remove()
-  document.body.prepend(buildSparkles(document))
-}

@@ -12,9 +12,13 @@ import { fileURLToPath } from 'node:url'
 
 const { outputFiles } = await build({
   stdin: {
-    contents: `import { initStarlight, buildSparkles } from './src/starlight.ts';
+    contents: `import './test/slot-fixture.mjs';
+      import * as React from 'react';
+      import { createBloomComponents } from './src/ui.ts';
+      import { buildSparkles } from './src/starlight.ts';
       import { GLASS_CSS } from './src/css/glass.ts';
-      window.fixture = { initStarlight, buildSparkles, GLASS_CSS };`,
+      const { Decorations } = createBloomComponents(React, () => () => {});
+      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
     loader: 'ts',
   },
@@ -40,7 +44,7 @@ async function setup(t, dark) {
     const st = document.createElement('style')
     st.textContent = window.fixture.GLASS_CSS
     document.head.appendChild(st)
-    window.fixture.initStarlight()
+    window.fixture.mount()
   })
   return page
 }
@@ -50,11 +54,15 @@ test('sparkle layer shows in dark mode, beneath content, without catching the po
   const info = await page.evaluate(() => {
     const el = document.getElementById('dsh-bloom-sparkles')
     const cs = getComputedStyle(el)
-    return { display: cs.display, position: cs.position, z: cs.zIndex, pe: cs.pointerEvents, dots: el.children.length }
+    const rect = el.getBoundingClientRect()
+    return { display: cs.display, position: cs.position, z: cs.zIndex, pe: cs.pointerEvents, dots: el.children.length, width: rect.width, height: rect.height, bg: cs.backgroundImage }
   })
   assert.equal(info.display, 'block')
   assert.equal(info.position, 'fixed')
-  assert.equal(info.z, '-1')
+  assert.equal(info.z, '0')
+  assert.equal(info.bg, 'none', 'overlay cannot wash the transcript with a full-screen glow')
+  assert.equal(info.width, 360)
+  assert.equal(info.height, 220)
   assert.equal(info.pe, 'none')
   assert.ok(info.dots >= 40, `expected many dots, got ${info.dots}`)
 })
@@ -77,12 +85,14 @@ test('dots actually animate: drift + twinkle with a non-zero offset', async t =>
   assert.notEqual(parseFloat(dot.dx) + parseFloat(dot.dy), 0)
 })
 
-test('layout is seed-stable and init is idempotent', async t => {
+test('layout is seed-stable and React remount keeps one layer', async t => {
   const page = await setup(t, true)
   const same = await page.evaluate(() => {
     const a = window.fixture.buildSparkles(document).innerHTML
     const b = window.fixture.buildSparkles(document).innerHTML
-    window.fixture.initStarlight()
+    window.unmountFixtureSlot('shell.overlay')
+    if (document.getElementById('dsh-bloom-sparkles')) return false
+    window.remountFixtureSlot('shell.overlay')
     return a === b && document.querySelectorAll('#dsh-bloom-sparkles').length === 1
   })
   assert.ok(same)

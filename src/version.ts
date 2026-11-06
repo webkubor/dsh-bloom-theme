@@ -80,14 +80,15 @@ export let latestVersion = null
 
 /* ═══ 版本 / 更新检测 ═══════════════════════════════════════════ */
 /** 从 npm registry 拉最新版，仅作版本对比（离线/网络失败静默，只显示当前版）。 */
-export async function checkUpdate() {
+export async function checkUpdate(signal?: AbortSignal) {
   try {
-    const r = await fetch('https://registry.npmjs.org/dsh-bloom-theme/latest', { cache: 'no-store' })
-    if (!r.ok) return
+    const r = await fetch('https://registry.npmjs.org/dsh-bloom-theme/latest', { cache: 'no-store', signal })
+    if (!r.ok || signal?.aborted) return
     const d = await r.json()
+    if (signal?.aborted) return
     latestVersion = (d && d.version) || null
   } catch { /* 忽略：显示当前版即可 */ }
-  refreshUpdateBadge()
+  if (!signal?.aborted) refreshUpdateBadge()
 }
 
 /* ── DSH 升级检查（宿主管理器优先；否则按当前预发布通道查 npm dist-tag）── */
@@ -105,6 +106,22 @@ let desktopStatusAsked = false
 let desktopStatusPolls = 0
 /** 挂起的重试定时器 —— 拿到终态时一次清空。 */
 const pendingPollTimers = new Set<ReturnType<typeof setTimeout>>()
+let versionUpdatesActive = true
+let versionGeneration = 0
+const versionRequests = new Set<AbortController>()
+
+/** Dispose pending update work together with the skin, including delayed desktop polls. */
+export function setVersionUpdatesActive(active: boolean) {
+  versionUpdatesActive = active
+  versionGeneration += 1
+  if (active) return
+  for (const timer of pendingPollTimers) clearTimeout(timer)
+  pendingPollTimers.clear()
+  for (const controller of versionRequests) controller.abort()
+  versionRequests.clear()
+  desktopStatusAsked = false
+  desktopStatusPolls = 0
+}
 
 /** 延迟重试：间隔与次数。壳查更新要联网，1.5s 一次、最多 4 次 ≈ 6s 窗口。 */
 const DESKTOP_STATUS_POLL_MS = 1500
@@ -325,6 +342,8 @@ export function selectDshDistTag(
 
 /** 从 npm registry 拉匹配当前通道的 DSH 版本（缓存 6h）。 */
 export async function checkDshLatest(force = false): Promise<void> {
+  if (!versionUpdatesActive) return
+  const generation = versionGeneration
   const runtime = readDshRuntimeInfo()
   if (runtime.updateManagedBy) {
     dshLatestVersion = null
@@ -354,6 +373,7 @@ export async function checkDshLatest(force = false): Promise<void> {
     // 超时是必须的：不带 signal 的 fetch 在被代理/黑洞的链路上会**永远挂着**，
     // 面板就停在初始的「检查中…」，看起来像"没触发"。8s 够 165KB 的 packument。
     const controller = new AbortController()
+    versionRequests.add(controller)
     const timer = setTimeout(() => controller.abort(), DSH_CHECK_TIMEOUT_MS)
     try {
       const r = await fetch(
@@ -367,6 +387,7 @@ export async function checkDshLatest(force = false): Promise<void> {
       )
       if (r.ok) {
         const packument = await r.json()
+        if (!versionUpdatesActive || generation !== versionGeneration) return
         const distTags = (packument && packument['dist-tags']) || {}
         const tag = selectDshDistTag(distTags, runtime.currentVersion)
         const selected = tag ? distTags?.[tag] : null
@@ -389,6 +410,7 @@ export async function checkDshLatest(force = false): Promise<void> {
         dshCheckError = `HTTP ${r.status} ${r.statusText}`.trim()
       }
     } catch (err) {
+      if (!versionUpdatesActive || generation !== versionGeneration) return
       dshLatestVersion = null
       // 失败必须留痕。原来的 catch 是空的，面板永远停在「点击 ↻ 检查」——
       // 2026-10-08 用户问「为啥版本检查不出来」，面板给不出任何线索，只能猜。
@@ -400,6 +422,7 @@ export async function checkDshLatest(force = false): Promise<void> {
         : String(err)
     } finally {
       clearTimeout(timer)
+      versionRequests.delete(controller)
       dshCheckPromise = null
     }
     renderDshUpdate()
@@ -409,6 +432,8 @@ export async function checkDshLatest(force = false): Promise<void> {
 
 /** 把宿主版本和对应更新通道渲染到下拉区块；绑按钮事件。 */
 export function renderDshUpdate() {
+  if (!versionUpdatesActive) return
+  const generation = versionGeneration
   const root = document.querySelector<HTMLElement>('.dsh-bloom-dsh-update')
   const curEl = document.querySelector<HTMLElement>('[data-dsh-current]')
   const latEl = document.querySelector<HTMLElement>('[data-dsh-latest]')
@@ -455,6 +480,7 @@ export function renderDshUpdate() {
     if (!desktopStatusAsked) {
       desktopStatusAsked = true
       void readDesktopUpdateStatus().then((s) => {
+        if (!versionUpdatesActive || generation !== versionGeneration) return
         // 只有拿到**终态**（available / error）才记成「问过了」。idle / checking
         // 这类过渡相位返回 null —— 若就此把开关锁死，之后用户点「检查更新」
         // 拉起桌面端面板、等它查完，这行永远等不到结果（Codex PR #41 P2）。

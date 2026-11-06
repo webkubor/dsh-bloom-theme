@@ -50,15 +50,30 @@ export function markThinkTags() {
 
 export function watchThinkTags() {
   if (window.__dshBloomThinkObserver__) return
-  let timer = null
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let disposed = false
   const schedule = () => {
+    if (disposed) return
     // 流式输出会高频触发，节流到 300ms
     if (timer) return
-    timer = setTimeout(() => { timer = null; markThinkTags(); markLiveTurn() }, 300)
+    timer = setTimeout(() => {
+      timer = undefined
+      if (!disposed) { markThinkTags(); markLiveTurn() }
+    }, 300)
   }
   const obs = new MutationObserver(schedule)
   obs.observe(document.body, { childList: true, subtree: true, characterData: true })
   window.__dshBloomThinkObserver__ = obs
+  window.__dshBloomThinkOff__ = () => {
+    disposed = true
+    obs.disconnect()
+    if (timer !== undefined) clearTimeout(timer)
+    if (liveTurnTimer !== undefined) clearTimeout(liveTurnTimer)
+    liveTurnTimer = undefined
+    lastRowText = new WeakMap()
+    window.__dshBloomThinkObserver__ = undefined
+    window.__dshBloomThinkOff__ = undefined
+  }
   markThinkTags()
   markLiveTurn()
 }
@@ -86,7 +101,7 @@ export function watchThinkTags() {
  * 代价是函数名比做的事多一点 —— 已在调用处注明。
  */
 const LIVE_TURN_ATTR = 'data-bloom-live-turn'
-const lastRowText = new WeakMap<Element, string>()
+let lastRowText = new WeakMap<Element, string>()
 let liveTurnTimer: ReturnType<typeof setTimeout> | undefined
 
 export function markLiveTurn() {
@@ -124,26 +139,4 @@ export function injectCSS(css, idSuffix) {
   tag.dataset.pluginCss = tagId
   tag.textContent = css
   document.head.appendChild(tag)
-}
-
-/**
- * 挂载点：优先塞进 DSH 顶栏的工具区，跟 Session log 等原生控件并排。
- *
- * 之前用 position:fixed 浮在右上角，实测矩形与 Session log 按钮几乎完全重合，
- * 把人家整个盖住点不到 —— 浮层永远有压住宿主控件的风险，挂进 DOM 才是根治。
- * 找不到宿主时退回浮动，但位置移到 header 下方（见 [data-floating] 样式）。
- */
-export function findSwitcherHost() {
-  // 必须限定在真顶栏（<header>）内部再找。
-  //
-  // 侧边栏「工作区」那一行也有个 [class*="_headerActions"] 容器（另一套 CSS Module
-  // 前缀，实测 qDHVXG_headerActions vs 顶栏的 wSkVaW_headerActions），而它在 DOM 里
-  // 排在顶栏之前 —— 不限定作用域时 document.querySelector 会先命中它，切换器就被
-  // prepend 到左边侧边栏去了。新建会话时顶栏子树重建、_headerUtilities 短暂消失，
-  // fallback 生效，于是「右上角的切换器跑到左边」。
-  const header = document.querySelector<HTMLElement>('header[class*="_header"]') || document.querySelector<HTMLElement>('header')
-  if (!header) return null
-  return header.querySelector<HTMLElement>('[class*="_headerUtilities"]')
-    || header.querySelector<HTMLElement>('[class*="_headerActions"]')
-    || null
 }

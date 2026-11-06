@@ -464,20 +464,18 @@ body[data-bloom-variant="cinnabar"]::after {
 /* ═══ 星辉层：右上角滑出的闪烁光点（参照 ModelGo 余额桶 BucketSparkles）══════
    DOM 由 src/starlight.ts 生成（每颗 <i> 自带 --dx/--dy/--peak/--glow 与时长相位）。
    只在深色下出现；浅色 display:none，动画随之不跑。
-   z-index:-1 + fixed：与 body::before 氛围层同层，画在应用内容之下。 */
+   挂在 shell.overlay，只占右上角、不铺背景，避免盖住正文。 */
 .dsh-bloom-sparkles { display: none; }
 body[data-ds-dark-theme] .dsh-bloom-sparkles {
   display: block;
   position: fixed;
-  inset: 0;
-  z-index: -1;
+  /* Lives in shell.overlay (above content): only the top-right corner, never a full-screen wash. */
+  top: 0; right: 0; width: 360px; height: 220px;
+  z-index: 0;
+  opacity: 0.7;
   overflow: hidden;
   pointer-events: none;
-  /* 右上角一团主题色光晕，光点从这里溢出 */
-  background: radial-gradient(560px 380px at calc(100% - 140px) 0px,
-    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%),
-    color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%) 55%,
-    transparent 100%);
+  background: none;
 }
 .dsh-bloom-sparkles > i {
   position: absolute;

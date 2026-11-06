@@ -13,7 +13,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
@@ -32,7 +32,9 @@ const files = execFileSync('git', ['ls-files', 'package.json', 'scripts', 'src',
   !f.endsWith('.test.mjs') &&
   // Shared product ledger intentionally contains other packages and their scopes.
   // It is not a Bloom install path or selector; executable scripts remain checked.
-  f !== 'scripts/npm-products.json',
+  f !== 'scripts/npm-products.json' &&
+  // ls-files 仍会列出工作树里已删除、尚未暂存的文件；只扫磁盘上真实存在的。
+  existsSync(root + f),
 )
 
 for (const f of files) {

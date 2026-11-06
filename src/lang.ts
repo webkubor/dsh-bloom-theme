@@ -49,7 +49,7 @@ export const DICTS: Record<BloomLang, Record<string, string>> = {
  * 把语言源接到 DSH 上。由 apply(ctx) 调用一次。
  * 绑定后广播变化，让早于 apply 注入的面板立即使用 DSH 当前语言。
  */
-export function bindLocale(locale: LocaleLike): void {
+export function bindLocale(locale: LocaleLike): () => void {
   runtime = locale
   translate = locale.bind(LOCALE_NS)
   try {
@@ -59,6 +59,12 @@ export function bindLocale(locale: LocaleLike): void {
   try {
     window.dispatchEvent(new Event(LANG_CHANGE_EVENT))
   } catch {}
+  return () => {
+    if (runtime === locale) {
+      runtime = null
+      translate = null
+    }
+  }
 }
 
 /** 当前界面语言。唯一真源是 DSH；未知或未绑定时回落英文。 */

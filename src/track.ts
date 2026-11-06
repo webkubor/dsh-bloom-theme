@@ -4,7 +4,7 @@ import { getLang } from './lang.js'
 
 const ENDPOINT = 'https://www.webkubor.online/api/event'
 const OPT_OUT_KEY = 'bloom-telemetry'
-const EVENTS = ['vote', 'feedback', 'share', 'changelog', 'version-open', 'reset-position'] as const
+const EVENTS = ['vote', 'feedback', 'share', 'changelog', 'version-open'] as const
 export type PanelEvent = typeof EVENTS[number]
 let sessionEnabled: boolean | undefined
 

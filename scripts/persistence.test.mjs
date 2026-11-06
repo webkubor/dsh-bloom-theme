@@ -1,8 +1,7 @@
 /**
  * 持久化契约测试。
  *
- * 2026-09-17 补。clampPos 有专门的自检（check-drag.mjs，变异 4/4 全抓住），
- * 但同样「坏了用户自己恢复不了」的另外两条路径是零覆盖的：
+ * 2026-09-17 补。以下路径「坏了用户自己恢复不了」，必须有覆盖：
  *
  *  1. STORAGE_KEY —— 用户选的配色存在这个键下。改动它 = 所有人的配色静默丢失、
  *     回落默认 mist。不报错、不崩溃，只是每个人打开发现主题变回去了。
@@ -14,11 +13,14 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+  e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith('.ts') ? [join(dir, e.name)] : [])
+const srcFiles = walk(join(root, 'src')).map((f) => relative(root, f)).sort()
 const meta = readFileSync(join(root, 'src/meta.ts'), 'utf8')
 const bundle = readFileSync(join(root, 'lib/client.js'), 'utf8')
 
@@ -40,11 +42,18 @@ test('打包产物里带着同一个 STORAGE_KEY（没被优化或改写）', ()
   )
 })
 
-test('派生键 float-pos 也要稳定 —— 它存浮动按钮位置', () => {
-  assert.ok(
-    bundle.includes('dsh-bloom-variant-float-pos') || bundle.includes('-float-pos'),
-    '浮动按钮位置键丢失会让用户拖过的位置失效，回到默认角落',
-  )
+test('旧的悬浮按钮位置键不被删除或清空 —— 移除功能不销毁用户数据', () => {
+  // 悬浮拖拽兜底已移除，`${STORAGE_KEY}-float-pos` 不再读取；
+  // 但已安装用户的旧值不属于本插件可以单方面销毁的数据，也不能整体 clear()。
+  const offenders = []
+  for (const f of srcFiles) {
+    const code = readFileSync(join(root, f), 'utf8')
+    if (/localStorage\??\.clear\s*\(/.test(code)) offenders.push(`${f}: localStorage.clear()`)
+    for (const m of code.matchAll(/removeItem\(([^)]*)\)/g)) {
+      if (/float-pos|POS_KEY/.test(m[1])) offenders.push(`${f}: removeItem(${m[1]})`)
+    }
+  }
+  assert.deepEqual(offenders, [], '不得删除旧的 float-pos 数据或清空 localStorage：\n  ' + offenders.join('\n  '))
 })
 
 test('readVariant 有脏值回落 —— 存了非法值不能让主题空掉', () => {
@@ -61,12 +70,11 @@ test('每一处 localStorage 调用都必须被 try/catch 包住 —— 隐私�
   // 抛出去就是整个 client bundle 加载失败（不只是主题没了）。
   //
   // ⚠️ 这条最初写成「至少有一处 try/catch」，变异测试当场证明没用：
-  // 把 dom.ts 的 catch 拿掉，drag.ts 里还有两处，断言照样通过。
+  // 拿掉一处 catch，其它文件里还有，断言照样通过。
   // 必须逐处判定 —— 漏掉任何一处都足以让整个插件在隐私模式下失效。
-  // lang.ts 存的是界面语言，也在初始化路径上（getLang 在建菜单时就会被调到），同样逐处判定。
-  const files = ['src/dom.ts', 'src/drag.ts', 'src/switcher.ts', 'src/lang.ts']
+  // 扫描整个 src/，不维护手写文件清单：删文件或新增存储点都不会让覆盖面过期。
   const unguarded = []
-  for (const f of files) {
+  for (const f of srcFiles) {
     const lines = readFileSync(join(root, f), 'utf8').split('\n')
     lines.forEach((line, i) => {
       if (!/localStorage\.(getItem|setItem|removeItem)/.test(line)) return

@@ -3,15 +3,21 @@ name: Release Please
 # 自动维护 version / CHANGELOG / tag / GitHub Release。
 # 提交走 Conventional Commits（feat:/fix:/docs:/ci:…）即可触发：
 # - 每个合并到 main 的 commit 会被收集到"待发布"清单
-# - 它每周自动开（或更新）一个 Release PR
-# - PR 合并后：自动打 tag、创建 GitHub Release，然后触发 publish.yml 发 npm
-# 想跳版本号或回滚：close 这个 PR 并评论 /autorelease:skip 或 /autorelease:major/minor。
+# - main push、每日巡检和默认手动触发只创建或更新 Release PR。
+# - 验收后显式合并 Release PR：随后生成 tag / GitHub Release 并触发 npm 发布。
+# - 手动启用 auto_merge_release 才允许自动合并；默认 false。
 # 完整协议见 https://github.com/googleapis/release-please/blob/main/docs/cli.md
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      auto_merge_release:
+        description: '验收完成后，允许合并 Release PR 并触发正式发布'
+        type: boolean
+        required: false
+        default: false
   schedule:
     # 每天 UTC 01:30（北京时间 09:30）兜底巡检未合并的 release PR
     - cron: '30 1 * * *'
@@ -37,30 +43,25 @@ jobs:
           manifest-file: .release-please-manifest.json
           skip-github-release: false
 
-  # 给 release-please 开出来的 PR 自动挂 auto-merge。
-  #
-  # ⚠️ 为什么需要这个 job：release-please 只负责「开 PR」，合并那一步设计上要人点。
-  #   仓库的 allow_auto_merge 已开，这里在 PR 出来后主动去启用，条件满足即自动合并 ——
-  #   这一步做完，日常发版零人工。仍然会等 branch protection 要求的 check 通过才合：
-  #   「合并不需要人」不等于「合并不需要门」。
+  # 仅在验收后显式触发（auto_merge_release=true）时运行：等待 GitHub 计算出 clean
+  # （必需检查、必需评审、未解决对话均通过），再以检查时的 head sha 合并。
+  # 不自动 resolve 评审线程；非 clean 只告警交给人。
   #
   # 靠 head ref 前缀筛（release-please--），不硬编码完整分支名 —— 组件名、
   # include-component-in-tag 都会影响它生成的分支名，写死等于埋雷。
   # 找不到 PR 就安静退出：这个 workflow 在「没有待发布内容」时也会跑。
   auto-merge:
+    if: github.event_name == 'workflow_dispatch' && inputs.auto_merge_release
     needs: release-please
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       contents: read
     steps:
-      - name: 对 release PR 启用 auto-merge
+      - name: 验收后合并 release PR
         uses: actions/github-script@v7
         with:
-          # ⚠️ 必须用 PR_PAT，不能用默认 GITHUB_TOKEN。
-          #   enablePullRequestAutoMerge 是「以用户身份」执行的 GraphQL mutation，
-          #   GitHub App token 调它会拿到 "Resource not accessible by integration" ——
-          #   workflow 报 success、日志里一条 warning，PR 上 autoMergeRequest 却是 null。
+          # PR_PAT：合并后触发的 tag / Release / publish 工作流需要非 GITHUB_TOKEN 身份。
           github-token: ${{ secrets.PR_PAT }}
           script: |
             // ⚠️ pulls.list 的 head 参数是**精确匹配**（`user:ref`），不是前缀匹配。
@@ -79,16 +80,8 @@ jobs:
               core.info(`开放 PR ${prs.length} 个，其中 release PR 0 个 —— 本次推送没有可发布内容`)
               return
             }
-            // ⚠️ 启用 auto-merge **只有 GraphQL 接口**，REST 里没有对应端点 ——
-            //   写 github.rest.pulls.enablePullRequestAutoMerge 会得到
-            //   "is not a function"。而且它吃的是 PR 的 node_id，不是 PR 号。
-            const mutation = `mutation ($prId: ID!) {
-              enablePullRequestAutoMerge(input: { pullRequestId: $prId, mergeMethod: SQUASH }) {
-                clientMutationId
-              }
-            }`
             for (const pr of releasePrs) {
-              core.info(`对 #${pr.number} 启用 auto-merge: ${pr.title}`)
+              core.info(`检查 #${pr.number}: ${pr.title}`)
 
               // **只以 mergeable_state 判门。**
               // 试过用 checks.listForRef 逐个看结论，有两个坑：
@@ -112,6 +105,7 @@ jobs:
               //             「撞到真门」和「状态还没稳定」在这里长得一样，
               //             只有等下去才分得开。所以只 dirty 短路。
               let state = 'unknown'
+              let headSha = ''
               const deadline = Date.now() + 20 * 60 * 1000
               while (Date.now() < deadline) {
                 const res = await github.rest.pulls.get({
@@ -120,54 +114,11 @@ jobs:
                   pull_number: pr.number
                 })
                 state = res.data.mergeable_state
+                headSha = res.data.head.sha
                 if (state === 'clean' || state === 'dirty') break
 
-                // ⚠️ 重点加固：若因 required_conversation_resolution 被机器人的 review comment 卡在 blocked，
-                //   自动将机器人（如 chatgpt-codex-connector、cursor 等）的 review thread 标记为 resolved。
-                if (state === 'blocked') {
-                  try {
-                    const threadQuery = `query($owner: String!, $repo: String!, $number: Int!) {
-                      repository(owner: $owner, name: $repo) {
-                        pullRequest(number: $number) {
-                          reviewThreads(first: 50) {
-                            nodes {
-                              id
-                              isResolved
-                              comments(first: 1) {
-                                nodes {
-                                  author { login }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }`
-                    const tRes = await github.graphql(threadQuery, {
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      number: pr.number
-                    })
-                    const threads = tRes?.repository?.pullRequest?.reviewThreads?.nodes || []
-                    const botKeys = ['codex', 'cursor', 'bot', 'github-actions']
-                    for (const th of threads) {
-                      if (!th.isResolved) {
-                        const author = (th.comments?.nodes?.[0]?.author?.login || '').toLowerCase()
-                        const isBot = botKeys.some((k) => author.includes(k))
-                        if (isBot) {
-                          core.info(`自动标记机器人 ${author} 的 review thread 为已解决: ${th.id}`)
-                          await github.graphql(`mutation($id: ID!) {
-                            resolveReviewThread(input: { threadId: $id }) {
-                              thread { id, isResolved }
-                            }
-                          }`, { id: th.id })
-                        }
-                      }
-                    }
-                  } catch (e) {
-                    core.info(`检查/标记 review threads 异常: ${e.message}`)
-                  }
-                }
+                // blocked 时只等待，不代替人处理评审：未解决对话、必需评审都由 branch protection 判定。
+                // 不自动 resolve 任何 review thread —— 作者身份不能证明问题已修复。
 
                 core.info(`#${pr.number} 状态 ${state}，等 20s 重读`)
                 await new Promise((resolve) => setTimeout(resolve, 20000))
@@ -180,22 +131,19 @@ jobs:
                 continue
               }
 
+              // clean 状态下 GitHub 拒绝启用 auto-merge，所以直接合并，
+              // 并用 sha 钉住刚检查过的 head：head 已变化时 GitHub 拒绝合并，不会合入未审内容。
               try {
-                await github.graphql(mutation, { prId: pr.node_id })
-                core.info(`#${pr.number} 已挂上 auto-merge，交给 GitHub 合`)
-                continue
+                const merged = await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash',
+                  sha: headSha
+                })
+                if (!merged.data.merged) throw new Error(merged.data.message || 'GitHub declined the merge')
+                core.info(`#${pr.number} 已合并（head ${headSha}）`)
               } catch (err) {
-                core.info(`#${pr.number} 挂原生 auto-merge 未成功（${err.message}），改走直接合并`)
+                core.warning(`#${pr.number} 合并失败（${err.message}），未合并 —— 请人工检查 ${pr.html_url}`)
               }
-
-              // 状态已经是 clean（门都过了），直接合。
-              // 这不是绕过门 —— PR 照走、branch protection 照判，
-              // 只是不再依赖那个时机敏感、会挑状态的接口。
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number,
-                merge_method: 'squash'
-              })
-              core.info(`#${pr.number} 已自动合并`)
             }

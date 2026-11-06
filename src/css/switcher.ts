@@ -1,4 +1,9 @@
 export const SWITCHER_CSS = `
+.dsh-bloom-slot { display: inline-block; flex: none; }
+.dsh-bloom-overlay { pointer-events: none; }
+.dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }
+.dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 80px); position: fixed; pointer-events: auto; z-index: 80; }
+.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
 .dsh-bloom-switcher {
   position: relative;
   display: inline-flex;
@@ -9,24 +14,6 @@ export const SWITCHER_CSS = `
   -webkit-app-region: no-drag;
 }
 .dsh-bloom-switcher * { -webkit-app-region: no-drag; }
-/* 兜底形态：挂不进 DSH header 时才浮起来。位置放在 header 下方，
-   避开右上角原生控件（Session log 等）—— 决不能再压住它们。 */
-.dsh-bloom-switcher[data-floating="true"] {
-  position: fixed;
-  top: 84px;
-  right: 16px;
-  z-index: 9999;
-  /* 触摸设备上拖动不要连带滚页面 */
-  touch-action: none;
-}
-/* 浮动形态可拖动（#14）：这个形态钉在固定坐标上，会压住什么取决于用户
-   装了哪些插件（报告里是侧边栏展开后顶部那排按钮）。给 grab 光标是为了
-   让「它挡住我了」的人第一反应就是把它拖开；点击打开菜单照旧可用。 */
-.dsh-bloom-switcher[data-floating="true"] .dsh-bloom-trigger { cursor: grab; }
-.dsh-bloom-switcher[data-dragging="true"] .dsh-bloom-trigger { cursor: grabbing; }
-.dsh-bloom-switcher[data-dragging="true"] .dsh-bloom-trigger { transition: none; }
-/* 拖到屏幕左半边时菜单改左对齐，否则 right:0 的菜单会伸出视口 */
-.dsh-bloom-switcher[data-menu-side="left"] .dsh-bloom-menu { left: 0; right: auto; }
 
 .dsh-bloom-trigger {
   display: inline-flex;
@@ -75,7 +62,7 @@ export const SWITCHER_CSS = `
  * --bloom-morandi 存的是 RGB 三元组（"146, 168, 179"，供 rgba(var(...)) 用），
  * 不是色值 —— 塞进 oklch 语法非法，**整条 box-shadow 一起失效**（computed 变 none）。
  * 实测踩过：规则命中、优先级也对，但画面上一点影子都没有。
- * （--bloom-poem-b / --bloom-accent 才是色值，可以用 color-mix。） */
+ * （--bloom-accent 才是色值，可以用 color-mix。） */
 .dsh-bloom-option .dsh-bloom-dot {
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.38),
@@ -251,24 +238,6 @@ export const SWITCHER_CSS = `
 .dsh-bloom-menu.is-entering .dsh-bloom-section,
 .dsh-bloom-menu.is-entering .dsh-bloom-appearance { animation-delay: 174ms; }
 
-/* 目录引导点：填充配色名与诗句之间的空白（详见 buildSwitcherHTML 的说明）。
-   用 radial-gradient 平铺圆点，比 border-bottom:dotted 更好控制点径与间距，
-   也不会因为行高变化把点拉成虚线。颜色走当前配色的莫兰迪，与整行同一调子。 */
-.dsh-bloom-leader {
-  align-self: center;
-  width: 24px;
-  height: 2px;
-  margin: 0;
-  background-image: radial-gradient(circle, rgba(var(--bloom-morandi), 0.5) 1px, transparent 1px);
-  background-size: 5px 2px;
-  background-repeat: repeat-x;
-  background-position: 0 50%;
-  opacity: 0.65;
-  transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
-}
-.dsh-bloom-option:hover .dsh-bloom-leader,
-.dsh-bloom-option[data-active="true"] .dsh-bloom-leader { opacity: 1; }
-
 /* 「版本与更新」展开：同框上下滑动（对齐 whale-widget 的做法）。
  * 不用 display:none 硬切 —— 高度用 grid-template-rows 0fr→1fr 过渡，
  * 容器高度自然撑开，内部内容整块 translateY 滑入，末段带一点回弹。 */
@@ -311,17 +280,28 @@ export const SWITCHER_CSS = `
   outline: 2px solid var(--bloom-accent, #34698c);
   outline-offset: 2px;
 }
-.dsh-bloom-switcher:not([data-floating="true"]) .dsh-bloom-reset-position { display: none; }
 
+.dsh-bloom-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .dsh-bloom-option {
+  /* 稳妥的单行 Grid：button 不依赖 Chromium 的 subgrid，
+     各列尺寸严格固定，诗句自适应占满中间，右侧勾选绝不折行。 */
   display: grid;
-  /* Fixed name/leader tracks keep Mint and Tangerine aligned in all locales.
-     Long translated poems truncate inside their track; title retains the full text. */
-  grid-template-columns: 14px 5.75em 24px minmax(0, 1fr) 12px;
+  grid-template-columns: 14px 44px minmax(0, 1fr) 14px;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   width: 100%;
-  padding: 8px 14px;
+  height: 34px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+.dsh-bloom-menu[lang="en"] .dsh-bloom-option {
+  grid-template-columns: 14px 5.75em minmax(0, 1fr) 14px;
+}
+.dsh-bloom-option {
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -380,47 +360,38 @@ export const SWITCHER_CSS = `
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* 右列从英文名改成出处诗句（v0.12.1）：中文在 11px 下太小、字距也不该按西文排，
-   所以放大一档、加字距、上衬线。衬线体是这套主题唯一的书卷气来源 —— 正文保持
-   无衬线保可读性，只在这一列用宋体，克制但立得住。 */
+/* 保留每一行诗句对应配色的渐变；起笔使用可读的次级正文色。
+   不再整行叠透明度，避免原本达标的 accent 与背景再次混合后变淡。 */
 .dsh-bloom-option__en {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12.5px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   font-family: 'Songti SC', 'STSong', 'Source Han Serif SC', 'Noto Serif SC', serif;
-  /* 诗句走渐变文字（owner 2026-09-15：「和深度求索中…一样有颜色渐变」）。
-     两端取本变体的气质轨→可读轨，跟左边色点同一对颜色，所以整行是一句话：
-     色点是这个颜色，诗句也是这个颜色。纯灰的 opacity 做不到这件事。 */
-  /* 起点用正文次级色而不是该变体的气质轨：气质轨是低饱和的莫兰迪，深色底上
-     竹青/琥珀这几支直接糊掉（实测诗句看不清）。起点保证可读、终点交代身份。 */
-  /* 终点色压一档彩度（2026-11-01 实测）：原来直接用 --bloom-poem-b，十行十色
-     全是高饱和（朱砂红/桃夭粉/天青蓝），相邻三行互相打架，整列看着吵。
-     降到 72% 彩度后仍然是「这个配色的身份色」，但退到背景之后。 */
-  background-image: linear-gradient(100deg,
-    var(--dsw-alias-label-tertiary, #9a9a9a) 0%,
-    color-mix(in oklch, var(--bloom-poem-b) 72%, transparent) 66%);
+  background-image: linear-gradient(100deg, var(--dsw-alias-label-secondary, #666) 0%, color-mix(in oklab, var(--bloom-poem-b) 45%, var(--dsw-alias-label-secondary, #666)) 70%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  opacity: 0.8;
+  opacity: 1;
+  transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
 }
-/* 西文诗句：宋体 + 0.08em 字距是给中文排的，英文/俄文套上去一行只放得下半句
-   （截图里连默认的黛蓝都被截断）。西文收一档字号、去字距，完整句在行 title 里。 */
+/* 西文诗句：收一档字号、去字距、斜体，完整句在行 title 里。 */
 .dsh-bloom-option__en:not(:lang(zh)) {
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.01em;
   font-family: 'Iowan Old Style', 'Palatino', Georgia, serif;
   font-style: italic;
 }
 body[data-ds-dark-theme] .dsh-bloom-option__en {
-  background-image: linear-gradient(100deg, var(--dsw-alias-label-tertiary, #8d8d8d) 0%, var(--bloom-poem-bd) 66%);
-  opacity: 0.88;
+  background-image: linear-gradient(100deg, var(--dsw-alias-label-secondary, #bbb) 0%, color-mix(in oklab, var(--bloom-poem-bd) 45%, var(--dsw-alias-label-primary, #eee)) 70%);
+  opacity: 1;
 }
 .dsh-bloom-option:hover .dsh-bloom-option__en,
-.dsh-bloom-option[data-active="true"] .dsh-bloom-option__en { opacity: 1; }
+.dsh-bloom-option[data-active="true"] .dsh-bloom-option__en {
+  opacity: 1;
+}
 /* 选中那一行让渐变缓缓流过，跟「深度求索中…」同一种语言 —— 只给一行，
    十行一起流会变成灯箱。 */
 .dsh-bloom-option[data-active="true"] .dsh-bloom-option__en {
@@ -1000,7 +971,6 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   .dsh-bloom-menu.is-entering .dsh-bloom-section,
   .dsh-bloom-menu.is-entering .dsh-bloom-appearance { animation: none; }
   .dsh-bloom-more-body { transition: none; transform: none; }
-  .dsh-bloom-leader { transition: none; }
 }
 
 /* 窄屏降级：DSH 顶栏在 < 900px 时空间紧张，隐藏中文名只留色点+chevron，

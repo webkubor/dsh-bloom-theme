@@ -48,5 +48,21 @@ export function setRotationMinutes(minutes: number) {
   schedule()
 }
 
+/** 停止自动换色：清定时器、解 visibilitychange（插件停用时由 teardown 调用）。 */
+export function stopRotation() {
+  if (timer) clearTimeout(timer)
+  timer = undefined
+  if (started) document.removeEventListener('visibilitychange', schedule)
+  started = false
+  applyNext = undefined
+  selectedMinutes = undefined
+}
+
 /** Manual color changes start a fresh interval; background tabs never catch up missed ticks. */
 export function resetRotationTimer() { if (started) schedule() }
+
+/** Allow tests and teardown to reset module state entirely. */
+export function resetRotationState(): void {
+  stopRotation()
+  selectedMinutes = undefined
+}

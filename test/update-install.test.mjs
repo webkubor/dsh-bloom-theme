@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url'
 const LATEST = '99.0.0'
 const { outputFiles } = await build({
   stdin: {
-    contents: `import './src/client.ts';
-      const services = {}; const pending = [];
+    contents: `import './test/slot-fixture.mjs'; import './src/client.ts';
+      const services = { slots: window.fixtureSlots }; const pending = [];
       window.remoteDisposers = [];
       const strictCtx = (declared = []) => new Proxy({}, {
         get(_, key) {
@@ -58,7 +58,6 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
   await page.goto('https://bloom.test/')
   await page.clock.install()
   await page.evaluate(({mode, desktop, latest}) => {
-    window.__ModuleLoader__ = { _module: null, load(def) { this._module=def.factory() } }
     if (desktop) window.dshDesktopBoot = {}
     window.copied = ''
     Object.defineProperty(navigator, 'clipboard', { configurable:true, value:{writeText:async text=>{window.copied=text}} })
@@ -92,6 +91,7 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
   return { page, errors }
 }
 const banner = page => page.locator('#dsh-bloom-update-banner')
+const bodyText = page => page.locator('#dsh-bloom-update-banner .bloom-upd-body').textContent()
 async function waitBody(page, text) {
   await page.waitForFunction(text => document.querySelector('#dsh-bloom-update-banner .bloom-upd-body')?.textContent.includes(text), text)
 }
@@ -100,16 +100,31 @@ test('desktop update invokes exact version once and unwraps a successful host re
   const { page, errors } = await setup(t)
   assert.equal(await banner(page).locator('code').isVisible(), false)
   await banner(page).locator('[data-act="install"]').click()
-  await banner(page).locator('[data-act="reload"]').waitFor()
-  assert.deepEqual(await page.evaluate(()=>window.installCalls), [{name:'dsh-bloom-theme',version:LATEST}])
   await waitBody(page, `已更新到 v${LATEST}`)
+  assert.deepEqual(await page.evaluate(()=>window.installCalls), [{name:'dsh-bloom-theme',version:LATEST}])
+  // applied: the host already activated the new version; a page reload proves nothing and is not offered.
+  assert.equal(await bodyText(page), `已更新到 v${LATEST}`)
+  assert.equal(await banner(page).locator('[data-act="reload"]').count(), 0)
+  assert.equal(await banner(page).locator('[data-act="dismiss"]').count(), 1)
   assert.deepEqual(errors, [])
+})
+
+test('English applied and restart-required results use the translated exact messages', async t => {
+  for (const [mode, message] of [['ok', `Updated to v${LATEST}`], ['restart', `Updated to v${LATEST} — restart DSH to apply`]]) {
+    const {page} = await setup(t, mode)
+    await page.evaluate(()=>window.locale.setLocale('en'))
+    await banner(page).locator('[data-act="install"]').click()
+    await waitBody(page, 'Updated to v')
+    assert.equal(await bodyText(page), message)
+    assert.equal(await banner(page).locator('[data-act="reload"]').count(), 0)
+  }
 })
 
 test('restart-required instructs application restart and never offers a page reload', async t => {
   const {page} = await setup(t, 'restart')
   await banner(page).locator('[data-act="install"]').click()
   await waitBody(page, '需要重启 DSH')
+  assert.equal(await bodyText(page), `已更新到 v${LATEST}，需要重启 DSH 才生效`)
   assert.equal(await banner(page).locator('[data-act="reload"]').count(), 0)
   assert.equal(await banner(page).locator('[data-act="dismiss"]').count(), 1)
 })
@@ -133,7 +148,8 @@ test('failed update can retry through a fresh install button', async t => {
   await page.evaluate(()=>{window.mode='ok'})
   await banner(page).locator('[data-act="retry"]').click()
   await banner(page).locator('[data-act="install"]').click()
-  await banner(page).locator('[data-act="reload"]').waitFor()
+  await waitBody(page, `已更新到 v${LATEST}`)
+  assert.equal(await banner(page).locator('[data-act="reload"]').count(),0)
   assert.equal(await page.evaluate(()=>window.installCalls.length),2)
 })
 
@@ -166,7 +182,7 @@ test('the stale update hint disappears once the outcome replaces the available s
   const {page}=await setup(t)
   assert.equal(await banner(page).locator('.bloom-upd-hint').count(),1)
   await banner(page).locator('[data-act="install"]').click()
-  await banner(page).locator('[data-act="reload"]').waitFor()
+  await waitBody(page, `已更新到 v${LATEST}`)
   assert.equal(await banner(page).locator('.bloom-upd-hint').count(),0)
 })
 

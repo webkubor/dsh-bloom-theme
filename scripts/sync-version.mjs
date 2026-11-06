@@ -6,11 +6,11 @@
  * 里的 client.js，`/plugins/<id>/package.json` 返回空）。下拉底部要显示「当前装的
  * 版本」并跟 npm latest 比，只能内置。
  *
- * ── 发布路径不走这里 ──
+ * ── 下一版本由 Release PR 决定 ──
  * release-please 通过 `extra-files` + 行尾 `x-release-please-version` 标记，在
  * release PR 里连同 package.json 一起 bump 源码，那是版本号的唯一真源。
- * 本脚本只服务本地 `npm run deploy` / `npm run dev`：手改 package.json 后
- * 不必等 release PR 就能在本机看到正确版本号。
+ * 本脚本供 Release Artifact Rebuild 与 prepublishOnly 对齐现有 package.json 版本。
+ * 它不决定下一版本；不要用手改 package.json 绕过 Release PR。
  *
  * ── 不硬编码文件名 ──
  * 上一版写死了 `src/client.ts`。2026-08-24 把 client.ts 拆成 10 个模块、

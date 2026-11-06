@@ -1,356 +1,100 @@
 # 贡献指南
 
-欢迎提 issue 和 PR。
+欢迎提 issue 和 PR。版本与 CHANGELOG 由 release-please 维护，贡献者使用 Conventional Commits 描述改动。
 
-## 本地开发
+## 本地构建
 
 ```bash
 git clone git@github.com:webkubor/dsh-bloom-theme
 cd dsh-bloom-theme
-npm run dev      # 监听 lib/，保存即部署到 web profile 并自动刷新浏览器
+npm ci
+npm run typecheck
+npm run build
+npm run dev          # 首次完整构建后监听浏览器源码，只更新本仓 lib/
 ```
 
-改完必须刷新页面——皮肤在浏览器端注入，且 CSS 由 `client.js` 运行时生成，
-没有「只热更 CSS」这条路。`npm run dev` 已代劳（按 `a` 可关掉自动刷新）。
+`dev` 不安装插件，也不刷新宿主。浏览器源码变更会重新打包；修改 Host 入口、版本号或 CHANGELOG 后，停止监听并重新运行 `npm run build`。
 
-## 源码结构与构建
+## 在 DSH 中安装与验证
 
-`src/` 是 10 个模块，按依赖分层（箭头 = import 方向）：
+使用正在运行的 DSH 的插件管理界面，或让该 DSH 会话调用官方 `plugin_manager`：先 `list_bundles` 核对已有包，再用 `install_bundle`，`target` 为构建完成的仓库绝对路径；正式版使用明确的 `dsh-bloom-theme@版本`。安装由宿主管理，禁止通过 shell 复制、rsync 或直接改写 profile 的依赖和 `node_modules`。
 
-```
-meta.ts        插件 ID / 版本号 / localStorage key —— 最底层，不 import 任何东西
-palette.ts     12 套配色的色板与标签 + mix()  —— 纯数据，无依赖
-   ↓
-tokens.ts      色板 → CSS 变量（borderStack / labelStack / sharedDswTokens / 三个变体块）
-css/           component.ts · glass.ts · switcher.ts —— 纯 CSS 字符串常量，零插值
-dom.ts         样式注入 / 变体读写 / 宿主查找 / <think> 收拾
-version.ts     Bloom 自己的 npm 最新版 + DSH 宿主 rev 检查
-   ↓
-switcher.ts    顶栏切换器（含 applyVariant —— 它更新切换器 DOM，属这里的职责）
-   ↓
-client.ts      入口：三个立即执行块 + window.__ModuleLoader__.load()
-```
+安装返回值中的 `application` / `nextStep` 决定后续动作。替换已安装的包可能需要重启宿主才能加载新模块；按返回提示完成重启后重新核对。页面刷新、相同 Slot ID 或本地构建成功都不能证明更新已经应用。若 DSH 版本要求阻止安装，先使用兼容宿主，不绕过版本检查。
 
-**构建是双轨的，两侧的模块格式要求正好相反：**
+使用运行时提供的 GUI URL，不写死端口。先确认实际加载版本与插件状态，再验证菜单、语言、配色切换与更新提示；截图和浏览器 console 共同作为证据。需要还原正式版时，也通过插件管理安装已发布的精确版本。
 
-| 产物 | 谁编译 | 格式 | 为什么 |
-|---|---|---|---|
-| `lib/index.js`（node 侧） | `tsc` | **ESM** | cordis 的 plugin loader 按 ESM 读它 |
-| `lib/client.js`（浏览器侧） | `esbuild`（`scripts/bundle.mjs`） | **IIFE 单文件** | DSH 的插件 client.js 是当 **classic script** 执行的，出现 `import`/`export` 直接语法错误 |
+## 官方扩展点
 
-所以浏览器侧源码可以随意拆模块，**产物必须 bundle 回一个自包含文件**。
-`scripts/bundle.mjs` 打完包会自检产物里没有顶层 `import`/`export`/`require`，
-且确实含 `window.__ModuleLoader__` —— 少了后者 DSH 根本不会注册这个插件。
+浏览器插件通过 `dsh.client.inject` 声明能力，用 `window.__ModuleLoader__.load()` 注册。根 `conversation.header.leading` Slot 提供本插件自己的顶栏定位锚点；完整切换器与其菜单、星光和更新提示都挂载在根 `shell.overlay` Slot，避免被宿主顶栏裁剪。定位只测量自己的锚点，不通过宿主选择器寻找位置。Slot 由 apply 通过 `ctx.slots.inject` 注册，副作用由上下文 effect/React effect 清理。
+
+更改能力或挂载位置前，先用 `cordis_inspect_list`，再用 Provider 声明的查询读取确切 Service 契约、Slot 树与 props。Inspect 方法是只读发现接口，不是插件可调用的业务 Service。不要扫描宿主 DOM 来寻找工具栏，不要手动重挂节点、追加第二个应用根或恢复悬浮拖拽兜底。
+
+主题样式调整沿用官方 theme token。已有兼容选择器仍需验证命中范围，禁止新增依赖构建 hash 的选择器；也不要通过匹配其它插件的 DOM/CSS 推测布局。
+
+## 源码与产物
+
+`src/` 按职责拆分，Host 入口为 `src/index.ts`，Client 入口为 `src/client.ts`。`lib/` 是构建产物，不手改。
+
+| 产物 | 编译器 | 格式 |
+|---|---|---|
+| `lib/index.js` | `tsc` | ESM，供 Cordis Host loader 加载 |
+| `lib/client.js` | `esbuild` | IIFE 单文件，供浏览器 classic script 加载 |
+
+浏览器源码可拆模块，产物必须自包含。`scripts/bundle.mjs` 检查产物不存在顶层 `import` / `export` / `require()`，并包含 ModuleLoader 注册。
+
+`package.json`、`.release-please-manifest.json`、`src/meta.ts` 的版本必须一致。移动 `PLUGIN_VERSION` 时同步核对 `release-please-config.json` 的 `extra-files` 与版本检查脚本。`sync-version` 只按现有包版本同步源码，不决定下一版本。
+
+## 验证命令
 
 ```bash
-npm run typecheck   # tsc --noEmit，全量类型检查（含所有模块）
-npm run build       # typecheck → tsc 出 index.js → esbuild 出 client.js
-```
-
-⚠️ **改动这个结构时记得连带检查三处配置**，它们都按路径找 `PLUGIN_VERSION`：
-`scripts/sync-version.mjs`（已改为扫 `src/` 不硬编码文件名）、
-`release-please-config.json` 的 `extra-files`、以及 `npm run check` 的版本真源组。
-拆分那次这三处漂了两处 —— 而 `sync-version` 挂在 `npm run deploy` 的 `&&` 链首位，
-它一 exit 1，**整个 deploy 静默中断**，部署点留着上一版产物、页面显示旧版本号，
-看起来像是主题坏了。`npm run check` 现在有一条闸门专门盯 `extra-files` 的有效性。
-
-## 提交前
-
-```bash
+npm run build
 npm run check
+npm run test:browser
+npm pack --dry-run
+npm run preflight    # 发布候选完成后联网核对远端真源
 ```
 
-这会校验六组，全是踩过坑才加的 —— 前三组是「改坏了会报错」，后三组是「改**偏**了会报错」，
-后者才是本项目真正反复失血的地方：
+`check` 覆盖打包契约、版本真源、选择器与范围边界、脚本测试和配色对比度；不等于运行时验证。`test:browser` 使用临时隔离的浏览器测试夹具验证交互，也不能代替真实宿主安装验收。`preflight` 会联网检查 npm、GitHub、版本、工作树及收录状态；记录失败项的实际原因，不把未提交的开发分支称为已发布。
 
-1. **打包契约** —— `dsh.bundle.patch`、包名与 `cordis.patch.yml` 一致、`files` 白名单、
-   以及 `client.js` 里 `PLUGIN_ID` 与包名一致（不一致会让 DSH 报
-   `loaded without registering`）
-2. **scripts 命名** —— script 名不得与 npm 生命周期钩子同名。曾有个
-   `"publish": "... && npm publish"`，而 `publish` 本身就是钩子，发包成功后
-   npm 自动触发它、又发一次 → 撞 403，让每次 CI 发布都假失败
-3. **前景色 token 反模式** —— `markdown-inline-code` 不得写成裸色值（它是背景色），
-   暗色阴影必须纯黑
-4. **版本真源** —— `package.json` / `.release-please-manifest.json` /
-   `PLUGIN_VERSION` 三处必须一致，手工 bump 直接 fail
-5. **选择器稳定性** —— 剥掉注释后扫源码，任何 `<hash>_<名>` 硬编码 fail
-6. **范围边界（棘轮）** —— `/bloom` 子命令 + 顶层 CSS 常量两份白名单，新增即 fail
+CI 在 PR 和 main push 上执行 `npm ci`、现有产物语法检查、check、test:browser 和 dry-run 包内容检查；它不自动构建普通 PR 的产物，因此提交前必须完成 build。提交前确认包含 `lib/index.js`、`lib/client.js`、`cordis.patch.yml`、README 与 LICENSE，且没有无关改动。
 
-配色对比度另由 `contrast-guard` 检查（`npm run check` 已串联），更深的视觉层
-见下方「视觉审计」。
+## 配色与视觉审计
 
-## 改配色时注意
+每套配色有两条轨道：
 
-**双轨制不能退回单轨。** 每个变体有两套色：
+- `accentL` / `accentD` 用于文字、按钮和可读边框，必须通过 WCAG AA。
+- `morandi` 用于低透明度氛围渐变和冷光，不用于可读文字。
 
-- `accentL` / `accentD` 是**可读轨**，用于文字、按钮填充、边框，必须过 WCAG AA
-- `morandi` 是**气质轨**，只用于 `rgba(morandi, 0.05~0.2)` 的大面积氛围渐变与冷光
+改颜色后运行 `npm run check`，并在真实宿主中核对明暗主题、各变体、键盘焦点和 `prefers-reduced-motion`。`contrast-guard` 的静态计算不能替代半透明叠层的浏览器实测。
 
-拿可读轨去铺大面积，或者拿气质轨去做文字色，都会失去莫兰迪质感。
-改完跑 `npm run check`，对比度不达标会直接失败。
+浏览器审计可使用 `scripts/visual-audit.browser.js`。调用方从当前 `src/palette.ts` 取得变体键，注入 `window.__bloomVariants` 后调用 `window.__bloomAudit()`；变体清单不可复制成过期常量。先检查审计结果的 `TRUSTWORTHY` 与 `sanity`，再看对比度和最终 verdict。运行时切换使用真实菜单与宿主设置，属性强切只用于纯 token 测量。
 
-## 改 CSS 选择器时注意
+提交视觉改动时提供明暗截图、所测宿主版本、实际加载的插件版本、审计命令与结果。完整历史问题见 [DEV_NOTES.md](./DEV_NOTES.md)；其中旧部署命令和固定端口属于历史记录，当前操作以本指南为准。
 
-DSH 用 CSS Modules，类名形如 `wSkVaW_root`（`<hash>_<语义名>`）。hash 随 DSH 构建变化，
-语义名相对稳定，所以一律用 `[class*="_语义名"]` 匹配，并且：
+### 对外截图脱敏
 
-- **限定 `div`** —— 裸 `[class*="_panel"]` 会命中 SVG 元素
-- **先数命中量** —— 裸 `[class*="_card"]` 会命中 30+ 个消息卡：
+README、Release 或公开讨论使用的截图，必须先在当前页面注入 `scripts/redact-for-shot.js`，等待执行成功，再截图。通过浏览器工具读取并执行脚本全文；Playwright 中可用 `await page.evaluate(redactionSource)`，其中 `redactionSource` 为该文件的 UTF-8 内容。
 
-  ```js
-  [...document.querySelectorAll('[class*="_card"]')].length
-  ```
+脚本把项目名、会话标题和工作区名称替换为示例名称，并在结束前检查原名是否残留；自检抛错时停止截图，不捕获错误后继续。截图前还要核对正文、路径、命令、账号与凭据等未被脚本覆盖的内容，必要时使用专门的示例会话或裁剪安全区域。脱敏不写存储、不发请求，刷新即可恢复，但宿主重新渲染可能恢复真实文字，因此每次截图前重新注入并确认结果。
 
-- **描边只给有实色背景的那一层** —— 加在内层透明元素上会形成「框中框」
+脱敏只服务对外展示图，不把替换后的内容当作功能验收证据；原始验收证据保留在受控范围内。脚本不随 npm 包分发，`npm run check` 会检查脚本、自校验和本流程引用是否在位。
 
-## 提交信息
+## 发布流程
 
-用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)：
-`feat` / `fix` / `docs` / `ci` / `chore` / `refactor`。
+1. 在独立 worktree 完成源码、双语 README 和构建产物，运行上述验证及真实宿主验收。
+2. 使用 `feat:` / `fix:` / `docs:` / `ci:` 等 Conventional Commits 提交，通过仓库交付流程合入 main。
+3. Release Please 工作流在 main push、每日定时巡检或手动触发时创建或更新 Release PR；以该 PR 的提议为下一版本真源，不手工 bump 版本或 CHANGELOG。
+4. Release Artifact Rebuild 工作流在 Release PR 上同步版本并重新构建产物；核对完整 diff 和当前 head SHA 的 CI 结果。
+5. main push、每日定时巡检及默认的手动触发只准备 Release PR。`auto_merge_release` 默认 `false`，因此不会自动启用合并。候选版到此仍未正式发布。
+6. 完成实际桌面安装验收、所发布 head SHA 的 CI 和独立代码评审，逐项处理所有评审发现，再运行 `npm run preflight`。发布负责人确认以上验收后，才可在本仓库显式执行：
 
-正文说清**为什么**这么改，不只是改了什么——本项目多数 bug 的根因都不在报错指向的地方，
-完整复盘见 [DEV_NOTES.md](./DEV_NOTES.md)。
-
-## 发版流程
-
-**版本号与 CHANGELOG 由 release-please 独占。人只写 commit。**
-
-1. 改完 `npm run deploy`（自带宿主契约门禁，不过不部署），⌘Q 重开桌面端验证；起不来就 `npm run rollback`
-2. `npm run check` 通过
-3. 跑一遍**视觉审计**（下一节），`verdict: PASS`
-4. 用 Conventional Commits 提交、推 main
-5. 合并 release PR 之前跑 `npm run preflight` —— **到此结束**
-
-### `npm run check` 与 `npm run preflight` 的分工
-
-| | 范围 | 何时跑 |
-|---|---|---|
-| `check` | 纯静态、无副作用、**不联网** | pre-commit + CI，每次提交 |
-| `preflight` | 读 git 状态、**要联网** | 发版前手动，合 release PR 之前 |
-
-preflight 查 check 照不到的那一类 —— 它们都得对照**外部真源**才能发现，而这个仓库
-每一条都真实出过事：
-
-1. **版本真源** —— 本地三处 + npm registry + git tag 五方一致。曾出现四头分裂
-   （npm `0.6.0` / git `0.6.1` / 工作区 `0.6.2` / release PR 想发 `0.7.0`），
-   以及 `v0.6.0` tag 指向 `0.4.0` 的 commit、Publish workflow 因此挂掉。
-2. **git 状态** —— 在 main、工作区干净、与 origin 同步、无已合并的僵尸分支、
-   无残留 worktree。
-3. **展示资源** —— 8 变体 × 明暗 = 16 张截图齐全，README 引用的本地图不断链。
-4. **awesome-dsh-plugin 收录同步** —— 拉线上的条目和 `data/screenshots.json` 比对：
-   描述里的变体数是否还准、市场截图是否注册过。这条抓到过真问题：条目长期写着
-   「four variants」（实际早就 8 个），且一张截图都没注册，
-   [dsh-market](https://github.com/dsh-market/dsh-market) 详情页只能从 README 瞎抽。
-
-离线时联网项自动跳过并标注，不会因为没网就报假失败。
-
-之后全自动：release-please 收集 commit → 开/更新 Release PR（里面 bump 版本号、
-写 CHANGELOG）→ 你合并那个 PR → 打 tag → `publish.yml` 发 npm + 建 Release
-→ `scripts/enrich-release.mjs` 把每个 commit 的 body 折叠追加到 Release notes。
-
-最后那步是因为 release-please 的 changelog **只取 commit 的 subject 行**
-（conventional-changelog 的规范如此，body 一律丢掉）。而本项目的 commit body 才是
-有价值的部分 —— 现象、根因、实测数字。所以**正文照旧要好好写**，它不会白写：
-Release 页面顶部是简洁列表，底部有可展开的详细说明。
-
-### 📸 Release notes 必须配图（owner 要求，2026-09-10）
-
-**一个主题的发版说明只有文字等于没写。** 自动生成的 changelog 是给 git 看的，
-Release 页是给人看的 —— 人要看到这一版长什么样。
-
-发完版（tag 已打、npm 已发）补这一段，放在自动 changelog **上面**：
-
-1. **拍图**：ego-browser 开 `http://127.0.0.1:19387`（宿主＝桌面端 app），至少三张 ——
-   整页深色、整页浅色、以及这一版真正改动的那块（面板/输入卡/侧栏，按需裁剪）。
-   变体统一用 mist 雾蓝，跟 README 对齐；换变体是另一回事，别混在同一张里。
-
-   ⛔ **截图前必须脱敏，这一步不能省。** 侧栏会把真实工作区一览无余 ——
-   项目名、会话标题；输入卡上方还有一枚"当前工作区"胶囊。这些图会进 README
-   和公开的 Release 页，等于把私有项目清单发布出去。
-   （2026-09-10 实际发生过：v0.11.0 首版配图带出了七八个真实项目名和一整段
-   对话正文，已删对象 + 清 CDN 缓存 + 换文件名重发。）
-
-   ```js
-   // 先开一个新会话（正文空 = hero 态），再注入脱敏脚本，最后才截图
-   await js(fs.readFileSync('scripts/redact-for-shot.js', 'utf8'))
+   ```bash
+   gh workflow run release-please.yml -f auto_merge_release=true
    ```
 
-   假数据沿用 README 那套（my-app / design-system / Refactor auth flow…），
-   换一套会让新旧展示图对不上号。截完自查一遍：
+   该命令允许工作流在 GitHub 判定 Release PR 为 `clean` 后，使用刚核验的 head SHA 合并并触发正式发布；准备候选版时不要执行。工作流不自动解决评审线程；状态不满足、head 变化或合并被拒绝时只记录警告，交给负责人检查。
+7. 合并 Release PR 后由 Release Please 创建 tag / GitHub Release，Publish 工作流通过 OIDC 发布 npm，并补充 release notes。分别核对 tag 指向、Publish 结果、npm 精确版本及 registry integrity，不能只看 GitHub Release 存在。
 
-   ```js
-   await js(`['CortexOS','modelgo',...].filter(k => document.body.innerText.includes(k))`)
-   // 必须返回 []
-   ```
-2. **传图**：走 R2（`cs resource policy` 是真源：**picx 已冻结新增**）。
-   注意 `cs image upload` 的默认值还停在 picx，必须显式 `--target r2`；
-   凭据不要手填，从密钥库注入：
+本仓使用 pre-1.0 版本策略：普通 `feat` 增 minor，`fix` 增 patch，破坏性变更的处理由 release-please 配置决定。最终版本以 Release PR 为准。需要特殊版本时使用 release-please 官方支持的配置或 Release-As 机制，重新审核提议；不要依赖未经验证的评论命令。
 
-   ```sh
-   CF_ACCOUNT_ID=916ebb1b9f240bf4c8826021dd161692 \
-   cs kyvault run --env CF_API_TOKEN=secret://cloudflare/api-token -- \
-     cs image upload <file> --target r2 --path projects/dsh-bloom-theme/<版本号>
-   ```
-
-3. **写说明**：`gh release edit v<x.y.z> --notes-file <文件>`，内容不是复述
-   changelog，而是回答三件事 —— **看起来什么样**（图 + 一句话）、
-   **新增了什么可感知的东西**（比如输入卡三态那张表）、
-   **升级后哪里会变得不一样**（行为变化要单独说，别埋在列表里）。
-   有外部贡献者就在这里点名致谢并链 PR。
-
-参照 v0.11.0：<https://github.com/webkubor/dsh-bloom-theme/releases/tag/v0.11.0>
-
-### ⛔ 不要做这些
-
-| 别做 | 为什么 |
-|---|---|
-| `npm version` / 手改 `package.json` 版本号 | release-please 按 commit 自己算版本，手改会和它的账本（`.release-please-manifest.json`）打架 |
-| `npm publish`（本地） | 发布只应由 tag 触发，本地发会让 npm 上出现 git 里不存在的版本 |
-| 手写 `chore: release vX.Y.Z` commit | 它不打 tag、不触发 publish，只会让 git 版本领先 npm |
-| 手写 `CHANGELOG.md` 条目 | release-please 按 commit 重新生成，手写条目会与它的输出重复 |
-
-这四条不是洁癖 —— 2026-08-24 实际出现过**版本四头分裂**：npm 上 `0.6.0`、
-git main `0.6.1`、工作区 `0.6.2`、release-please PR 想发 `0.7.0`，同时 Release PR
-的 changelog 把 `0.3.x` 时代的 commit 又全列了一遍。根因就是这份文档以前写的是手工
-流程、而 CI 装的是 release-please，**同一个仓库里存在两套发布协议**。
-
-现在 `npm run check` 会校验版本三处副本（`package.json` / manifest /
-`src/client.ts` 的 `PLUGIN_VERSION`）一致，手工 bump 会直接被拦下。
-
-### 视觉审计（改动配色 / token / 玻璃层时必跑）
-
-`npm run check` 是纯 node 的，算不了 `color-mix()` / `oklch()` 的最终 sRGB 值，
-也看不到「半透明面板叠在氛围渐变之后」的实际对比度 —— 那些只有 CSS 引擎能回答。
-所以有一个浏览器端脚本补这一层：
-
-```bash
-npm run deploy   # 门禁 → 装进 desktop（桌面端唯一会读的 profile）
-# 然后在 ego-browser 里打开 http://127.0.0.1:19387，先注入变体清单再注入脚本：
-#   window.__bloomVariants = <从 src/palette.ts 解析的键名数组>
-#   scripts/visual-audit.browser.js  →  window.__bloomAudit()
-```
-
-变体清单由调用方注入，不在脚本里抄一份 —— 抄的那份 2026-11-04 之前已经漏了
-7 个变体（2026-09-29 漏过 aurora / lavender）。清单为空时脚本直接报错，
-不会静默变成「零项通过」。
-
-它查三件事，全都是本项目真实出过血的地方：
-
-| 检查 | 覆盖 | 修过的坑 |
-|---|---|---|
-| 文字对比度 | 8 变体 × 明暗 = 16 组 × 9 个文字色 token = 144 项，外加当前 DOM 全量扫描 | 亮色 `label-tertiary` 3.46:1、暗色 `label-dimmed` 8/8 变体不及格、状态色亮色档 success 2.0:1 / warn 1.7:1 |
-| 暗底高亮边框 | 真实渲染的 border / outline | 「前景色 token 当边框用」已复发三次（inline-code / bloom-shadow / border 阶梯） |
-| 未接管的 DSH 静态色 | static 层绕过 alias 层的具体色值 | `#679efe` 曾让 8 套配色的 tab 选中色永远是蓝的；`#adb2b8` 曾是设置面板那圈刺眼灰白边 |
-
-外加两条结构断言：`state-business-primary` 必须已接管为 accent（曾在 mist 下失效，
-因为 mist 块留了旧定义），`label` 四档必须单调递减（曾塌成一档）。
-
-**先看 `TRUSTWORTHY` 和 `sanity`。** 脚本有自检 —— 它得先算对几个已知答案
-（白字/深底 ≈17:1、oklch 近白必须解析成近白）才输出结论。自检不过时它报的
-「0 问题」没有任何意义：这套扫描器的前两版就因为用 rgb 正则解析 `oklch(...)`
-而把所有对比度算成 ≈1.0，一次报出 54 条假阳性、一次把真问题全漏掉。
-
-**运行时层不要用属性强切来切变体/明暗。** DSH 部分组件的背景不跟着重算，会量到
-上一个变体的残留值（实测「新会话」按钮 1.02:1、切换器名字 1.86:1，真实切换下
-都不存在）。要切就走设置面板 + 刷新。属性切换只可用于纯 token 层（`auditTokens`）。
-
-### 需要跳版本或跳过发布
-
-不要手改文件，用 release-please 的协议：close 那个 Release PR 并评论
-`/autorelease:skip`，或 `/autorelease:major` / `/autorelease:minor`。
-
-## 对外数字一律现拿，不手写
-
-推广帖草稿曾把数据写死 —— 「344 downloads as of 2026-08-19」、只列 4 个变体的
-对比度表 —— 于是 8 变体上线后，那份**公开可见**的草稿一直在讲过时的事。
-
-```bash
-npm run stats            # 打印 markdown 片段：对比度表 + 下载量 + star
-npm run stats -- --json  # 结构化输出
-```
-
-三个来源都是真源，脚本不自己重算：
-
-- **对比度** —— `contrast-guard --json`，从 `lib/client.js` 解析实际发布的 OKLCH 值。
-  ⚠️ 绝不要在别处再实现一遍 oklch→sRGB→WCAG。`stats-table.mjs` 第一版就犯过：
-  自己换算出 `mist light = 5.29`，contrast-guard 是 `5.28`。差 0.01 无害，
-  但两套算法本身就是隐患（`check.mjs` 早写过「两份算法各写一遍必然漂移」）。
-- **下载量** —— `api.npmjs.org/downloads/point/last-month`
-- **star** —— GitHub API
-
-发帖 / 更新 README 数字前跑一遍，把输出贴进去。
-
-## 范围边界：什么该进这个仓库
-
-定位（README「一句话」）：**给 DSH 的「玻璃 + 莫兰迪」主题** = 配色 + 质感 + 切换器。
-
-这个仓库反复失血的地方不是 bug，是**范围往外长**，而且每次都以删除收场：
-
-| 越界功能 | 结局 |
-|---|---|
-| 0.4.0 壁纸 / 氛围层 | 0.5.0 全删 |
-| 0.5.0 代码统计卡（`/bloom stats` + 顶栏胶囊 + PNG 导出，约 500 行） | 0.8.0 全删 |
-
-统计卡那次尤其值得记住：它撑了三个版本，而**浏览器端展示的一直是假数据** ——
-顶栏卡片想读 `/bloom-stats.json`，但从来没有任何代码提供过这个端点（实测 404），
-于是永远 fallback 到硬编码的 `STATS_SAMPLE`，任何用户看到的都是本仓库的示例
-数字（3864 行 / 45 文件，项目名固定 `dsh-bloom-theme`）。
-
-根本矛盾是**浏览器端拿不到本地 git 数据**，而主题不该为此引入 client↔node 实时桥。
-也就是说：这个功能在「主题插件」这个载体里就是做不成的，当初硬塞进来时就已经
-注定要靠假数据顶着。**越界的功能往往不只是不该在这儿，而是在这儿根本做不对。**
-
-新功能进来前先问一句「它属于配色 / 质感 / 切换器吗」。不属于就该是独立插件。
-`npm run check` 用两份白名单把这条做成了棘轮：
-
-- `/bloom` 子命令白名单（**当前为空** —— 主题不提供任何命令）
-- 顶层 CSS 常量白名单（`COMPONENT_CSS` / `GLASS_CSS` / `SWITCHER_CSS`）
-
-新增会直接 fail。确实要扩，就改白名单**并**同步 README 的「一句话」—— 让范围扩张
-成为一次显式的、写下来的决策，而不是悄悄多出 500 行。
-
-## 怀疑 DSH 有 layout bug 时：先证明不是自己造成的
-
-**这是本项目最贵的一课。** 设置面板「279px 窄 drawer + 中文逐字竖排」被当成 DSH 的
-bug 修了三轮（v0.6.0 修 → v0.6.1 回滚并记为「去官方提 issue」→ 又改回来，
-一共 60 行 modal 改造 CSS）。
-
-真相：**DSH 原生设置面板本来就是 800×800 的居中 modal，中文正常横排。**
-那个 bug 是 Bloom 自己造成的 —— 侧栏的 `backdrop-filter` 让 `_sidebarCol` 成为
-其 `position: fixed` 后代的 containing block，而 DSH 的设置面板恰好挂在侧栏子树里，
-于是 overlay 的 `fixed` 从「相对视口」变成「相对 280px 的侧栏」。
-
-所以在动手覆盖 DSH 布局之前，**先摘掉 Bloom 自己的样式量一遍原生形态**：
-
-```js
-// 在 DSH 里跑：禁用 Bloom 注入的相关规则 + 摘掉可疑属性，再量几何
-side.style.setProperty('backdrop-filter', 'none', 'important')
-console.log(el.getBoundingClientRect())   // 和「有 Bloom」时对比
-```
-
-差异消失 → 是我们自己的问题，去修根因，别写覆盖。
-
-### 会污染后代 fixed 的属性（加玻璃/动效前必查）
-
-| 属性 | 破坏什么 | 症状 |
-|---|---|---|
-| `backdrop-filter` / `filter` / `transform` / `perspective` / `contain` / `will-change` | 成为 fixed 后代的 **containing block** | 定位基准变了，fixed 元素被钳在该祖先的盒子里 |
-| `isolation: isolate`（以及任何 `z-index` ≠ auto 的定位元素） | 创建 **stacking context** | 层叠顺序变了，fixed 元素被同级内容盖住 |
-
-判据：**「这个元素的子树里有 `position: fixed` 的东西吗？」**
-有 → 玻璃必须走 `::before`（伪元素的 `backdrop-filter` 只作用于自己），
-且不得顺手加 `isolation` —— 修第一个坑时当场踩了第二个：加了 `isolation: isolate`
-让设置面板被 composer 盖住。
-
-### 确实需要覆盖 DSH 布局时
-
-只准用语义 / 结构选择器，绝不写 `.VOzbGW_overlay` 这种带构建 hash 的类名 ——
-hash 随 DSH 每次构建变化，写死会在升级后**静默失效**（无报错无告警）。
-需要收紧作用域时用 `:has()` 匹配 DOM 结构特征：
-
-```ts
-// 例：DSH 设置面板 = 唯一「直接子元素同时有 _mask 和 _panel」的 overlay
-'div[class*="_overlay"]:has(> div[class*="_mask"]):has(> div[class*="_panel"])'
-```
-
-`npm run check` 会扫 `src/client.ts`（剥掉注释后）拦下任何 `<hash>_<名>` 硬编码。
+release-sync 负责当前版本在已登记文档或技能中的一致性，不代替 release-please 选版本。发版流程与版本同步入口只保留一套。

@@ -10,12 +10,13 @@ const { outputFiles } = await build({
   stdin: {
     contents: `import './test/slot-fixture.mjs'; import './src/client.ts';
       const services = { slots: window.fixtureSlots }; const pending = [];
-      window.remoteDisposers = [];
+      window.remoteDisposers = []; window.layoutDisposers = [];
       const strictCtx = (declared = []) => new Proxy({}, {
         get(_, key) {
           if (key === 'effect') return fn => {
             const dispose = fn();
             if (declared.includes('remote.pluginManager') && typeof dispose === 'function') window.remoteDisposers.push(dispose);
+             if (declared.includes('layout') && typeof dispose === 'function') window.layoutDisposers.push(dispose);
             return dispose;
           };
           if (key === 'inject') return (names, cb) => {
@@ -31,8 +32,13 @@ const { outputFiles } = await build({
         services.remote = {pluginManager:pm}; services['remote.pluginManager'] = pm;
         for (let i=pending.length-1;i>=0;i--) if(pending[i].names.every(n => services[n] !== undefined)) pending.splice(i,1)[0].run();
       };
-      window.applyFixture = (pm, locale) => {
+      window.activateLayout = service => {
+         services.layout=service;
+         for (let i=pending.length-1;i>=0;i--) if(pending[i].names.every(n => services[n] !== undefined)) pending.splice(i,1)[0].run();
+       };
+       window.applyFixture = (pm, locale) => {
         services.locale=locale;
+         if(window.layoutService) services.layout=window.layoutService;
         if(pm) {services.remote={pluginManager:pm};services['remote.pluginManager']=pm;}
         const mod=window.__ModuleLoader__._module;
         mod.apply(strictCtx(mod.inject ?? []));
@@ -43,7 +49,7 @@ const { outputFiles } = await build({
 const browser = await chromium.launch({ executablePath: process.env.BLOOM_CHROMIUM_PATH || undefined, args: ['--no-sandbox'] })
 test.after(() => browser.close())
 
-async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
+async function setup(t, mode = 'ok', { desktop = true, late = false, layout = true } = {}) {
   const context = await browser.newContext({ locale: 'zh-CN', colorScheme: 'dark' })
   t.after(() => context.close())
   const page = await context.newPage()
@@ -57,7 +63,8 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
   })
   await page.goto('https://bloom.test/')
   await page.clock.install()
-  await page.evaluate(({mode, desktop, latest}) => {
+  await page.evaluate(({mode, desktop, latest, layout}) => {
+    window.layoutCalls=[];window.layoutService=layout?{selectPanel:id=>window.layoutCalls.push(id)}:undefined;
     if (desktop) window.dshDesktopBoot = {}
     window.copied = ''
     Object.defineProperty(navigator, 'clipboard', { configurable:true, value:{writeText:async text=>{window.copied=text}} })
@@ -83,7 +90,7 @@ async function setup(t, mode = 'ok', { desktop = true, late = false } = {}) {
       return {ok:true,value:{from:'0.0.1',to:version,step:'install',result}}
     }}
     if(mode==='legacy') { delete window.pm.updateBundle; window.pm.installBundle=async()=>{throw new Error('must not call installBundle for an installed theme')} }
-  }, { mode, desktop, latest: LATEST })
+  }, { mode, desktop, latest: LATEST, layout })
   await page.addScriptTag({ content: outputFiles[0].text })
   await page.evaluate(({mode,late})=>window.applyFixture(mode==='none'||late?undefined:window.pm,window.locale),{mode,late})
   await page.clock.fastForward(4100)
@@ -215,4 +222,17 @@ test('self-hosted profile without the service keeps the exact-version copy fallb
   assert.equal(await banner(page).locator('[data-act="install"]').count(),0)
   await banner(page).locator('[data-act="copy"]').click()
   assert.match(await page.evaluate(()=>window.copied),new RegExp(`dsh-bloom-theme@${LATEST}`))
+})
+
+
+test('desktop hides Plugins until layout arrives and removes it when layout is disposed', async t => {
+  const {page,errors}=await setup(t,'none',{layout:false})
+  assert.equal(await banner(page).locator('[data-act="plugins"]').count(),0)
+  assert.ok((await banner(page).textContent()).includes('侧栏「插件」'))
+  await page.evaluate(()=>window.activateLayout({selectPanel:id=>window.layoutCalls.push(id)}))
+  await banner(page).locator('[data-act="plugins"]').click()
+  assert.deepEqual(await page.evaluate(()=>window.layoutCalls),['plugins'])
+  await page.evaluate(()=>window.layoutDisposers.forEach(dispose=>dispose()))
+  assert.equal(await banner(page).locator('[data-act="plugins"]').count(),0)
+  assert.deepEqual(errors,[])
 })

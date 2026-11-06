@@ -263,6 +263,7 @@ function installUpdateCheck(host: HTMLElement) {
     const isDesktop = isDesktopHost()
     // Only the replacement API can update an installed bundle; legacy installBundle cannot.
     const canUpdate = !!pluginManager?.updateBundle
+    const canOpenPlugins = typeof layout?.selectPanel === 'function'
 
     if (bannerVersion !== latest) outcome = { kind: 'available' }
     bannerVersion = latest
@@ -332,7 +333,7 @@ function installUpdateCheck(host: HTMLElement) {
           ? `<button data-primary data-act="install">${tr('立即更新')}</button>
              <button data-act="open">${tr('更新日志')}</button>`
           : isDesktop
-            ? `<button data-primary data-act="plugins">${tr('打开插件管理')}</button>
+            ? `${canOpenPlugins ? `<button data-primary data-act="plugins">${tr('打开插件管理')}</button>` : ''}
                <button data-act="open">${tr('更新日志')}</button>`
             : `<button data-primary data-act="copy">${tr('复制更新命令')}</button>
                <button data-act="open">${tr('更新日志')}</button>`}
@@ -611,8 +612,15 @@ window.__ModuleLoader__.load({
       bindPluginManager(ctx)
       ctx.inject(['layout'], (scope) => {
         scope.effect(() => {
-          layout = scope.layout
-          return () => { layout = null }
+          const service = scope.layout
+          layout = service
+          refreshUpdateCapability?.()
+          return () => {
+            if (layout === service) {
+              layout = null
+              refreshUpdateCapability?.()
+            }
+          }
         }, 'dsh-bloom-theme: plugin navigation')
       })
       ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')

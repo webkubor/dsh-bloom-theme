@@ -47,9 +47,7 @@
 **Short version: Bloom's next iterations target the DSH desktop app first. The Web UI is no longer
 actively supported and will fade out.**
 
-(0.16.0 and earlier were built against the DSH Web UI. **0.17.0 is the desktop-ready release** — it
-brings the DSH 0.2.0 selector adaptation plus a drift gate that catches this class of breakage
-automatically.) On desktop app 0.2.1-rc.5, the switcher's version display uses the desktop app version rather than an older bundled DSH package version; the drift gate also targets the locally installed desktop release.
+Desktop-first since 0.17.0. This update uses the host-provided header and overlay Slots and requires DSH 0.2.2-rc.1 or newer. Version hints read the desktop application version.
 
 DSH now ships a desktop app, and it is what I use every day. A theme's value lives on top of a UI —
 when the host changes its interface, the palettes and the glass have to follow — so that is where
@@ -68,11 +66,11 @@ Two clarifications, so you do not have to guess from the heading:
 - If the Web UI is your only option, please open an issue and describe your setup — real demand
   changes my judgement. That is not a formality.
 
-> **What the previous version (0.16.0) changed**: running steps now take on the theme color (the sweep went from grey to the
-> three Bloom tones); the round-status spectrum is wired back up (it vanished silently when DSH was
-> renamed); the message-bubble glass edge that never drew in light mode is fixed; substring-selector
-> self-overlap ("box inside a box", the square black chip) is fixed; the pill background on running
-> steps is gone — state should not have to shout from a box.
+### This update · 2026-11-06 🌸
+
+Light mode now has a gentle theme-coloured edge gradient while keeping the reading area clear. Its top-right sparkles are easier to see and follow palette changes; dark mode keeps its white highlights.
+
+The palette menu is aligned more neatly, with the poem gradients preserved. The controls and decoration use official Slots, with cleanup on navigation, disable and re-enable. Thanks to everyone who tried Bloom and sent feedback and screenshots. Those small details made this update possible.
 
 ## The gist
 

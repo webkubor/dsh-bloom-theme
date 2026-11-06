@@ -622,8 +622,8 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
       anchor.style.height = `${trigger.offsetHeight}px`
     }
     const box = anchor.getBoundingClientRect()
-    const modal = document.querySelector<HTMLElement>('dialog[open], [role="dialog"][aria-modal="true"]')
-    const covered = !!modal && !el.contains(modal) && modal.getClientRects().length > 0
+    const covered = Array.from(document.querySelectorAll<HTMLElement>('dialog[open], [role="dialog"][aria-modal="true"]'))
+      .some(modal => !el.contains(modal) && modal.getClientRects().length > 0 && getComputedStyle(modal).visibility !== 'hidden')
     const key = `${box.left}|${box.top}|${box.width}|${box.height}|${window.innerHeight}|${covered}`
     if (key === last) return
     last = key

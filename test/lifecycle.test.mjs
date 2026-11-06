@@ -396,6 +396,11 @@ for (const kind of ['aria-modal', 'dialog']) {
     })
 
     await page.evaluate(k => {
+      const retained = document.createElement('div')
+      retained.setAttribute('role', 'dialog')
+      retained.setAttribute('aria-modal', 'true')
+      retained.hidden = true
+      document.body.append(retained)
       const m = k === 'dialog' ? document.createElement('dialog') : document.createElement('div')
       m.id = 'host-modal'
       m.textContent = 'Host settings'

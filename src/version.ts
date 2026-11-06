@@ -100,7 +100,7 @@ export let dshCheckError: string | null = null
 let localizedCheckError: (() => string) | null = null
 
 /** 桌面壳那边已经查到的状态（available / error）。 */
-let desktopStatus: DesktopUpdateStatus | null = null
+export let desktopStatus: DesktopUpdateStatus | null = null
 let desktopStatusAsked = false
 /** 已排出的延迟重试次数（有界，避免开面板时无限轮询宿主）。 */
 let desktopStatusPolls = 0
@@ -119,6 +119,8 @@ export function setVersionUpdatesActive(active: boolean) {
   pendingPollTimers.clear()
   for (const controller of versionRequests) controller.abort()
   versionRequests.clear()
+  desktopStatus = null
+  dshCheckPromise = null
   desktopStatusAsked = false
   desktopStatusPolls = 0
 }
@@ -367,7 +369,8 @@ export async function checkDshLatest(force = false): Promise<void> {
     } catch {}
   }
   if (dshCheckPromise) return dshCheckPromise
-  dshCheckPromise = (async () => {
+  let promise: Promise<void> | null = null
+  promise = (async () => {
     dshCheckError = null
     localizedCheckError = null
     // 超时是必须的：不带 signal 的 fetch 在被代理/黑洞的链路上会**永远挂着**，
@@ -406,6 +409,7 @@ export async function checkDshLatest(force = false): Promise<void> {
           }))
         } catch {}
       } else {
+        if (!versionUpdatesActive || generation !== versionGeneration) return
         dshLatestVersion = null
         dshCheckError = `HTTP ${r.status} ${r.statusText}`.trim()
       }
@@ -423,10 +427,16 @@ export async function checkDshLatest(force = false): Promise<void> {
     } finally {
       clearTimeout(timer)
       versionRequests.delete(controller)
-      dshCheckPromise = null
+      queueMicrotask(() => {
+        if (dshCheckPromise === promise) {
+          dshCheckPromise = null
+        }
+      })
     }
+    if (!versionUpdatesActive || generation !== versionGeneration) return
     renderDshUpdate()
   })()
+  dshCheckPromise = promise
   return dshCheckPromise
 }
 

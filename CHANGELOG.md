@@ -13,6 +13,24 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.26.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.25.1...v0.26.0) (2026-11-06)
+
+
+### ✨ Features
+
+* **meta:** 补齐插件管理器标题、简介与图标 ([d9dda1f](https://github.com/webkubor/dsh-bloom-theme/commit/d9dda1f7237a10e8b8c148277889782bf2aa8ebe))
+* **starlight:** 引入物理羽化微光星辉粒子层，沉静点缀深色莫兰迪夜空 ([d697bf0](https://github.com/webkubor/dsh-bloom-theme/commit/d697bf0884d10275e55d0251553cb7bb67c1d78d))
+* **starlight:** 改为右上角滑出的闪烁光点，对齐 ModelGo BucketSparkles ([961c81f](https://github.com/webkubor/dsh-bloom-theme/commit/961c81fd08a3eb4e7d8587a15002da23b56e156a))
+* **starlight:** 落地 A 方案全屏星辰，加入防扎堆间距与深邃三层景深 ([1ffdbc7](https://github.com/webkubor/dsh-bloom-theme/commit/1ffdbc7e95b1242fec374083778bea20abc49c79))
+* 补齐浅色星辉与背景层次，整理配色菜单并接入官方 Slot ([13d4a69](https://github.com/webkubor/dsh-bloom-theme/commit/13d4a691a1970b82a1276ccc634437af08d94b7d))
+
+
+### 🐛 Bug Fixes
+
+* **ambience:** 彻底清除底部光晕与鼠标光斑残留，保持暗色纯粹沉静 ([6f5a3b7](https://github.com/webkubor/dsh-bloom-theme/commit/6f5a3b7a5bcc9ccf5b8dc80e50a91bb18ee9c5a5))
+* **glass:** 撤销输入卡与侧栏浮夸的彩色环境投影，压暗底部大色斑 ([62a7526](https://github.com/webkubor/dsh-bloom-theme/commit/62a752649ad979663729635d761306e65ce0001d))
+* **update:** 提供「打开插件管理」一键跳转，消解桌面端更新交互断层 ([ff14467](https://github.com/webkubor/dsh-bloom-theme/commit/ff144677a5b56e39a2cee39e3712172dc5fcda02))
+
 ## [0.24.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.24.0...v0.24.1) (2026-11-04)
 
 

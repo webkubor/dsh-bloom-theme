@@ -18,7 +18,11 @@
 
 ## 先看效果
 
-> 🎬 完整动效视频（深浅切换 · 流星 · 玻璃材质 · 配色轮换）待补充。
+![0.27.0 漫天星辰动态预览](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-starry-preview-v0.27.0.gif)
+
+[▶ 观看本版漫天星辰演示视频（6 秒，无声音）](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-starry-v0.27.0.mp4)
+
+<sub>基于 DSH Web 实际界面录制，演示会话中的名称均为示例。</sub>
 
 **深浅两套氛围，各自独立设置：**
 
@@ -62,11 +66,9 @@
 
 ## 界面截图
 
-[![黛蓝深色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-dark.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-dark.png)
+![0.27.0 深色漫天星辰界面](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-starry-v0.27.0.png)
 
-[![黛蓝浅色的 DSH 界面](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-light.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-light.png)
-
-> 截图为 v0.23 界面；玻璃材质、背景动效、新底栏为下一版内容，视频即将补充。
+> 本版深色「漫天星辰」画面，来自已脱敏的 DSH Web 演示会话。
 
 ## 常见问题
 

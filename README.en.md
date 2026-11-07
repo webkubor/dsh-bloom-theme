@@ -18,7 +18,11 @@
 
 ## See it first
 
-> 🎬 A full demo video (light/dark switching · meteors · glass materials · palette rotation) is planned.
+![Bloom 0.27.0 starry sky animated preview](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-starry-preview-v0.27.0.gif)
+
+[▶ Watch the starry sky demo (6 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-starry-v0.27.0.mp4)
+
+<sub>Recorded from the actual DSH Web interface; workspace and session names are examples.</sub>
 
 **Two moods, configured independently:**
 
@@ -62,11 +66,9 @@ Open source is easy to start and hard to keep. If Bloom makes your DSH a little 
 
 ## Screenshots
 
-[![Mist dark DSH UI](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-dark.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-dark.png)
+![Bloom 0.27.0 dark starry sky](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-starry-v0.27.0.png)
 
-[![Mist light DSH UI](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-light.png)](https://img.webkubor.online/projects/dsh-bloom-theme/v0230-ui-mist-light.png)
-
-> Screenshots show v0.23; glass materials, living backgrounds and the new footer arrive in the next release — video coming soon.
+> The dark starry-sky view from a redacted DSH Web demonstration session.
 
 ## FAQ
 

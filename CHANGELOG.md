@@ -13,6 +13,65 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.27.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.26.0...v0.27.0) (2026-11-07)
+
+
+### ✨ Features
+
+* add optical glass refraction lens ([4fca6f8](https://github.com/webkubor/dsh-bloom-theme/commit/4fca6f8ca73babda1343b81639f8760934c3740b))
+* add palette-independent SVG fog masks ([50fee21](https://github.com/webkubor/dsh-bloom-theme/commit/50fee21cd26d27bc767e327063c9429cba0874a9))
+* add privacy-safe feedback diagnostics ([9304a83](https://github.com/webkubor/dsh-bloom-theme/commit/9304a838b3e379f29df1ab9c7669b0d0da895394))
+* add single and multicolour meteors ([9b9de2d](https://github.com/webkubor/dsh-bloom-theme/commit/9b9de2d14e19b29bb7de2ec7ba211c347cb604d2))
+* add user-initiated screen capture ([68f4a45](https://github.com/webkubor/dsh-bloom-theme/commit/68f4a45673dd6ecea794d1d458c495233eb0209b))
+* compact footer with feedback, stars and share actions ([486cf56](https://github.com/webkubor/dsh-bloom-theme/commit/486cf565789a96838262ea18b9c36e1e2b1b231d))
+* enrich edge starlight in starry sky ([55f6a06](https://github.com/webkubor/dsh-bloom-theme/commit/55f6a0657fc99727459e1e7c4d3888e96232532d))
+* make starry sky fireflies more visible ([54d5e44](https://github.com/webkubor/dsh-bloom-theme/commit/54d5e442d3ec2d0df5d4a794f0d20c924dc15c99))
+* three glass materials with per-scheme ambience and themed surfaces ([d56e2a1](https://github.com/webkubor/dsh-bloom-theme/commit/d56e2a13fd7ad54a79314834ae817f59f2725cdd))
+* validate release showcase media ([de9a13f](https://github.com/webkubor/dsh-bloom-theme/commit/de9a13f6533a6bdfe70cd63589f4816c56a37c91))
+
+
+### 🐛 Bug Fixes
+
+* align dark background with composer seat ([3eb52a5](https://github.com/webkubor/dsh-bloom-theme/commit/3eb52a5f096ea03d51bfc865dad4b66d7185a35c))
+* align switcher within existing header clearance ([11a13b3](https://github.com/webkubor/dsh-bloom-theme/commit/11a13b386776c229d0ffa73d360fad98d6c5de4d))
+* clarify unsupported screen capture fallback ([40e1f57](https://github.com/webkubor/dsh-bloom-theme/commit/40e1f57b36959f3d1662eea055caf1a733310d0b))
+* include canvas diagnostics in all scope ([6f4b601](https://github.com/webkubor/dsh-bloom-theme/commit/6f4b601ee9088fc8720685c0b30fce498f944588))
+* keep theme switcher clear of sidebar control ([74b2788](https://github.com/webkubor/dsh-bloom-theme/commit/74b2788779b2be92fc1dd133ff4a4db54d091426))
+* limit background diagnostic selector details ([d60361d](https://github.com/webkubor/dsh-bloom-theme/commit/d60361d12ed0ff8dbab0806200ca432a2ccaf09c))
+* preserve ambience when storage fails ([8e685d4](https://github.com/webkubor/dsh-bloom-theme/commit/8e685d44bd8eaf902593a8be17cb5890662a52f6))
+* restore dark theme glow and background continuity ([cfd9d2a](https://github.com/webkubor/dsh-bloom-theme/commit/cfd9d2a1851dd39b641e8d294b97c90ebb485aa2))
+* restore readable showcase and community badges ([9ae67f3](https://github.com/webkubor/dsh-bloom-theme/commit/9ae67f307aa19d74290ed106e28c36149ad9c20a))
+* restore README media and community links ([8066965](https://github.com/webkubor/dsh-bloom-theme/commit/80669653012d6ef7d34ef37d012b097c6f6b3e58))
+* serve showcase from stable media host ([6440510](https://github.com/webkubor/dsh-bloom-theme/commit/6440510b061a4338abafcfad6af5d3e3c76a348e))
+
+
+### 📝 Documentation
+
+* add 0.27.0 starry-sky showcase ([4bf1fb8](https://github.com/webkubor/dsh-bloom-theme/commit/4bf1fb879cfef52eee54aa52a1e11d07375054b5))
+* add starry sky video and 0.27.0 showcase ([c43565e](https://github.com/webkubor/dsh-bloom-theme/commit/c43565e7a7c14643895f0790a4be4f61aa0aba7d))
+* anchor showcase assets to release tag and record lessons ([11e1172](https://github.com/webkubor/dsh-bloom-theme/commit/11e1172667b6af670e8f7e2faf817dd5db18b254))
+* clarify capture support and planned demo ([44a2bd4](https://github.com/webkubor/dsh-bloom-theme/commit/44a2bd44cc6d6fac9e5f731d2ce1554bbfc4c66c))
+* clarify header clearance compatibility ([73ec374](https://github.com/webkubor/dsh-bloom-theme/commit/73ec3749386cd754f4e37e56e45ca81d65118833))
+* clarify showcase version and quality metrics ([c9ba19d](https://github.com/webkubor/dsh-bloom-theme/commit/c9ba19d16b50973f010ca0db568c5e5a0f1598c7))
+* correct showcase banner palette count ([35a7f8c](https://github.com/webkubor/dsh-bloom-theme/commit/35a7f8cd2822d885f2f37e7b02e68cb1a839a593))
+* draft next version release notes ([fd434d5](https://github.com/webkubor/dsh-bloom-theme/commit/fd434d549c2c09b849a3a20272931f69062d56f9))
+* embed playable demo in GitHub README ([d7ef81f](https://github.com/webkubor/dsh-bloom-theme/commit/d7ef81f0d89419ad6ff0474924485ac01444c236))
+* embed playable product demo ([bd2ae1c](https://github.com/webkubor/dsh-bloom-theme/commit/bd2ae1caab3a0193376beb6a2112dfcc057e176d))
+* record desktop capture verification limits ([9bf0e26](https://github.com/webkubor/dsh-bloom-theme/commit/9bf0e2615709590a877007a42869591bc9dc372e))
+* restore verified theme strengths and metrics ([364608e](https://github.com/webkubor/dsh-bloom-theme/commit/364608e45ee11fc6732847640a7ce22f69e284a3))
+* rewrite README around visuals and quick start ([a9a4595](https://github.com/webkubor/dsh-bloom-theme/commit/a9a45950ffd0dcfb87e8aaca6373dbb7577c3a9d))
+* showcase full theme controls in release demo ([c73e894](https://github.com/webkubor/dsh-bloom-theme/commit/c73e8943e71d25577729847f89c53903db944e5c))
+
+
+### 🎨 Styling
+
+* compact material controls and align meteor row ([f83a22c](https://github.com/webkubor/dsh-bloom-theme/commit/f83a22c7686b32ce9830ecdc9258354c91d22ccc))
+
+
+### 🛠️ CI / Build
+
+* require versioned showcase media for releases ([62d2f1a](https://github.com/webkubor/dsh-bloom-theme/commit/62d2f1a910dcfe52b76ac737bcbfffe8d0a534c2))
+
 ## [0.26.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.25.1...v0.26.0) (2026-11-06)
 
 

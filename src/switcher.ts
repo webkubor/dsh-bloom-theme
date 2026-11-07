@@ -218,11 +218,10 @@ export function buildSwitcherHTML(currentVariant) {
     <div class="dsh-bloom-section">${tr('质感')}</div>
     <div class="dsh-bloom-glass" role="group" aria-label="${tr('质感')}">
       <div class="dsh-bloom-glass__choices">
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="frosted"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('毛玻璃')}</span></button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="matte"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('磨砂玻璃')}</span></button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="liquid"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('液态玻璃')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="frosted">${tr('毛玻璃')}</button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="matte">${tr('磨砂玻璃')}</button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="liquid">${tr('液态玻璃')}</button>
       </div>
-      <p class="dsh-bloom-glass__description" data-glass-description aria-live="polite"></p>
       <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
     </div>
     <div class="dsh-bloom-section">${tr('背景')}</div>
@@ -432,15 +431,6 @@ function syncGlassRow(el: HTMLElement) {
     const on = btn.dataset.glass === shown
     btn.dataset.active = String(on)
     btn.setAttribute('aria-pressed', String(on))
-  }
-  const description = row.querySelector<HTMLElement>('[data-glass-description]')
-  if (description) {
-    const descriptions = {
-      frosted: '毛玻璃 · 柔化背景，透光不透细节',
-      matte: '磨砂玻璃 · 细腻颗粒，低反光',
-      liquid: '液态玻璃 · 清透中心，边缘折光',
-    }
-    description.textContent = tr(descriptions[shown])
   }
   const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
   if (!hint) return

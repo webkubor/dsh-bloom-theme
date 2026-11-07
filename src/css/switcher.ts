@@ -412,116 +412,17 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
 }
 .dsh-bloom-appearance[hidden] { display: none; }
 
-/* 玻璃质感行：结构与深浅模式行一致（同一套分段控件），多一行说明文字。
- * 说明只在系统要求降透明时才出现，所以默认不占位。 */
-.dsh-bloom-glass {
-  padding: 0 14px 2px;
-  font-size: 12px;
-  color: var(--dsw-alias-label-secondary, #777);
-}
-.dsh-bloom-glass__hint {
-  margin: 7px 2px 2px;
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--dsw-alias-label-tertiary, #999);
-}
+/* 紧凑质感分段与模式控件保持一致。 */
+.dsh-bloom-glass { padding: 0 14px 2px; font-size: 12px; color: var(--dsw-alias-label-secondary, #777); }
+.dsh-bloom-glass__hint { margin: 7px 2px 2px; font-size: 11px; line-height: 1.55; color: var(--dsw-alias-label-tertiary, #999); }
 .dsh-bloom-glass__hint[hidden] { display: none; }
-/* [LES-33][LES-36] */
-.dsh-bloom-glass__choices { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
-.dsh-bloom-glass__choice {
-  appearance: none;
-  min-width: 0;
-  min-height: 72px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.1));
-  border-radius: 10px;
-  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 80%, transparent);
-  color: var(--dsw-alias-label-secondary, #555);
-  font: inherit;
-  font-size: 11px;
-  line-height: 1;
-  cursor: pointer;
-  transition: border-color .18s, background-color .18s, box-shadow .18s, transform .18s;
-}
-.dsh-bloom-glass__choice:hover { transform: translateY(-2px); border-color: var(--bloom-hairline-strong); }
-.dsh-bloom-glass__choice[data-active="true"] {
-  color: var(--dsw-alias-label-primary, #222);
-  font-weight: 600;
-  border-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 60%, transparent);
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 8%, var(--dsw-alias-bg-layer-1, #fff));
-  box-shadow: none;
-}
-.dsh-bloom-glass__choice:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: 2px; }
-.dsh-bloom-glass__sample {
-  position: relative;
-  display: block;
-  width: 44px;
-  height: 30px;
-  border-radius: 6px;
-  overflow: hidden;
-  /* 底纹：深色条纹 + 亮色缝隙，两种主题下都清晰。
-     三档共用同一张底纹，差别只在玻璃怎么处理它。 */
-  background: repeating-linear-gradient(115deg,
-    var(--bloom-accent, #6b8f71) 0 2px,
-    color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 88%, var(--bloom-accent, #6b8f71)) 2px 6px);
-}
-.dsh-bloom-glass__sample::before {
-  content: '';
-  position: absolute;
-  inset: 5px 4px 4px 7px;
-  border-radius: 4px;
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 80%, transparent), 0 3px 5px -2px rgba(0,0,0,.25);
-}
-/* [LES-27] */
-.dsh-bloom-glass__choice[data-glass="liquid"] .dsh-bloom-glass__sample::before {
-  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 22%, transparent);
-  border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 60%, transparent);
-  -webkit-backdrop-filter: blur(.5px) url("#dsh-bloom-liquid-lens") saturate(1.2);
-  backdrop-filter: blur(.5px) url("#dsh-bloom-liquid-lens") saturate(1.2);
-}
-/* 磨砂：条纹糊成一片均匀雾面。
-   模糊给到 6px —— 小样只有 44px 宽，模糊太小就看不出散射（深色下尤其）。 */
-.dsh-bloom-glass__choice[data-glass="matte"] .dsh-bloom-glass__sample::before {
-  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 48%, transparent);
-  border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 34%, transparent);
-  -webkit-backdrop-filter: blur(6px) saturate(1.05);
-  backdrop-filter: blur(6px) saturate(1.05);
-}
-/* [LES-36] */
-.dsh-bloom-glass__choice[data-glass="matte"] .dsh-bloom-glass__sample::after {
-  content: '';
-  position: absolute;
-  inset: 5px 4px 4px 7px;
-  border-radius: 4px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  pointer-events: none;
-}
-.dsh-bloom-glass__choice[data-glass="frosted"] .dsh-bloom-glass__sample::before {
-  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 30%, transparent);
-  border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 40%, transparent);
-  -webkit-backdrop-filter: blur(5px) saturate(1.15);
-  backdrop-filter: blur(5px) saturate(1.15);
-}
-.dsh-bloom-glass__description {
-  margin: 7px 2px 0;
-  font-size: 11px;
-  line-height: 1.4;
-  min-height: 16px;
-  color: var(--dsw-alias-label-secondary, #777);
-}
-@media (prefers-reduced-motion: reduce) {
-  .dsh-bloom-glass__choice { transition: none; }
-  .dsh-bloom-glass__choice:hover { transform: none; }
-}
-@media (forced-colors: active) {
-  .dsh-bloom-glass__choice[data-active="true"] { border: 2px solid Highlight; }
-  .dsh-bloom-glass__sample { forced-color-adjust: none; }
-}
+.dsh-bloom-glass__choices { display: flex; width: 100%; box-sizing: border-box; padding: 3px; border-radius: 9px; background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%); }
+.dsh-bloom-glass__choice { appearance: none; flex: 1; min-width: 0; min-height: 34px; border: 0; border-radius: 7px; padding: 7px 4px; background: transparent; color: inherit; font: inherit; line-height: 1.7; white-space: nowrap; cursor: pointer; transition: background-color .14s ease, color .14s ease; }
+.dsh-bloom-glass__choice:hover { background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%); }
+.dsh-bloom-glass__choice[data-active="true"] { background: var(--dsw-alias-bg-layer-1, #fff); color: var(--bloom-accent, #6b8f71); font-weight: 600; box-shadow: 0 1px 3px -1px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 70%); }
+.dsh-bloom-glass__choice:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .dsh-bloom-glass__choice { transition: none; } }
+@media (forced-colors: active) { .dsh-bloom-glass__choice[data-active="true"] { outline: 2px solid Highlight; outline-offset: -2px; } }
 .dsh-bloom-appearance__seg {
   display: flex;
   width: 100%;                 /* 撑满面板宽度，里面三个按钮才能真正三等分
@@ -612,7 +513,7 @@ body[data-ds-dark-theme] .dsh-bloom-ambience__btn[data-active="true"] {
 }
 
 /* The color choice belongs to the meteor background only. */
-.dsh-bloom-meteor-color { display: none; align-items: center; gap: 6px; margin: 6px 3px 0; font-size: 11.5px; }
+.dsh-bloom-meteor-color { display: none; align-items: center; gap: 6px; box-sizing: border-box; width: 100%; padding: 5px 14px; font-size: 12px; }
 body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-meteor-color { display: flex; }
 .dsh-bloom-meteor-color > span { margin-right: auto; color: var(--dsw-alias-label-secondary, inherit); }
 .dsh-bloom-meteor-color button { border: 0; border-radius: 7px; padding: 5px 10px; color: inherit; background: transparent; font: inherit; cursor: pointer; }

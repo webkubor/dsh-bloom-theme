@@ -39,6 +39,17 @@ test('meteor colour choice is visible only for the dark meteor background and pe
   assert.equal(await row.isHidden(),true)
   await page.evaluate(()=>{document.body.setAttribute('data-ds-dark-theme','');document.body.setAttribute('data-bloom-ambience-dark','galaxy')})
   assert.equal(await row.isVisible(),true)
+  const layout=await page.evaluate(()=>{
+    const label=document.querySelector('.dsh-bloom-meteor-color > span').getBoundingClientRect()
+    const color=document.querySelector('[data-meteor-color="colorful"]').getBoundingClientRect()
+    const rotation=document.querySelector('.dsh-bloom-rotation'), select=rotation.querySelector('select').getBoundingClientRect()
+    const material=document.querySelector('.dsh-bloom-glass__choices').getBoundingClientRect()
+    return {labelLeft:label.left,rotationLeft:rotation.getBoundingClientRect().left+parseFloat(getComputedStyle(rotation).paddingLeft),colorRight:color.right,selectRight:select.right,materialHeight:material.height,samples:document.querySelectorAll('.dsh-bloom-glass__sample,[data-glass-description]').length}
+  })
+  assert.ok(Math.abs(layout.labelLeft-layout.rotationLeft)<1,JSON.stringify(layout))
+  assert.ok(Math.abs(layout.colorRight-layout.selectRight)<1,JSON.stringify(layout))
+  assert.ok(layout.materialHeight<55,JSON.stringify(layout))
+  assert.equal(layout.samples,0)
   await page.locator('[data-meteor-color="solid"]').click()
   assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
   assert.equal(await page.locator('[data-meteor-color="colorful"]').getAttribute('aria-checked'),'false')

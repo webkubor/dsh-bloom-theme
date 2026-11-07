@@ -21,6 +21,14 @@ jobs:
       # 「contrast-guard: not found」(exit 127) —— 改依赖时要连带检查 CI 的安装步骤。
       - run: npm ci
 
+      - name: 发布媒体门禁测试
+        run: node --test test/release-media-gate.test.mjs test/release-media-cli.test.mjs
+
+      # 只有 Release Please PR 检查候选版本的素材；日常开发保留旧版 README 不受影响。
+      - name: 校验本版发布媒体
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--')
+        run: node scripts/release-media-cli.mjs check
+
       - name: 语法检查
         run: node --check lib/client.js && node --check lib/index.js
 

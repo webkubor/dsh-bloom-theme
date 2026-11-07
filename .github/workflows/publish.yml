@@ -69,6 +69,10 @@ jobs:
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # 在任何 npm 发布之前核对本 tag 的媒体，避免绕过 Release PR 时发布缺素材的版本。
+      - name: 校验本版发布媒体
+        run: node scripts/release-media-cli.mjs check
+
       - name: npm publish
         if: steps.ver.outputs.published == 'false'
         run: npm publish --access public
@@ -101,5 +105,11 @@ jobs:
       # 幂等 —— 重跑不会重复追加。
       - name: Release notes 补详细说明
         run: node scripts/enrich-release.mjs "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # 在详细说明之后追加，避免 enrich-release 的替换逻辑移除媒体区块。
+      - name: Release notes 添加本版媒体
+        run: node scripts/release-media-cli.mjs append
         env:
           GH_TOKEN: ${{ github.token }}

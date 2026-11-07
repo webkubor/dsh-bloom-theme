@@ -11,7 +11,8 @@ const imagePath = 'assets/bloom-v0.27.0.png'
 const videoPath = 'assets/bloom-v0.27.0.mp4'
 const imageUrl = 'https://example.org/bloom-v0.27.0.png'
 const videoUrl = 'https://example.org/bloom-v0.27.0.mp4'
-const doc = `![Bloom](${imageUrl})\n\n[Watch demo](${videoUrl})\n`
+const attachment = 'https://github.com/user-attachments/assets/12345678-1234-1234-1234-123456789abc'
+const doc = `![Bloom](${imageUrl})\n\n${attachment}\n\n[Watch demo](${videoUrl})\n`
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'bloom-release-media-'))
@@ -38,7 +39,7 @@ test('accepts matching files and both READMEs, returning release media markdown'
 })
 
 test('pure validator never mutates inputs', () => {
-  const input = { version: '0.27.0', image: { path: imagePath, url: imageUrl, bytes: png }, video: { path: videoPath, url: videoUrl, bytes: mp4 }, readmes: [{ name: 'README.md', text: doc }] }
+  const input = { version: '0.27.0', image: { path: imagePath, url: imageUrl, bytes: png }, video: { path: videoPath, url: videoUrl, bytes: mp4 }, readmes: [{ name: 'README.md', text: doc }, { name: 'README.en.md', text: doc }] }
   const before = JSON.stringify(input)
   assert.equal(validateReleaseMedia(input).ok, true)
   assert.equal(JSON.stringify(input), before)
@@ -68,6 +69,32 @@ test('requires real links in every README; comments and fenced code are not evid
   const result = checkReleaseMediaFiles(f)
   fails(result, 'README.en.md does not embed')
   assert.ok(result.errors.some(e => e.includes('does not link')))
+})
+
+test('requires a standalone attachment in each README, not just a Markdown link', t => {
+  const f = fixture(t)
+  writeFileSync(join(f.root, 'README.md'), `![Bloom](${imageUrl})\n[Watch demo](${videoUrl})\n`)
+  fails(checkReleaseMediaFiles(f), 'README.md must contain a standalone')
+  writeFileSync(join(f.root, 'README.md'), doc)
+  writeFileSync(join(f.root, 'README.en.md'), `![Bloom](${imageUrl})\n[Watch demo](${videoUrl})\n[GitHub video](${attachment})\n`)
+  fails(checkReleaseMediaFiles(f), 'README.en.md must contain a standalone')
+  writeFileSync(join(f.root, 'README.en.md'), `![Bloom](${imageUrl})\n[Watch demo](${videoUrl})\n<!--\n${attachment}\n-->\n`)
+  fails(checkReleaseMediaFiles(f), 'README.en.md must contain a standalone')
+  writeFileSync(join(f.root, 'README.en.md'), `![Bloom](${imageUrl})\n[Watch demo](${videoUrl})\n\`\`\`\n${attachment}\n\`\`\`\n`)
+  fails(checkReleaseMediaFiles(f), 'README.en.md must contain a standalone')
+})
+
+test('rejects differing attachment URLs and malformed or disguised URLs', t => {
+  const f = fixture(t)
+  const other = 'https://github.com/user-attachments/assets/abcdefab-1234-1234-1234-123456789abc'
+  writeFileSync(join(f.root, 'README.en.md'), doc.replace(attachment, other))
+  fails(checkReleaseMediaFiles(f), 'must embed the same')
+  for (const bad of [attachment + '?download=1', attachment + '/extra', attachment.replace('github.com', 'github.com.example.org'), attachment.replace('123456789abc', 'not-a-uuid')]) {
+    writeFileSync(join(f.root, 'README.en.md'), doc.replace(attachment, bad))
+    fails(checkReleaseMediaFiles(f), 'README.en.md must contain a standalone')
+  }
+  writeFileSync(join(f.root, 'README.en.md'), doc)
+  assert.equal(checkReleaseMediaFiles(f).ok, true)
 })
 
 test('rejects unfinished README placeholder in either language', t => {

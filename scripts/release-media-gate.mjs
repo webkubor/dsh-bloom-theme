@@ -4,6 +4,9 @@ import { basename, extname, isAbsolute, relative, resolve, sep } from 'node:path
 
 const VERSION = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/
 const PLACEHOLDER = /(?:待补充|待补|即将补充|视频占位|视频筹备中|planned|coming soon|to be added|video placeholder|placeholder video|tbd)/i
+// GitHub renders a bare attachment URL as a video player. Structure only: actual
+// playback, attachment provenance and correspondence to the local MP4 require review.
+const GITHUB_VIDEO_LINE = /^https:\/\/github\.com\/user-attachments\/assets\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[ \t]*$/gim
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 function versioned(name, version) {
@@ -47,11 +50,15 @@ export function validateReleaseMedia({ version, image, video, readmes } = {}) {
       if (validVersion && !versioned(urlName, version)) errors.push(`${kind} URL does not identify ${version}`)
     } catch { errors.push(`Invalid ${kind} HTTPS URL`) }
   }
+  const videoAttachments = new Map()
   if (!Array.isArray(readmes) || readmes.length === 0) errors.push('At least one README is required')
   else for (const doc of readmes) {
     if (!doc || typeof doc.name !== 'string' || typeof doc.text !== 'string') { errors.push('Invalid README descriptor'); continue }
     const visible = visibleMarkdown(doc.text)
     if (PLACEHOLDER.test(visible)) errors.push(`${doc.name} contains placeholder text`)
+    const attachments = [...visible.matchAll(GITHUB_VIDEO_LINE)].map(match => match[0].trim().toLowerCase())
+    videoAttachments.set(doc.name, attachments)
+    if (!attachments.length) errors.push(`${doc.name} must contain a standalone GitHub video attachment URL`)
     if (image?.url) {
       const url = escapeRe(image.url)
       const markdownImage = new RegExp(`!\\[[^\\]\\n]*\\]\\(<?${url}>?(?:\\s+[^)]*)?\\)`)
@@ -63,6 +70,12 @@ export function validateReleaseMedia({ version, image, video, readmes } = {}) {
       const linkedVideo = new RegExp(`(?<!!)\\[[^\\]\\n]+\\]\\(<?${url}>?(?:\\s+[^)]*)?\\)|(?:^|[\\s<])${url}(?=$|[\\s>])`, 'm')
       if (!linkedVideo.test(visible)) errors.push(`${doc.name} does not link the candidate video`)
     }
+  }
+  const zhAttachments = videoAttachments.get('README.md')
+  const enAttachments = videoAttachments.get('README.en.md')
+  if (!zhAttachments || !enAttachments) errors.push('Both README.md and README.en.md are required')
+  else if (zhAttachments.length && enAttachments.length && !zhAttachments.some(url => enAttachments.includes(url))) {
+    errors.push('README.md and README.en.md must embed the same GitHub video attachment')
   }
   return { ok: errors.length === 0, errors, releaseMarkdown: errors.length ? null : `![Bloom ${version} showcase](${image.url})\n\n[Watch the Bloom ${version} demo](${video.url})` }
 }

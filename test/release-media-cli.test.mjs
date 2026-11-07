@@ -19,7 +19,7 @@ function fixture(t) {
   writeFileSync(join(root, 'release-media.json'), JSON.stringify(manifest))
   writeFileSync(join(root, imagePath), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
   writeFileSync(join(root, videoPath), Buffer.from([0, 0, 0, 12, 102, 116, 121, 112, 105, 115, 111, 109]))
-  for (const name of ['README.md', 'README.en.md']) writeFileSync(join(root, name), `![Bloom](${imageUrl})\n[Watch](${videoUrl})\n`)
+  for (const name of ['README.md', 'README.en.md']) writeFileSync(join(root, name), `![Bloom](${imageUrl})\n[Watch](${videoUrl})\nhttps://github.com/user-attachments/assets/12345678-1234-1234-1234-123456789abc\n`)
   return root
 }
 

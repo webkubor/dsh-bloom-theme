@@ -527,10 +527,11 @@ export function buildSwitcherEl(initialVariant) {
       const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
       if (cancel) cancel.hidden = true
       if (outcome.kind === 'success') { showShareFile(outcome.file); return }
+      const captureFailed = tr('无法打开屏幕选择器或完成捕获，可能是宿主不支持、系统权限受限或已取消；可使用系统截图或录屏工具')
       const messages: Record<string, string> = {
-        cancelled: tr('已取消'), denied: tr('未获得屏幕共享权限或已取消'),
+        cancelled: tr('已取消'), denied: captureFailed,
         unsupported: tr('当前环境不支持直接截图或录屏'), busy: tr('请先结束当前操作'),
-        ended: tr('屏幕共享已结束'), failed: tr('未能完成，请检查系统权限'),
+        ended: tr('屏幕共享已结束'), failed: captureFailed,
       }
       shareStatus(messages[outcome.kind] ?? messages.failed)
     }).catch(() => {
@@ -538,7 +539,7 @@ export function buildSwitcherEl(initialVariant) {
       el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = false })
       const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
       if (cancel) cancel.hidden = true
-      shareStatus(tr('未能完成，请检查系统权限'))
+      shareStatus(tr('无法打开屏幕选择器或完成捕获，可能是宿主不支持、系统权限受限或已取消；可使用系统截图或录屏工具'))
     })
   }
 

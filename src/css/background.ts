@@ -230,10 +230,12 @@ body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles 
 }
 
 .dsh-bloom-sparkles > i.s-bl,
-.dsh-bloom-sparkles > i.s-amb { display: none; }
+.dsh-bloom-sparkles > i.s-amb,
+.dsh-bloom-sparkles > i.s-galaxy-edge { display: none; }
 body[data-ds-dark-theme][data-bloom-ambience-dark="diagonal"] .dsh-bloom-sparkles > i.s-bl,
 body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-bl,
-body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-amb { display: block; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-amb,
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-galaxy-edge { display: block; }
 .dsh-bloom-sparkles > i {
   display: block;
   position: absolute;

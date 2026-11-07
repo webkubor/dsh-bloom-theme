@@ -22,7 +22,7 @@
 
 **Two moods, configured independently:**
 
-| Dark · meteor shower | Light · watercolour wash |
+| Dark · starry sky | Light · watercolour wash |
 | :--: | :--: |
 | Meteors streak from the top-right. When you switch palettes, meteors already in flight keep the old colour — only the new ones wear the new palette | Light backgrounds blend your current palette's main colour with two harmonising colours and fade naturally to white |
 
@@ -49,7 +49,7 @@ One sentence: **it makes your DeepSeek Harness beautiful.**
 
 - 🎨 **12 Chinese-poetry Morandi palettes** — Cinnabar, Peach, Azure, Lotus… each with light and dark variants
 - 🪟 **Real glass, not a picture**: sidebar, top bar, input card and dock share one material; blur and translucency follow what's behind them live
-- ✨ **Backgrounds that move**: dark gets diagonal wash, meteor showers, corner glow; light gets slanted light, watercolour wash, clean whitespace
+- ✨ **Backgrounds that move**: dark gets diagonal wash, starry sky, corner glow; light gets slanted light, watercolour wash, clean whitespace
 - 🌗 **Dark and light are independent**: meteors at night, watercolour by day, never interfering
 - ♿ **Respects your system**: high-contrast, reduced-motion and reduced-transparency all degrade gracefully
 

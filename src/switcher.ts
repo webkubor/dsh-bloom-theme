@@ -153,7 +153,7 @@ async function shareInstall(btn: HTMLElement, schedule: (fn: () => void, delay: 
 }
 
 const AMBIENCE_LABELS: Record<string, string> = {
-  diagonal: '对角漫染', galaxy: '漫天流星', corner: '角落微光',
+  diagonal: '对角漫染', galaxy: '漫天星辰', corner: '角落微光',
   stream: '斜光流转', wash: '水彩晕染', clear: '清透留白', off: '不显示',
 }
 

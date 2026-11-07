@@ -200,6 +200,33 @@ test('ambience persists per scheme, rejects foreign presets and survives private
   assert.equal(r.cleared, false)
 })
 
+test('extra edge starlight appears only in dark starry sky and covers all four sides', async t => {
+  const page = await setup(t, true)
+  const result = await page.evaluate(() => {
+    const dots = [...document.querySelectorAll('#dsh-bloom-sparkles > i.s-galaxy-edge')]
+    const sides = [0, 0, 0, 0]
+    for (const [i, dot] of dots.entries()) {
+      const x = parseFloat(dot.style.left), y = parseFloat(dot.style.top)
+      if (i % 4 === 0 && y <= 17) sides[0]++
+      if (i % 4 === 1 && y >= 83) sides[1]++
+      if (i % 4 === 2 && x <= 17) sides[2]++
+      if (i % 4 === 3 && x >= 83) sides[3]++
+    }
+    const visible = () => dots.filter(dot => getComputedStyle(dot).display !== 'none').length
+    const modes = {}
+    for (const mode of ['corner', 'diagonal', 'galaxy', 'off']) {
+      document.body.setAttribute('data-bloom-ambience-dark', mode)
+      modes[mode] = visible()
+    }
+    document.body.removeAttribute('data-ds-dark-theme')
+    return {sides, modes, light: getComputedStyle(document.querySelector('#dsh-bloom-sparkles')).display, meteors: document.querySelectorAll('#dsh-bloom-sparkles > b.s-met').length}
+  })
+  assert.deepEqual(result.sides, [18, 18, 18, 18])
+  assert.deepEqual(result.modes, {corner: 0, diagonal: 0, galaxy: 72, off: 0})
+  assert.equal(result.light, 'none')
+  assert.equal(result.meteors, 40)
+})
+
 test('meteor shower shows only in dark galaxy, follows the palette and respects reduced motion', async t => {
   const page = await setup(t, true)
   const shown = () => page.evaluate(() => [...document.querySelectorAll('#dsh-bloom-sparkles > b.s-met')].filter(m => getComputedStyle(m).display !== 'none').length)

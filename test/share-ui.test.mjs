@@ -4,7 +4,7 @@ import { build } from 'esbuild'
 import { chromium } from 'playwright'
 import { fileURLToPath } from 'node:url'
 
-const {outputFiles}=await build({stdin:{contents:`import {buildSwitcherEl,cleanupSwitcher} from './src/switcher.ts'; import {buildBloomCSS} from './src/tokens.ts'; import {COMPONENT_CSS} from './src/css/component.ts'; import {GLASS_CSS} from './src/css/glass.ts'; import {BACKGROUND_CSS} from './src/css/background.ts'; import {BUTTON_CSS} from './src/css/button.ts'; import {ADAPTIVE_CSS} from './src/css/adaptive.ts'; import {SURFACES_CSS} from './src/css/surfaces.ts'; import {SWITCHER_CSS} from './src/css/switcher.ts'; import {buildLiquidLens} from './src/liquid-lens.ts'; import {buildFogDefinitions} from './src/fog.ts'; window.fixture={buildSwitcherEl,cleanupSwitcher,css:[buildBloomCSS(),COMPONENT_CSS,GLASS_CSS,BACKGROUND_CSS,BUTTON_CSS,ADAPTIVE_CSS,SURFACES_CSS,SWITCHER_CSS],buildLiquidLens,buildFogDefinitions}`,resolveDir:fileURLToPath(new URL('..',import.meta.url))},bundle:true,write:false,format:'iife',platform:'browser'})
+const {outputFiles}=await build({stdin:{contents:`import {buildSwitcherEl,cleanupSwitcher} from './src/switcher.ts'; import {bindLocale} from './src/lang.ts'; import {buildBloomCSS} from './src/tokens.ts'; import {COMPONENT_CSS} from './src/css/component.ts'; import {GLASS_CSS} from './src/css/glass.ts'; import {BACKGROUND_CSS} from './src/css/background.ts'; import {BUTTON_CSS} from './src/css/button.ts'; import {ADAPTIVE_CSS} from './src/css/adaptive.ts'; import {SURFACES_CSS} from './src/css/surfaces.ts'; import {SWITCHER_CSS} from './src/css/switcher.ts'; import {buildLiquidLens} from './src/liquid-lens.ts'; import {buildFogDefinitions} from './src/fog.ts'; window.fixture={buildSwitcherEl,cleanupSwitcher,bindLocale,css:[buildBloomCSS(),COMPONENT_CSS,GLASS_CSS,BACKGROUND_CSS,BUTTON_CSS,ADAPTIVE_CSS,SURFACES_CSS,SWITCHER_CSS],buildLiquidLens,buildFogDefinitions}`,resolveDir:fileURLToPath(new URL('..',import.meta.url))},bundle:true,write:false,format:'iife',platform:'browser'})
 async function setup(t){
   const browser=await chromium.launch({executablePath:process.env.BLOOM_CHROMIUM_PATH||undefined,args:['--no-sandbox']});t.after(()=>browser.close())
   const context=await browser.newContext({viewport:{width:1000,height:760},locale:'zh-CN'});const page=await context.newPage();page.setDefaultTimeout(5000)
@@ -39,6 +39,17 @@ test('meteor colour choice is visible only for the dark meteor background and pe
   assert.equal(await row.isHidden(),true)
   await page.evaluate(()=>{document.body.setAttribute('data-ds-dark-theme','');document.body.setAttribute('data-bloom-ambience-dark','galaxy')})
   assert.equal(await row.isVisible(),true)
+  const layout=await page.evaluate(()=>{
+    const label=document.querySelector('.dsh-bloom-meteor-color > span').getBoundingClientRect()
+    const color=document.querySelector('[data-meteor-color="colorful"]').getBoundingClientRect()
+    const rotation=document.querySelector('.dsh-bloom-rotation'), select=rotation.querySelector('select').getBoundingClientRect()
+    const material=document.querySelector('.dsh-bloom-glass__choices').getBoundingClientRect()
+    return {labelLeft:label.left,rotationLeft:rotation.getBoundingClientRect().left+parseFloat(getComputedStyle(rotation).paddingLeft),colorRight:color.right,selectRight:select.right,materialHeight:material.height,samples:document.querySelectorAll('.dsh-bloom-glass__sample,[data-glass-description]').length}
+  })
+  assert.ok(Math.abs(layout.labelLeft-layout.rotationLeft)<1,JSON.stringify(layout))
+  assert.ok(Math.abs(layout.colorRight-layout.selectRight)<1,JSON.stringify(layout))
+  assert.ok(layout.materialHeight<55,JSON.stringify(layout))
+  assert.equal(layout.samples,0)
   await page.locator('[data-meteor-color="solid"]').click()
   assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
   assert.equal(await page.locator('[data-meteor-color="colorful"]').getAttribute('aria-checked'),'false')
@@ -111,7 +122,7 @@ test('permission denial and clipboard failure leave clear manual fallbacks',asyn
   })
   await page.locator('.dsh-bloom-share').click()
   await page.locator('[data-share-capture="screenshot"]').click()
-  await page.waitForFunction(()=>/denied|cancelled|未获得|取消/i.test(document.querySelector('.dsh-bloom-share-status').textContent),null,{timeout:5000})
+  await page.waitForFunction(()=>/Could not open the screen picker/.test(document.querySelector('.dsh-bloom-share-status').textContent),null,{timeout:5000})
   assert.equal(await page.locator('[data-share-capture="screenshot"]').isEnabled(),true)
   assert.equal(await page.locator('.dsh-bloom-share-result').isHidden(),true)
   await page.locator('.dsh-bloom-share-install').click()
@@ -120,6 +131,25 @@ test('permission denial and clipboard failure leave clear manual fallbacks',asyn
   assert.match(await manual.inputValue(),/plugin_manager/)
   assert.equal(await page.evaluate(()=>window.__requests.length),0)
 })
+
+for(const locale of ['zh','en']) for(const name of ['NotAllowedError','NotReadableError']) {
+  test(`${locale} ${name} explains capture failure and system tool fallback`,async t=>{
+    const page=await setup(t)
+    await page.evaluate(({locale,name})=>{
+      // English uses the normal dictionary fallback when no locale service is bound.
+      if(locale==='zh') window.fixture.bindLocale({bind:()=>key=>key,getSnapshot:()=>({active:'zh'})})
+      navigator.mediaDevices.getDisplayMedia=()=>Promise.reject(new DOMException('unavailable',name))
+    },{locale,name})
+    await page.locator('.dsh-bloom-share').click()
+    await page.locator('[data-share-capture="screenshot"]').click()
+    const status=page.locator('.dsh-bloom-share-status')
+    await page.waitForFunction(()=>/无法打开屏幕选择器|Could not open the screen picker/.test(document.querySelector('.dsh-bloom-share-status').textContent))
+    const text=await status.textContent()
+    if(locale==='zh') assert.match(text,/宿主不支持.*系统权限受限.*已取消.*系统截图或录屏工具/)
+    else assert.match(text,/host may not support it.*system permissions.*cancelled.*system screenshot or screen recording tools/i)
+    assert.equal(await page.locator('.dsh-bloom-share-result').isHidden(),true)
+  })
+}
 
 test('closing the share panel cancels a pending picker and stops a later grant',async t=>{
   const page=await setup(t)

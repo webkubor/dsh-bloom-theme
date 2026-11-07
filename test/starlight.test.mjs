@@ -200,6 +200,56 @@ test('ambience persists per scheme, rejects foreign presets and survives private
   assert.equal(r.cleared, false)
 })
 
+test('extra edge starlight appears only in dark starry sky and covers all four sides', async t => {
+  const page = await setup(t, true)
+  const result = await page.evaluate(() => {
+    const dots = [...document.querySelectorAll('#dsh-bloom-sparkles > i.s-galaxy-edge')]
+    const sides = [0, 0, 0, 0]
+    for (const [i, dot] of dots.entries()) {
+      const x = parseFloat(dot.style.left), y = parseFloat(dot.style.top)
+      if (i % 4 === 0 && y <= 17) sides[0]++
+      if (i % 4 === 1 && y >= 83) sides[1]++
+      if (i % 4 === 2 && x <= 17) sides[2]++
+      if (i % 4 === 3 && x >= 83) sides[3]++
+    }
+    const visible = () => dots.filter(dot => getComputedStyle(dot).display !== 'none').length
+    const modes = {}
+    for (const mode of ['corner', 'diagonal', 'galaxy', 'off']) {
+      document.body.setAttribute('data-bloom-ambience-dark', mode)
+      modes[mode] = visible()
+    }
+    document.body.removeAttribute('data-ds-dark-theme')
+    return {sides, modes, light: getComputedStyle(document.querySelector('#dsh-bloom-sparkles')).display, meteors: document.querySelectorAll('#dsh-bloom-sparkles > b.s-met').length}
+  })
+  assert.deepEqual(result.sides, [18, 18, 18, 18])
+  assert.deepEqual(result.modes, {corner: 0, diagonal: 0, galaxy: 72, off: 0})
+  assert.equal(result.light, 'none')
+  assert.equal(result.meteors, 40)
+})
+
+test('starry-sky fireflies stay visibly present across animation phases', async t => {
+  const page = await setup(t, true)
+  const samples = await page.evaluate(() => {
+    document.body.setAttribute('data-bloom-ambience-dark', 'galaxy')
+    const dots = [...document.querySelectorAll('#dsh-bloom-sparkles > i.s-galaxy-edge, #dsh-bloom-sparkles > i.s-amb')]
+    // Freeze the real CSS animations at several moments; their original negative
+    // delays preserve independent, non-uniform phases across the particles.
+    const counts = []
+    for (const time of [0, 450, 900, 1350, 1800]) {
+      for (const dot of dots) for (const animation of dot.getAnimations()) { animation.pause(); animation.currentTime = time }
+      counts.push(dots.filter(dot => parseFloat(getComputedStyle(dot).opacity) >= 0.5 && parseFloat(getComputedStyle(dot).width) >= 1.5).length)
+    }
+    const clearPeaks = dots.filter(dot => parseFloat(dot.style.width) >= 1.8 && parseFloat(dot.style.getPropertyValue('--peak')) >= 0.55).length
+    const minGlow = Math.min(...dots.map(dot => parseFloat(dot.style.getPropertyValue('--glow'))))
+    return {counts, clearPeaks, minGlow, animations: getComputedStyle(dots[0]).animationName, meteors: document.querySelectorAll('#dsh-bloom-sparkles > b.s-met').length}
+  })
+  assert.match(samples.animations, /bloom-galaxy-firefly/)
+  assert.ok(samples.clearPeaks >= 45, `too few clearly sized fireflies: ${samples.clearPeaks}`)
+  assert.ok(samples.minGlow >= 3, `small fireflies lost their glow: ${samples.minGlow}`)
+  assert.ok(samples.counts.every(count => count >= 18), `too few clearly lit fireflies across phases: ${samples.counts}`)
+  assert.equal(samples.meteors, 40)
+})
+
 test('meteor shower shows only in dark galaxy, follows the palette and respects reduced motion', async t => {
   const page = await setup(t, true)
   const shown = () => page.evaluate(() => [...document.querySelectorAll('#dsh-bloom-sparkles > b.s-met')].filter(m => getComputedStyle(m).display !== 'none').length)

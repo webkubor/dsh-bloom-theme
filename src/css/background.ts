@@ -7,13 +7,21 @@ body[data-bloom-variant] {
     radial-gradient(1200px circle at 8% -6%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%), transparent 48%),
     
     radial-gradient(1000px circle at 95% -4%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 88%), transparent 45%);
+}
+/* The desktop host clears html[data-platform] body later in the cascade. */
+html body[data-bloom-variant]:is([data-ds-dark-theme], :not([data-ds-dark-theme])) {
   background-attachment: fixed;
   background-image: var(--bloom-ambience);
-  
 }
 
-
-
+/* Restore the four-corner colour distribution from the released visual reference. */
+body[data-bloom-variant][data-ds-dark-theme] {
+  --bloom-ambience:
+    radial-gradient(1400px circle at 6% -4%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 80%), transparent 50%),
+    radial-gradient(1100px circle at 100% 8%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 50%), transparent 60%),
+    radial-gradient(900px circle at 96% 100%, color-mix(in oklch, var(--bloom-aurora-stream-3), transparent 50%), transparent 62%),
+    radial-gradient(1000px circle at 2% 96%, color-mix(in oklch, var(--bloom-aurora-stream-1), transparent 50%), transparent 60%);
+}
 
 body[data-bloom-variant]:not([data-ds-dark-theme]) {
   /* [LES-33] */
@@ -66,6 +74,8 @@ body::before {
   
   background-image: var(--bloom-ambience);
 }
+/* Dark colour is painted once on the body; the fixed seat repeats that same image. */
+body[data-bloom-variant][data-ds-dark-theme]::before { background-image: none; }
 body[data-bloom-variant]:not([data-ds-dark-theme]):not([data-bloom-ambience-light="off"])::after {
   content: '';
   display: block;
@@ -84,6 +94,8 @@ body[data-bloom-variant]:not([data-ds-dark-theme]):not([data-bloom-ambience-ligh
 
 body[data-bloom-variant] [class*="_root"] [class*="_composerSeat"] {
   background-image: none;
+  /* Keep the fixed backdrop aligned to the viewport. */
+  will-change: auto;
 }
 body[data-bloom-variant] [class*="_root"] [class*="_composerSeat"]::before {
   content: '';
@@ -92,7 +104,8 @@ body[data-bloom-variant] [class*="_root"] [class*="_composerSeat"]::before {
   z-index: -1;
   pointer-events: none;
   background-color: var(--dsw-alias-bg-layer-1, #101010);
-  background-image: none;
+  background-image: var(--bloom-ambience);
+  background-attachment: fixed;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 56px);
   mask-image: linear-gradient(to bottom, transparent 0, #000 56px);
 }
@@ -123,49 +136,12 @@ body[data-bloom-variant]:not([data-ds-dark-theme]) [class*="_root"] [class*="_co
     mask-image: none;
   }
 }
-body[data-bloom-variant="aurora"][data-ds-dark-theme]:not([data-bloom-ambience-dark="off"])::before {
-  content: '';
-  position: fixed;
-  inset: -40%;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(115deg,
-      transparent 38%, var(--bloom-aurora-stream-1) 50%, transparent 62%),
-    linear-gradient(70deg,
-      transparent 32%, var(--bloom-aurora-stream-2) 46%, transparent 60%);
-  background-size: 220% 220%, 260% 240%;
-  background-position: 25% 30%, 80% 15%;
-  background-repeat: no-repeat;
-  
-  filter: blur(76px);
-  opacity: 0.2;
-  transform: translate3d(0, 0, 0);
-  animation: bloom-aurora-drift 28s ease-in-out infinite alternate;
-  will-change: transform, background-position;
-}
-@keyframes bloom-aurora-drift {
-  from { transform: translate3d(-2.5%, -1.5%, 0); background-position: 25% 30%, 80% 15%, 50% 50%; }
-  to   { transform: translate3d(3%, 2%, 0);      background-position: 65% 55%, 35% 45%, 55% 45%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  body[data-bloom-variant="aurora"][data-ds-dark-theme]:not([data-bloom-ambience-dark="off"])::before {
-    animation: none !important;
-    transform: none !important;
-    opacity: 0.4 !important;
-  }
-}
 body[data-bloom-variant="aurora"]::after,
-body[data-bloom-variant="cinnabar"]::after {
-  display: none;
-}
+body[data-bloom-variant="cinnabar"]::after { display: none; }
 @media (prefers-reduced-motion: reduce) {
   body[data-bloom-variant="aurora"]::after,
   body[data-bloom-variant="cinnabar"]::after { display: none; }
 }
-
-
-
 .dsh-bloom-sparkles {
   display: none;
   position: fixed;
@@ -230,10 +206,23 @@ body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles 
 }
 
 .dsh-bloom-sparkles > i.s-bl,
-.dsh-bloom-sparkles > i.s-amb { display: none; }
+.dsh-bloom-sparkles > i.s-amb,
+.dsh-bloom-sparkles > i.s-galaxy-edge { display: none; }
 body[data-ds-dark-theme][data-bloom-ambience-dark="diagonal"] .dsh-bloom-sparkles > i.s-bl,
 body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-bl,
-body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-amb { display: block; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-amb,
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-galaxy-edge { display: block; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-amb,
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-galaxy-edge {
+  animation-name: bloom-spark-drift, bloom-galaxy-firefly;
+}
+@keyframes bloom-galaxy-firefly {
+  0%, 100% { opacity: calc(var(--peak) * .24); }
+  22% { opacity: var(--peak); }
+  42% { opacity: calc(var(--peak) * .4); }
+  66% { opacity: calc(var(--peak) * .9); }
+  84% { opacity: calc(var(--peak) * .3); }
+}
 .dsh-bloom-sparkles > i {
   display: block;
   position: absolute;
@@ -266,6 +255,8 @@ body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles 
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dsh-bloom-sparkles > i { animation: none; opacity: .4; }
+  .dsh-bloom-sparkles > i,
+  body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-amb,
+  body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > i.s-galaxy-edge { animation: none; opacity: .4; }
 }
 `

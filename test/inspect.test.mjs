@@ -32,6 +32,7 @@ test('snapshot is read-only and excludes draft, message, query and resource cont
   assert.equal(data.result.input.empty,false)
   assert.equal(data.result.input.length,'Private draft not for diagnostics'.length)
   assert.match(data.result.surfaces.composer.element['background-image'],/\[resource\]/)
+  assert.ok(data.result.canvas, 'all includes canvas diagnostics')
 })
 
 test('appearance preference is reported independently from the effective scheme', async t=>{
@@ -59,6 +60,21 @@ test('sidebar cascade is opt-in and sanitizes resource URLs', async t=>{
   assert.equal(data.plain.sidebarCascade,undefined)
   assert.ok(data.detailed.sidebarCascade.some(rule=>rule.declarations.some(d=>d.priority==='important')))
   assert.doesNotMatch(JSON.stringify(data.detailed.sidebarCascade),/private\.invalid|token=secret/)
+})
+
+test('canvas diagnostics omit private selector values and resource URLs', async t=>{
+  const page=await setup(t)
+  const result=await page.evaluate(()=>{
+    document.body.dataset.privateSelector='secret-value'
+    const style=document.createElement('style')
+    style.textContent='body[data-private-selector="secret-value"] { background-image:url("https://private.invalid/pixel?token=secret") !important }'
+    document.head.append(style)
+    return window.fixture.createBloomInspectProvider().query('snapshot',{target:'any',scope:'canvas',cascade:true})
+  })
+  const text=JSON.stringify(result.canvas)
+  assert.doesNotMatch(text,/secret-value|private\.invalid|token=secret/)
+  assert.ok(result.canvas.bodyCascade.some(rule=>rule.declarations.some(item=>item.priority==='important')))
+  assert.match(result.canvas.body['background-image'],/\[resource\]/)
 })
 
 test('native editor geometry rejects a different client page', async t=>{

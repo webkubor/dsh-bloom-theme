@@ -123,6 +123,20 @@ export function buildSparkles(doc: Document, seed = 7): HTMLElement {
     createParticle(doc, layer, q, x, y, ang, dist, 's-amb')
   }
 
+  // A separate deterministic stream adds glow around all four edges only in galaxy.
+  // It cannot change the existing clusters or the independent meteor stream below.
+  const edge = rand(seed * 104729 + 11)
+  for (let i = 0; i < 72; i++) {
+    const side = i % 4
+    const along = 2 + edge() * 96
+    const inset = 1 + edge() * 16
+    const x = side === 0 || side === 1 ? along : side === 2 ? inset : 100 - inset
+    const y = side === 2 || side === 3 ? along : side === 0 ? inset : 100 - inset
+    const angle = edge() * 2 * Math.PI
+    const distance = 20 + edge() * 150
+    createParticle(doc, layer, edge, x, y, angle, distance, 's-galaxy-edge')
+  }
+
   // Meteor shower for the galaxy preset: original shape, direction and count.
   const m = rand(seed * 6151 + 29)
   for (let i = 0; i < METEOR_COUNT; i++) layer.appendChild(makeMeteor(doc, m, i))
@@ -190,9 +204,14 @@ function createParticle(
   doc: Document, layer: HTMLElement, r: () => number,
   x: number, y: number, ang: number, dist: number, cluster: string,
 ): void {
-  const big = r() < 0.15
+  const galaxyOnly = cluster === 's-amb' || cluster === 's-galaxy-edge'
+  const big = r() < (galaxyOnly ? 0.32 : 0.15)
   const size = big ? 1.8 + r() * 0.9 : 0.7 + r() * 1.0
   const dot = makeDot(doc, r, cluster, size, Math.cos(ang) * dist, Math.sin(ang) * dist * 0.75, 6.5, 7.5, 1.2, 1.8, 0.55)
+  if (galaxyOnly) {
+    dot.style.setProperty('--peak', Math.max(0.55, Number(dot.style.getPropertyValue('--peak'))).toFixed(2))
+    dot.style.setProperty('--glow', `${Math.max(3, size * 2.4).toFixed(1)}px`)
+  }
   dot.style.left = `${x.toFixed(2)}%`
   dot.style.top = `${y.toFixed(2)}%`
   layer.appendChild(dot)

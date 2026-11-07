@@ -14,7 +14,7 @@ const SURFACES = {
   menu: '.dsh-bloom-menu',
 }
 const STYLES = ['position', 'background-color', 'background-image', 'backdrop-filter', 'border-top-width', 'border-top-color', 'box-shadow', 'outline-style', 'outline-width', 'outline-color', 'animation-name', 'opacity', 'overflow-x', 'mask-image']
-const SCOPES = ['summary', 'tables', 'surfaces', 'all']
+const SCOPES = ['summary', 'tables', 'surfaces', 'canvas', 'all']
 const PAGE_ID = globalThis.crypto?.randomUUID?.() ?? `bloom-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 function rect(element: Element | null) {
@@ -115,6 +115,17 @@ export function collectRuntimeSnapshot(scope = 'summary', cascade = false) {
     },
     input: { found: !!editor, rect: rect(editor ?? null), empty: draft.trim().length === 0, length: draft.length, knownTestDraft: draft === 'BLOOM UI TEST', focused: !!editor && (document.activeElement === editor || editor.contains(document.activeElement)), typingAnimation: composer ? getComputedStyle(composer, '::after').animationName : null },
   }
+  if (scope === 'canvas' || scope === 'all') {
+    const seat = document.querySelector(SURFACES.composerSeat)
+    const chain: Array<Record<string, unknown>> = []
+    for (let element: Element | null = seat; element && chain.length < 16; element = element.parentElement) {
+      const style = getComputedStyle(element)
+      const known = ['composerSeat', 'scrollBody', 'centerCol', 'frame', 'root', 'body'].filter(name => element!.className && typeof element!.className === 'string' && element!.className.includes(`_${name}`))
+      chain.push({ tag: element.tagName.toLowerCase(), kind: known, rect: rect(element), color: style.backgroundColor, image: safeCSS(style.backgroundImage), attachment: style.backgroundAttachment, position: style.position, zIndex: style.zIndex, opacity: style.opacity, transform: style.transform, isolation: style.isolation })
+    }
+    const state = (element: Element | null) => element ? { rect: rect(element), ...styles(element) } : null
+    result.canvas = { chain, html: state(document.documentElement), body: state(body), bodyCascade: cascade ? backgroundCascade(body) : undefined, seatBefore: seat ? styles(seat, '::before') : null }
+  }
   if (scope === 'tables' || scope === 'all') {
     const tables = Array.from(document.querySelectorAll('table'))
     result.tables = tables.slice(0, 24).map(tableMetrics)
@@ -163,12 +174,12 @@ export function createBloomInspectProvider() {
             foreground: { type: 'boolean', description: 'Require a visible, focused page when identifying the current window.' },
             editorLeft: { type: 'number', description: 'Optional native editor x coordinate relative to the selected window.' },
             editorWidth: { type: 'number', description: 'Optional native editor width for distinguishing pages.' },
-            cascade: { type: 'boolean', description: 'Include sanitized sidebar background cascade for surface diagnostics.' },
+            cascade: { type: 'boolean', description: 'Include sanitized sidebar or body background cascade for the selected diagnostic scope.' },
           }, additionalProperties: false,
         },
         outputSchema: {
           type: 'object', required: ['page', 'viewport', 'bloom', 'input'],
-          properties: { page: { type: 'object' }, viewport: { type: 'object' }, bloom: { type: 'object' }, input: { type: 'object' }, tables: { type: 'array', items: { type: 'object' } }, tableCount: { type: 'integer' }, tablesTruncated: { type: 'boolean' }, surfaces: { type: 'object' }, background: { type: 'object' }, glassSummary: { type: 'object' }, sidebarCascade: { type: 'array', items: { type: 'object' } } },
+          properties: { page: { type: 'object' }, viewport: { type: 'object' }, bloom: { type: 'object' }, input: { type: 'object' }, tables: { type: 'array', items: { type: 'object' } }, tableCount: { type: 'integer' }, tablesTruncated: { type: 'boolean' }, surfaces: { type: 'object' }, canvas: { type: 'object' }, background: { type: 'object' }, glassSummary: { type: 'object' }, sidebarCascade: { type: 'array', items: { type: 'object' } } },
           additionalProperties: false,
         },
       }],

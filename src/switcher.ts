@@ -153,7 +153,7 @@ async function shareInstall(btn: HTMLElement, schedule: (fn: () => void, delay: 
 }
 
 const AMBIENCE_LABELS: Record<string, string> = {
-  diagonal: '对角漫染', galaxy: '漫天流星', corner: '角落微光',
+  diagonal: '对角漫染', galaxy: '漫天星辰', corner: '角落微光',
   stream: '斜光流转', wash: '水彩晕染', clear: '清透留白', off: '不显示',
 }
 
@@ -218,11 +218,10 @@ export function buildSwitcherHTML(currentVariant) {
     <div class="dsh-bloom-section">${tr('质感')}</div>
     <div class="dsh-bloom-glass" role="group" aria-label="${tr('质感')}">
       <div class="dsh-bloom-glass__choices">
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="frosted"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('毛玻璃')}</span></button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="matte"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('磨砂玻璃')}</span></button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="liquid"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('液态玻璃')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="frosted">${tr('毛玻璃')}</button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="matte">${tr('磨砂玻璃')}</button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="liquid">${tr('液态玻璃')}</button>
       </div>
-      <p class="dsh-bloom-glass__description" data-glass-description aria-live="polite"></p>
       <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
     </div>
     <div class="dsh-bloom-section">${tr('背景')}</div>
@@ -433,15 +432,6 @@ function syncGlassRow(el: HTMLElement) {
     btn.dataset.active = String(on)
     btn.setAttribute('aria-pressed', String(on))
   }
-  const description = row.querySelector<HTMLElement>('[data-glass-description]')
-  if (description) {
-    const descriptions = {
-      frosted: '毛玻璃 · 柔化背景，透光不透细节',
-      matte: '磨砂玻璃 · 细腻颗粒，低反光',
-      liquid: '液态玻璃 · 清透中心，边缘折光',
-    }
-    description.textContent = tr(descriptions[shown])
-  }
   const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
   if (!hint) return
   const systemDowngraded = effective === 'solid'
@@ -537,10 +527,11 @@ export function buildSwitcherEl(initialVariant) {
       const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
       if (cancel) cancel.hidden = true
       if (outcome.kind === 'success') { showShareFile(outcome.file); return }
+      const captureFailed = tr('无法打开屏幕选择器或完成捕获，可能是宿主不支持、系统权限受限或已取消；可使用系统截图或录屏工具')
       const messages: Record<string, string> = {
-        cancelled: tr('已取消'), denied: tr('未获得屏幕共享权限或已取消'),
+        cancelled: tr('已取消'), denied: captureFailed,
         unsupported: tr('当前环境不支持直接截图或录屏'), busy: tr('请先结束当前操作'),
-        ended: tr('屏幕共享已结束'), failed: tr('未能完成，请检查系统权限'),
+        ended: tr('屏幕共享已结束'), failed: captureFailed,
       }
       shareStatus(messages[outcome.kind] ?? messages.failed)
     }).catch(() => {
@@ -548,7 +539,7 @@ export function buildSwitcherEl(initialVariant) {
       el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = false })
       const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
       if (cancel) cancel.hidden = true
-      shareStatus(tr('未能完成，请检查系统权限'))
+      shareStatus(tr('无法打开屏幕选择器或完成捕获，可能是宿主不支持、系统权限受限或已取消；可使用系统截图或录屏工具'))
     })
   }
 
@@ -841,11 +832,14 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
   let last = ''
   let size = ''
   const position = () => {
-    const measured = `${trigger.offsetWidth}|${trigger.offsetHeight}`
+    const triggerRect = trigger.getBoundingClientRect()
+    const width = Math.ceil(triggerRect.width)
+    const height = Math.ceil(triggerRect.height)
+    const measured = `${width}|${height}`
     if (measured !== size) {
       size = measured
-      anchor.style.width = `${trigger.offsetWidth}px`
-      anchor.style.height = `${trigger.offsetHeight}px`
+      anchor.style.width = `${width}px`
+      anchor.style.height = `${height}px`
     }
     const box = anchor.getBoundingClientRect()
     const covered = Array.from(document.querySelectorAll<HTMLElement>('dialog[open], [role="dialog"][aria-modal="true"]'))

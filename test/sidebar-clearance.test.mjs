@@ -84,7 +84,7 @@ for (const lang of ['zh', 'en']) for (const scenario of scenarios) {
       // overlap appears, so a passing test cannot simply miss the original bug.
       await page.evaluate(() => {
         const style = document.createElement('style')
-        style.textContent = '.dsh-bloom-slot { margin-inline-start: 0 !important }'
+        style.textContent = '.dsh-bloom-slot { margin-inline-start: 0 !important; transform: none !important }'
         document.head.append(style)
       })
       await page.waitForFunction(() => Math.abs(document.querySelector('.dsh-bloom-trigger').getBoundingClientRect().left - document.querySelector('[data-bloom-slot="switcher"]').getBoundingClientRect().left) <= 1)
@@ -97,5 +97,55 @@ for (const lang of ['zh', 'en']) for (const scenario of scenarios) {
     await page.evaluate(() => window.disposeBloom())
     assert.equal(await page.locator('.dsh-bloom-switcher, [data-bloom-slot]').count(), 0)
     assert.equal(await page.locator('.icon').count(), 1)
+  })
+}
+
+for (const lang of ['zh', 'en']) for (const width of [1000, 380]) {
+  test(`${lang}/${width}: dynamic sidebar changes keep title adjacent and controls clickable`, async t => {
+    const context = await browser.newContext({ viewport: { width, height: 700 }, reducedMotion: 'reduce' })
+    t.after(() => context.close())
+    const page = await context.newPage()
+    await page.route('**/*', route => route.request().url() === 'https://bloom.test/'
+      ? route.fulfill({ contentType:'text/html', body:`<!doctype html><html data-platform="darwin"><head><style>
+        * { box-sizing:border-box } body { margin:0 } .frame { position:relative; height:100vh; --dsh-frame-leading-clearance:0px }
+        .icon { position:absolute; top:11px; width:28px; height:28px; z-index:15 }
+        header { position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); padding:10px 28px 0 20px; height:48px; overflow:hidden; contain:paint }
+        .leading { display:flex; grid-area:1/1; align-items:center }
+        .title { min-width:0; min-height:30px; grid-column:2; align-items:center; display:flex; padding-inline-start:max(0px,calc(var(--dsh-frame-leading-clearance,0px) - 20px)) }
+        .title-button { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
+      </style></head><body><div class="frame"><button class="icon" onclick="this.dataset.clicks=String(Number(this.dataset.clicks||0)+1)">S</button><header><div class="leading" data-fixture-leading></div><div class="title"><button class="title-button" onclick="this.dataset.clicks=String(Number(this.dataset.clicks||0)+1)">${lang === 'zh' ? '会话标题' : 'Conversation title'}</button></div></header></div></body></html>` })
+      : route.fulfill({ status:404, body:'' }))
+    await page.goto('https://bloom.test/')
+    await page.evaluate(lang => {
+      const dict = {}
+      window.fixtureLocale = { active:lang, register(ns,d) { dict[ns]=d; return () => delete dict[ns] }, bind(ns) { return key => dict[ns]?.[this.active]?.[key] ?? key }, subscribe() { return () => {} } }
+    }, lang)
+    await page.addScriptTag({ content:outputFiles[0].text })
+    const outcomes = []
+    for (const state of [{clearance:0,frameLeft:80,iconX:-40}, {clearance:160,frameLeft:0,iconX:100}, {clearance:84,frameLeft:0,iconX:12}, {clearance:0,frameLeft:80,iconX:-40}]) {
+      await page.evaluate(s => {
+        const frame=document.querySelector('.frame'); frame.style.marginLeft=s.frameLeft+'px'; frame.style.setProperty('--dsh-frame-leading-clearance',s.clearance+'px')
+        document.querySelector('.icon').style.left=s.iconX+'px'
+      }, state)
+      await page.waitForFunction(() => {
+        const a=document.querySelector('[data-bloom-slot="switcher"]')?.getBoundingClientRect(), b=document.querySelector('.dsh-bloom-trigger')?.getBoundingClientRect()
+        return a && b && Math.abs(a.left-b.left)<1 && Math.abs(a.top-b.top)<1
+      })
+      const g = await page.evaluate(() => {
+        const rect=sel=>{const r=document.querySelector(sel).getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width}}
+        const anchor=rect('[data-bloom-slot="switcher"]'), trigger=rect('.dsh-bloom-trigger'), icon=rect('.icon'), title=rect('.title-button')
+        const hit = r => document.elementFromPoint((r.left+r.right)/2,(r.top+r.bottom)/2)
+        return {anchor,trigger,icon,title,iconHit:hit(icon)?.closest('.icon')!==null,titleHit:hit(title)?.closest('.title-button')!==null}
+      })
+      const overlaps=(a,b)=>a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+      const gap=g.title.left-g.trigger.right
+      if (overlaps(g.icon,g.trigger) || !g.iconHit || overlaps(g.title,g.trigger) || !g.titleHit || gap < -1 || gap > 8)
+        outcomes.push({state, gap, ...g})
+      if (g.iconHit) await page.locator('.icon').click()
+      if (g.titleHit) await page.locator('.title-button').click()
+    }
+    await page.evaluate(() => window.disposeBloom())
+    assert.equal(await page.locator('.dsh-bloom-switcher, [data-bloom-slot]').count(), 0)
+    assert.deepEqual(outcomes, [], 'dynamic layout: controls overlap, lose hit targets, or double-count the host title clearance')
   })
 }

@@ -832,11 +832,14 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
   let last = ''
   let size = ''
   const position = () => {
-    const measured = `${trigger.offsetWidth}|${trigger.offsetHeight}`
+    const triggerRect = trigger.getBoundingClientRect()
+    const width = Math.ceil(triggerRect.width)
+    const height = Math.ceil(triggerRect.height)
+    const measured = `${width}|${height}`
     if (measured !== size) {
       size = measured
-      anchor.style.width = `${trigger.offsetWidth}px`
-      anchor.style.height = `${trigger.offsetHeight}px`
+      anchor.style.width = `${width}px`
+      anchor.style.height = `${height}px`
     }
     const box = anchor.getBoundingClientRect()
     const covered = Array.from(document.querySelectorAll<HTMLElement>('dialog[open], [role="dialog"][aria-modal="true"]'))

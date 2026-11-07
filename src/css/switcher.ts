@@ -1,6 +1,7 @@
 export const SWITCHER_CSS = `
-/* Match the current host header's inherited clearance; absent variables fall back to zero. */
-.dsh-bloom-slot { display: inline-block; flex: none; margin-inline-start: max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px)); }
+/* Move only the empty Slot anchor into the host's existing leading clearance. */
+.dsh-bloom-slot { display: inline-block; flex: none; transform: translateX(max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px))); }
+.dsh-bloom-slot:dir(rtl) { transform: translateX(calc(-1 * max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px)))); }
 .dsh-bloom-overlay { pointer-events: none; }
 .dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }
 .dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 80px); position: fixed; pointer-events: auto; z-index: 80; }

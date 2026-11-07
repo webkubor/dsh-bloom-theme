@@ -75,8 +75,8 @@ const browser = await chromium.launch({
 })
 test.after(() => browser.close())
 const expected = {
-  zh: { heading: '外观', banner: 'Bloom 主题有新版本', share: '装到你的 DSH：', error: 'registry 无可用通道（tags: 无）', badge: '可更新到 v' },
-  en: { heading: 'Appearance', banner: 'A new Bloom version is out', share: 'Install Bloom into your DSH:', error: 'No usable channel in the registry (tags: none)', badge: 'update available: v' },
+  zh: { heading: '外观', banner: 'Bloom 主题有新版本', share: '请帮我安装', error: 'registry 无可用通道（tags: 无）', badge: '可更新到 v' },
+  en: { heading: 'Appearance', banner: 'A new Bloom version is out', share: 'Please install and enable', error: 'No usable channel in the registry (tags: none)', badge: 'update available: v' },
 }
 /**
  * DSH locale 服务的最小替身见文件头的 makeLocale —— 浏览器里用的是它序列化过去的副本。
@@ -291,9 +291,12 @@ for (const mode of ['light', 'dark', 'system']) {
         // 其余持久化状态（配色/模式/版本）一律不变。
         assert.deepEqual(after, before)
         assert.equal(await page.evaluate(() => window.__dshLocale.active), lang)
+        await page.evaluate(() => { window.copied = null })
         await click(page, '.dsh-bloom-share')
+        await click(page, '.dsh-bloom-share-install')
         await page.waitForFunction(() => window.copied)
         assert.ok((await page.evaluate(() => window.copied)).includes(expected[lang].share))
+        await click(page, '.dsh-bloom-share')
         await click(page, '#dsh-bloom-update-banner [data-act="copy"]')
         await page.waitForFunction(() => window.copied.startsWith('dsh plugin'))
         await click(page, '.dsh-bloom-trigger')
@@ -328,6 +331,7 @@ test('DSH language switch works when localStorage throws', async () => {
 for (const [name, check] of [
   ['share uses live language', async page => {
     await click(page, '.dsh-bloom-share')
+    await click(page, '.dsh-bloom-share-install')
     await page.waitForFunction(() => window.copied)
     assert.ok((await page.evaluate(() => window.copied)).includes(expected.zh.share))
   }],

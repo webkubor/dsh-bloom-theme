@@ -80,14 +80,13 @@ export const SWITCHER_CSS = `
     0 2px 7px rgba(0, 0, 0, 0.28);
 }
 
-/* ── 面板头部：标题 + 当前配色胶囊 + 关闭（按 owner 2026-09-10 的设计图） ── */
+/* 面板头部：标题、配色胶囊与关闭按钮 */
 .dsh-bloom-head {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 14px 10px;
-  /* 用阴影代替分隔线：硬线在圆角面板里显得生硬、没有过渡（owner 2026-09-10）。
-     一道极浅的向下扩散阴影同样能分出层次，边界是渐隐的。 */
+  /* 使用柔和微阴影替代硬边框分割，形成平滑过渡 */
   box-shadow: 0 6px 10px -8px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 78%);
 }
 /* 有新版时的小红点：徽标本体在「版本与更新」折叠区里，默认看不见，
@@ -137,10 +136,7 @@ export const SWITCHER_CSS = `
 }
 .dsh-bloom-section[hidden] { display: none; }
 
-/* 「Bloom v0.x ›」：版本与更新的入口，2026-11-03 起住进底栏左侧。
-   原来它独占一行居中 + 上方一道分隔阴影，加上「语言」行和快链行，面板底部是
-   三条带子两道线（owner：「底部是不是不美观」）。现在底部只有一行：
-   左边版本入口、右边快链，展开体出现在这一行**上方**。 */
+/* 底栏：版本信息与快捷功能区保持单行布局 */
 .dsh-bloom-more {
   display: inline-flex; align-items: center; gap: 5px;
   appearance: none; border: 0; background: transparent; cursor: pointer;
@@ -195,10 +191,7 @@ export const SWITCHER_CSS = `
  * 同一个元素第二次显示时，animation 已经处于结束态，浏览器不会重播，
  * 表现就是「第一次打开有动画，后面几次都是硬弹出来」。 */
 .dsh-bloom-menu { transform-origin: top right; }
-/* 面板入场。原来只有 translateY(-6px) + scale(0.98)，位移 6px 太小 —— owner
-   2026-11-01 的反馈是「其实并没有动画」。同一套参数在 0.28s 内走 6px，肉眼
-   基本接收不到。位移加到 12px、缩放压到 0.96，配合回弹曲线才有「弹出来」的
-   手感；它仍然很克制（没有旋转、没有模糊），但因为够快够明显，能被看见。 */
+/* 面板入场动画：12px 弹性位移与微缩放回弹 */
 @keyframes bloom-menu-in {
   from { opacity: 0; transform: translateY(-12px) scale(0.96); }
   to { opacity: 1; transform: none; }
@@ -312,18 +305,10 @@ export const SWITCHER_CSS = `
   transition: background 0.15s;
 }
 .dsh-bloom-option:hover { background: rgba(var(--bloom-morandi), 0.14); }
-/* 聚焦环：主题自己的颜色，不用宿主的品牌蓝。
- *
- * ⚠️ 为什么必须改（2026-11-01 真实 DSH 里实测）：打开菜单时 openMenu() 会自动
- * focus 到当前选中项，于是 :focus-visible 立刻命中 —— 亮蓝描边
- * （--dsw-alias-brand-primary）每次开面板都跳出来，在黛蓝/竹青这类冷色皮肤上
- * 像贴了个系统默认焦点框。宿主品牌色不是主题色，这条不能留。
- *
- * 换成主题自己的 accent 并压低不透明度：仍然看得见「焦点在哪」（键盘可用性不能丢），
- * 但不再是刺眼的系统蓝。 */
-.dsh-bloom-option:focus,
+/* [LES-30] */
 .dsh-bloom-option:focus-visible {
-  outline: 2px solid color-mix(in oklch, var(--bloom-accent, #34698c) 62%, transparent);
+  --dsw-focus-ring-color: color-mix(in oklch, var(--bloom-accent, #34698c) 62%, transparent);
+  outline: 2px solid var(--dsw-focus-ring-color);
   outline-offset: -2px;
   background: rgba(var(--bloom-morandi), 0.14);
 }
@@ -335,9 +320,9 @@ export const SWITCHER_CSS = `
     inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #34698c) 26%, transparent),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
-/* 选中项的焦点环再亮一档 —— 键盘用户能立刻分辨「当前选中」和「当前焦点」。 */
 .dsh-bloom-option[data-active="true"]:focus-visible {
-  outline-color: color-mix(in oklch, var(--bloom-accent, #34698c) 78%, transparent);
+  --dsw-focus-ring-color: color-mix(in oklch, var(--bloom-accent, #34698c) 78%, transparent);
+  box-shadow: none;
 }
 /* 「新」小标签（本版新上的配色）：只占一个字宽，贴在名字后面。
    用 accent 色不抢行焦点；悬停整行时不变化，它是个状态不是按钮。 */
@@ -441,12 +426,7 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   color: var(--dsw-alias-label-tertiary, #999);
 }
 .dsh-bloom-glass__hint[hidden] { display: none; }
-/* 三块小样就是三档的实物说明。
-   底纹用**细条纹**而不是色块：细条纹穿过玻璃后能不能数清，是三种材料
-   最直接的对照 —— 通透能数清（背后透过来）、磨砂糊成一片（散射掉了）、
-   实底完全看不见（不透光）。
-   早先用的是一道粗斜条，透通过去后糊成一团深紫，三块小样几乎一样
-   （2026-11-05 用户截图指出）。 */
+/* [LES-33][LES-36] */
 .dsh-bloom-glass__choices { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
 .dsh-bloom-glass__choice {
   appearance: none;
@@ -473,7 +453,7 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   font-weight: 600;
   border-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 60%, transparent);
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 8%, var(--dsw-alias-bg-layer-1, #fff));
-  box-shadow: 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 20%, transparent);
+  box-shadow: none;
 }
 .dsh-bloom-glass__choice:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: 2px; }
 .dsh-bloom-glass__sample {
@@ -489,11 +469,6 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
     var(--bloom-accent, #6b8f71) 0 2px,
     color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 88%, var(--bloom-accent, #6b8f71)) 2px 6px);
 }
-/* 实底档的样片：条纹后面再垫一层「完全遮住」的白/黑，
-   于是这块小样本身就是实底材质的样子 —— 不透光、边缘清晰。 */
-.dsh-bloom-glass__choice[data-glass="solid"] .dsh-bloom-glass__sample {
-  background: var(--dsw-alias-bg-layer-1, #fff);
-}
 .dsh-bloom-glass__sample::before {
   content: '';
   position: absolute;
@@ -501,23 +476,23 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   border-radius: 4px;
   box-shadow: inset 0 1px 0 color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 80%, transparent), 0 3px 5px -2px rgba(0,0,0,.25);
 }
-/* 通透：玻璃几乎全透，细条纹清晰可数，顶沿一道亮边。 */
-.dsh-bloom-glass__choice[data-glass="glass"] .dsh-bloom-glass__sample::before {
+/* [LES-27] */
+.dsh-bloom-glass__choice[data-glass="liquid"] .dsh-bloom-glass__sample::before {
   background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 22%, transparent);
   border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 60%, transparent);
-  -webkit-backdrop-filter: blur(1.5px) saturate(1.45);
-  backdrop-filter: blur(1.5px) saturate(1.45);
+  -webkit-backdrop-filter: blur(.5px) url("#dsh-bloom-liquid-lens") saturate(1.2);
+  backdrop-filter: blur(.5px) url("#dsh-bloom-liquid-lens") saturate(1.2);
 }
 /* 磨砂：条纹糊成一片均匀雾面。
    模糊给到 6px —— 小样只有 44px 宽，模糊太小就看不出散射（深色下尤其）。 */
-.dsh-bloom-glass__choice[data-glass="soft"] .dsh-bloom-glass__sample::before {
-  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 74%, transparent);
+.dsh-bloom-glass__choice[data-glass="matte"] .dsh-bloom-glass__sample::before {
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 48%, transparent);
   border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 34%, transparent);
   -webkit-backdrop-filter: blur(6px) saturate(1.05);
   backdrop-filter: blur(6px) saturate(1.05);
 }
-/* 磨砂档再叠一层细颗粒，和实底界面用的是同一套噪点。 */
-.dsh-bloom-glass__choice[data-glass="soft"] .dsh-bloom-glass__sample::after {
+/* [LES-36] */
+.dsh-bloom-glass__choice[data-glass="matte"] .dsh-bloom-glass__sample::after {
   content: '';
   position: absolute;
   inset: 5px 4px 4px 7px;
@@ -526,26 +501,11 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   background-repeat: repeat;
   pointer-events: none;
 }
-/* 实底：条纹一点看不见，边缘是清晰的实线。 */
-.dsh-bloom-glass__choice[data-glass="solid"] .dsh-bloom-glass__sample::before {
-  background: var(--dsw-alias-bg-layer-1, #fff);
-  border: 1px solid color-mix(in oklch, var(--bloom-accent, #6b8f71) 55%, transparent);
-  box-shadow: none;
-}
-/* 实底档的样片里再画一小段「被挡住的条纹」残影：
-   证明这层是不透光的，而不是没画条纹。 */
-.dsh-bloom-glass__choice[data-glass="solid"] .dsh-bloom-glass__sample::after {
-  content: '';
-  position: absolute;
-  left: 7px;
-  bottom: 4px;
-  width: 26px;
-  height: 5px;
-  border-radius: 2px;
-  background: repeating-linear-gradient(115deg,
-    color-mix(in oklch, var(--bloom-accent, #6b8f71) 55%, transparent) 0 2px,
-    transparent 2px 6px);
-  opacity: .5;
+.dsh-bloom-glass__choice[data-glass="frosted"] .dsh-bloom-glass__sample::before {
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 30%, transparent);
+  border: 1px solid color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 40%, transparent);
+  -webkit-backdrop-filter: blur(5px) saturate(1.15);
+  backdrop-filter: blur(5px) saturate(1.15);
 }
 .dsh-bloom-glass__description {
   margin: 7px 2px 0;
@@ -602,6 +562,53 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
 .dsh-bloom-appearance__btn:focus-visible {
   outline: 2px solid var(--bloom-accent, #6b8f71);
   outline-offset: -2px;
+}
+
+/* 氛围分段：深浅各一行，只显示与宿主当前深浅一致的那行 */
+body[data-ds-dark-theme] .dsh-bloom-ambience[data-scheme="light"],
+body:not([data-ds-dark-theme]) .dsh-bloom-ambience[data-scheme="dark"] { display: none; }
+.dsh-bloom-ambience {
+  display: flex;
+  width: 100%;
+  padding: 3px;
+  border-radius: 9px;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%);
+  gap: 2px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+.dsh-bloom-ambience__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  flex: 1;
+  padding: 5px 2px;
+  cursor: pointer;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 11.5px;
+  border-radius: 7px;
+  transition: background-color var(--bloom-dur-fast) var(--bloom-ease), color var(--bloom-dur-fast) var(--bloom-ease);
+}
+.dsh-bloom-ambience__btn:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: -2px;
+}
+.dsh-bloom-ambience__btn:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 90%);
+}
+.dsh-bloom-ambience__btn[data-active="true"] {
+  background: var(--dsw-alias-bg-layer-2, #ffffff);
+  color: var(--bloom-accent, inherit);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+body[data-ds-dark-theme] .dsh-bloom-ambience__btn[data-active="true"] {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 22%, #1a1a1c);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .dsh-bloom-version {
@@ -915,11 +922,11 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   color: oklch(78% 0.14 150);
 }
 
-/* ── 底部快链：配色投票 / 反馈（v0.12.x，owner 要求）──
-   放常驻底部而不是「版本与更新」折叠区里 —— 折叠区本来就是低频信息，
-   反馈入口再藏一层等于没有。分隔沿用全站的「向下扩散阴影」语言。 */
+/* 底栏作为分享面板的定位边界，使面板始终贴齐菜单右侧。 */
 .dsh-bloom-foot {
+  position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -960,8 +967,75 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
   border-radius: 4px;
 }
 /* 底栏一行装「版本入口 + 三个快链」，任何语言都不许折行（英文原文案曾把投票挤成两行） */
-.dsh-bloom-foot__links { display: inline-flex; align-items: center; gap: 12px; white-space: nowrap; }
+.dsh-bloom-foot__links { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
 .dsh-bloom-more { white-space: nowrap; }
+.dsh-bloom-foot__link { min-height: 28px; white-space: nowrap; }
+.dsh-bloom-share-panel[hidden] { display: none; }
+.dsh-bloom-share-panel {
+  position: absolute;
+  right: 14px;
+  bottom: calc(100% + 4px);
+  z-index: 2;
+  box-sizing: border-box;
+  width: min(280px, calc(100% - 28px));
+  max-height: min(300px, calc(var(--bloom-menu-max-h, 100vh) - 56px));
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.16));
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 94%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: var(--dsw-alias-label-primary, #222);
+  box-shadow: var(--bloom-shadow, 0 8px 24px rgba(0,0,0,.18));
+  white-space: normal;
+}
+body[data-ds-dark-theme] .dsh-bloom-share-panel {
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #252528) 94%, transparent);
+  color: var(--dsw-alias-label-primary, #f2f2f2);
+}
+.dsh-bloom-share-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dsh-bloom-share-intro { display: block; padding: 7px 8px 5px; color: var(--dsw-alias-label-secondary, #666); font-size: 11px; line-height: 1.4; }
+.dsh-bloom-share-action:hover:not(:disabled) { background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 88%); }
+.dsh-bloom-share-action:disabled { opacity: .55; cursor: default; }
+.dsh-bloom-share-action:focus-visible, .dsh-bloom-share-result button:focus-visible, .dsh-bloom-share-result a:focus-visible, .dsh-bloom-share-cancel:focus-visible, .dsh-bloom-share-manual:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: -2px;
+}
+.dsh-bloom-share-action__title { font-size: 12px; font-weight: 600; }
+.dsh-bloom-share-action__hint { font-size: 11px; line-height: 1.35; color: var(--dsw-alias-label-secondary, #555); overflow-wrap: anywhere; }
+body[data-ds-dark-theme] .dsh-bloom-share-action__hint { color: var(--dsw-alias-label-secondary, #c3c3c3); }
+.dsh-bloom-share-status { display: block; padding: 5px 8px; color: var(--dsw-alias-label-secondary, #666); font-size: 11px; line-height: 1.4; }
+.dsh-bloom-share-status:empty { display: none; }
+.dsh-bloom-share-cancel { display: inline-flex; align-items: center; min-height: 28px; margin: 0 8px 6px; padding: 0; border: 0; background: none; color: var(--bloom-accent, #6b8f71); font: inherit; cursor: pointer; }
+.dsh-bloom-share-cancel[hidden] { display: none; }
+.dsh-bloom-share-manual { box-sizing: border-box; width: 100%; min-height: 92px; padding: 7px; resize: vertical; color: var(--dsw-alias-label-primary, #222); background: var(--dsw-alias-bg-layer-1, #fff); border: 1px solid var(--bloom-hairline); border-radius: 6px; font: inherit; }
+.dsh-bloom-share-manual[hidden] { display: none; }
+.dsh-bloom-share-result { display: flex; align-items: center; gap: 8px; padding: 4px 8px 8px; font-size: 11px; line-height: 1.4; }
+.dsh-bloom-share-result button, .dsh-bloom-share-result a { min-height: 28px; display: inline-flex; align-items: center; border: 0; padding: 0; background: none; color: var(--bloom-accent, #6b8f71); font: inherit; text-decoration: none; cursor: pointer; }
+.dsh-bloom-share-result [hidden] { display: none; }
+.dsh-bloom-share-result[hidden] { display: none; }
+@media (prefers-contrast: more), (forced-colors: active) {
+  html body .dsh-bloom-share-panel { background: Canvas; color: CanvasText; border-color: CanvasText; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html body:not([data-bloom-glass]) .dsh-bloom-share-panel { background: var(--dsw-alias-bg-layer-1, #fff); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .dsh-bloom-trigger, .dsh-bloom-chevron, .dsh-bloom-option { transition: none !important; }

@@ -10,5 +10,9 @@ declare global {
     __dshBloomCursorBound__?: boolean
     __dshBloomCursorOff__?: () => void
     __dshBloomGlassOff__?: () => void
+    __BLOOM_DEBUG__?: {
+      dump(): import('./diagnostics.js').BloomDiagnostics
+      copy(): Promise<boolean>
+    }
   }
 }

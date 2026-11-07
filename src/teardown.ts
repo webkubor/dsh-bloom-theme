@@ -16,7 +16,7 @@ import { setVersionUpdatesActive } from './version.js'
 import { clearAppearanceSync } from './appearance.js'
 
 /** Bloom 写在 body / 消息节点上的 data-* 属性。 */
-const BODY_ATTRS = ['data-bloom-variant', 'data-bloom-glass', 'data-bloom-typing', 'data-bloom-update']
+const BODY_ATTRS = ['data-bloom-variant', 'data-bloom-glass', 'data-bloom-ambience-dark', 'data-bloom-ambience-light', 'data-bloom-typing', 'data-bloom-update']
 const NODE_ATTRS = ['data-bloom-think', 'data-bloom-think-body', 'data-bloom-live-turn']
 
 export function teardownBloom(): void {
@@ -32,6 +32,7 @@ export function teardownBloom(): void {
   window.__dshBloomGlassOff__?.()
   window.__dshBloomGlassOff__ = undefined
   stopRotation()
+  delete window.__BLOOM_DEBUG__
 
   document.querySelectorAll(`style[data-plugin="${PLUGIN_ID}"]`).forEach((n) => n.remove())
   document.querySelectorAll('.dsh-bloom-switcher, #dsh-bloom-sparkles, #dsh-bloom-starlight, #dsh-bloom-update-banner')

@@ -267,7 +267,7 @@ test('menu stays reachable inside a short desktop window (no part below the view
       .filter(a => Number.isFinite(a.effect?.getComputedTiming().endTime)).map(a => a.finished))
     const b = menu.getBoundingClientRect(), cs = getComputedStyle(menu)
     const scrollable = /auto|scroll/.test(cs.overflowY) && menu.scrollHeight > menu.clientHeight
-    const last = [...menu.querySelectorAll('button')].at(-1)
+    const last = [...menu.querySelectorAll('button')].filter(node => node.getClientRects().length > 0 && getComputedStyle(node).visibility === 'visible').at(-1)
     if (scrollable) last.scrollIntoView({ block: 'nearest' })
     const lb = last.getBoundingClientRect()
     const hit = document.elementFromPoint(lb.left + lb.width / 2, lb.top + lb.height / 2)
@@ -324,7 +324,7 @@ test('keyboard alone reaches and operates glass and rotation controls; Tab close
   const last = visited.at(-1)
   assert.ok(last.isTrigger && last.menuHidden, `Tab past the last stop closes and returns focus to the trigger (${JSON.stringify(last)})`)
   const glassStops = visited.filter(v => v.glass).map(v => v.glass)
-  assert.deepEqual(glassStops, ['glass', 'soft', 'solid'], `all glass choices are Tab stops (${JSON.stringify(visited.map(v => v.label))})`)
+  assert.deepEqual(glassStops, ['frosted', 'matte', 'liquid'], `all glass choices are Tab stops (${JSON.stringify(visited.map(v => v.label))})`)
   assert.ok(visited.some(v => v.select), 'rotation select is a Tab stop')
   // Opening focuses the active palette row; controls before it in DOM order (the close button) are
   // reached with Shift+Tab. Together the two walks must cover every visible focusable control once.
@@ -347,10 +347,10 @@ test('keyboard alone reaches and operates glass and rotation controls; Tab close
   await page.focus('.dsh-bloom-trigger')
   await page.keyboard.press('Enter')
   for (let i = 0; i < 60 && !(await activeInfo(page)).glass; i++) await page.keyboard.press('Tab')
-  while ((await activeInfo(page)).glass !== 'solid') await page.keyboard.press('Tab')
+  while ((await activeInfo(page)).glass !== 'liquid') await page.keyboard.press('Tab')
   await page.keyboard.press('Enter')
-  assert.equal(await page.evaluate(() => document.body.dataset.bloomGlass), 'solid', 'Enter on a focused glass choice applies it')
-  assert.equal(await page.evaluate(() => document.querySelector('[data-glass="solid"]').getAttribute('aria-pressed')), 'true')
+  assert.equal(await page.evaluate(() => document.body.dataset.bloomGlass), 'liquid', 'Enter on a focused glass choice applies it')
+  assert.equal(await page.evaluate(() => document.querySelector('[data-glass="liquid"]').getAttribute('aria-pressed')), 'true')
   assert.equal((await activeInfo(page)).menuHidden, false, 'activating a glass choice keeps the panel open')
 
   while (!(await activeInfo(page)).select) await page.keyboard.press('Tab')
@@ -471,4 +471,38 @@ test('teardown cancels and prevents timers or observers from executing or leakin
   await page.waitForTimeout(400)
   const thinkMarked = await page.evaluate(() => document.querySelectorAll('[data-bloom-think]').length)
   assert.equal(thinkMarked, 0, 'no think tags marked after disposal')
+})
+
+test('material and per-scheme backgrounds remain independent through UI changes and reload', async t => {
+  const page = await setupPage(t)
+  await page.evaluate(() => window.applyModule(window.mockLocale))
+  const menu = page.locator('.dsh-bloom-menu')
+  const open = async () => { if (await menu.isHidden()) await page.click('.dsh-bloom-trigger') }
+  const state = () => page.evaluate(() => ({
+    dark: document.body.hasAttribute('data-ds-dark-theme'),
+    material: document.body.dataset.bloomGlass,
+    light: document.body.dataset.bloomAmbienceLight,
+    darkBackground: document.body.dataset.bloomAmbienceDark,
+  }))
+  await open()
+  assert.deepEqual(await menu.locator('[data-glass]').allTextContents(), ['毛玻璃', '磨砂玻璃', '液态玻璃'])
+  await menu.locator('[data-mode="light"]').click()
+  await menu.locator('[data-glass="matte"]').click()
+  await menu.locator('[data-scheme="light"] [data-preset="wash"]').click()
+  assert.deepEqual(await state(), { dark: false, material: 'matte', light: 'wash', darkBackground: 'corner' })
+  await menu.locator('[data-mode="dark"]').click()
+  await menu.locator('[data-scheme="dark"] [data-preset="galaxy"]').click()
+  assert.deepEqual(await state(), { dark: true, material: 'matte', light: 'wash', darkBackground: 'galaxy' })
+  await menu.locator('[data-mode="light"]').click()
+  assert.deepEqual(await state(), { dark: false, material: 'matte', light: 'wash', darkBackground: 'galaxy' })
+  await menu.locator('[data-glass="liquid"]').click()
+  await menu.locator('[data-mode="dark"]').click()
+  assert.deepEqual(await state(), { dark: true, material: 'liquid', light: 'wash', darkBackground: 'galaxy' })
+  await page.reload()
+  await page.addScriptTag({ content: outputFiles[0].text })
+  await page.evaluate(() => window.applyModule())
+  assert.deepEqual(await state(), { dark: true, material: 'liquid', light: 'wash', darkBackground: 'galaxy' })
+  await open()
+  await menu.locator('[data-mode="light"]').click()
+  assert.deepEqual(await state(), { dark: false, material: 'liquid', light: 'wash', darkBackground: 'galaxy' })
 })

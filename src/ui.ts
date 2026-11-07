@@ -1,5 +1,7 @@
 import { mountSwitcher } from './switcher.js'
 import { buildSparkles } from './starlight.js'
+import { buildLiquidLens } from './liquid-lens.js'
+import { buildFogDefinitions } from './fog.js'
 
 /** React comes from the host loader; no second React copy is bundled. */
 export interface HostReact {
@@ -36,7 +38,9 @@ export function createBloomComponents(React: HostReact, installUpdateCheck: (hos
       const container = host.current
       if (!container) return
       const sparkles = buildSparkles(container.ownerDocument)
-      container.append(sparkles)
+      const lens = buildLiquidLens(container.ownerDocument)
+      const fog = buildFogDefinitions(container.ownerDocument)
+      container.append(lens, fog, sparkles)
       const stopUpdates = installUpdateCheck(container)
       overlay = container
       onOverlayChange.forEach((sync) => sync())
@@ -45,6 +49,8 @@ export function createBloomComponents(React: HostReact, installUpdateCheck: (hos
         onOverlayChange.forEach((sync) => sync())
         stopUpdates()
         sparkles.remove()
+        lens.remove()
+        fog.remove()
       }
     }, [])
     return React.createElement('div', { ref: host, className: 'dsh-bloom-overlay', 'data-bloom-slot': 'decorations' })

@@ -15,10 +15,13 @@ import {
   readGlassMode,
   writeGlassMode,
   effectiveGlassMode,
-  systemPrefersReducedTransparency,
   type GlassMode,
 } from './glass.js'
+import { AMBIENCE_PRESETS, readAmbience, writeAmbience, type Scheme } from './ambience.js'
 import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
+import { copyDiagnostics, formatDiagnosticsMarkdown } from './diagnostics.js'
+import { buildFeedbackUrl } from './feedback.js'
+import { createShareCapture } from './share-capture.js'
 import { track, telemetryEnabled, setTelemetryEnabled, type PanelEvent } from './track.js'
 
 /* 「本版更新」内容在构建时由 scripts/bundle.mjs 注入（CHANGELOG.md 里当前版本那一节）；
@@ -108,30 +111,24 @@ export function applyVariant(variant) {
    跟面板里的 chevron 同一种语言，颜色也跟着 hover 一起变。 */
 const icon = (body: string) =>
   `<svg class="dsh-bloom-foot__icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
-const ICON_VOTE = icon('<rect x="1.9" y="1.9" width="10.2" height="10.2" rx="2.4"/><path d="M4.5 7.1l1.8 1.8 3.3-3.7"/>')
+const ICON_STAR = icon('<path d="m7 1.3 1.7 3.5 3.8.6-2.8 2.7.7 3.9L7 10.2l-3.4 1.8.7-3.9L1.5 5.4l3.8-.6z"/>')
 const ICON_CHAT = icon('<path d="M12.1 8.1a1.8 1.8 0 0 1-1.8 1.8H5.6L2.9 12.1V3.7a1.8 1.8 0 0 1 1.8-1.8h5.6a1.8 1.8 0 0 1 1.8 1.8z"/>')
+const ICON_DIAGNOSE = icon('<rect x="2.8" y="2.5" width="8.4" height="9.5" rx="1.6"/><path d="M5 2.5V1.5a.8.8 0 0 1 .8-.8h1.6a.8.8 0 0 1 .8.8v1M5 6h4M5 8.5h2.5"/>')
 const ICON_SHARE = icon('<circle cx="10.5" cy="3.3" r="1.6"/><circle cx="3.5" cy="7" r="1.6"/><circle cx="10.5" cy="10.7" r="1.6"/><path d="M4.9 6.2l4.2-2.2M4.9 7.8l4.2 2.2"/>')
 
-/** 分享文案：对方原样贴进自己的 DSH 就能装上，不需要再问「怎么装」。
- *
- *  ⚠️ 2026-10-12 改：原文案写死 `--profile web` 和 `~/.dsh/profiles/web/`。那个
- *  profile 已于 2026-10-02 退役，当前宿主是桌面端 app（profile `desktop`，由 app
- *  独占托管，CLI 的 `dsh plugin --profile desktop` 会被直接拒绝）。照原文案操作的人
- *  只会得到一条报错。两条路都写出来：app 里走插件管理，自建 profile 走 CLI 且 profile
- *  名必须自己填（写死任何具体名字都是给一份必然过期的指令）。
- */
+/* [LES-33] */
 const buildShareText = () => [
-  tr('Bloom —— DSH 的中国风配色主题：{0} 套诗词命名的莫兰迪配色，深浅色自适应，顶栏一键切换。', VARIANTS.length),
-  tr('装到你的 DSH：'),
-  tr('  · 桌面端 app：在应用内的「插件管理」里搜 dsh-bloom-theme 直接装'),
-  tr('    （app 独占托管 desktop profile，CLI 的 dsh plugin --profile desktop 会被拒）'),
-  tr('  · 自建 CLI profile：dsh plugin --profile <你的profile名> add dsh-bloom-theme'),
-  tr('    然后确认 "dsh-bloom-theme" 在该 profile 的 package.json 的 dsh.profile.bundles 里（plugin add 会自动加），重启 DSH'),
+  tr('我在用 Bloom：诗意配色与玻璃质感，欢迎试试，也欢迎到仓库点个 Star。'),
+  '',
+  tr('请帮我安装并启用 DeepSeek Harness 的 Bloom 主题（dsh-bloom-theme）。'),
+  tr('请先使用官方 plugin_manager 的 list_bundles 查询，再用 install_bundle 安装 dsh-bloom-theme，并按返回的 application / nextStep 完成和验证。'),
+  tr('如果使用自建 CLI profile，请先确认 profile 名称，再运行：'),
+  'dsh plugin --profile <profile> add dsh-bloom-theme',
   tr('仓库：https://github.com/webkubor/dsh-bloom-theme'),
 ].join('\n')
 
 /** 复制分享文案；就地把按钮文字换成「已复制」给反馈（视线在按钮上，改别处等于没反馈）。 */
-async function shareInstall(btn: HTMLElement) {
+async function shareInstall(btn: HTMLElement, schedule: (fn: () => void, delay: number) => void) {
   // 只改文字那个 span —— 直接写 btn.textContent 会把 svg 图标一起擦掉。
   const SHARE_TEXT = buildShareText()
   const slot = btn.querySelector('span') ?? btn
@@ -141,17 +138,38 @@ async function shareInstall(btn: HTMLElement) {
     if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(SHARE_TEXT); ok = true }
   } catch {}
   if (!ok) {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const ta = document.createElement('textarea')
     ta.value = SHARE_TEXT; ta.style.position = 'fixed'; ta.style.opacity = '0'
     document.body.appendChild(ta); ta.select()
     try { ok = document.execCommand('copy') } catch {}
     ta.remove()
+    if (previous?.isConnected) previous.focus({ preventScroll: true })
   }
   slot.textContent = ok ? tr('已复制') : tr('复制失败')
-  setTimeout(() => { slot.textContent = label }, 1600)
+  schedule(() => { if (slot.isConnected) slot.textContent = label }, 1600)
+  return ok
 }
 
+const AMBIENCE_LABELS: Record<string, string> = {
+  diagonal: '对角漫染', galaxy: '漫天流星', corner: '角落微光',
+  stream: '斜光流转', wash: '水彩晕染', clear: '清透留白', off: '不显示',
+}
+
+/** One segmented row per scheme; CSS shows the row matching the host scheme. */
+function ambienceRows(): string {
+  return (Object.keys(AMBIENCE_PRESETS) as Scheme[]).map((scheme) => {
+    const current = readAmbience(scheme)
+    const buttons = AMBIENCE_PRESETS[scheme].map((preset) =>
+      `<button type="button" class="dsh-bloom-ambience__btn" data-preset="${preset}" role="radio" aria-checked="${preset === current}" data-active="${preset === current}">${tr(AMBIENCE_LABELS[preset])}</button>`).join('')
+    const hint = scheme === 'dark' ? tr('深色背景') : tr('浅色背景')
+    return `<div class="dsh-bloom-ambience" data-scheme="${scheme}" role="radiogroup" aria-label="${hint}">${buttons}</div>`
+  }).join('')
+}
+
+let switcherSerial = 0
 export function buildSwitcherHTML(currentVariant) {
+  const sharePanelId = `dsh-bloom-share-${++switcherSerial}`
   // Hidden-from-menu legacy colors remain valid in storage; show the active legacy
   // choice until its owner deliberately selects a featured replacement.
   const shown = FEATURED_VARIANTS.includes(currentVariant)
@@ -196,16 +214,18 @@ export function buildSwitcherHTML(currentVariant) {
         <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
       </div>
     </div>
-    <div class="dsh-bloom-section">${tr('玻璃质感')}</div>
-    <div class="dsh-bloom-glass" role="group" aria-label="${tr('玻璃质感')}">
+    <div class="dsh-bloom-section">${tr('质感')}</div>
+    <div class="dsh-bloom-glass" role="group" aria-label="${tr('质感')}">
       <div class="dsh-bloom-glass__choices">
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="glass"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('通透')}</span></button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="soft"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('柔和')}</span></button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="solid"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('实底')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="frosted"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('毛玻璃')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="matte"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('磨砂玻璃')}</span></button>
+        <button type="button" class="dsh-bloom-glass__choice" data-glass="liquid"><span class="dsh-bloom-glass__sample" aria-hidden="true"></span><span>${tr('液态玻璃')}</span></button>
       </div>
       <p class="dsh-bloom-glass__description" data-glass-description aria-live="polite"></p>
       <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
     </div>
+    <div class="dsh-bloom-section">${tr('背景')}</div>
+    ${ambienceRows()}
     <label class="dsh-bloom-rotation">${tr('自动换色')}
       <select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">
         ${rotationOptions}
@@ -232,6 +252,10 @@ export function buildSwitcherHTML(currentVariant) {
           <span class="dsh-bloom-dsh-ver" data-dsh-latest>${tr('检查中…')}</span>
         </div>
         <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
+        <div class="dsh-bloom-dsh-row">
+          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-diagnose" title="${tr('复制排错诊断信息（在 GitHub 提交 Issue 时粘贴）')}">${ICON_DIAGNOSE}<span>${tr('复制诊断')}</span></button>
+          <a class="dsh-bloom-foot__link" data-track="vote" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener noreferrer">${tr('配色投票')}</a>
+        </div>
         <label class="dsh-bloom-telemetry" title="${tr('只上报按钮点击的事件名和版本，不含对话内容')}">
           <input type="checkbox" class="dsh-bloom-telemetry__box" data-telemetry${telemetryEnabled() ? ' checked' : ''}>
           <span class="dsh-bloom-telemetry__box-ui" aria-hidden="true"></span>
@@ -248,16 +272,30 @@ export function buildSwitcherHTML(currentVariant) {
         </svg>
       </button>
       <span class="dsh-bloom-foot__links">
-      <a class="dsh-bloom-foot__link" data-track="vote" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener" title="${tr('为你喜欢的配色点赞投票，或提议新色')}">${ICON_VOTE}<span>${tr('配色投票')}</span></a>
-      <a class="dsh-bloom-foot__link" data-track="feedback" href="https://github.com/webkubor/dsh-bloom-theme/issues" target="_blank" rel="noopener" title="${tr('报问题 / 提建议')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
-      <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" title="${tr('复制一段话，对方贴进自己的 DSH 就能装上 Bloom')}">${ICON_SHARE}<span>${tr('分享')}</span></button>
+        <a class="dsh-bloom-foot__link dsh-bloom-feedback" data-track="feedback" href="https://github.com/webkubor/dsh-bloom-theme/issues/new" target="_blank" rel="noopener noreferrer" title="${tr('填写反馈，自动附上基础诊断')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
+        <a class="dsh-bloom-foot__link dsh-bloom-star" href="https://github.com/webkubor/dsh-bloom-theme" target="_blank" rel="noopener noreferrer" title="${tr('喜欢 Bloom？欢迎去 GitHub 点个 Star')}">${ICON_STAR}<span>${tr('点个星')}</span></a>
+        <span class="dsh-bloom-share-wrap">
+          <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" aria-expanded="false" aria-controls="${sharePanelId}">${ICON_SHARE}<span>${tr('分享')}</span></button>
+          <span id="${sharePanelId}" class="dsh-bloom-share-panel" role="group" aria-label="${tr('分享 Bloom')}" hidden>
+            <span class="dsh-bloom-share-intro">${tr('喜欢 Bloom？欢迎分享，也欢迎到仓库点个 Star。')}</span>
+            <button type="button" class="dsh-bloom-share-action dsh-bloom-share-install"><span class="dsh-bloom-share-action__title">${tr('复制安装提示词')}</span><span class="dsh-bloom-share-action__hint">${tr('发给 Agent，帮你安装')}</span></button>
+            <button type="button" class="dsh-bloom-share-action" data-share-capture="screenshot"><span class="dsh-bloom-share-action__title">${tr('截图分享')}</span><span class="dsh-bloom-share-action__hint">${tr('选择要展示的屏幕、窗口或标签页')}</span></button>
+            <button type="button" class="dsh-bloom-share-action" data-share-capture="record"><span class="dsh-bloom-share-action__title">${tr('录制 5 秒')}</span><span class="dsh-bloom-share-action__hint">${tr('记录动态界面，不录制声音')}</span></button>
+            <textarea class="dsh-bloom-share-manual" aria-label="${tr('安装提示词')}" readonly hidden></textarea>
+            <span class="dsh-bloom-share-status" role="status" aria-live="polite"></span>
+            <button type="button" class="dsh-bloom-share-cancel" hidden>${tr('取消')}</button>
+            <span class="dsh-bloom-share-result" hidden><button type="button" class="dsh-bloom-share-system" hidden>${tr('分享文件')}</button><a class="dsh-bloom-share-save" download>${tr('保存文件')}</a></span>
+          </span>
+        </span>
       </span>
     </div>
   </div>
 </div>`
 }
 
+const closeShareSessions = new WeakMap<HTMLElement, () => void>()
 export function closeMenu(root: HTMLElement) {
+  closeShareSessions.get(root)?.()
   const menu = root.querySelector<HTMLElement>('.dsh-bloom-menu')
   const trigger = root.querySelector<HTMLElement>('.dsh-bloom-trigger')
   if (menu) {
@@ -383,8 +421,8 @@ function syncGlassRow(el: HTMLElement) {
   const row = el.querySelector<HTMLElement>('.dsh-bloom-glass')
   if (!row) return
   const stored = readGlassMode()
-  // 没手动选过（auto）时亮「实际生效」的那一档 —— 三格全灰看着像坏了（0.24.0 UI 审核发现）
-  const shown = stored === 'auto' ? effectiveGlassMode() : stored
+  const effective = effectiveGlassMode()
+  const shown = stored === 'auto' ? (effective === 'solid' ? 'liquid' : effective) : stored
   for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-glass__choice'))) {
     const on = btn.dataset.glass === shown
     btn.dataset.active = String(on)
@@ -393,18 +431,18 @@ function syncGlassRow(el: HTMLElement) {
   const description = row.querySelector<HTMLElement>('[data-glass-description]')
   if (description) {
     const descriptions = {
-      glass: '通透 · 毛玻璃透光，边缘泛亮',
-      soft: '柔和 · 细粒磨砂，反光更轻',
-      solid: '实底 · 哑光不透，边缘清晰',
+      frosted: '毛玻璃 · 柔化背景，透光不透细节',
+      matte: '磨砂玻璃 · 细腻颗粒，低反光',
+      liquid: '液态玻璃 · 清透中心，边缘折光',
     }
     description.textContent = tr(descriptions[shown])
   }
   const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
   if (!hint) return
-  const systemDowngraded = stored === 'auto' && systemPrefersReducedTransparency()
+  const systemDowngraded = effective === 'solid'
   hint.hidden = !systemDowngraded
   if (systemDowngraded) {
-    hint.textContent = tr('系统已开启「降低透明度」，Bloom 已自动改为实底。选「通透」可强制保留毛玻璃。')
+    hint.textContent = tr('系统设置已降低透明效果；已保留你的质感选择。')
   }
 }
 
@@ -424,11 +462,96 @@ export function buildSwitcherEl(initialVariant) {
   const wrapper = document.createElement('div')
   wrapper.innerHTML = buildSwitcherHTML(initialVariant)
   const el = wrapper.firstElementChild as HTMLElement
+  const capture = createShareCapture()
+  const timers = new Set<ReturnType<typeof setTimeout>>()
+  let disposed = false
+  let shareFile: File | undefined
+  let shareUrl: string | undefined
+  let shareRequest = 0
+  const schedule = (fn: () => void, delay: number) => {
+    if (disposed) return
+    const timer = setTimeout(() => { timers.delete(timer); fn() }, delay)
+    timers.add(timer)
+  }
+  const releaseShareFile = () => {
+    if (shareUrl) URL.revokeObjectURL(shareUrl)
+    shareUrl = undefined
+    shareFile = undefined
+  }
+  const closeShare = () => {
+    shareRequest++
+    capture.cancel()
+    releaseShareFile()
+    const panel = el.querySelector<HTMLElement>('.dsh-bloom-share-panel')
+    if (panel) panel.hidden = true
+    el.querySelector<HTMLElement>('.dsh-bloom-share')?.setAttribute('aria-expanded', 'false')
+    const status = el.querySelector<HTMLElement>('.dsh-bloom-share-status')
+    if (status) status.textContent = ''
+    const result = el.querySelector<HTMLElement>('.dsh-bloom-share-result')
+    if (result) result.hidden = true
+    const manual = el.querySelector<HTMLTextAreaElement>('.dsh-bloom-share-manual')
+    if (manual) { manual.value = ''; manual.hidden = true }
+    const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
+    if (cancel) cancel.hidden = true
+    el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = false })
+  }
+  closeShareSessions.set(el, closeShare)
+  const shareStatus = (message: string) => {
+    const status = el.querySelector<HTMLElement>('.dsh-bloom-share-status')
+    if (status) status.textContent = message
+  }
+  const showShareFile = (file: File) => {
+    releaseShareFile()
+    shareFile = file
+    const result = el.querySelector<HTMLElement>('.dsh-bloom-share-result')
+    const save = el.querySelector<HTMLAnchorElement>('.dsh-bloom-share-save')
+    const system = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-system')
+    if (!result || !save || !system) return
+    try { shareUrl = URL.createObjectURL(file) } catch {}
+    save.hidden = !shareUrl
+    if (shareUrl) { save.href = shareUrl; save.download = file.name }
+    let canShare = false
+    try { canShare = typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] }) } catch {}
+    system.hidden = !canShare
+    result.hidden = !canShare && !shareUrl
+    shareStatus(result.hidden ? tr('无法准备文件，请检查浏览器权限') : canShare ? tr('文件已准备好，可分享或保存') : tr('文件已准备好，保存后即可分享'))
+  }
+  const startCapture = (kind: 'screenshot' | 'record') => {
+    releaseShareFile()
+    const result = el.querySelector<HTMLElement>('.dsh-bloom-share-result')
+    if (result) result.hidden = true
+    const request = ++shareRequest
+    el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = true })
+    const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
+    if (cancel) { cancel.hidden = false; cancel.focus({ preventScroll: true }) }
+    shareStatus(kind === 'record' ? tr('请选择屏幕、窗口或标签页，将录制 5 秒且不录音') : tr('请选择要截图的屏幕、窗口或标签页'))
+    const pending = kind === 'record' ? capture.record() : capture.screenshot()
+    void pending.then(outcome => {
+      if (disposed || request !== shareRequest || !el.isConnected) return
+      el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = false })
+      const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
+      if (cancel) cancel.hidden = true
+      if (outcome.kind === 'success') { showShareFile(outcome.file); return }
+      const messages: Record<string, string> = {
+        cancelled: tr('已取消'), denied: tr('未获得屏幕共享权限或已取消'),
+        unsupported: tr('当前环境不支持直接截图或录屏'), busy: tr('请先结束当前操作'),
+        ended: tr('屏幕共享已结束'), failed: tr('未能完成，请检查系统权限'),
+      }
+      shareStatus(messages[outcome.kind] ?? messages.failed)
+    }).catch(() => {
+      if (disposed || request !== shareRequest || !el.isConnected) return
+      el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = false })
+      const cancel = el.querySelector<HTMLButtonElement>('.dsh-bloom-share-cancel')
+      if (cancel) cancel.hidden = true
+      shareStatus(tr('未能完成，请检查系统权限'))
+    })
+  }
 
   // 语言现在是 DSH 的偏好（locale.preference）。在 DSH 设置里换语言时，
   // 面板要跟着重画 —— 否则会出现「DSH 是中文、面板还是英文」的割裂。
   // 监听挂在 window 上：面板可能被替换掉，但事件源始终在。
   const onLanguageChange = () => {
+    closeShare()
     if (el.isConnected) rerenderMenu(el, readVariant())
   }
   window.addEventListener(LANG_CHANGE_EVENT, onLanguageChange)
@@ -469,11 +592,68 @@ export function buildSwitcherEl(initialVariant) {
     const tracked = target.closest<HTMLElement>('[data-track]')
     if (tracked?.dataset.track) track(tracked.dataset.track as PanelEvent)
     if (target.closest('.dsh-bloom-close')) { closeMenu(el); return }
+    const ambienceBtn = target.closest<HTMLElement>('.dsh-bloom-ambience__btn')
+    if (ambienceBtn) {
+      e.stopPropagation()
+      const row = ambienceBtn.closest<HTMLElement>('.dsh-bloom-ambience')
+      const scheme = row?.dataset.scheme as Scheme | undefined
+      if (row && scheme && writeAmbience(scheme, ambienceBtn.dataset.preset ?? '')) {
+        row.querySelectorAll<HTMLElement>('.dsh-bloom-ambience__btn').forEach((b) => {
+          const on = b === ambienceBtn
+          b.dataset.active = String(on)
+          b.setAttribute('aria-checked', String(on))
+        })
+      }
+      return
+    }
+    const diagnose = target.closest<HTMLElement>('.dsh-bloom-diagnose')
+    if (diagnose) {
+      e.stopPropagation()
+      track('diagnose')
+      void copyDiagnostics(diagnose)
+      return
+    }
+    const feedback = target.closest<HTMLAnchorElement>('.dsh-bloom-feedback')
+    if (feedback) {
+      try { feedback.href = buildFeedbackUrl(formatDiagnosticsMarkdown(), getLang()) } catch {}
+      return
+    }
+    const install = target.closest<HTMLElement>('.dsh-bloom-share-install')
+    if (install) {
+      e.stopPropagation()
+      void shareInstall(install, schedule).then(ok => {
+        if (ok || disposed || !install.isConnected) return
+        const manual = el.querySelector<HTMLTextAreaElement>('.dsh-bloom-share-manual')
+        if (manual) { manual.value = buildShareText(); manual.hidden = false; manual.focus(); manual.select() }
+        shareStatus(tr('复制失败，请手动复制'))
+      })
+      return
+    }
+    const cancelCapture = target.closest<HTMLButtonElement>('.dsh-bloom-share-cancel')
+    if (cancelCapture) { e.stopPropagation(); closeShare(); el.querySelector<HTMLElement>('.dsh-bloom-share')?.focus(); return }
+    const captureAction = target.closest<HTMLButtonElement>('[data-share-capture]')
+    if (captureAction) {
+      e.stopPropagation()
+      if (captureAction.dataset.shareCapture === 'screenshot' || captureAction.dataset.shareCapture === 'record') startCapture(captureAction.dataset.shareCapture)
+      return
+    }
+    const systemShare = target.closest<HTMLButtonElement>('.dsh-bloom-share-system')
+    if (systemShare && shareFile && typeof navigator.share === 'function') {
+      e.stopPropagation()
+      try {
+        void navigator.share({ files: [shareFile], title: 'Bloom' }).catch(error => {
+          if (!disposed) shareStatus(error instanceof Error && error.name === 'AbortError' ? tr('已取消') : tr('无法分享，请先保存文件'))
+        })
+      } catch { shareStatus(tr('无法分享，请先保存文件')) }
+      return
+    }
     const share = target.closest<HTMLElement>('.dsh-bloom-share')
     if (share) {
       e.stopPropagation()
-      track('share')
-      void shareInstall(share)
+      const panel = el.querySelector<HTMLElement>('.dsh-bloom-share-panel')
+      if (!panel) return
+      if (!panel.hidden) closeShare()
+      else { track('share'); panel.hidden = false; share.setAttribute('aria-expanded', 'true') }
       return
     }
     const more = target.closest<HTMLElement>('.dsh-bloom-more')
@@ -520,6 +700,21 @@ export function buildSwitcherEl(initialVariant) {
     const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
     const options = [...menu.querySelectorAll<HTMLElement>('.dsh-bloom-option')]
     const idx = options.indexOf(document.activeElement as HTMLElement)
+    const sharePanel = el.querySelector<HTMLElement>('.dsh-bloom-share-panel')
+    const shareTrigger = el.querySelector<HTMLElement>('.dsh-bloom-share')
+    if (sharePanel && !sharePanel.hidden) {
+      if (e.key === 'Escape') { e.preventDefault(); closeShare(); shareTrigger?.focus(); return }
+      const withinShare = e.target instanceof Element && (sharePanel.contains(e.target) || e.target === shareTrigger)
+      if (withinShare && !(e.target instanceof HTMLTextAreaElement) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        const actions = [...sharePanel.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], textarea:not([hidden])')].filter(node => node.getClientRects().length > 0)
+        if (actions.length) {
+          e.preventDefault()
+          const index = actions.indexOf(document.activeElement as HTMLElement)
+          actions[e.key === 'ArrowDown' ? (index + 1) % actions.length : (index <= 0 ? actions.length - 1 : index - 1)]?.focus()
+        }
+        return
+      }
+    }
 
     // 面板内的表单控件里，键盘交给控件本身（只保留 Escape 收起）
     // ⚠️ 自动换色是 <select>：方向键 / Home / End 必须留给下拉框，
@@ -598,6 +793,12 @@ export function buildSwitcherEl(initialVariant) {
   }
   document.addEventListener('click', onOutsideClick)
   switcherCleanups.set(el, () => {
+    disposed = true
+    closeShare()
+    capture.dispose()
+    closeShareSessions.delete(el)
+    for (const timer of timers) clearTimeout(timer)
+    timers.clear()
     window.removeEventListener(LANG_CHANGE_EVENT, onLanguageChange)
     document.removeEventListener('click', onOutsideClick)
   })

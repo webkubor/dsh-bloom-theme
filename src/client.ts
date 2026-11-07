@@ -32,14 +32,20 @@ import { PLUGIN_ID, PLUGIN_VERSION } from './meta.js'
 import { buildBloomCSS } from './tokens.js'
 import { COMPONENT_CSS } from './css/component.js'
 import { GLASS_CSS } from './css/glass.js'
+import { BACKGROUND_CSS } from './css/background.js'
+import { BUTTON_CSS } from './css/button.js'
 import { ADAPTIVE_CSS } from './css/adaptive.js'
+import { SURFACES_CSS } from './css/surfaces.js'
 import { injectCSS, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appearance.js'
+import { initAmbience } from './ambience.js'
 import { initGlassMode } from './glass.js'
 import { createBloomComponents, type HostReact } from './ui.js'
 import { initTypingGlow } from './typing.js'
 import { checkUpdate, setVersionUpdatesActive } from './version.js'
 import { teardownBloom } from './teardown.js'
+import { collectDiagnostics, copyDiagnostics } from './diagnostics.js'
+import { bindBloomInspect } from './inspect.js'
 import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS } from './lang.js'
 
 /**
@@ -86,15 +92,17 @@ function installSkin(): () => void {
     const variant = readVariant()
     injectCSS(buildBloomCSS(), 'bloom.css')
     injectCSS(COMPONENT_CSS, 'components.css')
-    injectCSS(GLASS_CSS, 'glass.css')
-    injectCSS(ADAPTIVE_CSS, 'adaptive.css')
+    injectCSS(GLASS_CSS + BACKGROUND_CSS + BUTTON_CSS, 'glass.css')
+    injectCSS(ADAPTIVE_CSS + SURFACES_CSS, 'adaptive.css')
     document.body.dataset.bloomVariant = variant
     initAppearanceSync()
+    initAmbience()
     window.__dshBloomGlassOff__ ??= initGlassMode()
     setVersionUpdatesActive(true)
     void checkUpdate(controller.signal)
     watchThinkTags()
     watchCursorGlow()
+    window.__BLOOM_DEBUG__ = { dump: collectDiagnostics, copy: () => copyDiagnostics() }
   }
   if (document.body) boot()
   else document.addEventListener('DOMContentLoaded', boot, { once: true })
@@ -624,6 +632,7 @@ window.__ModuleLoader__.load({
         }, 'dsh-bloom-theme: plugin navigation')
       })
       ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')
+      bindBloomInspect(ctx)
       ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({
         name: 'conversation.header.leading',
       }, Switcher))

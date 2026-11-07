@@ -39,8 +39,9 @@ const html = `<main>
 <div id="trigger" class="fixture_trigger" data-turn-trigger>Turn trigger</div>
 <div id="preview" class="fixture_card fixture_preview"><pre>File change preview</pre></div>
 <div id="unrelated" class="fixture_card">Ordinary card</div>
+<aside class="fixture_sidebarCol" style="width:220px"><div id="sidelist" class="fixture_list" style="overflow:auto;height:90px">${'<div role="treeitem" style="width:100%;height:30px">Session row</div>'.repeat(4)}</div></aside>
 </main>`
-const css = ['component', 'glass'].map(name => {
+const css = ['component', 'glass', 'background'].map(name => {
   const source = readFileSync(new URL(`../src/css/${name}.ts`, import.meta.url), 'utf8')
   return runInNewContext(source.slice(source.indexOf('= `') + 2, source.lastIndexOf('`') + 1))
 }).join('\n')
@@ -52,7 +53,7 @@ function measure() {
     const t = el.querySelector('table')
     const s = style(id)
     return { width:el.clientWidth, height:el.getBoundingClientRect().height, table:t.getBoundingClientRect().width,
-      paddingBottom:s.paddingBottom, overflow:s.overflowX, gutter:s.scrollbarGutter,
+      paddingBottom:s.paddingBottom, overflow:s.overflowX, gutter:s.scrollbarGutter, thumb:s.scrollbarColor,
       background:s.backgroundColor, border:s.borderTopWidth, backdrop:s.backdropFilter, maxScroll:el.scrollWidth - el.clientWidth }
   }
   return { short:table('short'), wide:table('wide'), fill:table('fill'),
@@ -87,6 +88,11 @@ const before = await page.evaluate(measure);
   const hovered = await page.evaluate(measure);
   assert.equal(hovered.wide.height, before.wide.height, 'hover cannot add/remove scrollbar padding');
   assert.equal(hovered.wide.overflow, 'auto');
+  assert.match(before.wide.thumb, /^transparent transparent$|rgba\(0, 0, 0, 0\) rgba\(0, 0, 0, 0\)/, 'wide-table scrollbar is invisible at rest');
+  assert.notEqual(hovered.wide.thumb, before.wide.thumb, 'wide-table scrollbar appears on hover');
+  await page.hover('#sidelist [role="treeitem"]');
+  assert.ok(await page.evaluate(() => { const l=document.getElementById('sidelist'); return l.scrollWidth <= l.clientWidth }), 'hovering a session row cannot create a horizontal sidebar scrollbar');
+  await page.hover('#wide');
   await page.evaluate(() => {const el=document.getElementById('wide');el.scrollLeft=999;});
   assert.ok(await page.evaluate(() => document.getElementById('wide').scrollLeft > 0), 'wide table actually scrolls');
   await page.focus('#wide');

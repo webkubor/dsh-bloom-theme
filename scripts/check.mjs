@@ -411,7 +411,7 @@ const ALLOWED_SUBCOMMANDS = []   // 空 —— 主题不提供任何 /bloom 子�
 // 鼠标焦点环 / 触屏行高）补齐到 Bloom 这边。它属于 README 定位里的「质感」，
 // 不是新功能类别；拆成独立文件是因为它有 7 条媒体查询，跟玻璃层混在一起
 // 会让 glass.ts 变成一个什么都装的大块。
-const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS', 'ADAPTIVE_CSS']
+const ALLOWED_CSS_BLOCKS = ['COMPONENT_CSS', 'GLASS_CSS', 'SWITCHER_CSS', 'ADAPTIVE_CSS', 'BACKGROUND_CSS', 'BUTTON_CSS', 'SURFACES_CSS']
 
 // 用剥注释后的源码：说明「这里曾注册过 /bloom stats、为什么删掉」是合法且有价值的
 const subcommands = [...SRC_CODE.matchAll(/\/bloom\s+([a-z][a-z0-9-]*)/g)].map((m) => m[1])
@@ -455,7 +455,7 @@ cssBlocks.length === 0
 //   · 6 处是 @media print —— 打印样式必须压过一切屏幕样式（含其它 !important），
 //     否则打印出来还是整页色块。这是打印样式表的标准做法，不是压宿主。
 // 先试过去掉降级段里能省的 7 处 —— 测试仍全通过，所以最终只留这 18 处。
-const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 7, 'switcher.ts': 1, 'adaptive.ts': 18 }
+const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 4, 'background.ts': 3, 'switcher.ts': 1, 'adaptive.ts': 18, 'button.ts': 0, 'surfaces.ts': 0 }
 const overBudget = []
 for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
   const name = f.path.split('/').pop()

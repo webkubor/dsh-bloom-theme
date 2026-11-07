@@ -11,8 +11,15 @@ body:
     id: what
     attributes:
       label: 现象
-      description: 界面上看到了什么？贴截图最直观（注意去掉会话里的隐私信息）
+      description: 界面上看到了什么？强烈建议附带截图（全屏或局部对比图最直观，注意抹去敏感会话内容）
     validations: { required: true }
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: 排错诊断信息（强烈推荐）
+      description: |
+        请在 Bloom 菜单底部点击【📋 诊断】（或在控制台执行 `__BLOOM_DEBUG__.copy()`），直接在此处粘贴复制的诊断块。包含环境指纹与关键容器计算样式，能极大加快定位速度。
+      render: markdown
   - type: input
     id: variant
     attributes:

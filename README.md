@@ -20,9 +20,15 @@
 
 <!-- demo-video -->
 
-[![观看 Bloom 0.27.0 操作演示](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
-[▶ 看 27 秒演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+[▶ 观看原画质演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+
+<details><summary>查看本版特色截图</summary>
+
+![Bloom 0.27.0 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+
+</details>
 
 ### 好看，也好用
 

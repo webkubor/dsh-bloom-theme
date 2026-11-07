@@ -20,9 +20,15 @@
 
 <!-- demo-video -->
 
-[![Watch the Bloom 0.27.0 hands-on demo](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
-[▶ 27-second demo: switch palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+[▶ Watch the full-quality demo: palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+
+<details><summary>View the showcase screenshot</summary>
+
+![Bloom 0.27.0 controls and starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+
+</details>
 
 ### Beautiful and practical
 

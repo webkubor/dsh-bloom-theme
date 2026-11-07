@@ -1,0 +1,7 @@
+# Native material matrix: helper notes
+
+`native-material-matrix.py --dry-run` prints the 21 requested combinations without modifying the desktop. `--resume` currently stops before opening the menu or writing evidence: the existing AX helpers cannot read DOM `data-bloom-*` attributes or distinguish an implicit `auto` material from its displayed effective choice, and `native-ui` cannot select the palette rows observed as AX static text without usable help labels. Exact restoration therefore cannot be verified. Do not remove the guard until an authoritative read-only state source and a verified restoration path exist.
+
+Existing helpers: `~/.local/state/bloom-preview/r7/bin/native-ui` (`list`, `press`, `window`) and `native-inspect` (read-only AX traversal). `native-ui press` selects the first global label match, so an exact unique-match check plus a strict Bloom label/role allowlist is required before every press. The allowlist excludes session controls, message input, and send. AX provides visible labels and selection states; these are not equivalent to exact body attributes or stored preferences.
+
+During investigation, the 15-minute rotation was temporarily disabled and then restored to the 15-minute selection. Other menu choices were changed during interactive probing; their original complete state was not captured, so their restoration cannot be claimed. Existing evidence was not overwritten.

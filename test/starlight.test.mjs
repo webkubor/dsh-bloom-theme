@@ -4,11 +4,8 @@ import { build } from 'esbuild'
 import { chromium } from 'playwright'
 import { fileURLToPath } from 'node:url'
 
-// 星辉层契约（断言计算后样式，不断言源码字符串）：
-// 1. 深浅模式都出现；浅色跟随主题色渐变，深色保留白色辉光
-// 2. 图层只占右上角，不铺满正文也不吃指针
-// 3. 光点真的在动（两条动画都挂上，且 drift 位移非零）
-// 4. 种子稳定：两次生成的布局完全一致
+// Ambience contract, asserted on computed styles:
+// starlight exists only in dark; light uses themed glass backdrops; presets are CSS-only.
 
 const { outputFiles } = await build({
   stdin: {
@@ -17,9 +14,11 @@ const { outputFiles } = await build({
       import { createBloomComponents } from './src/ui.ts';
       import { buildSparkles } from './src/starlight.ts';
       import { GLASS_CSS } from './src/css/glass.ts';
+      import { BACKGROUND_CSS } from './src/css/background.ts';
       import { COMPONENT_CSS } from './src/css/component.ts';
+      import { initAmbience, writeAmbience, readAmbience, clearAmbience } from './src/ambience.ts';
       const { Decorations } = createBloomComponents(React, () => () => {});
-      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS, COMPONENT_CSS };`,
+      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS, BACKGROUND_CSS, COMPONENT_CSS, initAmbience, writeAmbience, readAmbience, clearAmbience };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
     loader: 'ts',
   },
@@ -43,144 +42,230 @@ async function setup(t, dark) {
   await page.addScriptTag({ content: outputFiles[0].text })
   await page.evaluate(() => {
     const st = document.createElement('style')
-    st.textContent = window.fixture.GLASS_CSS
+    st.textContent = window.fixture.GLASS_CSS + window.fixture.BACKGROUND_CSS
     document.head.appendChild(st)
     window.fixture.mount()
   })
   return page
 }
 
-test('sparkle layer shows in dark mode without covering content or catching the pointer', async t => {
-  const page = await setup(t, true)
-  const info = await page.evaluate(() => {
-    const el = document.getElementById('dsh-bloom-sparkles')
-    const cs = getComputedStyle(el)
-    const rect = el.getBoundingClientRect()
-    return { display: cs.display, position: cs.position, z: cs.zIndex, pe: cs.pointerEvents, dots: el.children.length, width: rect.width, height: rect.height, bg: cs.backgroundImage }
-  })
-  assert.equal(info.display, 'block')
-  assert.equal(info.position, 'fixed')
-  assert.equal(info.z, '0')
-  assert.equal(info.bg, 'none', 'overlay cannot wash the transcript with a full-screen glow')
-  assert.equal(info.width, 360)
-  assert.equal(info.height, 220)
-  assert.equal(info.pe, 'none')
-  assert.ok(info.dots >= 40, `expected many dots, got ${info.dots}`)
-})
-
-test('light sparkles stay visible and change gradient with the theme without recreating dots', async t => {
-  const page = await setup(t, false)
-  const result = await page.evaluate(() => {
-    const layer = document.getElementById('dsh-bloom-sparkles')
-    const dot = layer.firstElementChild
-    document.body.style.setProperty('--bloom-accent', '#b63d73')
-    const pink = getComputedStyle(dot).backgroundImage
-    document.body.style.setProperty('--bloom-accent', '#297cb5')
-    const blue = getComputedStyle(dot).backgroundImage
-    return { display: getComputedStyle(layer).display, pink, blue,
-      same: dot === layer.firstElementChild, names: getComputedStyle(dot).animationName,
-      pointer: getComputedStyle(layer).pointerEvents }
-  })
-  assert.equal(result.display, 'block')
-  assert.match(result.pink, /linear-gradient/)
-  assert.match(result.blue, /linear-gradient/)
-  assert.notEqual(result.pink, result.blue)
-  assert.equal(result.same, true)
-  assert.match(result.names, /bloom-spark-drift/)
-  assert.equal(result.pointer, 'none')
-})
-
-test('switching to dark preserves white highlights and both animation timelines', async t => {
-  const page = await setup(t, false)
-  const result = await page.evaluate(() => {
-    const dot = document.querySelector('#dsh-bloom-sparkles > i:not(.t)')
-    const before = getComputedStyle(dot).animationDuration
-    document.body.setAttribute('data-ds-dark-theme', '')
-    const cs = getComputedStyle(dot)
-    return { bg: cs.backgroundColor, image: cs.backgroundImage,
-      before, after: cs.animationDuration, display: getComputedStyle(dot.parentElement).display }
-  })
-  assert.equal(result.bg, 'rgb(255, 255, 255)')
-  assert.equal(result.image, 'none')
-  assert.equal(result.before, result.after)
-  assert.equal(result.display, 'block')
-})
-
-for (const dark of [false, true]) {
-  test(`reduced motion keeps ${dark ? 'dark' : 'light'} sparkles visible and static`, async t => {
-    const page = await setup(t, dark)
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    const state = await page.locator('#dsh-bloom-sparkles > i').first().evaluate(dot => ({
-      animation: getComputedStyle(dot).animationName,
-      opacity: getComputedStyle(dot).opacity,
-      display: getComputedStyle(dot.parentElement).display,
-    }))
-    assert.equal(state.animation, 'none')
-    assert.ok(Number(state.opacity) > 0)
-    assert.equal(state.display, 'block')
-  })
+const layerState = () => {
+  const el = document.getElementById('dsh-bloom-sparkles')
+  const r = el.getBoundingClientRect(); const cs = getComputedStyle(el)
+  const shown = c => Array.from(el.querySelectorAll('i.' + c)).filter(i => getComputedStyle(i).display !== 'none').length
+  return { display: cs.display, width: r.width, height: r.height, pe: cs.pointerEvents, bg: cs.backgroundImage,
+    position: cs.position, tr: shown('s-tr'), bl: shown('s-bl'), amb: shown('s-amb') }
 }
 
-test('dots actually animate: drift + twinkle with a non-zero offset', async t => {
-  const page = await setup(t, true)
-  const dot = await page.evaluate(() => {
-    const i = document.querySelector('#dsh-bloom-sparkles > i')
-    const cs = getComputedStyle(i)
-    return { names: cs.animationName, dx: i.style.getPropertyValue('--dx'), dy: i.style.getPropertyValue('--dy') }
-  })
-  assert.match(dot.names, /bloom-spark-drift/)
-  assert.match(dot.names, /bloom-spark-twinkle/)
-  assert.notEqual(parseFloat(dot.dx) + parseFloat(dot.dy), 0)
+test('starlight is dark-only and never shows in light mode, whatever the presets', async t => {
+  const page = await setup(t, false)
+  const states = await page.evaluate(stateSrc => {
+    const state = new Function('return (' + stateSrc + ')()')
+    return ['diagonal', 'galaxy', 'corner', 'off'].map(p => { document.body.setAttribute('data-bloom-ambience-dark', p); return state().display })
+  }, layerState.toString())
+  assert.deepEqual(states, ['none', 'none', 'none', 'none'])
 })
 
-test('layout is seed-stable and React remount keeps one layer', async t => {
+test('dark presets change geometry and particle clusters; layer never covers content', async t => {
   const page = await setup(t, true)
-  const same = await page.evaluate(() => {
+  const r = await page.evaluate(stateSrc => {
+    const state = new Function('return (' + stateSrc + ')()')
+    const out = { initial: state() }
+    for (const p of ['diagonal', 'galaxy', 'corner', 'off']) { document.body.setAttribute('data-bloom-ambience-dark', p); out[p] = state() }
+    return out
+  }, layerState.toString())
+  assert.equal(r.initial.display, 'block', 'default preset shows starlight')
+  assert.equal(r.initial.width, 360, 'default dark preset keeps the v0.26.0 corner box')
+  assert.equal(r.initial.height, 220)
+  for (const k of ['diagonal', 'galaxy']) {
+    assert.equal(r[k].display, 'block'); assert.equal(r[k].width, 1200); assert.equal(r[k].height, 800)
+    assert.equal(r[k].pe, 'none'); assert.equal(r[k].bg, 'none'); assert.equal(r[k].position, 'fixed')
+  }
+  assert.ok(r.diagonal.bl > 0 && r.diagonal.amb === 0, 'diagonal = top-right nebula + bottom-left dust')
+  assert.ok(r.galaxy.amb > 0 && r.galaxy.bl > 0, 'galaxy adds ambient dust')
+  assert.equal(r.corner.width, 360); assert.equal(r.corner.height, 220)
+  assert.ok(r.corner.tr > 0 && r.corner.bl === 0 && r.corner.amb === 0)
+  assert.equal(r.off.display, 'none')
+})
+
+test('dark stars keep the v0.26.0 look: white points and palette-tinted points', async t => {
+  const page = await setup(t, true)
+  const r = await page.evaluate(() => {
+    const white = document.querySelector('#dsh-bloom-sparkles > i:not(.t)')
+    const tint = document.querySelector('#dsh-bloom-sparkles > i.t')
+    document.body.style.setProperty('--bloom-accent', '#b63d73')
+    const pink = getComputedStyle(tint).backgroundColor
+    document.body.style.setProperty('--bloom-accent', '#297cb5')
+    return { white: getComputedStyle(white).backgroundColor, pink, blue: getComputedStyle(tint).backgroundColor,
+      names: getComputedStyle(white).animationName }
+  })
+  assert.equal(r.white, 'rgb(255, 255, 255)')
+  assert.notEqual(r.pink, r.blue)
+  assert.match(r.names, /bloom-spark-drift/)
+  assert.match(r.names, /bloom-spark-twinkle/)
+})
+
+test('dark presets share the base backdrop, while off removes the background', async t => {
+  const page = await setup(t, true)
+  const r = await page.evaluate(() => {
+    const style = document.createElement('style')
+    style.textContent = window.fixture.COMPONENT_CSS
+    document.head.append(style)
+    return ['corner', 'diagonal', 'galaxy', 'off'].map(p => {
+      document.body.setAttribute('data-bloom-ambience-dark', p)
+      return getComputedStyle(document.body, '::before').backgroundImage
+    })
+  })
+  assert.equal(new Set(r.slice(0, 3)).size, 1)
+  assert.equal(r[3], 'none')
+})
+
+test('reduced motion keeps dark stars visible and static', async t => {
+  const page = await setup(t, true)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const state = await page.locator('#dsh-bloom-sparkles > i').first().evaluate(dot => ({
+    animation: getComputedStyle(dot).animationName, opacity: getComputedStyle(dot).opacity }))
+  assert.equal(state.animation, 'none')
+  assert.ok(Number(state.opacity) > 0)
+})
+
+test('dots drift with a non-zero offset and the layout is seed-stable across remounts', async t => {
+  const page = await setup(t, true)
+  const r = await page.evaluate(() => {
+    const i = document.querySelector('#dsh-bloom-sparkles > i')
+    const offset = parseFloat(i.style.getPropertyValue('--dx')) + parseFloat(i.style.getPropertyValue('--dy'))
     const a = window.fixture.buildSparkles(document).innerHTML
     const b = window.fixture.buildSparkles(document).innerHTML
     window.unmountFixtureSlot('shell.overlay')
-    if (document.getElementById('dsh-bloom-sparkles')) return false
+    const gone = !document.getElementById('dsh-bloom-sparkles')
     window.remountFixtureSlot('shell.overlay')
-    return a === b && document.querySelectorAll('#dsh-bloom-sparkles').length === 1
+    return { offset, same: a === b, gone, one: document.querySelectorAll('#dsh-bloom-sparkles').length === 1 }
   })
-  assert.ok(same)
+  assert.notEqual(r.offset, 0); assert.ok(r.same); assert.ok(r.gone); assert.ok(r.one)
 })
 
-test('light dots have clearer cores while dark keeps its original intensity', async t => {
+test('light presets give distinct themed backdrops; dark keeps its own nebula', async t => {
   const page = await setup(t, false)
-  const result = await page.evaluate(() => {
-    const layer = document.getElementById('dsh-bloom-sparkles')
-    const dots = Array.from(layer.children)
-    const light = { opacity: Number(getComputedStyle(layer).opacity),
-      min: Math.min(...dots.map(dot => parseFloat(getComputedStyle(dot).width))) }
-    document.body.setAttribute('data-ds-dark-theme', '')
-    return { light, dark: { opacity: Number(getComputedStyle(layer).opacity),
-      min: Math.min(...dots.map(dot => parseFloat(getComputedStyle(dot).width))) } }
-  })
-  assert.ok(result.light.min >= 1.8, 'light cores remain visible on a pale surface')
-  assert.ok(result.light.opacity > result.dark.opacity)
-  assert.ok(result.dark.min < 1.8, 'dark dots preserve their original size variation')
-  assert.equal(result.dark.opacity, 0.7)
-})
-
-test('light ambience follows theme colour without changing the dark backdrop', async t => {
-  const page = await setup(t, false)
-  const result = await page.evaluate(() => {
+  const r = await page.evaluate(() => {
     const style = document.createElement('style')
     style.textContent = window.fixture.COMPONENT_CSS
     document.head.append(style)
     document.body.style.setProperty('--bloom-morandi', '146,168,179')
-    document.body.style.setProperty('--bloom-aurora-stream-2', '#b0d4de')
     document.body.style.setProperty('--bloom-accent', '#297cb5')
-    const blue = getComputedStyle(document.body, '::before').backgroundImage
+    const bg = () => getComputedStyle(document.body, '::before').backgroundImage
+    const out = { default: bg() }
+    for (const p of ['stream', 'wash', 'clear', 'off']) { document.body.setAttribute('data-bloom-ambience-light', p); out[p] = bg() }
+    document.body.setAttribute('data-bloom-ambience-light', 'stream')
     document.body.style.setProperty('--bloom-accent', '#b63d73')
-    const pink = getComputedStyle(document.body, '::before').backgroundImage
+    out.pinkStream = bg()
     document.body.setAttribute('data-ds-dark-theme', '')
-    const dark = getComputedStyle(document.body, '::before').backgroundImage
-    return { blue, pink, dark }
+    out.dark = bg()
+    return out
   })
-  assert.match(result.blue, /linear-gradient/)
-  assert.match(result.blue, /radial-gradient/)
-  assert.notEqual(result.blue, result.pink)
-  assert.doesNotMatch(result.dark, /linear-gradient/)
+  assert.equal(r.default, r.stream, 'stream is the light default')
+  assert.equal(new Set([r.stream, r.wash, r.clear]).size, 3, 'three light presets differ')
+  assert.equal(r.off, 'none')
+  assert.notEqual(r.stream, r.pinkStream, 'light glass follows the palette')
+  assert.notEqual(r.dark, r.stream)
+  assert.doesNotMatch(r.dark, /linear-gradient/)
+})
+
+test('ambience persists per scheme, rejects foreign presets and survives private mode', async t => {
+  const page = await setup(t, false)
+  const r = await page.evaluate(() => {
+    const f = window.fixture
+    const mem = new Map()
+    let deny = false
+    Object.defineProperty(window, 'localStorage', { configurable: true, get() {
+      if (deny) throw new Error('denied')
+      return { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)) }
+    } })
+    f.initAmbience()
+    const defaults = [document.body.getAttribute('data-bloom-ambience-dark'), document.body.getAttribute('data-bloom-ambience-light')]
+    const okDark = f.writeAmbience('dark', 'galaxy')
+    const rejected = f.writeAmbience('dark', 'wash')
+    f.writeAmbience('light', 'clear')
+    const read = [f.readAmbience('dark'), f.readAmbience('light')]
+    const glass = document.body.getAttribute('data-bloom-glass')
+    deny = true
+    const priv = f.readAmbience('dark'); f.writeAmbience('light', 'wash')
+    f.clearAmbience()
+    return { defaults, okDark, rejected, read, glass, priv, cleared: document.body.hasAttribute('data-bloom-ambience-light') }
+  })
+  assert.deepEqual(r.defaults, ['corner', 'stream'])
+  assert.equal(r.okDark, true); assert.equal(r.rejected, false)
+  assert.deepEqual(r.read, ['galaxy', 'clear'])
+  assert.equal(r.glass, null, 'ambience writes never touch other dimensions')
+  assert.equal(r.priv, 'galaxy', 'private mode keeps the just-written choice')
+  assert.equal(r.cleared, false)
+})
+
+test('meteor shower shows only in dark galaxy, follows the palette and respects reduced motion', async t => {
+  const page = await setup(t, true)
+  const shown = () => page.evaluate(() => [...document.querySelectorAll('#dsh-bloom-sparkles > b.s-met')].filter(m => getComputedStyle(m).display !== 'none').length)
+  const r = {}
+  for (const p of ['corner', 'diagonal', 'galaxy']) { await page.evaluate(p => document.body.setAttribute('data-bloom-ambience-dark', p), p); r[p] = await shown() }
+  const colors = await page.evaluate(() => {
+    const m = document.querySelector('#dsh-bloom-sparkles > b.s-met')
+    document.body.style.setProperty('--bloom-motion-1', '#b63d73'); const pink = getComputedStyle(m).backgroundImage
+    document.body.style.setProperty('--bloom-motion-1', '#297cb5'); return { pink, blue: getComputedStyle(m).backgroundImage, anim: getComputedStyle(m).animationName }
+  })
+  await page.evaluate(() => document.body.removeAttribute('data-ds-dark-theme')); const light = await shown()
+  await page.evaluate(() => document.body.setAttribute('data-ds-dark-theme', ''))
+  await page.emulateMedia({ reducedMotion: 'reduce' }); const reduced = await shown()
+  assert.equal(r.corner, 0); assert.equal(r.diagonal, 0); assert.ok(r.galaxy >= 20)
+  assert.notEqual(colors.pink, colors.blue); assert.equal(colors.anim, 'bloom-meteor')
+  assert.equal(light, 0); assert.equal(reduced, 0)
+})
+
+test('meteors keep the established shape: top-right to bottom-left, 40 streaks, unchanged count', async t => {
+  const page = await setup(t, true)
+  await page.evaluate(() => document.body.setAttribute('data-bloom-ambience-dark', 'galaxy'))
+  const r = await page.evaluate(() => {
+    const ms = [...document.querySelectorAll('#dsh-bloom-sparkles > b.s-met')]
+    const angles = ms.map(m => parseFloat(m.style.getPropertyValue('--rot')))
+    const travels = ms.map(m => parseFloat(m.style.getPropertyValue('--travel')))
+    const cs = getComputedStyle(ms[0])
+    return {
+      count: ms.length,
+      minAngle: Math.min(...angles),
+      maxAngle: Math.max(...angles),
+      minTravel: Math.min(...travels),
+      originX: parseFloat(cs.transformOrigin),
+      originY: parseFloat(cs.transformOrigin.split(' ')[1]),
+      height: parseFloat(cs.height),
+    }
+  })
+  assert.equal(r.count, 40, 'meteor count is unchanged')
+  // -28deg to -44deg: the streak always falls towards the lower left.
+  assert.ok(r.minAngle >= -44.5 && r.maxAngle <= -27.5, `angle range drifted: ${r.minAngle}..${r.maxAngle}`)
+  // Long enough to actually reach the bottom-left corner of the screen.
+  assert.ok(r.minTravel >= 900, `travel too short to cross the screen: ${r.minTravel}`)
+  // The streak rotates around its left-middle point. Percentages resolve to
+  // pixels per element, so compare against half of this meteor's own height
+  // instead of a literal '50%' string.
+  assert.equal(r.originX, 0, 'streak pivots on its left edge')
+  assert.ok(Math.abs(r.originY - r.height / 2) < 0.01, `origin ${r.originY} is not the middle of ${r.height}`)
+})
+
+test('switching palette re-colours meteors one cycle at a time, not all at once', async t => {
+  const page = await setup(t, true)
+  await page.evaluate(() => document.body.setAttribute('data-bloom-ambience-dark', 'galaxy'))
+  const r = await page.evaluate(async () => {
+    const ms = [...document.querySelectorAll('#dsh-bloom-sparkles > b.s-met')]
+    // Lock a colour on the first meteor to simulate a streak already in flight.
+    ms[0].style.setProperty('--meteor-color', '#ff0000')
+    document.body.style.setProperty('--bloom-motion-1', '#00ff00')
+    const before = ms[0].style.getPropertyValue('--meteor-color')
+    // Fire the animationiteration handler the way the browser does.
+    ms[0].dispatchEvent(new AnimationEvent('animationiteration', { bubbles: true }))
+    const after = ms[0].style.getPropertyValue('--meteor-color')
+    return { before, after, other: ms[1].style.getPropertyValue('--meteor-color') }
+  })
+  // The in-flight meteor keeps the old colour until its next cycle starts.
+  assert.equal(r.before, '#ff0000')
+  // When the cycle restarts it picks up the new palette colour.
+  assert.equal(r.after, '#00ff00')
+  // Other meteors are untouched: they switch one by one, not all at once.
+  assert.notEqual(r.other, '#00ff00')
 })

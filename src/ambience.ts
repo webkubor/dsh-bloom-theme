@@ -31,17 +31,17 @@ function isPreset(scheme: Scheme, value: string | null): value is AmbiencePreset
 }
 
 export function readAmbience(scheme: Scheme): AmbiencePreset {
-  try {
-    const saved = localStorage.getItem(storageKey(scheme))
-    const cached = memory[scheme]
-    // A rejected write must not be overwritten by the unchanged old stored value.
-    if (cached?.pending && cached.baseline !== undefined && cached.baseline === saved) return cached.value
-    const value = (isPreset(scheme, saved) ? saved : DEFAULTS[scheme]) as AmbiencePreset
-    memory[scheme] = { value, pending: false, baseline: undefined }
-    return value
-  } catch {
-    return memory[scheme]?.value ?? DEFAULTS[scheme] as AmbiencePreset
-  }
+  let saved: string | null = null
+  let readable = true
+  try { saved = localStorage.getItem(storageKey(scheme)) } catch { readable = false }
+  const cached = memory[scheme]
+  // A rejected write must not be overwritten by the unchanged old stored value.
+  if (cached?.pending && cached.baseline !== undefined && cached.baseline === saved) return cached.value
+  // While reads are denied, a session choice (however it was recorded) stays visible.
+  if (!readable && cached?.value) return cached.value
+  const value = (isPreset(scheme, saved) ? saved : DEFAULTS[scheme]) as AmbiencePreset
+  memory[scheme] = { value, pending: false, baseline: undefined }
+  return value
 }
 
 function apply(scheme: Scheme, preset: string): void {

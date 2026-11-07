@@ -18,6 +18,8 @@
 import { PALETTE, mix } from './palette.js'
 import { OTHER_VARIANTS } from './palette.js'
 
+const readableAccent = (p, dark) => dark ? p.accentD : `color-mix(in oklch, ${p.accentL} 88%, black)`
+
 /**
  * Bloom 自有 token —— 三个变体块共用，是所有「质感」CSS 的唯一色源(SSOT)。
  * 有了这层，COMPONENT_CSS 只需写一份、全部引用 var(--bloom-*)，
@@ -34,7 +36,7 @@ export function bloomTokens(p, dark) {
   const motion = dark ? p.motionD : p.motionL
   return `
   --bloom-morandi: ${m};
-  --bloom-accent: ${dark ? p.accentD : p.accentL};
+  --bloom-accent: ${readableAccent(p, dark)};
   --bloom-motion-1: ${motion[0]};
   --bloom-motion-2: ${motion[1]};
   --bloom-motion-3: ${motion[2]};
@@ -75,7 +77,7 @@ export function bloomTokens(p, dark) {
      切来切去,那条选中下划线永远是蓝的、跟主色打架(用户实拍反馈)。
      注意只接管 alias 层 —— --dsw-static-deepseek-400 是 DSH 的品牌标识色,
      不属于主题可覆盖范围。 */
-  --dsw-alias-state-business-primary: ${dark ? p.accentD : p.accentL};
+  --dsw-alias-state-business-primary: ${readableAccent(p, dark)};
   /* 玻璃模糊半径 —— glass.ts 里 10 处 backdrop-filter 都读它。
      之前只写了 var(--bloom-glass-blur, 24px) 却从未定义,fallback 一直生效所以
      视觉没问题,但这个变量是**死的**:想统一调玻璃质感根本改不到。定义出来之后
@@ -232,7 +234,7 @@ export function sharedDswTokens(p, dark) {
      底色上（行 hover、按钮 hover），预混 bg 反而会在非 bg 底色上露出色块。 */
   --dsw-alias-interactive-bg-hover-danger: ${mix(err, dark ? 86 : 90)};
   /* business = 主题 accent（bloomTokens 里已接管，这里给 tertiary 配套） */
-  --dsw-alias-state-business-tertiary: ${t(dark ? p.accentD : p.accentL, dark ? 78 : 88)};
+  --dsw-alias-state-business-tertiary: ${t(readableAccent(p, dark), dark ? 78 : 88)};
   /* 反色 / 浮层 —— 跟着变体的 bg / tx 走，不再是硬编码蓝灰 */
   --dsw-alias-border-inverted: ${mix(bg, dark ? 85 : 85)};
   --dsw-alias-border-inverted2: ${mix(bg, dark ? 70 : 70)};
@@ -248,7 +250,8 @@ export function sharedDswTokens(p, dark) {
 }
 
 export function mistLight(p) {
-  const { accentL: aL, bgL, txL, sfL, sf2L } = p
+  const { bgL, txL, sfL, sf2L } = p
+  const aL = readableAccent(p, false)
   return `
 /* ─── Bloom · mist 雾蓝 亮色（默认 + body[data-bloom-variant=mist]）─────────── */
 body, body[data-bloom-variant="mist"] {${bloomTokens(p, false)}${sharedDswTokens(p, false)}
@@ -416,7 +419,7 @@ ${borderStack(p, true)}
  */
 export function variantBlock(v, dark) {
   const p = PALETTE[v]
-  const a = dark ? p.accentD : p.accentL
+  const a = readableAccent(p, dark)
   const bg = dark ? p.bgD : p.bgL
   const tx = dark ? p.txD : p.txL
   const sf = dark ? p.sfD : p.sfL
@@ -446,7 +449,7 @@ ${sel} {${bloomTokens(p, dark)}${sharedDswTokens(p, dark)}
   --dsw-alias-button-primary-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
   /* 见亮色段说明：fill 上的文字色，与 fill 反向（#16） */
   --dsw-alias-button-primary-dimmed: ${bg};
-  /* 见 mist 段：info 是实心按钮填充，不是 10% 淡染（2026-10-08 发送键消失） */
+  /* 实心按钮填充：使用 accent 主题色 */
   --dsw-alias-button-info-fill: ${a};
   --dsw-alias-button-info-hover: color-mix(in oklch, ${a}, ${dark ? 'white' : 'black'} 8%);
   --dsw-alias-button-ghost-active-fill: ${mix(a, dark ? 88 : 92)};

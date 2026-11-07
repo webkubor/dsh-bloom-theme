@@ -120,3 +120,25 @@ test('releasing the host service falls back to the legacy path', async t => {
   await page.evaluate(() => window.fixture.setMode('light'))
   assert.equal(await page.evaluate(() => localStorage.getItem('bloom-appearance-mode')), 'light')
 })
+
+// 复现 2026-11-06 实机 bug：插件 boot 早于宿主 theme 注入、系统为深色、宿主偏好为浅色。
+// 旧兜底路径先写了深色属性，宿主服务到位后必须撤回，且系统主题监听不能再改写页面。
+test('late host theme binding on a dark OS keeps the host light preference', async t => {
+  const page = await setup(t)
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.evaluate(() => window.fixture.initAppearanceSync())
+  const handle = await hostService(page)
+  await page.evaluate(svc => { window.fixture.bindHostTheme(svc); window.fixture.initAppearanceSync() }, handle)
+  assert.equal(await page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme')), false)
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  assert.equal(await page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme')), false,
+    'stale legacy OS listener must not repaint the page after the host owns the theme')
+})
+
+test('a host theme bootstrap marker skips the legacy path before the service binds', async t => {
+  const page = await setup(t)
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.evaluate(() => { document.documentElement.dataset.dsThemeSource = 'light'; window.fixture.initAppearanceSync() })
+  assert.equal(await page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme')), false)
+})

@@ -12,105 +12,8 @@
  * DSH 改版导致失配时，效果只会「退回纯色」——不会错位或不可用，属安全降级。
  */
 export const COMPONENT_CSS = `
-/* ═══ 1. 氛围层 ═══════════════════════════════════════════════════
-   原版 body 的三层叠加：大尺度径向光晕 + 斜向淡染 + 顶部柔光。
-   全部用气质轨(morandi)的极低透明度，这是莫兰迪「灰调通透」的来源。
-
-   v0.10.x（owner 反馈「没光感」）：把 veil 换成 aurora-stream 并提高透明度。
-   aurora-stream 来自 motion 谱，是每个变体的三色光谱（鼠尾草=草绿系、青金=蓝系），
-   透明度从原来的 40% 提高到 55-65%，让"四角色斑"真正能看出来 —— 这是
-   "光感"的主要来源，不再靠硬边光带。 */
-body[data-bloom-variant] {
-  /* 抽成变量：只保留顶部的极柔和微光，中下部与输入区保持完全纯净、深邃，
-     绝不在底部堆积任何大光斑、光带或彩带。 */
-  --bloom-ambience:
-    /* 顶左：微弱主色光晕（仅给顶栏微透质感） */
-    radial-gradient(1200px circle at 8% -6%, color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%), transparent 48%),
-    /* 顶右：极弱辅助相，柔和融进深底 */
-    radial-gradient(1000px circle at 95% -4%, color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 88%), transparent 45%);
-  background-attachment: fixed;
-  background-image: var(--bloom-ambience);
-  /* ⚠️ 2026-10-02（桌面端真机诊断）：底色必须是**实色**。
-     桌面端宿主把 body 的 background-color 算成了 rgba(0,0,0,0)（透明），
-     而上面那条 background-image 又被宿主某条 \`background:\` **简写**重置成 none
-     —— 两者叠加＝「既没底色也没氛围图」，Electron 窗口/桌面内容就直接透出来了。
-     owner 原话：「我的背景是灰的，但它的主体好像做成半透明了……如果底部有别的图层
-     就会透过来，看起来很丑。所以不能做，尤其是对话框」。
-     给 body 一个不透明底色后，半透明面板才只透出主题自己的层，而不是桌面。
-
-     ⚠️ 这里必须用 !important，理由要留档：让 body 变透明的那条规则**不在任何已发布的
-     DSH 包里**（把 0.2.0 全部 client 包翻遍都没有），是桌面宿主**运行时注入**的，
-     因此无法靠特异度稳定压过 —— 实测 body 那条规则 (0,0,1) 与 body[data-bloom-variant] (0,1,1)
-     都试不过它。按 check.mjs 的指引「确实必要就连同理由一起调低预算表」，
-     component.ts 的 !important 预算从 15 调到 16。 */
-  background-color: var(--dsw-alias-bg-base) !important;
-}
-
-/* 浅色：让边缘有主题色的纵深，中心保留干净的阅读底色。
-   所有层随当前主题变化，避免大片无层次的近白色；深色沿用原有氛围。 */
-body[data-bloom-variant]:not([data-ds-dark-theme]) {
-  --bloom-ambience:
-    radial-gradient(ellipse at 100% 0%, color-mix(in oklch, var(--bloom-accent, #6b8f71) 20%, transparent), transparent 58%),
-    radial-gradient(ellipse at 0% 100%, rgba(var(--bloom-morandi), 0.12), transparent 58%),
-    linear-gradient(130deg, rgba(var(--bloom-morandi), 0.06), transparent 45%, rgba(var(--bloom-morandi), 0.035));
-}
-
-/* 氛围层：另挂一个固定层，不再只靠 body 的 background-image。
-   为什么必须另挂：body 上的 background-image 会被宿主的 \`background:\` 简写重置
-   （真机实测计算值 = none，而 --bloom-ambience 变量本身有值），
-   挂到 body 自己的伪元素上就动不到它了。
-   注：aurora 变体的 ::before 是它自己的丝带层（特异度更高，会盖掉这条）——
-   那个变体维持原行为，见 DEV_NOTES 的待办。 */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  /* 这一层只放氛围（半透明渐变），**不放实底**。
-     为什么实底不在这儿：aurora 变体自己有一条更具体的 ::before（丝带层，带 opacity:.2），
-     实底放在同一元素上会被那 20% 一起降到几乎全透 —— 等于把「桌面透过来」的 bug
-     给 aurora 又造回去（PR #39 上 Codex 与 Cursor 同时指出的 P1）。 */
-  background-image: var(--bloom-ambience);
-}
-
-/* ═══ 1.5 输入区底板：让氛围一路铺到窗口底边 ═══════════════════════
- *
- * owner 反馈「底部有种戛然而止的感觉」。实测原因：DSH 给 _composerSeat 铺了
- *   linear-gradient(transparent 0, oklch(0.28 0.02 25) 36px)
- * ——36px 内从透明冲到**不透明**，之后 90px 全是死板一块。氛围的左右色差
- * 在 y=721 还有 13 级，到 y=757 直接归零，窗口最下面 1/5 是块死色。
- *
- * 修法不是把它改透明（它要盖住滚到输入框背后的正文），而是**在这块不透明
- * 底板上原样重画一遍氛围**：同一份 --bloom-ambience + background-attachment:
- * fixed，光斑相对视口定位，于是和 body 那层严丝合缝地接上。
- *
- * 为什么要走 ::before + mask 而不是直接给 seat 叠背景：直接叠的话，渐变
- * 顶部那段半透明区域会**同时**透出 body 的氛围和自己画的氛围，双份叠加，
- * 实测顶端亮了 20 级。改成 ::before 承载「不透明底 + 氛围」整体，再用
- * mask 做同一条 56px 淡入 —— 淡入区里 ::before 本身是半透的，透出来的
- * 只有 body 那一份，不会重复。实测纵向逐行色差 0-1 级，无缝。
- *
- * ⚠️ 只用 position:absolute + z-index:-1，不引入 backdrop-filter / transform /
- * isolation —— seat 的子树里有 conversation.input.overlay 注入的 fixed 元素，
- * 判据同 glass.ts 侧栏那段。seat 自身是 position:sticky，已经是定位元素，
- * 不需要也不要去改它的 position。 */
-/* 宿主那条是 .wSkVaW_root[data-phase="active"] .wSkVaW_composerSeat，特异度
-   (0,3,0)；这里必须写满三段才压得过（(0,3,1)），少一段就还是它赢。 */
-body[data-bloom-variant] [class*="_root"] [class*="_composerSeat"] {
-  background-image: none;
-}
-body[data-bloom-variant] [class*="_root"] [class*="_composerSeat"]::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--dsw-alias-bg-layer-1, #101010);
-  background-image: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 56px);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 56px);
-}
+/* [LES-10][LES-30] */
+body[data-bloom-variant] { --dsw-focus-ring-color: var(--bloom-accent); background-color: var(--dsw-alias-bg-base) !important; }
 
 /* 让 body 的氛围层透出来：DSH 这几个全屏容器自带不透明底色会盖住它。
    侧栏与卡片保留自己的 surface 色（原版同样保留），只做描边和光。 */
@@ -225,7 +128,9 @@ body[data-bloom-variant] [class*="_scrollBody"] {
 /* 会话列表细滚动条：4px、冷光 thumb、hover 才加强。
    系统默认滚动条在 280px 的窄栏里非常抢；DSH 自己只有全局 alias 变量，
    没有给侧栏列表单独收窄。 */
-[class*="_sidebarCol"] [class*="_list"]::-webkit-scrollbar { width: 4px; }
+/* [LES-13] 会话列表只纵向滚动，横向溢出一律裁掉 */
+[class*="_sidebarCol"] [class*="_list"] { overflow-x: hidden; }
+[class*="_sidebarCol"] [class*="_list"]::-webkit-scrollbar { width: 4px; height: 0; }
 [class*="_sidebarCol"] [class*="_list"]::-webkit-scrollbar-track { background: transparent; }
 [class*="_sidebarCol"] [class*="_list"]::-webkit-scrollbar-thumb {
   background: color-mix(in oklch, var(--bloom-accent) 30%, transparent);
@@ -362,6 +267,23 @@ body[data-bloom-typing="true"] div[class*="_composer"] div[class*="_card"]::afte
   55%  { background-position: -20% 0; }
   100% { background-position: -20% 0; }
 }
+/* [LES-21] 浅色打字光：左上角呼吸光晕，不做横向扫光（扫光带是深色的流星，浅色上是脏色块） */
+body[data-bloom-variant]:not([data-ds-dark-theme]) div[class*="_composer"] div[class*="_card"]::after {
+  background: radial-gradient(130% 150% at 16% 0%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71) 9%, transparent) 0%,
+    color-mix(in oklch, var(--bloom-accent, #6b8f71) 4%, transparent) 36%,
+    transparent 70%);
+  background-size: 100% 100%;
+  animation: none;
+}
+body[data-bloom-variant]:not([data-ds-dark-theme])[data-bloom-typing="true"] div[class*="_composer"] div[class*="_card"]::after {
+  animation: dsh-bloom-typing-breath 2.8s var(--bloom-ease, ease) infinite;
+}
+@keyframes dsh-bloom-typing-breath {
+  0%, 100% { opacity: .5; }
+  50%      { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body[data-bloom-typing="true"] div[class*="_composer"] div[class*="_card"]::after {
     animation: none; background-position: 50% 0;
@@ -530,6 +452,26 @@ body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]).md-
   overflow-x: auto;
   padding-bottom: 0;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+/* [LES-08b] 会话 tab 轨迹区滚动条：几何保留，滑块平时全透明，悬停才显色 */
+body[data-bloom-variant] main [class*="_scroll"]::-webkit-scrollbar-thumb,
+body[data-bloom-variant] div[class*="_tableScroll"]::-webkit-scrollbar-thumb,
+body[data-bloom-variant] div[class*="_tablePane"]::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+body[data-bloom-variant] main [class*="_scroll"]:hover::-webkit-scrollbar-thumb,
+body[data-bloom-variant] div[class*="_tableScroll"]:hover::-webkit-scrollbar-thumb,
+body[data-bloom-variant] div[class*="_tablePane"]:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 55%);
+}
+
+/* [LES-08] 宽表滚动条：几何恒定，平时透明，悬停或聚焦才显色 */
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]).md-table-wide {
+  scrollbar-color: transparent transparent;
+}
+body[data-bloom-variant] :is([class*="_tableScroll"], [class*="_tablePane"]).md-table-wide:is(:hover, :focus-visible) {
+  scrollbar-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 62%) transparent;
 }
 :is([class*="_tableScroll"], [class*="_tablePane"]) > table {
   border-collapse: separate;
@@ -749,40 +691,19 @@ body {
   --bloom-dur-slow: 280ms;
 }
 
-/* 侧栏会话行：hover 轻微右移 + 淡染（可点暗示），active 按下回弹 */
+/* [LES-13] 侧栏会话行：只淡染与按下微缩，不做位移，避免撑出横向滚动条 */
 [class*="_sidebarCol"] [role="treeitem"],
 [class*="_sidebarCol"] [class*="_sessionRow"] {
   transition:
     background var(--bloom-dur-fast) var(--bloom-ease),
     transform var(--bloom-dur-fast) var(--bloom-ease);
 }
-[class*="_sidebarCol"] [role="treeitem"]:hover {
-  transform: translateX(2px);
-}
-[class*="_sidebarCol"] [role="treeitem"]:active { transform: translateX(2px) scale(0.996); }
+[class*="_sidebarCol"] [role="treeitem"]:active { transform: scale(0.996); }
 
-/* ── 侧栏：去分割线，靠间距 + 极淡光感分组（owner 2026-09-10）──
- *
- * 反馈原话：「基本取消分割线，用行间距和浅色交替分组」「取消网格，增加当前行
- * 左侧粉色短竖条」「现在已经不流行通过 border 去做切割了，要不然就是很淡的
- * 边框线加光感流动或者是阴影，比硬的边框好看得多」。
- *
- * 所以这里一条实线都不画。曾经退而求其次画过"极淡的渐隐光带"，
- * 结果 18 个分组 = 18 条横线，等于换了个材质的网格 —— 也删了，见下。
- */
+/* [LES-02] 侧栏分组：去硬边框，紧凑 6px 留白避免工作区列表过度稀疏 */
 [class*="_sidebarCol"] [class*="_groupSection"] + [class*="_groupSection"] {
-  /* 分组之间只靠留白。10px 时还要配一条组标题下的光带才分得开，
-     16px 之后光带就多余了 —— 见下面那段。 */
-  margin-top: 16px;
+  margin-top: 6px;
 }
-
-/* 组标题下曾有一道渐隐光带（左浓右透）。删掉了：侧栏里有 18 个分组，
- * 一组一条 = 18 条横线，正是 owner 说的「取消网格」要取消的东西
- * （2026-09-10 实拍反馈"细节不满意"）。浅色下线的左端是 28% accent，
- * 在莫兰迪里更是一条明显的彩色规线。
- *
- * 分组识别现在靠三件不画线的东西：组标题自带文件夹图标、条目相对缩进、
- * 组间 16px 留白。实测这三样够了 —— 加线只是把"够了"变成"吵"。 */
 
 /* 会话行：圆角 + hover 淡染，靠留白区分，不描边不画网格 */
 [class*="_sidebarCol"] [class*="_sessionRow"] {
@@ -793,23 +714,12 @@ body {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 93%);
 }
 
-/* 当前行：只染色，不画条不画框（owner 反馈「脏」）
-   之前有左侧 3px 蓝竖条 + inset 1px 边框 + 25% accent 实色底，三个都是脏点。
-   现在只留一个 8% 的极淡 accent 染色，跟 hover 区分用细微浓淡差。
-
-   这里不需要 !important（2026-09-10 实测推翻了原注释）：DSH 那条是
-   .YDXeBa_sessionRow.YDXeBa_selected { background: var(--dsw-alias-interactive-bg-hover) }，
-   特异度 (0,2,0) 且不带 !important，而本条 (0,3,0) 本来就赢；更何况
-   --dsw-alias-interactive-bg-hover 早已被 tokens.ts 覆写成本主题的 accent，
-   压根不是"固定蓝色"。 */
+/* [LES-02] 当前选中行：8% 极淡主色染色，不加生硬边框与高亮竖条 */
 [class*="_sidebarCol"] [class*="_sessionRow"][class*="_selected"],
 [class*="_sidebarCol"] [class*="_sessionRow"][aria-selected="true"],
 [class*="_sidebarCol"] [role="treeitem"][aria-selected="true"] {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
 }
-
-/* v0.10.x：左色条 + bloom-bar-in 动画整体删除（owner 反馈「脏」）。
-   没有 ::before 了，bloom-bar-in keyframe 也跟着删。 */
 
 /* 输入卡片 hover：只提描边，不抬、不换阴影。
    v0.15 曾在这里加 transform: translateY(-1px) + box-shadow: var(--bloom-shadow)
@@ -843,7 +753,7 @@ div[class*="_composer"] div[class*="_card"]:hover {
    用 :focus-visible 而不是 :focus —— 只在键盘导航时出现，鼠标点击不显示，
    这也是 WCAG 2.4.7「焦点可见」的正确做法：焦点依然清晰，只是跟着主题走。 */
 :focus-visible {
-  outline: 2px solid var(--bloom-accent) !important;
+  outline: 2px solid var(--dsw-focus-ring-color, var(--bloom-accent)) !important;
   outline-offset: 2px;
 }
 
@@ -1049,23 +959,7 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
  * 消息气泡与输入卡不在此列 —— 它们的边由 glass.ts 的玻璃体系管，动了会破相。
  */
 
-/* 顶部标题栏下沿：跟侧栏右缘同一套做法 —— box-shadow 往外投的辉光，
- * 不是伪元素画的带。
- *
- * 为什么不用 ::after：伪元素被自身盒子裁在里面，渐变最浓的一端就是一条
- * 硬边（实拍 y=58 处 207→189 一跳）。box-shadow 的外阴影画在 border-box
- * 之外、由 blur 自然收尾，两头都没有边。offset 与 spread 同量（24/-24）
- * 保证光只往下走，不糊到左右和顶上。
- *
- * ⚠️ 选择器必须是 :has(> [class*="_tabs"])，不能只写 [class*="_header"]。
- * 后者在实际 DOM 里匹配 5 个元素，其中 4 个是**小按钮组**
- * （wSkVaW_headerActions 68px、wSkVaW_headerUtilities 208px、
- *   bhn1Oq_headerActions 60px、_2ctAZa_header 24px），二三十像素高的盒子
- * 挂上 18px 光带就是一小段悬空横带 —— owner 反馈"像被玻璃劈开"
- * （2026-09-10 实拍：药丸组下沿 y=43 一条硬边，色差 191→209）。
- * 而真顶栏 wSkVaW_header 反而没吃到：它自带 ::after 是 0.5px 线，
- * 跟我们 (0,1,0) 平手、后注入者赢。:has() 把特异度提到 (0,2,0)，
- * 既只命中真顶栏，又压得过宿主那条硬线。 */
+/* [LES-03] 顶栏下沿辉光：使用外阴影自然衰减，避免伪元素裁剪硬边 */
 body[data-bloom-variant] header[class*="_header"] {
   position: relative;
   border-bottom: 0;

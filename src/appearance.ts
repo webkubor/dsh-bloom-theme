@@ -76,7 +76,16 @@ function hasHostTheme(): boolean {
  *
  * 新宿主上这条路径完全不执行：深浅由宿主的 ThemePresenter 写属性。
  */
+/** Whether the legacy path, not the host, wrote the current dark attribute. */
+let legacyOwnsScheme = false
+
+/** The host boot script marks <html> before plugins load when it owns the scheme. */
+function hostBootOwnsScheme(): boolean {
+  return !!document.documentElement.dataset.dsThemeSource
+}
+
 function applyModeLegacy(mode: AppearanceMode): void {
+  legacyOwnsScheme = true
   if (mode === 'system') {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     document.body.toggleAttribute('data-ds-dark-theme', prefersDark)
@@ -154,11 +163,12 @@ export function clearAppearanceSync(): void {
  */
 export function initAppearanceSync(): void {
   if (hasHostTheme()) {
-    // 宿主快照通常已经落地；只有属性与偏好不一致时才补写一次。
+    clearAppearanceSync()
     syncHostScheme()
     return
   }
   clearAppearanceSync()
+  if (hostBootOwnsScheme()) return
   applyModeLegacy(readLegacyMode())
   legacyMq = window.matchMedia('(prefers-color-scheme: dark)')
   legacyMqHandler = () => {
@@ -179,7 +189,11 @@ function syncHostScheme(): void {
     const scheme = snapshot?.active?.colorScheme
     if (scheme === 'dark' && !document.body.hasAttribute('data-ds-dark-theme')) {
       document.body.setAttribute('data-ds-dark-theme', '')
+    } else if (scheme === 'light' && legacyOwnsScheme) {
+      // Only retract an attribute the legacy fallback wrote before the host bound.
+      document.body.removeAttribute('data-ds-dark-theme')
     }
+    if (scheme === 'dark' || scheme === 'light') legacyOwnsScheme = false
   } catch {}
 }
 

@@ -25,13 +25,13 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
 [▶ 观看原画质演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
-![Bloom 0.27.0 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+![Bloom 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
 
 ### 为什么选择 Bloom？
 
 | 15 套配色 · 12 套精选 | ≥ 4.5:1 | 0 个运行时依赖 |
 | :-- | :-- | :-- |
-| 朱砂、青莲、黛蓝……低饱和中国风配色，明暗各有一套 | 15 套配色的明暗主色与底色，共 30 组对比度均 ≥ 4.5:1 | 顶栏一键切换，即时预览 |
+| 朱砂、青莲、黛蓝……低饱和中国风配色，明暗各有一套 | 15 套配色的明暗主色与底色，共 30 组对比度均 ≥ 4.5:1 | 无额外运行时依赖，顶栏一键切换 |
 
 - **颜色既耐看，也清楚。** 用 OKLCH 调色，把文字和按钮的可读颜色与大面积氛围色分开；换色时，面板、输入区和背景一起变化。
 - **玻璃和背景，自由搭配。** 液态、磨砂、毛玻璃三种材质；浅色水彩与深色背景分别记忆。夜晚打开「漫天星辰」，星辉与流星跟随主题色变化。
@@ -51,6 +51,6 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
 喜欢 Bloom？[点一颗 ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) 让更多人看到它，也欢迎分享你的配色。
 
-<sub>演示录自 DSH Web，使用脱敏示例会话。截图和录屏功能依宿主支持；当前桌面端若无法打开选择器，请使用系统截图或录屏工具。</sub>
+<sub>演示录自 DSH Web 的发行前功能构建，录制时面板仍显示 v0.26.0；使用脱敏示例会话。截图和录屏功能依宿主支持；当前桌面端若无法打开选择器，请使用系统截图或录屏工具。</sub>
 
 [问题反馈](https://github.com/webkubor/dsh-bloom-theme/issues) · [更新记录](CHANGELOG.md) · [MIT License](LICENSE) · 配色灵感：[typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)

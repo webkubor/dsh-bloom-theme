@@ -25,13 +25,13 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
 [▶ Watch the full-quality demo: palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
-![Bloom 0.27.0 controls and starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+![Bloom controls and starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
 
 ### Why Bloom?
 
 | 15 palettes · 12 featured | ≥ 4.5:1 | Zero runtime dependencies |
 | :-- | :-- | :-- |
-| Chinese-inspired Morandi colours, each with light and dark variants | All 30 light and dark accent/background pairs pass the 4.5:1 contrast check | Switch instantly from the top bar |
+| Chinese-inspired Morandi colours, each with light and dark variants | All 30 light and dark accent/background pairs pass the 4.5:1 contrast check | No runtime dependencies; switch from the top bar |
 
 - **Colour that stays easy on the eyes.** OKLCH tuning separates readable text and button colours from softer ambience; panels, composer and background change together.
 - **Make the glass yours.** Choose liquid, frosted or matte glass. Light and dark backgrounds remember their own settings; Starry Sky brings theme-coloured stars and meteors to the night.
@@ -51,6 +51,6 @@ Search **`dsh-bloom-theme`** in DeepSeek Harness "Plugins", install, and restart
 
 Like Bloom? [Leave a ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) so more people find it, and share your palette.
 
-<sub>Demo recorded in DSH Web with a redacted example session. Screenshot and recording features depend on host support; if the desktop picker cannot open, use your system capture tools.</sub>
+<sub>Demo recorded in a pre-release DSH Web build with a redacted example session; the panel still shows v0.26.0 while the new features are demonstrated. Screenshot and recording depend on host support; if the desktop picker cannot open, use your system capture tools.</sub>
 
 [Issues](https://github.com/webkubor/dsh-bloom-theme/issues) · [Changelog](CHANGELOG.md) · [MIT License](LICENSE) · Palette origins: [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)

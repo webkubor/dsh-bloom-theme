@@ -18,9 +18,9 @@
 
 ## 先看效果
 
-[![Bloom 0.27.0 实际操作演示（27 秒，无声音）](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[![Bloom 0.27.0 实际操作演示（27 秒，无声音）](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
 
-[▶ 观看完整演示：配色 · 材质 · 明暗背景（27 秒，无声音）](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[▶ 观看完整演示：配色 · 材质 · 明暗背景（27 秒，无声音）](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
 
 <sub>来自 DSH Web 实际界面的脱敏演示会话：画面里的项目、会话与模型均为示例。深色背景为「漫天星辰」。</sub>
 
@@ -66,7 +66,7 @@
 
 ## 界面截图
 
-![0.27.0 深色漫天星辰界面](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)
+![0.27.0 深色漫天星辰界面](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)
 
 > 本版深色「漫天星辰」画面，来自已脱敏的 DSH Web 演示会话。
 

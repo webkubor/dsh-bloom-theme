@@ -18,9 +18,9 @@
 
 ## See it first
 
-[![Bloom 0.27.0 hands-on demo (27 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[![Bloom 0.27.0 hands-on demo (27 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
 
-[▶ Watch the full demo: palettes · glass · dark/light backgrounds (27 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[▶ Watch the full demo: palettes · glass · dark/light backgrounds (27 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
 
 <sub>Recorded from the actual DSH Web interface in a redacted demonstration session: project, session and model names are examples. The dark background is "Starry Sky".</sub>
 
@@ -66,7 +66,7 @@ Open source is easy to start and hard to keep. If Bloom makes your DSH a little 
 
 ## Screenshots
 
-![Bloom 0.27.0 dark starry sky](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)
+![Bloom 0.27.0 dark starry sky](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)
 
 > The dark starry-sky view from a redacted DSH Web demonstration session.
 

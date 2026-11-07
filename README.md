@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/bloom-banner.png" alt="Bloom for DSH" width="100%" />
+  <img src="https://img.webkubor.online/projects/dsh-bloom-theme/bloom-banner-v0.27.0.png" alt="Bloom for DSH" width="100%" />
 </p>
 
 <h1 align="center">🌊 Bloom for DSH</h1>

@@ -49,7 +49,7 @@
     "test": "npm run check",
     "check:drift": "node scripts/dsh-drift.mjs",
     "test:i18n": "node --test test/i18n.test.mjs",
-    "test:browser": "node --test test/lifecycle.test.mjs test/i18n.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs test/adaptive-glass.test.mjs test/appearance-host-theme.test.mjs test/starlight.test.mjs test/liquid-layout.test.mjs test/liquid-lens.test.mjs test/inspect.test.mjs test/material-persistence.test.mjs test/diagnostics.test.mjs test/background-contrast.test.mjs test/fog.test.mjs test/button-bead.test.mjs test/surfaces-glass.test.mjs test/footer-layout.test.mjs test/share-capture.test.mjs test/share-ui.test.mjs test/feedback.test.mjs test/ambience-persistence.test.mjs"
+    "test:browser": "node --test test/lifecycle.test.mjs test/i18n.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs test/adaptive-glass.test.mjs test/appearance-host-theme.test.mjs test/starlight.test.mjs test/liquid-layout.test.mjs test/liquid-lens.test.mjs test/inspect.test.mjs test/material-persistence.test.mjs test/diagnostics.test.mjs test/background-contrast.test.mjs test/fog.test.mjs test/button-bead.test.mjs test/surfaces-glass.test.mjs test/footer-layout.test.mjs test/share-capture.test.mjs test/share-ui.test.mjs test/feedback.test.mjs test/ambience-persistence.test.mjs test/meteor-color-mode.test.mjs"
   },
   "repository": {
     "type": "git",

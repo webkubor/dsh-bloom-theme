@@ -3,6 +3,41 @@
  * Preset selection lives in ambience.ts; visibility per preset is pure CSS (background.ts).
  */
 
+import { STORAGE_KEY } from './meta.js'
+
+export type MeteorColorMode = 'colorful' | 'solid'
+const COLOR_MODE_KEY = `${STORAGE_KEY}-meteor-color-mode`
+let colorMode: MeteorColorMode = 'colorful'
+let pendingWrite = false
+let priorValue: string | null | undefined
+
+export function readMeteorColorMode(): MeteorColorMode {
+  try {
+    const stored = localStorage.getItem(COLOR_MODE_KEY)
+    if (pendingWrite && priorValue !== undefined && priorValue === stored) return colorMode
+    colorMode = stored === 'solid' ? 'solid' : 'colorful'
+    pendingWrite = false
+    priorValue = undefined
+  } catch { /* retain the session choice */ }
+  return colorMode
+}
+
+export function writeMeteorColorMode(mode: MeteorColorMode): boolean {
+  if (mode !== 'colorful' && mode !== 'solid') return false
+  let previous: string | null | undefined
+  try { previous = localStorage.getItem(COLOR_MODE_KEY) } catch { /* private mode */ }
+  colorMode = mode
+  try {
+    localStorage.setItem(COLOR_MODE_KEY, mode)
+    pendingWrite = false
+    priorValue = undefined
+  } catch {
+    pendingWrite = true
+    priorValue = previous
+  }
+  return true
+}
+
 const LAYER_ID = 'dsh-bloom-sparkles'
 const CORNER_COUNT = 64
 const CORNER_W = 360
@@ -22,7 +57,7 @@ function rand(seed: number): () => number {
 function sampleMotionColor(doc: Document, streamIndex: number): string {
   const view = doc.defaultView
   if (!view || !doc.body) return ''
-  const prop = MOTION_VARS[streamIndex] ?? MOTION_VARS[0]
+  const prop = readMeteorColorMode() === 'solid' ? '--bloom-accent' : (MOTION_VARS[streamIndex] ?? MOTION_VARS[0])
   return view.getComputedStyle(doc.body).getPropertyValue(prop).trim()
 }
 

@@ -18,6 +18,7 @@ import {
   type GlassMode,
 } from './glass.js'
 import { AMBIENCE_PRESETS, readAmbience, writeAmbience, type Scheme } from './ambience.js'
+import { readMeteorColorMode, writeMeteorColorMode } from './starlight.js'
 import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
 import { copyDiagnostics, formatDiagnosticsMarkdown } from './diagnostics.js'
 import { buildFeedbackUrl } from './feedback.js'
@@ -226,6 +227,10 @@ export function buildSwitcherHTML(currentVariant) {
     </div>
     <div class="dsh-bloom-section">${tr('背景')}</div>
     ${ambienceRows()}
+    <div class="dsh-bloom-meteor-color" role="radiogroup" aria-label="${tr('流星颜色')}">
+      <span>${tr('流星颜色')}</span>
+      ${(['solid', 'colorful'] as const).map(mode => `<button type="button" data-meteor-color="${mode}" role="radio" aria-checked="${readMeteorColorMode() === mode}" data-active="${readMeteorColorMode() === mode}">${tr(mode === 'solid' ? '纯色' : '彩色')}</button>`).join('')}
+    </div>
     <label class="dsh-bloom-rotation">${tr('自动换色')}
       <select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">
         ${rotationOptions}
@@ -592,6 +597,20 @@ export function buildSwitcherEl(initialVariant) {
     const tracked = target.closest<HTMLElement>('[data-track]')
     if (tracked?.dataset.track) track(tracked.dataset.track as PanelEvent)
     if (target.closest('.dsh-bloom-close')) { closeMenu(el); return }
+    const meteorBtn = target.closest<HTMLButtonElement>('[data-meteor-color]')
+    if (meteorBtn) {
+      const mode = meteorBtn.dataset.meteorColor
+      if (mode === 'solid' || mode === 'colorful') {
+        writeMeteorColorMode(mode)
+        el.querySelectorAll<HTMLButtonElement>('[data-meteor-color]').forEach(button => {
+          const active = button.dataset.meteorColor === mode
+          button.dataset.active = String(active)
+          button.setAttribute('aria-checked', String(active))
+        })
+      }
+      e.stopPropagation()
+      return
+    }
     const ambienceBtn = target.closest<HTMLElement>('.dsh-bloom-ambience__btn')
     if (ambienceBtn) {
       e.stopPropagation()
@@ -700,6 +719,12 @@ export function buildSwitcherEl(initialVariant) {
     const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
     const options = [...menu.querySelectorAll<HTMLElement>('.dsh-bloom-option')]
     const idx = options.indexOf(document.activeElement as HTMLElement)
+    const meteorChoice = e.target instanceof Element ? e.target.closest<HTMLButtonElement>('[data-meteor-color]') : null
+    if (meteorChoice && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      const other = el.querySelector<HTMLButtonElement>(`[data-meteor-color="${meteorChoice.dataset.meteorColor === 'solid' ? 'colorful' : 'solid'}"]`)
+      if (other) { e.preventDefault(); other.click(); other.focus() }
+      return
+    }
     const sharePanel = el.querySelector<HTMLElement>('.dsh-bloom-share-panel')
     const shareTrigger = el.querySelector<HTMLElement>('.dsh-bloom-share')
     if (sharePanel && !sharePanel.hidden) {

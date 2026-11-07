@@ -33,6 +33,22 @@ async function setup(t){
   return page
 }
 
+test('meteor colour choice is visible only for the dark meteor background and persists',async t=>{
+  const page=await setup(t)
+  const row=page.locator('.dsh-bloom-meteor-color')
+  assert.equal(await row.isHidden(),true)
+  await page.evaluate(()=>{document.body.setAttribute('data-ds-dark-theme','');document.body.setAttribute('data-bloom-ambience-dark','galaxy')})
+  assert.equal(await row.isVisible(),true)
+  await page.locator('[data-meteor-color="solid"]').click()
+  assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('[data-meteor-color="colorful"]').getAttribute('aria-checked'),'false')
+  await page.evaluate(()=>{window.fixture.cleanupSwitcher();window.__root.remove();window.__root=window.fixture.buildSwitcherEl('mist');window.__root.dataset.slotted='true';window.__root.style.left='80px';window.__root.style.top='40px';document.body.append(window.__root)})
+  await page.locator('.dsh-bloom-trigger').click()
+  assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
+  await page.evaluate(()=>document.body.setAttribute('data-bloom-ambience-dark','corner'))
+  assert.equal(await row.isHidden(),true)
+})
+
 test('footer keeps feedback and stars accessible and copies an actionable Agent prompt',async t=>{
   const page=await setup(t)
   assert.equal(await page.locator('.dsh-bloom-foot__links > a').count(),2)

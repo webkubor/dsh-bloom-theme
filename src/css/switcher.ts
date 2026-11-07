@@ -611,6 +611,14 @@ body[data-ds-dark-theme] .dsh-bloom-ambience__btn[data-active="true"] {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* The color choice belongs to the meteor background only. */
+.dsh-bloom-meteor-color { display: none; align-items: center; gap: 6px; margin: 6px 3px 0; font-size: 11.5px; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-meteor-color { display: flex; }
+.dsh-bloom-meteor-color > span { margin-right: auto; color: var(--dsw-alias-label-secondary, inherit); }
+.dsh-bloom-meteor-color button { border: 0; border-radius: 7px; padding: 5px 10px; color: inherit; background: transparent; font: inherit; cursor: pointer; }
+.dsh-bloom-meteor-color button[data-active="true"] { color: var(--bloom-accent, inherit); background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 22%, #1a1a1c); }
+.dsh-bloom-meteor-color button:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: -2px; }
+
 .dsh-bloom-version {
   display: flex;
   align-items: center;

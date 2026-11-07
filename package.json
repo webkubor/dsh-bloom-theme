@@ -1,6 +1,6 @@
 {
   "name": "dsh-bloom-theme",
-  "version": "0.26.0",
+  "version": "0.27.0",
   "description": "Bloom for DSH — 玻璃+莫兰迪主题。15 套 OKLCH 配色（新增轻黄；主菜单精选 12 套，赤橙黄绿青蓝紫齐全，旧配色兼容），明暗自适应；磨砂玻璃面板默认常开；微动效 + 版本/更新指示。零依赖、TypeScript、WCAG AA。",
   "type": "module",
   "engines": {

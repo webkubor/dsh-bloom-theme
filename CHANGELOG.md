@@ -13,6 +13,29 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.27.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.26.0...v0.27.0) (2026-11-07)
+
+
+### ✨ Features
+
+* add optical glass refraction lens ([4fca6f8](https://github.com/webkubor/dsh-bloom-theme/commit/4fca6f8ca73babda1343b81639f8760934c3740b))
+* add palette-independent SVG fog masks ([50fee21](https://github.com/webkubor/dsh-bloom-theme/commit/50fee21cd26d27bc767e327063c9429cba0874a9))
+* add privacy-safe feedback diagnostics ([9304a83](https://github.com/webkubor/dsh-bloom-theme/commit/9304a838b3e379f29df1ab9c7669b0d0da895394))
+* add single and multicolour meteors ([9b9de2d](https://github.com/webkubor/dsh-bloom-theme/commit/9b9de2d14e19b29bb7de2ec7ba211c347cb604d2))
+* add user-initiated screen capture ([68f4a45](https://github.com/webkubor/dsh-bloom-theme/commit/68f4a45673dd6ecea794d1d458c495233eb0209b))
+* compact footer with feedback, stars and share actions ([486cf56](https://github.com/webkubor/dsh-bloom-theme/commit/486cf565789a96838262ea18b9c36e1e2b1b231d))
+* three glass materials with per-scheme ambience and themed surfaces ([d56e2a1](https://github.com/webkubor/dsh-bloom-theme/commit/d56e2a13fd7ad54a79314834ae817f59f2725cdd))
+
+
+### 🐛 Bug Fixes
+
+* preserve ambience when storage fails ([8e685d4](https://github.com/webkubor/dsh-bloom-theme/commit/8e685d44bd8eaf902593a8be17cb5890662a52f6))
+
+
+### 📝 Documentation
+
+* rewrite README around visuals and quick start ([a9a4595](https://github.com/webkubor/dsh-bloom-theme/commit/a9a45950ffd0dcfb87e8aaca6373dbb7577c3a9d))
+
 ## [0.26.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.25.1...v0.26.0) (2026-11-06)
 
 

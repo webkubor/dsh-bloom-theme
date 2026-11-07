@@ -32,6 +32,7 @@ test('snapshot is read-only and excludes draft, message, query and resource cont
   assert.equal(data.result.input.empty,false)
   assert.equal(data.result.input.length,'Private draft not for diagnostics'.length)
   assert.match(data.result.surfaces.composer.element['background-image'],/\[resource\]/)
+  assert.ok(data.result.canvas, 'all includes canvas diagnostics')
 })
 
 test('appearance preference is reported independently from the effective scheme', async t=>{

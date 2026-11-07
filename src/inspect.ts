@@ -115,7 +115,7 @@ export function collectRuntimeSnapshot(scope = 'summary', cascade = false) {
     },
     input: { found: !!editor, rect: rect(editor ?? null), empty: draft.trim().length === 0, length: draft.length, knownTestDraft: draft === 'BLOOM UI TEST', focused: !!editor && (document.activeElement === editor || editor.contains(document.activeElement)), typingAnimation: composer ? getComputedStyle(composer, '::after').animationName : null },
   }
-  if (scope === 'canvas') {
+  if (scope === 'canvas' || scope === 'all') {
     const seat = document.querySelector(SURFACES.composerSeat)
     const chain: Array<Record<string, unknown>> = []
     for (let element: Element | null = seat; element && chain.length < 16; element = element.parentElement) {

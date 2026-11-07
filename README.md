@@ -20,15 +20,22 @@
 
 <!-- demo-video -->
 
-[![观看 Bloom 0.27.0 操作演示](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4bf1fb879cfef52eee54aa52a1e11d07375054b5/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4bf1fb879cfef52eee54aa52a1e11d07375054b5/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[![观看 Bloom 0.27.0 操作演示](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
-[▶ 看 27 秒演示：换色、切玻璃、看星空](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4bf1fb879cfef52eee54aa52a1e11d07375054b5/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[▶ 看 27 秒演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
 ### 好看，也好用
 
 | 🎨 换色即换心情 | 🪟 玻璃由你选 | ✨ 白天水彩，夜晚星辰 |
 | :-- | :-- | :-- |
 | 朱砂、青莲、黛蓝……中国风莫兰迪配色，界面与背景一起变 | 液态、磨砂、毛玻璃，一键切换 | 深浅背景分别记住；夜里有微光与流星，白天是随配色晕开的水彩 |
+
+### 配色一览
+
+![浅色配色一览](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)
+![深色配色一览](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)
+
+<sub>配色预览图来自 v0.23；新版界面与动效见上方演示。</sub>
 
 ### 安装
 

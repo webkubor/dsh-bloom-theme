@@ -20,15 +20,22 @@
 
 <!-- demo-video -->
 
-[![Watch the Bloom 0.27.0 hands-on demo](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4bf1fb879cfef52eee54aa52a1e11d07375054b5/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4bf1fb879cfef52eee54aa52a1e11d07375054b5/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[![Watch the Bloom 0.27.0 hands-on demo](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
-[▶ 27-second demo: switch palettes, glass, starry sky](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4bf1fb879cfef52eee54aa52a1e11d07375054b5/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[▶ 27-second demo: switch palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
 ### Beautiful and practical
 
 | 🎨 A palette for every mood | 🪟 Pick your glass | ✨ Watercolour days, starry nights |
 | :-- | :-- | :-- |
 | Cinnabar, Lotus, Mist… Chinese-poetry Morandi palettes; the whole UI and background change together | Liquid, frosted or matte glass, one click to switch | Dark and light backgrounds are remembered separately; meteors glow at night while light mode washes watercolour from your palette |
+
+### Explore the palettes
+
+![Light palettes](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)
+![Dark palettes](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)
+
+<sub>Palette previews are from v0.23; see the demo above for the current interface and effects.</sub>
 
 ### Install
 

@@ -18,7 +18,7 @@
 
 ## See it first
 
-> 🎬 A full demo video (light/dark switching · meteors · glass materials · palette rotation) is being recorded and will land here.
+> 🎬 A full demo video (light/dark switching · meteors · glass materials · palette rotation) is planned.
 
 **Two moods, configured independently:**
 
@@ -41,7 +41,7 @@ Open "Plugins" in the DSH app, search `dsh-bloom-theme`, install, restart when p
 - **Palettes**: 12 featured Morandi colour schemes
 - **Material**: liquid / frosted / matte glass
 - **Background**: independent choices for dark and light
-- **Share**: copy an install prompt for your Agent, or grab a screenshot / 5-second recording to show a friend
+- **Share**: copy an install prompt for your Agent. Screenshots and 5-second recordings depend on the host; our current desktop test could not open the picker, so use your system capture tools there.
 
 ## What is this
 

@@ -4,84 +4,45 @@
 
 <h1 align="center">🌊 Bloom for DSH</h1>
 
-<p align="center">
-  <strong>Glass-theme for DeepSeek Harness — 12 Morandi palettes · 3 glass materials · living backgrounds</strong>
-</p>
+<p align="center"><strong>Give DeepSeek Harness a beautiful glass theme.</strong><br/>Morandi palettes · three glass materials · living backgrounds</p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/v/dsh-bloom-theme?style=for-the-badge&color=A873C4&logo=npm" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=for-the-badge&color=92a8b3" alt="downloads" /></a>
-  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=for-the-badge&color=5fa8b2" alt="License" />
+  <a href="https://www.npmjs.com/package/dsh-bloom-theme"><img src="https://img.shields.io/npm/dm/dsh-bloom-theme?style=for-the-badge&color=92a8b3" alt="monthly downloads" /></a>
+  <img src="https://img.shields.io/github/license/webkubor/dsh-bloom-theme?style=for-the-badge&color=5fa8b2" alt="MIT License" />
+  <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="Listed in Awesome DSH Plugin" /></a>
+  <a href="https://dshhub.dev/plugins/dsh-bloom-theme"><img src="https://dshhub.dev/badge/dsh-bloom-theme.svg" alt="Listed on DSH Hub" /></a>
+  <img src="https://img.shields.io/badge/WCAG-AA-6a9955?style=for-the-badge" alt="Theme accent and background pairs meet WCAG AA" />
+  <img src="https://img.shields.io/badge/dependencies-0-92a8b3?style=for-the-badge" alt="Zero runtime dependencies" />
 </p>
+
+<p align="center"><a href="README.md">中文</a> · <a href="https://github.com/webkubor/dsh-bloom-theme">⭐ Star it if you like it</a></p>
 
 <!-- demo-video -->
 
-## See it first
+[![Watch the Bloom 0.27.0 hands-on demo](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
-[![Bloom 0.27.0 hands-on demo (27 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+[▶ 27-second demo: switch palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
 
-[▶ Watch the full demo: palettes · glass · dark/light backgrounds (27 seconds, no audio)](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-demo-v0.27.0.mp4)
+### Beautiful and practical
 
-<sub>Recorded from the actual DSH Web interface in a redacted demonstration session: project, session and model names are examples. The dark background is "Starry Sky".</sub>
+| 🎨 A palette for every mood | 🪟 Pick your glass | ✨ Watercolour days, starry nights |
+| :-- | :-- | :-- |
+| Cinnabar, Lotus, Mist… Chinese-poetry Morandi palettes; the whole UI and background change together | Liquid, frosted or matte glass, one click to switch | Dark and light backgrounds are remembered separately; meteors glow at night while light mode washes watercolour from your palette |
 
-**Two moods, configured independently:**
+### Explore the palettes
 
-| Dark · starry sky | Light · watercolour wash |
-| :--: | :--: |
-| Meteors streak from the top-right. When you switch palettes, meteors already in flight keep the old colour — only the new ones wear the new palette | Light backgrounds blend your current palette's main colour with two harmonising colours and fade naturally to white |
+![Light palettes](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-light.png)
+![Dark palettes](https://img.webkubor.online/projects/dsh-bloom-theme/v0.23.0/palettes-dark.png)
 
-**Three glass materials, switch anytime:**
+<sub>Palette previews are from v0.23; see the demo above for the current interface and effects.</sub>
 
-| Liquid glass | Frosted glass | Matte glass |
-| :--: | :--: | :--: |
-| Real refraction at the edges — light bends | Translucent with a fine grain | Classic translucent blur |
+### Install
 
-**The send button is a glass bead that follows your palette** — warm red under Cinnabar, teal green under Grass. Never a hardcoded blue again.
+Search **`dsh-bloom-theme`** in DeepSeek Harness "Plugins", install, and restart when prompted. Then click the theme button in the top bar and start matching.
 
-## Installed in 30 seconds
+Like Bloom? [Leave a ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) so more people find it, and share your palette.
 
-Open "Plugins" in the DSH app, search `dsh-bloom-theme`, install, restart when prompted. A "Mist ▾" button appears in the top bar. Click it for:
+<sub>Demo recorded in DSH Web with a redacted example session. Screenshot and recording features depend on host support; if the desktop picker cannot open, use your system capture tools.</sub>
 
-- **Palettes**: 12 featured Morandi colour schemes
-- **Material**: liquid / frosted / matte glass
-- **Background**: independent choices for dark and light
-- **Share**: copy an install prompt for your Agent. Screenshots and 5-second recordings depend on the host; our current desktop test could not open the picker, so use your system capture tools there.
-
-## What is this
-
-One sentence: **it makes your DeepSeek Harness beautiful.**
-
-- 🎨 **12 Chinese-poetry Morandi palettes** — Cinnabar, Peach, Azure, Lotus… each with light and dark variants
-- 🪟 **Real glass, not a picture**: sidebar, top bar, input card and dock share one material; blur and translucency follow what's behind them live
-- ✨ **Backgrounds that move**: dark gets diagonal wash, starry sky, corner glow; light gets slanted light, watercolour wash, clean whitespace
-- 🌗 **Dark and light are independent**: meteors at night, watercolour by day, never interfering
-- ♿ **Respects your system**: high-contrast, reduced-motion and reduced-transparency all degrade gracefully
-
-## Like it?
-
-Open source is easy to start and hard to keep. If Bloom makes your DSH a little nicer every day:
-
-- ⭐ Star the [repo](https://github.com/webkubor/dsh-bloom-theme) — it's the biggest reason I keep going
-- 📤 Hit "Share" in the menu, send the install prompt to a friend, or post a screenshot of your setup
-
-## Screenshots
-
-![Bloom 0.27.0 dark starry sky](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/v0.27.0/assets/showcase/v0.27.0/bloom-preview-v0.27.0.png)
-
-> The dark starry-sky view from a redacted DSH Web demonstration session.
-
-## FAQ
-
-**Theme not applying?** Confirm the package is enabled in Plugins; restart the app if it asks. If it still misbehaves, open an [issue](https://github.com/webkubor/dsh-bloom-theme/issues).
-
-**Screenshot / recording does nothing?** Both use the system screen picker — you choose the screen/window/tab to share, and audio is never recorded. Desktop support depends on the host app; failures show a clear message.
-
-**Privacy?** The theme runs locally. Screenshots and recordings start only when you click, stay on your machine, and are shared only if you choose to. Anonymous click counters can be switched off in the panel.
-
-## Support
-
-If Bloom makes your DSH more pleasant, leave a ⭐ or buy me a coffee ([Sponsor](https://github.com/sponsors/webkubor)).
-
-## License
-
-[MIT](LICENSE) — palettes originate from [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme).
+[Issues](https://github.com/webkubor/dsh-bloom-theme/issues) · [Changelog](CHANGELOG.md) · [MIT License](LICENSE) · Palette origins: [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)

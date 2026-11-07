@@ -120,6 +120,36 @@ test('host active and embedded seat backgrounds preserve the same pixels regardl
       const changed = points.map((p, i) => ({ p, delta: difference(withSeat.colors[i], bare.colors[i]) })).filter(x => x.delta > 2)
       if (changed.length) results.push({ mode, order, variant, max: Math.max(...changed.map(x => x.delta)), affected: changed })
     }
+    for (const variant of palettes) {
+      await page.evaluate(v => {
+        document.body.dataset.bloomVariant = v
+        document.body.dataset.bloomAmbienceDark = 'off'
+        document.querySelector('[data-composer-seat]').style.visibility = 'visible'
+      }, variant)
+      const images = await page.evaluate(() => {
+        const seat = document.querySelector('[data-composer-seat]')
+        return { body: getComputedStyle(document.body).backgroundImage,
+          bodyBefore: getComputedStyle(document.body, '::before').backgroundImage,
+          seat: getComputedStyle(seat).backgroundImage,
+          seatBefore: getComputedStyle(seat, '::before').backgroundImage }
+      })
+      if (Object.values(images).some(image => image !== 'none')) results.push({ mode, order, variant, darkOffImages: images })
+      const withSeat = await pixels(page)
+      await page.locator('[data-composer-seat]').evaluate(el => { el.style.visibility = 'hidden' })
+      const bare = await pixels(page)
+      const max = Math.max(...points.map((_, i) => difference(withSeat.colors[i], bare.colors[i])))
+      if (max > 2) results.push({ mode, order, variant, darkOffMax: max })
+    }
+    // Check every light preset still paints a body background in this same host cascade.
+    for (const preset of ['stream', 'wash', 'clear']) {
+      const light = await page.evaluate(preset => {
+        document.body.removeAttribute('data-ds-dark-theme')
+        document.body.dataset.bloomAmbienceLight = preset
+        return getComputedStyle(document.body).backgroundImage
+      }, preset)
+      if (light === 'none' || !light.includes('gradient(')) results.push({ mode, order, lightPreset: preset, background: light })
+    }
+    await page.evaluate(() => { document.body.setAttribute('data-ds-dark-theme', ''); document.body.dataset.bloomAmbienceDark = 'corner' })
     // Negative control reenables the actual host seat gradient while removing Bloom's
     // seat pseudo-element. It must turn this same-pixel test red.
     await page.evaluate(() => {

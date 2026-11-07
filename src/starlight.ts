@@ -204,9 +204,14 @@ function createParticle(
   doc: Document, layer: HTMLElement, r: () => number,
   x: number, y: number, ang: number, dist: number, cluster: string,
 ): void {
-  const big = r() < 0.15
+  const galaxyOnly = cluster === 's-amb' || cluster === 's-galaxy-edge'
+  const big = r() < (galaxyOnly ? 0.32 : 0.15)
   const size = big ? 1.8 + r() * 0.9 : 0.7 + r() * 1.0
   const dot = makeDot(doc, r, cluster, size, Math.cos(ang) * dist, Math.sin(ang) * dist * 0.75, 6.5, 7.5, 1.2, 1.8, 0.55)
+  if (galaxyOnly) {
+    dot.style.setProperty('--peak', Math.max(0.55, Number(dot.style.getPropertyValue('--peak'))).toFixed(2))
+    dot.style.setProperty('--glow', `${Math.max(3, size * 2.4).toFixed(1)}px`)
+  }
   dot.style.left = `${x.toFixed(2)}%`
   dot.style.top = `${y.toFixed(2)}%`
   layer.appendChild(dot)

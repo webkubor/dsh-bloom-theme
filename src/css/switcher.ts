@@ -1,5 +1,5 @@
 export const SWITCHER_CSS = `
-/* The host exposes a leading-frame clearance when its native navigation occupies the header. */
+/* Match the current host header's inherited clearance; absent variables fall back to zero. */
 .dsh-bloom-slot { display: inline-block; flex: none; margin-inline-start: max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px)); }
 .dsh-bloom-overlay { pointer-events: none; }
 .dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }

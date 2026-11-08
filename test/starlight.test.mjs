@@ -18,7 +18,14 @@ const { outputFiles } = await build({
       import { COMPONENT_CSS } from './src/css/component.ts';
       import { initAmbience, writeAmbience, readAmbience, clearAmbience } from './src/ambience.ts';
       const { Decorations } = createBloomComponents(React, () => () => {});
-      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS, BACKGROUND_CSS, COMPONENT_CSS, initAmbience, writeAmbience, readAmbience, clearAmbience };`,
+      const layerState = () => {
+        const el = document.getElementById('dsh-bloom-sparkles');
+        const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+        const shown = c => Array.from(el.querySelectorAll('i.' + c)).filter(i => getComputedStyle(i).display !== 'none').length;
+        return { display: cs.display, width: r.width, height: r.height, pe: cs.pointerEvents, bg: cs.backgroundImage,
+          position: cs.position, tr: shown('s-tr'), bl: shown('s-bl'), amb: shown('s-amb') };
+      };
+      window.fixture = { mount: () => window.fixtureSlots.inject('shell.overlay', () => window.fixtureSlots.register({name:'shell.overlay', id:'dsh-bloom-theme.decorations', order:-100}, Decorations)), buildSparkles, GLASS_CSS, BACKGROUND_CSS, COMPONENT_CSS, initAmbience, writeAmbience, readAmbience, clearAmbience, layerState };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
     loader: 'ts',
   },
@@ -49,31 +56,21 @@ async function setup(t, dark) {
   return page
 }
 
-const layerState = () => {
-  const el = document.getElementById('dsh-bloom-sparkles')
-  const r = el.getBoundingClientRect(); const cs = getComputedStyle(el)
-  const shown = c => Array.from(el.querySelectorAll('i.' + c)).filter(i => getComputedStyle(i).display !== 'none').length
-  return { display: cs.display, width: r.width, height: r.height, pe: cs.pointerEvents, bg: cs.backgroundImage,
-    position: cs.position, tr: shown('s-tr'), bl: shown('s-bl'), amb: shown('s-amb') }
-}
-
 test('starlight is dark-only and never shows in light mode, whatever the presets', async t => {
   const page = await setup(t, false)
-  const states = await page.evaluate(stateSrc => {
-    const state = new Function('return (' + stateSrc + ')()')
-    return ['diagonal', 'galaxy', 'corner', 'off'].map(p => { document.body.setAttribute('data-bloom-ambience-dark', p); return state().display })
-  }, layerState.toString())
+  const states = await page.evaluate(() => {
+    return ['diagonal', 'galaxy', 'corner', 'off'].map(p => { document.body.setAttribute('data-bloom-ambience-dark', p); return window.fixture.layerState().display })
+  })
   assert.deepEqual(states, ['none', 'none', 'none', 'none'])
 })
 
 test('dark presets change geometry and particle clusters; layer never covers content', async t => {
   const page = await setup(t, true)
-  const r = await page.evaluate(stateSrc => {
-    const state = new Function('return (' + stateSrc + ')()')
-    const out = { initial: state() }
-    for (const p of ['diagonal', 'galaxy', 'corner', 'off']) { document.body.setAttribute('data-bloom-ambience-dark', p); out[p] = state() }
+  const r = await page.evaluate(() => {
+    const out = { initial: window.fixture.layerState() }
+    for (const p of ['diagonal', 'galaxy', 'corner', 'off']) { document.body.setAttribute('data-bloom-ambience-dark', p); out[p] = window.fixture.layerState() }
     return out
-  }, layerState.toString())
+  })
   assert.equal(r.initial.display, 'block', 'default preset shows starlight')
   assert.equal(r.initial.width, 360, 'default dark preset keeps the v0.26.0 corner box')
   assert.equal(r.initial.height, 220)

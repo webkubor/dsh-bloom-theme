@@ -39,7 +39,7 @@
     "sync-version": "node scripts/sync-version.mjs",
     "dev": "npm run build && npm run build:watch",
     "package": "npm run build && npm pack",
-    "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs test/readme-package-name.test.mjs",
+    "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && contrast-guard && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs test/readme-package-name.test.mjs test/enrich-release.test.mjs",
     "check:contrast": "contrast-guard",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs && node scripts/version-sync-gate.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.check.json",

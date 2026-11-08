@@ -7,47 +7,11 @@ import { fileURLToPath } from 'node:url'
 
 const {version: currentVersion} = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
 
-/**
- * DSH locale 服务的最小替身。
- *
- * 按 DSH 的真实契约实现（dsh-client-locale）：注册词条、bind 取词（回落链
- * 当前语言 → 声明的 fallback → en → key 本身）、setLocale 改偏好并广播、
- * subscribe 订阅变化。
- *
- * @param active - 起始语言（对应 DSH 的 locale.preference）。
- */
-const makeLocale = (active) => ({
-  active,
-  dicts: {},
-  listeners: new Set(),
-  register(ns, dicts) {
-    if (Object.keys(dicts).sort().join(',') !== 'en,zh') throw new Error('Only zh/en dictionaries are supported')
-    this.dicts[ns] = dicts
-  },
-  bind(ns) {
-    const dicts = this.dicts[ns] ?? {}
-    return (key) => {
-      for (const loc of [this.active, 'en']) {
-        const v = dicts[loc]?.[key]
-        if (v !== undefined) return v
-      }
-      return key
-    }
-  },
-  getSnapshot() { return { active: this.active } },
-  subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn) },
-  setLocale(id) {
-    if (!['zh', 'en'].includes(id)) throw new Error(`locale "${id}" is not registered`)
-    this.active = id
-    for (const fn of this.listeners) fn()
-  },
-  addLanguage() { throw new Error('Bloom must not register additional DSH languages') },
-})
-
 // Exercise the real client and its DOM event handlers; all network traffic is mocked.
 const { outputFiles } = await build({
   stdin: { contents: `import './test/slot-fixture.mjs'; import './src/client.ts'; import * as lang from './src/lang.ts'; import * as version from './src/version.ts'; import * as switcher from './src/switcher.ts';
-    window.bloomTest = {lang, version, switcher};
+    import { makeLocale } from './test/fixtures/locale.mjs';
+    window.bloomTest = {lang, version, switcher, makeLocale};
     // 宿主注入 locale 服务后，cordis 会 materialize 插件的 apply(ctx)。
     // 测试里手动调它，走和真实宿主同一条路径。
     // ⚠️ ctx 必须是「严格」的：cordis 的 ctx 是 Proxy，读没在 inject 里声明的服务会抛
@@ -97,7 +61,9 @@ async function setup(locale, active, mode = 'dark', variant = 'petal', hostBody 
     return route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) })
   })
   await page.goto('https://bloom.test/')
-  await page.evaluate(({active, mode, variant, legacy, localeSrc}) => {
+  await page.clock.install()
+  await page.addScriptTag({ content: outputFiles[0].text })
+  await page.evaluate(({active, mode, variant, legacy}) => {
     localStorage.setItem('dsh-bloom-lang', legacy)
     localStorage.setItem('dsh-bloom-variant', variant)
     localStorage.setItem('bloom-appearance-mode', mode)
@@ -108,12 +74,10 @@ async function setup(locale, active, mode = 'dark', variant = 'petal', hostBody 
     // 语言是体系配置，真源在 DSH（2026-10-30 改）。测试里不能只改 localStorage ——
     // 那样测的就不是新架构了。这里按 DSH 的真实契约实现一份：注册词条、bind 取词、
     // setLocale 改偏好并广播、subscribe 订阅变化。
-    window.__dshLocale = new Function('return (' + localeSrc + ')')()(active)
+    window.__dshLocale = window.bloomTest.makeLocale(active)
     // 宿主把 locale 服务交给插件：apply(ctx) 会从这里取
     window.__dshApply = (ctx) => window.__dshApplyModule?.apply(ctx)
-  }, {active, mode, variant, legacy, localeSrc: makeLocale.toString()})
-  await page.clock.install()
-  await page.addScriptTag({ content: outputFiles[0].text })
+  }, {active, mode, variant, legacy})
   // 让插件走 apply(ctx) 这条真实路径（宿主注入 locale 后才会 bind 上）
   await page.evaluate(() => window.bloomTest.applyWithLocale?.())
   await page.waitForFunction(() => window.bloomTest.version.dshCheckError)
@@ -391,10 +355,10 @@ test('DSH language and appearance replay on reload; legacy preference is ignored
     await page.reload()
     // 重载后宿主重新注入 locale 服务，并把偏好（zh）交给插件。
     // 这正是新架构：语言状态在 DSH 那边，不在插件的 localStorage。
-    await page.evaluate(([src, active]) => {
-      window.__dshLocale = new Function('return (' + src + ')')()(active)
-    }, [makeLocale.toString(), 'zh'])
     await page.addScriptTag({content: outputFiles[0].text})
+    await page.evaluate(() => {
+      window.__dshLocale = window.bloomTest.makeLocale('zh')
+    })
     await page.evaluate(() => window.bloomTest.applyWithLocale?.())
     assert.equal(await text(page, '.dsh-bloom-head__title'), expected.zh.heading)
     assert.equal(await page.evaluate(() => document.body.dataset.bloomVariant), 'lapis')

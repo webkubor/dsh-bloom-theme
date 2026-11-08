@@ -32,7 +32,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v5
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           # 用 personal PAT（cs vault: secret://github/personal-pat，仓库 secret 名 PR_PAT），
           # 而不是默认 GITHUB_TOKEN —— 后者要仓库额外勾
@@ -59,7 +59,7 @@ jobs:
       contents: read
     steps:
       - name: 验收后合并 release PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           # PR_PAT：合并后触发的 tag / Release / publish 工作流需要非 GITHUB_TOKEN 身份。
           github-token: ${{ secrets.PR_PAT }}

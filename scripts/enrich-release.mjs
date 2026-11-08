@@ -21,7 +21,7 @@
 import { execFileSync } from 'node:child_process'
 
 const MARKER = '<!-- enriched-by-scripts/enrich-release.mjs -->'
-const VERSION_TAG = /^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
+const VERSION_TAG = /^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/
 const args = process.argv.slice(2)
 const dry = args.includes('--dry')
 const positional = args.filter((arg) => arg !== '--dry')

@@ -43,7 +43,7 @@ function cleanup(root) {
 test('rejects malicious and invalid tag arguments before running commands', () => {
   const f = fixture()
   try {
-    for (const tag of ['v1.2.3;touch pwned', 'v1.2.3$(touch pwned)', 'v1', '--unexpected']) {
+    for (const tag of ['v1.2.3;touch pwned', 'v1.2.3$(touch pwned)', 'v1', 'v1.2.3-..', 'v1.2.3-01', 'v1.2.3+..', '--unexpected']) {
       const result = spawnSync(process.execPath, [script, tag], { cwd: f.root, env: f.env, encoding: 'utf8' })
       assert.notEqual(result.status, 0, tag)
       assert.equal(existsSync(f.calls), false, 'invalid tag must not invoke git or gh')

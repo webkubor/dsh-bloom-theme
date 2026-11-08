@@ -13,6 +13,16 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.27.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.27.0...v0.27.1) (2026-11-08)
+
+
+### 🛠️ CI / Build
+
+* add Scorecard PR maturity checks ([6473478](https://github.com/webkubor/dsh-bloom-theme/commit/6473478ccca15d4f929cae3999a9413f1211dff4))
+* add Scorecard project maturity to PRs ([a2a506b](https://github.com/webkubor/dsh-bloom-theme/commit/a2a506b43cae54040db1c5474c10950864eaa14a))
+* use type-aware Scorecard scoring ([ef95aaf](https://github.com/webkubor/dsh-bloom-theme/commit/ef95aaf9d9f5892e81a74d79293ab0f4774b340f))
+* use type-aware Scorecard scoring ([5604e40](https://github.com/webkubor/dsh-bloom-theme/commit/5604e40ef16428dc786d977ba1b41696322b2328))
+
 ## [0.27.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.26.0...v0.27.0) (2026-11-07)
 
 

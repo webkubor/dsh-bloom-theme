@@ -18,26 +18,34 @@
  *
  * 幂等：已经补过的（notes 里含 MARKER）会先剥掉旧的详细段落再重写。
  */
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 
 const MARKER = '<!-- enriched-by-scripts/enrich-release.mjs -->'
+const VERSION_TAG = /^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
 const args = process.argv.slice(2)
 const dry = args.includes('--dry')
-const tag = args.find((a) => /^v\d/.test(a)) || run('git describe --tags --abbrev=0')
+const positional = args.filter((arg) => arg !== '--dry')
+if (positional.length > 1) throw new Error('Expected at most one version tag')
 
-function run(cmd) {
-  return execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim()
+function run(program, argv, input) {
+  return execFileSync(program, argv, { encoding: 'utf8', input, stdio: ['pipe', 'pipe', 'pipe'] }).trim()
 }
-function tryRun(cmd) { try { return run(cmd) } catch { return null } }
+function tryRun(program, argv) { try { return run(program, argv) } catch { return null } }
+function validatedTag(value) {
+  if (!VERSION_TAG.test(value)) throw new Error('Expected a valid version tag, for example v1.2.3 or v1.2.3-rc.1')
+  return value
+}
+const tag = validatedTag(positional[0] || run('git', ['describe', '--tags', '--abbrev=0']))
 
-// 上一个 tag —— 区间起点
-const prev = tryRun(`git describe --tags --abbrev=0 ${tag}^ 2>/dev/null`)
+// 上一个 tag —— 区间起点；所有参数独立传入，不经 shell。
+const previousTag = tryRun('git', ['describe', '--tags', '--abbrev=0', `${tag}^`])
+const prev = previousTag ? validatedTag(previousTag) : null
 // 拿不到上一个 tag 有两种可能，必须区分：
 //   · 真的是首个 release —— 正常，全量收
 //   · git 历史不全（CI 的 shallow clone）—— 此时区间会退化成「只有 release commit」，
 //     那条又被下面过滤掉，于是静默什么都不补、退出码还是 0。
 //     v0.8.4 就是这么漏的，所以这里宁可硬失败也不静默。
-const tagCount = (tryRun('git tag -l') || '').split('\n').filter(Boolean).length
+const tagCount = (tryRun('git', ['tag', '-l']) || '').split('\n').filter(Boolean).length
 if (!prev && tagCount > 1) {
   console.error(
     `✗ 有 ${tagCount} 个 tag 却找不到 ${tag} 的上一个 —— git 历史不全。\n` +
@@ -50,7 +58,7 @@ console.error(`区间：${range}${prev ? '' : '（首个 release，全量收）'
 
 // 取区间内的 commit（跳过 release-please 自己的 release commit）
 const sep = ''
-const raw = tryRun(`git log --format='%H${sep}%s${sep}%b${sep}END' ${range}`)
+const raw = tryRun('git', ['log', `--format=%H${sep}%s${sep}%b${sep}END`, range])
 if (!raw) { console.error('✗ 取不到 commit'); process.exit(1) }
 
 const commits = raw.split('END').map((chunk) => {
@@ -86,7 +94,7 @@ const detail = [
   '</details>',
 ].join('\n')
 
-const current = run(`gh release view ${tag} --json body --jq .body`)
+const current = run('gh', ['release', 'view', tag, '--json', 'body', '--jq', '.body'])
 // 幂等：剥掉此前补过的段落
 const base = current.split(/\n*---\n*<!-- enriched-by/)[0].replace(/\s+$/, '')
 const next = base + '\n' + detail
@@ -95,7 +103,5 @@ if (dry) {
   console.log(next)
   process.exit(0)
 }
-const tmp = `/tmp/release-notes-${tag}.md`
-execSync(`cat > ${tmp}`, { input: next })
-run(`gh release edit ${tag} --notes-file ${tmp}`)
+run('gh', ['release', 'edit', tag, '--notes-file', '-'], next)
 console.error(`✔ ${tag} 的 Release notes 已补上 ${commits.length} 条详细说明`)

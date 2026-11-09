@@ -28,7 +28,7 @@ dsh plugin --profile <your-profile> add dsh-bloom-theme
 - 需要高度定制任意色值的场景：配色是内置色板，不是运行时可编程主题系统。
 
 ## 排障 (Troubleshooting)
-- 主题不生效、版本更新后仍显示旧版、别的插件按钮看不清、插件装不上：
+- 主题不生效、版本更新后仍显示旧版、DeepSeek Harness 更新后主题样式异常、别的插件按钮看不清、插件装不上：
   https://github.com/webkubor/dsh-bloom-theme/blob/main/docs/troubleshooting.md
 - 查看 Web 端或自建 CLI profile 实际安装的版本：
   `dsh plugin --profile <your-profile> list`；桌面端 profile 由应用托管，在「插件」管理里查看和更新。

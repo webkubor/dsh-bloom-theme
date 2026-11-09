@@ -93,6 +93,12 @@ Each of the 12 palettes in the main menu has a light and a dark variant. "Appear
 choose light, dark or follow system separately. If switching does not change the interface, check whether
 the current palette setting was remembered from last time, then switch manually again.
 
+## Change the glass material
+
+Open the Bloom theme button in the top bar. In the panel's "Material" group, choose frosted, matte or liquid glass. Use the "Theme" group to change the palette and the "Mode" group to select light, dark or follow system.
+
+When the system requests reduced transparency, the automatic default uses a solid background. If you explicitly select one of the three materials, reduced transparency alone does not override that selection. Forced colors or high contrast take precedence and use a solid background. `glassMode` in diagnostics is the saved preference and may differ from the effective appearance.
+
 ## When reporting an issue, include
 
 - The Bloom version (shown at the bottom of the panel) and the host version;

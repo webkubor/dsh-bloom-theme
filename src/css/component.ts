@@ -1016,7 +1016,7 @@ body[data-bloom-variant] [class*="_footerActions"] {
  * 顺带说明：早先 info-fill 写成 mix(a,90)（10% 不透明度）时这条也救不了 ——
  * 实测填充 rgb(231,233,218) vs 白箭头 1.24:1，整颗按钮在卡片里看不见
  * （2026-10-08 用户实拍）。根因在 token，已在 tokens.ts 改回实心。 */
-body[data-bloom-variant] button[class*="_primary"] {
+body[data-bloom-variant] div[class*="_composer"] div[class*="_trailing"] button[class*="_primary"] {
   color: var(--dsw-alias-button-primary-dimmed);
 }
 
@@ -1029,7 +1029,7 @@ body[data-bloom-variant] button[class*="_primary"] {
  * 才读得清，明暗自适应 —— 暗色下两者同为亮色，行为不变，只有亮色被纠正。
  * 特异度比上面那条高（多一个 :disabled），两条同时生效：启用态走 dimmed，
  * 禁用态走正文字色。 */
-body[data-bloom-variant] button[class*="_primary"]:disabled {
+body[data-bloom-variant] div[class*="_composer"] div[class*="_trailing"] button[class*="_primary"]:disabled {
   color: var(--dsw-alias-label-primary);
 }
 `

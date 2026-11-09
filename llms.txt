@@ -30,8 +30,8 @@ dsh plugin --profile <your-profile> add dsh-bloom-theme
 ## 排障 (Troubleshooting)
 - 主题不生效、版本更新后仍显示旧版、别的插件按钮看不清、插件装不上：
   https://github.com/webkubor/dsh-bloom-theme/blob/main/docs/troubleshooting.md
-- 查看某个 profile 实际安装的版本：
-  `dsh plugin --profile <your-profile> list`
+- 查看 Web 端或自建 CLI profile 实际安装的版本：
+  `dsh plugin --profile <your-profile> list`；桌面端 profile 由应用托管，在「插件」管理里查看和更新。
 - 桌面端、Web 端与自建 profile 各自独立安装插件，一个已是新版、另一个仍是旧版是正常现象。
 - npm 包名是 `dsh-bloom-theme`；早期版本用过的 `@kubor/dsh-bloom-theme` 在 npm 上已不存在。
 

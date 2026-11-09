@@ -13,33 +13,41 @@
 
 ## 版本更新后仍显示旧版
 
-Bloom 只在应用启动后做一次版本检测，并且**检查失败时不会打扰你**；若刚检查过一次，
-24 小时内不会再次联网检查。宿主更新较慢时，可能要等到下一个检查周期才看到提示。
+先分清两件事：
 
-因此新版本发布后，短时间内仍显示旧版是正常现象，不是更新失败。
+- **没看到「有更新」提示**：Bloom 在应用启动后检查一次新版本，检查失败时不打扰你；
+  若上次检查结果已是最新，24 小时内不会再联网检查。所以新版刚发布时可能暂时没有提示。
+- **更新过了，面板底部仍显示旧版本**：面板上的版本号是**当前加载的插件包**自带的版本，
+  和检查周期无关，等待不会让它变化。这说明新版本没有装到你正在用的那个 profile，
+  或应用还没完全重启（Cmd+Q 后重开）。
 
-- 应用内提示「有更新」时，点击「立即更新」即可；桌面端不支持原地更新时，按提示到
-  「插件」管理里更新对应 profile。
-- 也可以手动更新：
+更新方式按你用的入口选：
+
+- **桌面端 app**：在侧栏「插件」管理里更新，或点更新提示里的「立即更新」。桌面端的
+  profile 由应用托管，`dsh plugin --profile desktop` 会被 CLI 拒绝，不要用终端命令。
+- **Web 端或自建 CLI profile**：先查最新版本号，再显式安装该版本：
 
   ```sh
-  dsh plugin --profile <your-profile> add dsh-bloom-theme@latest
+  npm view dsh-bloom-theme version
+  dsh plugin --profile <your-profile> add dsh-bloom-theme@<上面查到的版本号>
   ```
 
-  `dsh plugin` 会把其余参数转交给 pnpm 在 profile 目录里执行。
+  写明版本号比 `@latest` 更可靠：某些 profile 的锁文件已解析到旧版本时，`@latest`
+  可能不会真的升级。`dsh plugin` 会把其余参数转交给 pnpm 在 profile 目录里执行。
 
 ### 先确认你看的是哪个 profile
 
-**桌面端、Web 端和自建 profile 各自独立安装插件，互不影响。** 同一个机器上完全可能出现
-「桌面端已经是新版，某个 profile 还是旧版」的情况——两个界面显示的版本号不一样，不是
-哪一边出错。逐个 profile 查看当前版本：
+**桌面端、Web 端和自建 profile 各自独立安装插件，互不影响。** 同一台机器上完全可能出现
+「桌面端已经是新版，Web 端还是旧版」——两个界面显示的版本号不一样，不是哪一边出错。
 
-```sh
-dsh plugin --profile <your-profile> list
-```
+- 桌面端：看面板底部的 `Bloom v0.x.y`，或「插件」管理里的版本。
+- Web 端或自建 CLI profile：
 
-输出里 `dsh-bloom-theme@<version>` 就是该 profile 实际安装的版本。确认是哪个 profile
-装旧了，再针对它执行上面的更新命令。
+  ```sh
+  dsh plugin --profile <your-profile> list
+  ```
+
+  输出里的 `dsh-bloom-theme@<version>` 就是该 profile 实际安装的版本。
 
 ## 某个插件的按钮文字看不清
 
@@ -63,12 +71,8 @@ dsh plugin --profile <your-profile> list
   早期版本曾用过 `@kubor/dsh-bloom-theme`，该名字在 npm 上**已不存在**，按它安装会报
   404。部分第三方目录的旧快照仍在推荐这个旧名，看到带 `@kubor/` 的安装命令请直接换成
   `dsh-bloom-theme`。
-- **确认 profile 装对了。** 桌面端、CLI 与自建 profile 各自独立；装在 A profile
-  不会影响 B profile。想确认装在哪里：
-
-  ```sh
-  dsh plugin --profile <your-profile> list
-  ```
+- **确认 profile 装对了。** 桌面端、Web 端与自建 profile 各自独立；装在 A profile
+  不会影响 B profile。查看方式见上文「先确认你看的是哪个 profile」。
 
 - **零运行时依赖。** 本插件没有额外依赖，安装不需要 `--ignore-scripts` 之类的特殊参数。
 

@@ -24,7 +24,7 @@ export interface BloomDiagnostics {
     version: string               // 插件当前版本（如 0.26.0）
     variant: string               // 当前激活配色（如 cinnabar / grass / ripple）
     appearance: 'light' | 'dark'  // 当前深浅模式
-    glassMode: string             // 当前玻璃质感模式（translucent / soft / solid）
+    glassMode: string             // 保存的质感偏好：auto / frosted / matte / liquid；系统降透明时实际效果可能不同
     rotationMinutes: number       // 自动换色周期（0 为关闭）
     bodyDataset: Record<string, string> // body 上的 data-bloom-* 属性状态
     slots: {

@@ -97,7 +97,7 @@ the current palette setting was remembered from last time, then switch manually 
 
 Open the Bloom theme button in the top bar. In the panel's "Material" group, choose frosted, matte or liquid glass. Use the "Theme" group to change the palette and the "Mode" group to select light, dark or follow system.
 
-If the panel says "System settings reduce transparency; your material choice is preserved," the system's reduced-transparency setting affects the actual appearance. Bloom retains your selected material. `glassMode` in diagnostics is the saved preference, which may differ from the effective appearance when transparency is reduced.
+When the system requests reduced transparency, the automatic default uses a solid background. If you explicitly select one of the three materials, reduced transparency alone does not override that selection. Forced colors or high contrast take precedence and use a solid background. `glassMode` in diagnostics is the saved preference and may differ from the effective appearance.
 
 ## When reporting an issue, include
 

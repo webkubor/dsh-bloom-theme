@@ -59,6 +59,25 @@ version numbers in the two interfaces do not mean either side is broken.
 
   The `dsh-bloom-theme@<version>` in the output is the version that profile actually has installed.
 
+## Theme styling breaks after a DeepSeek Harness update
+
+Bloom targets areas of the DeepSeek Harness interface by their style class names. If a host update renames them,
+**some areas silently lose Bloom styling**: there is no error and the app still works, but a region falls back to the
+default look or its colours no longer match. The minimum host version is declared in `engines.dsh` in `package.json`;
+if the host does not meet it, the plugin may fail to install or activate.
+
+Work through these steps in order:
+
+1. **Update Bloom to the latest version** as described in "Still on the old version after an update" above. New
+   releases usually follow host interface changes.
+2. **Quit the app completely and reopen it** (Cmd+Q on macOS), then confirm the panel footer shows the new version.
+3. If problems remain and get in your way, disable Bloom for now: in the desktop app, turn it off in the sidebar
+   Plugins manager; for the Web app or a self-managed CLI profile, run
+   `dsh plugin --profile <your-profile> remove dsh-bloom-theme`. The interface returns to the host default, and you can
+   reinstall later.
+4. Report it in [Issues](https://github.com/webkubor/dsh-bloom-theme/issues) with the Bloom version, host version,
+   screenshots of the affected area and the block exported by "Diagnostics".
+
 ## Button text in another plugin is hard to read
 
 If the primary button or selected tab in **another** plugin's panel turns into a solid block with nearly

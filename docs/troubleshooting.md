@@ -51,6 +51,22 @@
 
   输出里的 `dsh-bloom-theme@<version>` 就是该 profile 实际安装的版本。
 
+## DeepSeek Harness 更新后主题样式异常
+
+Bloom 通过 DeepSeek Harness 界面里的样式类名定位各个区域。宿主更新后如果改了这些名字，
+**部分区域会静默失去 Bloom 样式**：不会报错，界面也能正常使用，只是某块恢复成默认外观或配色不协调。
+Bloom 要求的宿主最低版本写在 `package.json` 的 `engines.dsh` 中，宿主版本不满足时可能无法安装或启用插件。
+
+按顺序处理：
+
+1. **先把 Bloom 更新到最新版本**，做法见上文「版本更新后仍显示旧版」。新版本通常会跟进宿主的界面变化。
+2. **完全退出应用后重开**（macOS 上 Cmd+Q），确认面板底部显示的是新版本号。
+3. 仍有异常但影响使用时，可以先停用 Bloom：桌面端在侧栏「插件」管理中关闭；
+   Web 端或自建 CLI profile 可执行 `dsh plugin --profile <your-profile> remove dsh-bloom-theme`。
+   界面会回到宿主默认外观，之后可以重新安装。
+4. 到 [Issues](https://github.com/webkubor/dsh-bloom-theme/issues) 反馈，附上 Bloom 版本、宿主版本、
+   异常区域的截图以及「诊断」导出的信息块。
+
 ## 某个插件的按钮文字看不清
 
 如果**别的插件**面板上的主按钮或选中标签变成实色块、文字几乎不可见，多半不是插件之间

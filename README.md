@@ -53,4 +53,4 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
 <sub>演示录自 DSH Web 的发行前功能构建，录制时面板仍显示 v0.26.0；使用脱敏示例会话。截图和录屏功能依宿主支持；当前桌面端若无法打开选择器，请使用系统截图或录屏工具。</sub>
 
-[问题反馈](https://github.com/webkubor/dsh-bloom-theme/issues) · [更新记录](CHANGELOG.md) · [MIT License](LICENSE) · 配色灵感：[typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)
+[问题反馈](https://github.com/webkubor/dsh-bloom-theme/issues) · [排障指南](docs/troubleshooting.md) · [更新记录](CHANGELOG.md) · [MIT License](LICENSE) · 配色灵感：[typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)

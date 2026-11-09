@@ -1,5 +1,7 @@
 # 排障：主题不生效、按钮看不清、插件装不上
 
+[English](troubleshooting.en.md)
+
 面向使用者的常见问题处理。开发细节见 [lessons.md](lessons.md)（宿主兼容踩坑台账）与
 [diagnostics.md](diagnostics.md)（诊断与信息导出）。
 

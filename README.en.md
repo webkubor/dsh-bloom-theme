@@ -53,4 +53,4 @@ Like Bloom? [Leave a ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) so m
 
 <sub>Demo recorded in a pre-release DSH Web build with a redacted example session; the panel still shows v0.26.0 while the new features are demonstrated. Screenshot and recording depend on host support; if the desktop picker cannot open, use your system capture tools.</sub>
 
-[Issues](https://github.com/webkubor/dsh-bloom-theme/issues) · [Troubleshooting](docs/troubleshooting.md) · [Changelog](CHANGELOG.md) · [MIT License](LICENSE) · Palette origins: [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)
+[Issues](https://github.com/webkubor/dsh-bloom-theme/issues) · [Troubleshooting](docs/troubleshooting.en.md) · [Changelog](CHANGELOG.md) · [MIT License](LICENSE) · Palette origins: [typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)

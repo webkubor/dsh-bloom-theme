@@ -60,7 +60,9 @@ dsh plugin --profile <your-profile> list
 ## 插件装不上
 
 - **确认包名。** npm 上的包名是 `dsh-bloom-theme`，没有作用域前缀。
-  早期版本曾用过 `@kubor/dsh-bloom-theme`，该名字在 npm 上已不存在，按它安装会报 404。
+  早期版本曾用过 `@kubor/dsh-bloom-theme`，该名字在 npm 上**已不存在**，按它安装会报
+  404。部分第三方目录的旧快照仍在推荐这个旧名，看到带 `@kubor/` 的安装命令请直接换成
+  `dsh-bloom-theme`。
 - **确认 profile 装对了。** 桌面端、CLI 与自建 profile 各自独立；装在 A profile
   不会影响 B profile。想确认装在哪里：
 

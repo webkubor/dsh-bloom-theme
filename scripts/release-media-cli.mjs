@@ -15,12 +15,21 @@ export function prepareMedia(root) {
     pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'))
     manifest = JSON.parse(readFileSync(resolve(root, 'release-media.json'), 'utf8'))
   } catch (error) { throw new Error(`Cannot read package.json or release-media.json: ${error.message}`) }
-  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest) || typeof pkg.version !== 'string' || manifest.version !== pkg.version) {
-    throw new Error('release-media.json version must match package.json version')
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest) || typeof pkg.version !== 'string' || !mediaCovers(manifest.version, pkg.version)) {
+    throw new Error('release-media.json version must match package.json version, or be an earlier patch of the same minor line')
   }
-  const result = checkReleaseMediaFiles({ root, version: pkg.version, imagePath: manifest.imagePath, videoPath: manifest.videoPath, imageUrl: manifest.imageUrl, videoUrl: manifest.videoUrl })
+  // Media keeps its own version in file names and the Release caption, so a patch never claims new footage.
+  const result = checkReleaseMediaFiles({ root, version: manifest.version, imagePath: manifest.imagePath, videoPath: manifest.videoPath, imageUrl: manifest.imageUrl, videoUrl: manifest.videoUrl })
   if (!result.ok) throw new Error(`Release media validation failed:\n- ${result.errors.join('\n- ')}`)
-  return { version: pkg.version, markdown: result.releaseMarkdown }
+  return { version: pkg.version, mediaVersion: manifest.version, markdown: result.releaseMarkdown }
+}
+
+/** Patch releases may reuse the media of an earlier patch in the same x.y line; minor/major releases need new media. */
+export function mediaCovers(media, release) {
+  const parse = v => typeof v === 'string' && /^(\d+)\.(\d+)\.(\d+)$/.exec(v)
+  const m = parse(media), r = parse(release)
+  if (!m || !r) return typeof media === 'string' && media === release
+  return m[1] === r[1] && m[2] === r[2] && Number(m[3]) <= Number(r[3])
 }
 
 /** Replace only our own delimited block; all other release notes remain intact. */

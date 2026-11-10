@@ -94,7 +94,7 @@ README、Release 或公开讨论使用的截图，必须先在当前页面注入
    ```
 
    该命令允许工作流在 GitHub 判定 Release PR 为 `clean` 后，使用刚核验的 head SHA 合并并触发正式发布；准备候选版时不要执行。工作流不自动解决评审线程；状态不满足、head 变化或合并被拒绝时只记录警告，交给负责人检查。
-7. 合并 Release PR 后由 Release Please 创建 tag / GitHub Release，Publish 工作流通过 OIDC 发布 npm，并补充 release notes。分别核对 tag 指向、Publish 结果、npm 精确版本及 registry integrity，不能只看 GitHub Release 存在。
+8. 合并 Release PR 后由 Release Please 创建 tag / GitHub Release，Publish 工作流通过 OIDC 发布 npm，并补充 release notes。分别核对 tag 指向、Publish 结果、npm 精确版本及 registry integrity，不能只看 GitHub Release 存在。
 
 本仓使用 pre-1.0 版本策略：普通 `feat` 增 minor，`fix` 增 patch，破坏性变更的处理由 release-please 配置决定。最终版本以 Release PR 为准。需要特殊版本时使用 release-please 官方支持的配置或 Release-As 机制，重新审核提议；不要依赖未经验证的评论命令。
 

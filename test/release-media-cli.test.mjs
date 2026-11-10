@@ -35,6 +35,37 @@ test('checks manifest version, media files and both READMEs', t => {
   assert.throws(() => prepareMedia(root), /Invalid or empty video/)
 })
 
+test('patch releases reuse earlier media of the same minor line, labelled with the media version', t => {
+  const root = fixture(t)
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '0.27.1' }))
+  const media = prepareMedia(root)
+  assert.equal(media.version, '0.27.1')
+  assert.equal(media.mediaVersion, '0.27.0')
+  assert.ok(media.markdown.includes('Bloom 0.27.0 showcase'))
+  for (const version of ['0.28.0', '1.27.1', '0.27.1-rc.1']) {
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ version }))
+    assert.throws(() => prepareMedia(root), /must match/, version)
+  }
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '0.26.9' }))
+  assert.throws(() => prepareMedia(root), /must match/)
+  writeFileSync(join(root, 'release-media.json'), JSON.stringify({ ...manifest, version: '0.27.2' }))
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '0.27.1' }))
+  assert.throws(() => prepareMedia(root), /must match/, 'newer media cannot cover an older patch')
+})
+
+test('patch append checks the release tag, not the reused media version', t => {
+  const root = fixture(t)
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ version: '0.27.1' }))
+  const previous = process.env.GITHUB_REF_NAME
+  t.after(() => { if (previous === undefined) delete process.env.GITHUB_REF_NAME; else process.env.GITHUB_REF_NAME = previous })
+  process.env.GITHUB_REF_NAME = 'v0.27.0'
+  assert.throws(() => run(['append', '--dry-run'], { root, output() {} }), /GITHUB_REF_NAME/)
+  process.env.GITHUB_REF_NAME = 'v0.27.1'
+  let out = ''
+  run(['append', '--dry-run'], { root, output: s => { out = s } })
+  assert.ok(out.includes('Bloom 0.27.0 showcase'))
+})
+
 test('fails closed for missing manifest, media, invalid JSON or placeholder', t => {
   const root = fixture(t)
   rmSync(join(root, 'release-media.json'))

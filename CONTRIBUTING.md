@@ -84,16 +84,17 @@ README、Release 或公开讨论使用的截图，必须先在当前页面注入
 1. 在独立 worktree 完成源码、双语 README 和构建产物，运行上述验证及真实宿主验收。
 2. 使用 `feat:` / `fix:` / `docs:` / `ci:` 等 Conventional Commits 提交，通过仓库交付流程合入 main。
 3. Release Please 工作流在 main push、每日定时巡检或手动触发时创建或更新 Release PR；以该 PR 的提议为下一版本真源，不手工 bump 版本或 CHANGELOG。
-4. Release Artifact Rebuild 工作流在 Release PR 上同步版本并重新构建产物；核对完整 diff 和当前 head SHA 的 CI 结果。
-5. main push、每日定时巡检及默认的手动触发只准备 Release PR。`auto_merge_release` 默认 `false`，因此不会自动启用合并。候选版到此仍未正式发布。
-6. 完成实际桌面安装验收、所发布 head SHA 的 CI 和独立代码评审，逐项处理所有评审发现，再运行 `npm run preflight`。发布负责人确认以上验收后，才可在本仓库显式执行：
+4. 发布媒体：`release-media.json` 描述 README 和 Release 使用的展示图与演示视频。新的次版本或主版本必须录制本版素材；补丁版本（如 0.27.1）可沿用同一次版本已发布的素材，Release 中按素材自身版本标注（如“Bloom 0.27.0 showcase”），不冒充新素材。
+5. Release Artifact Rebuild 工作流在 Release PR 上同步版本并重新构建产物；核对完整 diff 和当前 head SHA 的 CI 结果。
+6. main push、每日定时巡检及默认的手动触发只准备 Release PR。`auto_merge_release` 默认 `false`，因此不会自动启用合并。候选版到此仍未正式发布。
+7. 完成实际桌面安装验收、所发布 head SHA 的 CI 和独立代码评审，逐项处理所有评审发现，再运行 `npm run preflight`。发布负责人确认以上验收后，才可在本仓库显式执行：
 
    ```bash
    gh workflow run release-please.yml -f auto_merge_release=true
    ```
 
    该命令允许工作流在 GitHub 判定 Release PR 为 `clean` 后，使用刚核验的 head SHA 合并并触发正式发布；准备候选版时不要执行。工作流不自动解决评审线程；状态不满足、head 变化或合并被拒绝时只记录警告，交给负责人检查。
-7. 合并 Release PR 后由 Release Please 创建 tag / GitHub Release，Publish 工作流通过 OIDC 发布 npm，并补充 release notes。分别核对 tag 指向、Publish 结果、npm 精确版本及 registry integrity，不能只看 GitHub Release 存在。
+8. 合并 Release PR 后由 Release Please 创建 tag / GitHub Release，Publish 工作流通过 OIDC 发布 npm，并补充 release notes。分别核对 tag 指向、Publish 结果、npm 精确版本及 registry integrity，不能只看 GitHub Release 存在。
 
 本仓使用 pre-1.0 版本策略：普通 `feat` 增 minor，`fix` 增 patch，破坏性变更的处理由 release-please 配置决定。最终版本以 Release PR 为准。需要特殊版本时使用 release-please 官方支持的配置或 Release-As 机制，重新审核提议；不要依赖未经验证的评论命令。
 

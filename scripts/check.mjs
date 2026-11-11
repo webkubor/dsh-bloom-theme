@@ -128,7 +128,7 @@ idMatch?.[1] === pkg.name
   : bad(`PLUGIN_ID (${idMatch?.[1]}) 与包名 (${pkg.name}) 不一致 —— DSH 会报 "loaded without registering"`)
 
 // ── 2. 配色无障碍 ──────────────────────────────────────────────
-// 已交给 contrast-guard（npm run check:contrast / CI 单独一步）。
+// 已交给 ui-craft（npm run check:contrast / CI 单独一步）。
 // 它按 4 个变体逐组检查 8 组「主色+底色」，不达标时直接反推出该改成多少。
 // 此处不再重复实现 —— 两份算法各写一遍必然漂移。
 

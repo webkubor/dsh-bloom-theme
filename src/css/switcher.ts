@@ -771,7 +771,7 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-state[data-state="err"] {
 }
 /* 主操作按钮改实心 —— 原本是 accent 22% 底 + accent 文字,同色系互叠只有
    4.09:1(10.5px 字)。实心 accent 底 + 反色文字实测 ≈7:1,而且 PALETTE 的
-   accent×bg 组合本来就由 contrast-guard 守着 ≥4.5,这条路天然达标。
+   accent×bg 组合本来就由 ui-craft 守着 ≥4.5,这条路天然达标。
    它也确实是主操作,视觉上该比「↻ 检查」重。 */
 .dsh-bloom-dsh-btn--primary {
   flex: 1 1 auto;

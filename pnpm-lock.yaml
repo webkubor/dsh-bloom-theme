@@ -11,18 +11,24 @@ importers:
       '@types/node':
         specifier: ^26.2.0
         version: 26.6.5
-      contrast-guard:
-        specifier: ^0.3.0
-        version: 0.3.0
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
       playwright:
         specifier: 1.64.1
         version: 1.64.1
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.3.1
+        version: 19.3.1(react@19.3.1)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
+      ui-craft:
+        specifier: github:webkubor/ui-craft#v1.0.1
+        version: https://codeload.github.com/webkubor/ui-craft/tar.gz/fef7b65372260aaec16c770a415fad34e637ea41
 
 packages:
 
@@ -305,11 +311,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  contrast-guard@0.3.0:
-    resolution: {integrity: sha512-I22vBbOTwnQfK7Bn4RjKiZPiBIn2DZ8bLv23J53f1Ichf78o/D3PCwTGWJXLXM3weugqpfIpv/MP4koMoDt3ig==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   esbuild@0.28.2:
     resolution: {integrity: sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==}
     engines: {node: '>=18'}
@@ -325,9 +326,27 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  react-dom@19.3.1:
+    resolution: {integrity: sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ==}
+    peerDependencies:
+      react: ^19.3.1
+
+  react@19.3.1:
+    resolution: {integrity: sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw==}
+    engines: {node: '>=0.10.0'}
+
+  scheduler@0.28.0:
+    resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
+
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
     engines: {node: '>=16.20.0'}
+    hasBin: true
+
+  ui-craft@https://codeload.github.com/webkubor/ui-craft/tar.gz/fef7b65372260aaec16c770a415fad34e637ea41:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/webkubor/ui-craft/tar.gz/fef7b65372260aaec16c770a415fad34e637ea41}
+    version: 1.0.0
+    engines: {node: '>=18'}
     hasBin: true
 
   undici-types@8.9.0:
@@ -477,8 +496,6 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  contrast-guard@0.3.0: {}
-
   esbuild@0.28.2:
     optionalDependencies:
       '@esbuild/aix-ppc64': 0.28.2
@@ -514,6 +531,15 @@ snapshots:
     dependencies:
       playwright-core: 1.64.1
 
+  react-dom@19.3.1(react@19.3.1):
+    dependencies:
+      react: 19.3.1
+      scheduler: 0.28.0
+
+  react@19.3.1: {}
+
+  scheduler@0.28.0: {}
+
   typescript@7.0.2:
     optionalDependencies:
       '@typescript/typescript-aix-ppc64': 7.0.2
@@ -536,5 +562,7 @@ snapshots:
       '@typescript/typescript-sunos-x64': 7.0.2
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
+
+  ui-craft@https://codeload.github.com/webkubor/ui-craft/tar.gz/fef7b65372260aaec16c770a415fad34e637ea41: {}
 
   undici-types@8.9.0: {}

@@ -128,7 +128,7 @@
         // data-bloom-live-turn）就是这一类：`-webkit-text-fill-color: transparent`
         // + 渐变裁字。2026-09-29 引入这条样式后，暗色下一次扫描报了 13 条
         // ratio≈1.06 的假阳性（原生基线 4.92），逐条查 DOM 全部是渐变文字。
-        // 它们的对比度由 --bloom-motion-* 决定，而那一层由 contrast-guard 按
+        // 它们的对比度由 --bloom-motion-* 决定，而那一层由 ui-craft 按
         // 变体逐个验过（见 §auditTokens 里的 motion 组），不在这里的判据范围。
         const gradientText = (s.webkitBackgroundClip === 'text' || s.backgroundClip === 'text')
           && (s.webkitTextFillColor === 'rgba(0, 0, 0, 0)' || s.webkitTextFillColor === 'transparent')

@@ -65,7 +65,7 @@ CI 在 PR 和 main push 上执行 `npm ci`、现有产物语法检查、check、
 - `accentL` / `accentD` 用于文字、按钮和可读边框，必须通过 WCAG AA。
 - `morandi` 用于低透明度氛围渐变和冷光，不用于可读文字。
 
-改颜色后运行 `npm run check`，并在真实宿主中核对明暗主题、各变体、键盘焦点和 `prefers-reduced-motion`。`contrast-guard` 的静态计算不能替代半透明叠层的浏览器实测。
+改颜色后运行 `npm run check`，并在真实宿主中核对明暗主题、各变体、键盘焦点和 `prefers-reduced-motion`。`ui-craft` 的静态计算不能替代半透明叠层的浏览器实测。
 
 浏览器审计可使用 `scripts/visual-audit.browser.js`。调用方从当前 `src/palette.ts` 取得变体键，注入 `window.__bloomVariants` 后调用 `window.__bloomAudit()`；变体清单不可复制成过期常量。先检查审计结果的 `TRUSTWORTHY` 与 `sanity`，再看对比度和最终 verdict。运行时切换使用真实菜单与宿主设置，属性强切只用于纯 token 测量。
 

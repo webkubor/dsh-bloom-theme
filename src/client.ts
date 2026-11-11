@@ -319,7 +319,7 @@ function installUpdateCheck(host: HTMLElement) {
           color:var(--bloom-accent,#34698c)}
         #dsh-bloom-update-banner button:active{transform:scale(.97)}
         /* 主按钮:accent 底 + label-primary-foreground(即 bg 色)文字。
-           PALETTE 的 accent×bg 组合本来就由 contrast-guard 守着 ≥4.5,这条路天然达标;
+           PALETTE 的 accent×bg 组合本来就由 ui-craft 守着 ≥4.5,这条路天然达标;
            原先写死 color:#fff,在亮色档的 accent 上只有 2.3:1。 */
         #dsh-bloom-update-banner button[data-primary]{background:var(--bloom-accent,#34698c);
           color:var(--dsw-alias-label-primary-foreground,#fff);border-color:transparent}

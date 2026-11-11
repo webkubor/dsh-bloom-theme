@@ -7,10 +7,10 @@
  * 那份公开可见的草稿就一直在讲过时的事。数据能统计就不该手写。
  *
  * 三个来源都是真源，不自己重算：
- *   · 对比度  `contrast-guard --json`（它从 lib/client.js 里解析 OKLCH 实算）
+ *   · 对比度  `ui-craft --json`（它从 lib/client.js 里解析 OKLCH 实算）
  *     ⚠️ 绝不在这里自己实现 oklch→sRGB→WCAG。check.mjs 的注释早写过
  *        「两份算法各写一遍必然漂移」，本脚本第一版就犯了这个错：自己换算出
- *        mist light = 5.29，contrast-guard 是 5.28。差 0.01 无害，但两套算法
+ *        mist light = 5.29，ui-craft 是 5.28。差 0.01 无害，但两套算法
  *        本身就是隐患。
  *   · 下载量  api.npmjs.org/downloads/point/last-month
  *   · star    GitHub API（有 gh CLI 就用它，省 token 配置）
@@ -32,9 +32,9 @@ const sh = (cmd) => {
 }
 const wantJson = process.argv.includes('--json')
 
-// ── 1. 对比度：一律取 contrast-guard 的输出 ────────────────────
-const raw = sh('npx contrast-guard --json 2>/dev/null')
-if (!raw) { console.error('✗ contrast-guard --json 跑不起来（先 npm install）'); process.exit(1) }
+// ── 1. 对比度：一律取 ui-craft 的输出 ────────────────────
+const raw = sh('npx ui-craft --json 2>/dev/null')
+if (!raw) { console.error('✗ ui-craft --json 跑不起来（先 npm install）'); process.exit(1) }
 const cg = JSON.parse(raw.slice(raw.indexOf('{')))
 
 // 中文名不在这里再抄一份 —— 配色改名（v0.13.0 全改中国风）时这份副本没人想起来改，
@@ -95,7 +95,7 @@ for (const r of rows) {
 console.log(`\n${summary.pairs} 组「主色 + 底色」全部实测：最低 **${summary.min.toFixed(2)}:1**、最高 **${summary.max.toFixed(2)}:1**，`
   + `其中 ${summary.aaa} 组达 AAA，不达标 ${summary.failed} 组。`)
 console.log(`\n数据来源（都可复现，不是手写）：`)
-console.log(`- 对比度：\`npx contrast-guard --json\` —— 从 \`lib/client.js\` 解析 OKLCH 实算，改了配色数字就会跟着变`)
+console.log(`- 对比度：\`npx ui-craft --json\` —— 从 \`lib/client.js\` 解析 OKLCH 实算，改了配色数字就会跟着变`)
 if (downloads !== null) console.log(`- 下载量：近 30 天 **${downloads.toLocaleString('en-US')}** 次（api.npmjs.org，${today}）`)
 if (stars) console.log(`- Star：**${stars}**（GitHub API，${today}）`)
 console.log(`- 版本：**v${pkg.version}**`)

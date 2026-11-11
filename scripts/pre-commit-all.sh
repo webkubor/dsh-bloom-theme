@@ -9,7 +9,7 @@ cd "$(git rev-parse --show-toplevel)"
 node --check lib/client.js
 node --check lib/index.js
 
-# 打包契约 + contrast-guard
+# 打包契约 + ui-craft
 npm run check
 
 # 本仓的 React Slot 生命周期回归可在独立 worktree 复现；不依赖父目录私有脚本。

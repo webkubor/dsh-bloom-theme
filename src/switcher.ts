@@ -189,7 +189,7 @@ export function buildSwitcherHTML(currentVariant) {
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
   }).join('')
   return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
-  <button type="button" class="dsh-bloom-trigger" aria-haspopup="dialog" aria-expanded="false" title="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}">
+  <button type="button" class="dsh-bloom-trigger" aria-label="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}" aria-haspopup="dialog" aria-expanded="false" title="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}">
     <span class="dsh-bloom-dot" style="${dotStyle(currentVariant)}"></span>
     <span class="dsh-bloom-trigger__name">${variantName(currentVariant)}</span>
     <svg class="dsh-bloom-chevron" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">

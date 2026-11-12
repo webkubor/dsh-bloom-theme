@@ -384,5 +384,40 @@ body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) tbo
   background: rgba(var(--bloom-morandi), 0.04);
 }
 
+/* ═══ 插件页吸顶头部：实底涂层 → 氛围淡化（#113）═════════════════
+   DSH 的插件页头（dsh-client-ui-plugin-manager）在吸顶时用
+   .pageBar[data-natural]:before 铺一条不透明的 --dsw-alias-bg-base 涂层，
+   作用是滚动时盖住从底下穿过去的列表内容。DSH 原生页面底色均匀，
+   这条涂层与页面同色、不可见；Bloom 把页面底透明化换成 body 氛围渐变后，
+   涂层仍是不透明纯色 —— 未滚动时页面顶部就横着一条与星空/水彩割裂的
+   纯色带（用户截图「插件页面上方是黑色的，主题没有全部覆盖」，
+   实测 flat 区 rgb(30,28,32) == silverrose bgD，即 bg-base token）。
+
+   处理：把涂层从不透明纯色改成「bg-base 向下渐隐」——
+   顶部保留较高不透明度（滚动遮字的功能仍在），向下 72px 内衰减为透明，
+   让氛围层透出来。列表内容从涂层下穿过时仍被顶部较实的部分盖住；
+   72px 的选择对应 compact 吸顶态的高度（--plugin-header-compact-height），
+   自然态整条涂层更高，但透明段只盖住自身空白区，不影响可读性。
+   用宿主语义属性 [data-plugin-bar] 定位（实测 0.2.2-rc.2 仅插件页头使用），
+   不依赖 hash 类名；高度沿宿主自己的 --plugin-header-paint-height 变量，
+   不硬编码。 */
+body[data-bloom-variant] [data-plugin-bar]::before {
+  background: linear-gradient(
+    180deg,
+    var(--dsw-alias-bg-base) 0%,
+    color-mix(in oklch, var(--dsw-alias-bg-base), transparent 55%) 56%,
+    transparent 100%
+  );
+}
+/* 滚动进入 compact 态时涂层变矮（compact-height），渐隐同样按比例收敛：
+   顶部一段保持较实，保证标题行在列表滚过时依旧可读。 */
+body[data-bloom-variant] [data-plugin-bar][data-compact]::before {
+  background: linear-gradient(
+    180deg,
+    var(--dsw-alias-bg-base) 0%,
+    color-mix(in oklch, var(--dsw-alias-bg-base), transparent 30%) 70%,
+    transparent 100%
+  );
+}
 
 `

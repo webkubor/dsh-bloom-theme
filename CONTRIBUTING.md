@@ -25,7 +25,7 @@ npm run dev          # 首次完整构建后监听浏览器源码，只更新本
 
 ## 官方扩展点
 
-浏览器插件通过 `dsh.client.inject` 声明能力，用 `window.__ModuleLoader__.load()` 注册。根 `conversation.header.leading` Slot 提供本插件自己的顶栏定位锚点；完整切换器与其菜单、星光和更新提示都挂载在根 `shell.overlay` Slot，避免被宿主顶栏裁剪。定位只测量自己的锚点，不通过宿主选择器寻找位置。Slot 由 apply 通过 `ctx.slots.inject` 注册，副作用由上下文 effect/React effect 清理。
+浏览器插件通过 `dsh.client.inject` 声明能力，用 `window.__ModuleLoader__.load()` 注册。主题色按钮由 `conversation.session.header.corner` Slot 挂载在会话标题栏最右侧；切换器只显示当前主题色块，完整菜单、星光和更新提示挂载在根 `shell.overlay` Slot，避免被宿主裁剪。定位只使用宿主公开 Slot，不通过宿主选择器寻找位置。Slot 由 apply 通过 `ctx.slots.inject` 注册，副作用由上下文 effect/React effect 清理。
 
 更改能力或挂载位置前，先用 `cordis_inspect_list`，再用 Provider 声明的查询读取确切 Service 契约、Slot 树与 props。Inspect 方法是只读发现接口，不是插件可调用的业务 Service。不要扫描宿主 DOM 来寻找工具栏，不要手动重挂节点、追加第二个应用根或恢复悬浮拖拽兜底。
 

@@ -633,8 +633,8 @@ window.__ModuleLoader__.load({
       })
       ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')
       bindBloomInspect(ctx)
-      ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({
-        name: 'conversation.header.leading',
+      ctx.slots.inject('conversation.session.header.corner', () => ctx.slots.register({
+        name: 'conversation.session.header.corner',
       }, Switcher))
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({
         name: 'shell.overlay', id: 'dsh-bloom-theme.decorations', order: -100,

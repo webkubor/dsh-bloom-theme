@@ -50,9 +50,12 @@ ${s} [class*="_centerCol"] {
 }
 ${s} [class*="_sidebarCol"]::before,
 ${s} header[class*="_header"]::before {
-  inset: 6px;
-  border-radius: 14px;
-  box-shadow: ${RIM}, ${FLOAT};
+  /* #125: inset:6px + 14px 圆角会把顶栏/侧栏画成悬空卡片，窗口角上留出
+     一块没玻璃的缝，用户实拍「左上角单独圆角了」。面板必须贴边、圆角
+     继承宿主容器（窗口本身的圆角），不再自造悬浮卡片观感。 */
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: ${RIM};
 }
 ${s} [class*="_sidebarCol"] [class*="_root"]:has(> [class*="_regionArea"]),
 ${s} [class*="_sidebarCol"] :is([class*="_regionArea"], [class*="_listArea"], [class*="_treeBody"], [class*="_list"]) {

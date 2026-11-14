@@ -6,7 +6,7 @@
  */
 import { FEATURED_VARIANTS, isNewVariant, PALETTE, VARIANTS } from './palette.js'
 import { readRotationMinutes, resetRotationTimer, ROTATION_MINUTES, setRotationMinutes, startRotation } from './rotation.js'
-import { injectCSS, readVariant } from './dom.js'
+import { applyMotion, injectCSS, readMotion, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
@@ -189,7 +189,7 @@ export function buildSwitcherHTML(currentVariant) {
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
   }).join('')
   return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
-  <button type="button" class="dsh-bloom-trigger" aria-haspopup="dialog" aria-expanded="false" title="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}">
+  <button type="button" class="dsh-bloom-trigger" aria-label="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}" aria-haspopup="dialog" aria-expanded="false" title="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}">
     <span class="dsh-bloom-dot" style="${dotStyle(currentVariant)}"></span>
     <span class="dsh-bloom-trigger__name">${variantName(currentVariant)}</span>
     <svg class="dsh-bloom-chevron" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
@@ -235,6 +235,12 @@ export function buildSwitcherHTML(currentVariant) {
         ${rotationOptions}
       </select>
     </label>
+    <div class="dsh-bloom-rotation dsh-bloom-motion-row">${tr('动效')}
+      <span class="dsh-bloom-appearance__seg dsh-bloom-motion-seg">
+        <button type="button" class="dsh-bloom-appearance__btn" data-motion="on" role="radio" aria-checked="${readMotion()}" data-active="${readMotion()}">${tr('开启')}</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-motion="off" role="radio" aria-checked="${!readMotion()}" data-active="${!readMotion()}">${tr('停用')}</button>
+      </span>
+    </div>
     <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">
       <div class="dsh-bloom-more-inner">
       ${changelogHTML()}
@@ -614,6 +620,18 @@ export function buildSwitcherEl(initialVariant) {
           b.setAttribute('aria-checked', String(on))
         })
       }
+      return
+    }
+    const motionBtn = target.closest<HTMLButtonElement>('[data-motion]')
+    if (motionBtn) {
+      e.stopPropagation()
+      const on = motionBtn.dataset.motion === 'on'
+      applyMotion(on)
+      el.querySelectorAll<HTMLButtonElement>('[data-motion]').forEach(b => {
+        const active = (b.dataset.motion === 'on') === on
+        b.dataset.active = String(active)
+        b.setAttribute('aria-checked', String(active))
+      })
       return
     }
     const diagnose = target.closest<HTMLElement>('.dsh-bloom-diagnose')

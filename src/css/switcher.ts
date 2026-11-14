@@ -1,7 +1,7 @@
 export const SWITCHER_CSS = `
-/* Move only the empty Slot anchor into the host's existing leading clearance. */
-.dsh-bloom-slot { display: inline-block; flex: none; transform: translateX(max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px))); }
-.dsh-bloom-slot:dir(rtl) { transform: translateX(calc(-1 * max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px)))); }
+/* Switcher lives in the session header action row, beside host actions. */
+.dsh-bloom-slot { display: inline-flex; flex: none; align-items: center; }
+.dsh-bloom-slot:dir(rtl) { direction: rtl; }
 .dsh-bloom-overlay { pointer-events: none; }
 .dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }
 .dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 80px); position: fixed; pointer-events: auto; z-index: 80; }
@@ -20,10 +20,11 @@ export const SWITCHER_CSS = `
 .dsh-bloom-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 9px;
-  border-radius: 9px;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
   background: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 30%);
   backdrop-filter: blur(14px) saturate(1.2);
@@ -40,6 +41,8 @@ export const SWITCHER_CSS = `
   outline: 2px solid var(--dsw-alias-brand-primary, #4a90e2);
   outline-offset: 2px;
 }
+.dsh-bloom-trigger__name,
+.dsh-bloom-trigger .dsh-bloom-chevron { display: none; }
 .dsh-bloom-trigger__name {
   font-weight: 500;
   color: var(--dsw-alias-label-primary, #222);
@@ -276,10 +279,30 @@ export const SWITCHER_CSS = `
   outline-offset: 2px;
 }
 
+.dsh-bloom-motion-seg {
+  display: inline-flex;
+  width: 110px;
+}
 .dsh-bloom-options {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-height: 252px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent) transparent;
+}
+.dsh-bloom-options::-webkit-scrollbar {
+  width: 4px;
+}
+.dsh-bloom-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dsh-bloom-options::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 28%, transparent);
+  border-radius: 999px;
 }
 .dsh-bloom-option {
   /* 稳妥的单行 Grid：button 不依赖 Chromium 的 subgrid，

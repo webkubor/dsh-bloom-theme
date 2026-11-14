@@ -16,7 +16,7 @@ import { setVersionUpdatesActive } from './version.js'
 import { clearAppearanceSync } from './appearance.js'
 
 /** Bloom 写在 body / 消息节点上的 data-* 属性。 */
-const BODY_ATTRS = ['data-bloom-variant', 'data-bloom-glass', 'data-bloom-ambience-dark', 'data-bloom-ambience-light', 'data-bloom-typing', 'data-bloom-update']
+const BODY_ATTRS = ['data-bloom-variant', 'data-bloom-glass', 'data-bloom-ambience-dark', 'data-bloom-ambience-light', 'data-bloom-typing', 'data-bloom-update', 'data-bloom-motion']
 const NODE_ATTRS = ['data-bloom-think', 'data-bloom-think-body', 'data-bloom-live-turn']
 
 export function teardownBloom(): void {

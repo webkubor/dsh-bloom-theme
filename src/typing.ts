@@ -14,6 +14,8 @@
  * 冒泡阶段收不到；捕获阶段一定先于目标。
  */
 
+import { readMotion } from './dom.js'
+
 const TYPING_ATTR = 'data-bloom-typing'
 const IDLE_MS = 900
 
@@ -34,7 +36,7 @@ function isComposerInput(el: EventTarget | null): el is HTMLElement {
 function setTyping(on: boolean): void {
   const body = document.body
   if (!body) return
-  if (on) body.setAttribute(TYPING_ATTR, 'true')
+  if (on && readMotion()) body.setAttribute(TYPING_ATTR, 'true')
   else body.removeAttribute(TYPING_ATTR)
 }
 

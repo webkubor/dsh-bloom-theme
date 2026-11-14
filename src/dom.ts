@@ -4,8 +4,26 @@
  * injectCSS 用 data-plugin-css 属性做幂等标记 —— DSH 的 cordis materialize
  * 可能多次调用 apply，重复注入会让同一份 CSS 叠好几份。
  */
-import { PLUGIN_ID, STORAGE_KEY } from './meta.js'
+import { PLUGIN_ID, STORAGE_KEY, STORAGE_MOTION_KEY } from './meta.js'
 import { VARIANTS } from './palette.js'
+
+export function readMotion(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_MOTION_KEY) !== 'off'
+  } catch { return true }
+}
+
+export function applyMotion(enabled: boolean): void {
+  try {
+    if (enabled) {
+      window.localStorage.removeItem(STORAGE_MOTION_KEY)
+      document.body?.removeAttribute('data-bloom-motion')
+    } else {
+      window.localStorage.setItem(STORAGE_MOTION_KEY, 'off')
+      document.body?.setAttribute('data-bloom-motion', 'off')
+    }
+  } catch {}
+}
 
 
 /**

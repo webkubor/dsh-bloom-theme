@@ -36,7 +36,7 @@ import { BACKGROUND_CSS } from './css/background.js'
 import { BUTTON_CSS } from './css/button.js'
 import { ADAPTIVE_CSS } from './css/adaptive.js'
 import { SURFACES_CSS } from './css/surfaces.js'
-import { injectCSS, readVariant, watchThinkTags } from './dom.js'
+import { applyMotion, injectCSS, readMotion, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appearance.js'
 import { initAmbience } from './ambience.js'
 import { initGlassMode } from './glass.js'
@@ -95,6 +95,7 @@ function installSkin(): () => void {
     injectCSS(GLASS_CSS + BACKGROUND_CSS + BUTTON_CSS, 'glass.css')
     injectCSS(ADAPTIVE_CSS + SURFACES_CSS, 'adaptive.css')
     document.body.dataset.bloomVariant = variant
+    applyMotion(readMotion())
     initAppearanceSync()
     initAmbience()
     window.__dshBloomGlassOff__ ??= initGlassMode()
@@ -633,8 +634,8 @@ window.__ModuleLoader__.load({
       })
       ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')
       bindBloomInspect(ctx)
-      ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({
-        name: 'conversation.header.leading',
+      ctx.slots.inject('conversation.session.header.corner', () => ctx.slots.register({
+        name: 'conversation.session.header.corner',
       }, Switcher))
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({
         name: 'shell.overlay', id: 'dsh-bloom-theme.decorations', order: -100,

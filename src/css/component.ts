@@ -780,13 +780,13 @@ div[class*="_composer"] div[class*="_card"]:hover {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  opacity: 0.85;
   background: radial-gradient(
     42% 32% at 50% 48%,
     color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%) 0%,
     color-mix(in oklch, var(--bloom-aurora-stream-2), transparent 92%) 35%,
     transparent 68%
   );
-  animation: bloom-anchor-breathe 4.2s ease-in-out infinite;
 }
 /* 2026-09-27 修 #32「空状态下页面持续上下浮动」：
    原来 50% 帧是 transform: scale(1.05)。这块 ::before 用 inset:0 铺满整个
@@ -874,22 +874,14 @@ button[class*="_newSession"]:hover,
  * 「执行中」的判据是 :has([class*="_pending"])：uV2eYG_pending 是 DSH 自己的
  * 待处理指示点（8px 圆点 + 1s 脉冲），只在跑的时候渲染进输入卡 —— idle 态
  * 实测 DOM 里查不到。比按 aria-label="停止" 判稳（那个会随界面语言变）。 */
-@property --bloom-halo { syntax: '<number>'; initial-value: 0.5; inherits: false; }
-@property --bloom-spin { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-
-@keyframes bloom-halo-breathe {
-  0%, 100% { --bloom-halo: 0.3; }
-  50%      { --bloom-halo: 0.85; }
-}
+/* #130 性能修复：移除 @property，避免空闲常驻 52 次/秒样式重算。
+   外晕改用固定浓度，执行中流光改用 GPU 可合成的 rotate。 */
 @keyframes bloom-ring-spin {
-  to { --bloom-spin: 360deg; }
+  to { rotate: 360deg; }
 }
 
 body[data-bloom-variant] div[class*="_composer"] div[class*="_card"] {
-  animation: bloom-halo-breathe 5.2s ease-in-out infinite;
-}
-body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:focus-within {
-  animation-duration: 2.6s;
+  --bloom-halo: 0.55;
 }
 
 /* 执行中：1.5px 的一圈环，conic 起始角在转，看上去像一束光绕着卡边跑。
@@ -904,7 +896,7 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
   padding: 1.5px;
   pointer-events: none;
   background: conic-gradient(
-    from var(--bloom-spin),
+    from 0deg,
     transparent 0 52%,
     color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 20%) 70%,
     color-mix(in oklch, var(--bloom-motion-2, #6b8f71), transparent 45%) 80%,
@@ -932,7 +924,22 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* ④ 无障碍：动效全部降级为瞬间 */
+/* ④ 无障碍与手动动效开关（#129/#131）：全部降级为静止 */
+body[data-bloom-motion="off"] [class*="_sidebarCol"] [role="treeitem"],
+body[data-bloom-motion="off"] .dsh-bloom-switcher,
+body[data-bloom-motion="off"] .dsh-bloom-trigger,
+body[data-bloom-motion="off"] .dsh-bloom-option,
+body[data-bloom-motion="off"] .dsh-bloom-menu,
+body[data-bloom-motion="off"] [class*="_composer"] div[class*="_card"],
+body[data-bloom-motion="off"] [class*="_composer"] div[class*="_card"]::after,
+body[data-bloom-motion="off"] [class*="_composer"] div[class*="_card"]:has([class*="_pending"])::after,
+body[data-bloom-motion="off"] div[class*="_bubble"],
+body[data-bloom-motion="off"] div:is([class*="_toolRow"], [class*="_toolChanges"]),
+body[data-bloom-motion="off"] div[class*="_scrollBody"] > div[class*="_card"],
+body[data-bloom-motion="off"] button[class*="_newSession"],
+body[data-bloom-motion="off"] [class*="_scrollBody"]:not(:has(div[class*="_bubble"]))::before,
+body[data-bloom-motion="off"] ::view-transition-old(root),
+body[data-bloom-motion="off"] ::view-transition-new(root),
 @media (prefers-reduced-motion: reduce) {
   [class*="_sidebarCol"] [role="treeitem"],
   .dsh-bloom-switcher, .dsh-bloom-trigger, .dsh-bloom-option, .dsh-bloom-menu,

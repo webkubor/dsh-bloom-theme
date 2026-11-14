@@ -149,7 +149,12 @@ body[data-bloom-variant="cinnabar"]::after { display: none; }
   right: 0;
   width: 360px;
   height: 220px;
-  z-index: 0;
+  /* #116: 全屏(sidebar 收起+galaxy/diagonal)时 z-index:0 会盖住宿主 fixed 的
+     z-index:auto tooltip(span._bubble) —— 同为 positioned 且 sparkles 挂载在
+     body 末尾(shell.overlay)更晚，0 层画在 auto 提示之上，星系粒子遮住提示。
+     改回 -1，与 body::before / composerSeat::before 同级，装饰只垫底，
+     玻璃半透明表面仍能透出粒子。 */
+  z-index: -1;
   opacity: 0.7;
   overflow: hidden;
   pointer-events: none;

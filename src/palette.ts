@@ -11,9 +11,9 @@
 // Menu order is derived from color families; supported historical keys come from PALETTE.
 export const PALETTE_GROUPS = [
   { family: 'red', variants: ['cinnabar', 'dawn'] },
-  { family: 'orange', variants: ['tangerine', 'aurora'] },
+  { family: 'orange', variants: ['tangerine', 'aurora', 'stone', 'amber'] },
   { family: 'yellow', variants: ['osmanthus'] },
-  { family: 'green', variants: ['mint'] },
+  { family: 'green', variants: ['mint', 'sage'] },
   { family: 'cyan', variants: ['ripple'] },
   { family: 'blue', variants: ['mist', 'lapis'] },
   { family: 'purple', variants: ['lavender', 'silverrose'] },

@@ -58,7 +58,11 @@ ${scope(s, FLOATING)} {
 }
 ${s} .dsh-bloom-menu { position: absolute; }
 ${s} [class*="_sidebarCol"]::before,
-${s} header[class*="_header"]::before { inset: 6px; border-radius: 14px; }
+${s} header[class*="_header"]::before {
+  /* #125: 同 liquid —— 面板贴边、圆角继承宿主，不再做悬空卡片。 */
+  inset: 0;
+  border-radius: inherit;
+}
 ${s} header[class*="_header"]::before { bottom: 0; }
 ${s} header[class*="_header"] > div[class*="_tabs"] {
   background: transparent; border-color: transparent; box-shadow: none;

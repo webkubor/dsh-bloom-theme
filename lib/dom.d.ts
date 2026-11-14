@@ -1,3 +1,5 @@
+export declare function readMotion(): boolean;
+export declare function applyMotion(enabled: boolean): void;
 /**
  * 收拾裸露的 <think> 标签。
  *

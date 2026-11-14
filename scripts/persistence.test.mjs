@@ -24,6 +24,110 @@ const srcFiles = walk(join(root, 'src')).map((f) => relative(root, f)).sort()
 const meta = readFileSync(join(root, 'src/meta.ts'), 'utf8')
 const bundle = readFileSync(join(root, 'lib/client.js'), 'utf8')
 
+/**
+ * 把源码里的字符串字面量与注释**按原长度**抹成空格，
+ * 这样后面做花括号配对时，不会把字符串里的 `{` `}` 当成代码块。
+ * 长度不变 ⇒ 所有下标仍然可用。
+ */
+function stripLiterals(text) {
+  const out = text.split('')
+  let state = 'code'
+  let i = 0
+  const n = text.length
+  while (i < n) {
+    const c = text[i]
+    const c2 = text[i + 1]
+    if (state === 'code') {
+      if (c === '/' && c2 === '/') { out[i] = ' '; out[i + 1] = ' '; i += 2; state = 'line'; continue }
+      if (c === '/' && c2 === '*') { out[i] = ' '; out[i + 1] = ' '; i += 2; state = 'block'; continue }
+      if (c === "'") { out[i] = ' '; i++; state = 'sq'; continue }
+      if (c === '"') { out[i] = ' '; i++; state = 'dq'; continue }
+      if (c === '`') { out[i] = ' '; i++; state = 'tpl'; continue }
+      i++; continue
+    }
+    if (state === 'line') { if (c === '\n') state = 'code'; else out[i] = ' '; i++; continue }
+    if (state === 'block') {
+      if (c === '*' && c2 === '/') { out[i] = ' '; out[i + 1] = ' '; i += 2; state = 'code'; continue }
+      if (c !== '\n') out[i] = ' '
+      i++; continue
+    }
+    if (state === 'sq' || state === 'dq') {
+      if (c === '\\') { out[i] = ' '; if (i + 1 < n) out[i + 1] = ' '; i += 2; continue }
+      if ((state === 'sq' && c === "'") || (state === 'dq' && c === '"')) { out[i] = ' '; state = 'code'; i++; continue }
+      if (c !== '\n') out[i] = ' '
+      i++; continue
+    }
+    // template literal
+    if (c === '\\') { out[i] = ' '; if (i + 1 < n) out[i + 1] = ' '; i += 2; continue }
+    if (c === '`') { out[i] = ' '; state = 'code'; i++; continue }
+    if (c !== '\n') out[i] = ' '
+    i++
+  }
+  return out.join('')
+}
+
+/**
+ * 判断第 i 行是否落在一个「try { ... } catch { ... }」块里。
+ *
+ * 为什么不用「前后 N 行」窗口：窗口大小是任意的，同一段安全代码只要块写得
+ * 比窗口深一点就会被判成没有保护（2026-11-14 在 v0.28.0 的 src/dom.ts 上实测）。
+ * 花括号配对与代码结构一致，结论不随排版变化。
+ *
+ * 三个容易踩的点（都实测过）：
+ *   ① `} catch {` 把 catch 写在**闭合那一行**。这一行开合括号数相等（净 0），
+ *      用「净深度」跟踪永远配不上 —— 必须逐字符看 `}` 出现在哪。
+ *   ② `try {` 可能与外层 `{` 同行，闭合判据要回到「进入 try 之前的深度」。
+ *   ③ 往上找到的 try 可能**早已闭合**（在第 i 行之前就结束了）——
+ *      那种不算保护，必须继续往上找。
+ */
+function hasEnclosingTryCatch(lines, i) {
+  const text = lines.join('\n')
+  const code = stripLiterals(text)
+
+  // 第 i 行在全文中的起始偏移
+  let offset = 0
+  for (let k = 0; k < i; k++) offset += lines[k].length + 1
+
+  // 从最近的 try 往前逐个试：只有「包住第 i 行」的那个才算
+  const re = /try\s*\{/g
+  const candidates = []
+  let m
+  while ((m = re.exec(code)) !== null) {
+    if (m.index >= offset) break
+    candidates.push(m)
+  }
+
+  for (let c = candidates.length - 1; c >= 0; c--) {
+    const match = candidates[c]
+    const braceIdx = match.index + match[0].length - 1 // '{' 的位置
+
+    // 进入 try 之前的花括号深度
+    let base = 0
+    for (let k = 0; k < braceIdx; k++) {
+      if (code[k] === '{') base++
+      else if (code[k] === '}') base--
+    }
+
+    // 逐字符找与 try 的 '{' 配对的那个 '}'
+    let depth = base + 1
+    for (let k = braceIdx + 1; k < code.length; k++) {
+      if (code[k] === '{') depth++
+      else if (code[k] === '}') {
+        depth--
+        if (depth === base) {
+          // 这个 '}' 关掉了 try 块
+          if (offset <= k) {
+            // 第 i 行确实落在 try 块内 —— 看紧随其后是不是 catch
+            return /^\s*catch\b/.test(code.slice(k + 1, k + 200))
+          }
+          break // 这个 try 早就闭合了，继续往上找
+        }
+      }
+    }
+  }
+  return false
+}
+
 test('STORAGE_KEY 值必须稳定 —— 改了等于所有用户的配色被重置', () => {
   const m = meta.match(/export const STORAGE_KEY = '([^']+)'/)
   assert.ok(m, 'meta.ts 里找不到 STORAGE_KEY')
@@ -82,9 +186,18 @@ test('每一处 localStorage 调用都必须被 try/catch 包住 —— 隐私�
       //   ① 单行：try { localStorage.setItem(...) } catch {}
       //   ② 多行：try { \n ... localStorage ... \n } catch
       const inline = /try\s*\{[^}]*localStorage\.[^}]*\}\s*catch/.test(line)
-      const before = lines.slice(Math.max(0, i - 6), i).join('\n')
-      const after = lines.slice(i, i + 6).join('\n')
-      const block = /try\s*\{/.test(before) && /catch/.test(after)
+      // 多行写法必须**按花括号配对**判定，不能用「前后 N 行窗口」。
+      //
+      // 为什么改掉窗口写法（2026-11-14 实测）：窗口固定 6 行，于是
+      // 「try { if (enabled) { removeItem(...) } else { setItem(...) } } catch {}」
+      // 这种一个分支里放两处存储调用的正常写法会漏判 —— catch 恰好落在窗口外，
+      // 门禁误报「没有 try/catch 保护」。实测 v0.28.0 的 src/dom.ts:19 就是这样被误报的：
+      // 代码本身有 try/catch 且完全安全，是判据把安全代码判成了不安全。
+      //
+      // 判据改成：从本行往上找最近的 try {，再从那个 try { 起做花括号配对，
+      // 看它闭合的那一层有没有对应的 catch。命中即为受保护。
+      // 这样窗口大小不再影响结论，块写多深都能判对。
+      const block = hasEnclosingTryCatch(lines, i)
       if (!inline && !block) unguarded.push(`${f}:${i + 1}  ${line.trim()}`)
     })
   }

@@ -455,7 +455,14 @@ cssBlocks.length === 0
 //   · 6 处是 @media print —— 打印样式必须压过一切屏幕样式（含其它 !important），
 //     否则打印出来还是整页色块。这是打印样式表的标准做法，不是压宿主。
 // 先试过去掉降级段里能省的 7 处 —— 测试仍全通过，所以最终只留这 18 处。
-const IMPORTANT_BUDGET = { 'component.ts': 16, 'glass.ts': 4, 'background.ts': 3, 'switcher.ts': 1, 'adaptive.ts': 18, 'button.ts': 0, 'surfaces.ts': 0 }
+// component.ts 16 → 18（2026-11-16）：【动效】开关（#129/#131）需要一条独立的
+// body[data-bloom-motion="off"] 降级规则。它必须和 @media (prefers-reduced-motion)
+// 那条**分开成块**—— 若把选择器列表用逗号连在 @media 前，@media 会被当成选择器
+// 的一部分，整个块连同无障碍降级一起被浏览器丢弃（实测 stylesheet 里少一个
+// CSSMediaRule，【动效】开关按下去没反应）。两条块各自需要 animation/transition
+// 两条 !important（对手是 837-855 那批带 !important 的入场动画，特异度低也压不住），
+// 因此 +2。已确认无可删项：其它 16 处都注明了「宿主也在用 !important」的硬约束。
+const IMPORTANT_BUDGET = { 'component.ts': 18, 'glass.ts': 4, 'background.ts': 3, 'switcher.ts': 1, 'adaptive.ts': 18, 'button.ts': 0, 'surfaces.ts': 0 }
 const overBudget = []
 for (const f of SRC.filter((x) => /\/css\//.test(x.path))) {
   const name = f.path.split('/').pop()

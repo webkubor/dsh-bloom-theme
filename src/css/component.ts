@@ -924,7 +924,11 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]:has([class*
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* ④ 无障碍与手动动效开关（#129/#131）：全部降级为静止 */
+/* ④ 无障碍与手动动效开关（#129/#131）：全部降级为静止
+   ⚠️ 手动开关这条必须独立成块：若把它的选择器列表和后面的 @media 用逗号连在
+   一起，@media 会被当成选择器列表的一部分，整个块连同无障碍降级一起被浏览器
+   丢弃（实测 stylesheet 里只剩 2 个 CSSMediaRule 而不是 3 个），结果【动效】
+   开关按下去没反应，prefers-reduced-motion 也失效。 */
 body[data-bloom-motion="off"] [class*="_sidebarCol"] [role="treeitem"],
 body[data-bloom-motion="off"] .dsh-bloom-switcher,
 body[data-bloom-motion="off"] .dsh-bloom-trigger,
@@ -939,7 +943,11 @@ body[data-bloom-motion="off"] div[class*="_scrollBody"] > div[class*="_card"],
 body[data-bloom-motion="off"] button[class*="_newSession"],
 body[data-bloom-motion="off"] [class*="_scrollBody"]:not(:has(div[class*="_bubble"]))::before,
 body[data-bloom-motion="off"] ::view-transition-old(root),
-body[data-bloom-motion="off"] ::view-transition-new(root),
+body[data-bloom-motion="off"] ::view-transition-new(root) {
+  animation: none !important;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [class*="_sidebarCol"] [role="treeitem"],
   .dsh-bloom-switcher, .dsh-bloom-trigger, .dsh-bloom-option, .dsh-bloom-menu,

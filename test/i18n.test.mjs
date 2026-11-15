@@ -42,6 +42,11 @@ const expected = {
   zh: { heading: '外观', banner: 'Bloom 主题有新版本', share: '请帮我安装', error: 'registry 无可用通道（tags: 无）', badge: '可更新到 v' },
   en: { heading: 'Appearance', banner: 'A new Bloom version is out', share: 'Please install and enable', error: 'No usable channel in the registry (tags: none)', badge: 'update available: v' },
 }
+/** 配色数量从 palette 源码推导，别写死 —— v0.28.0 扩到 15 套后写死的 12 就过期了。 */
+const paletteSource = await readFile(new URL('../src/palette.ts', import.meta.url), 'utf8')
+const featuredCount = (paletteSource.match(/variants:\s*\[([^\]]*)\]/g) ?? [])
+  .flatMap(entry => entry.replace(/variants:\s*\[|\]/g, '').split(',').map(v => v.trim().replace(/^'|'$/g, '')))
+  .filter(Boolean).length
 /**
  * DSH locale 服务的最小替身见文件头的 makeLocale —— 浏览器里用的是它序列化过去的副本。
  */
@@ -145,7 +150,7 @@ for (const language of ['zh', 'en']) {
           overflows: row.scrollWidth > row.clientWidth + 1,
           titleContainsPoem: row.title.includes(poem.textContent) }
       }))
-      assert.equal(geometry.length, 12)
+      assert.equal(geometry.length, featuredCount)
       assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))
       assert.ok(geometry.every(row => !row.overflows && row.titleContainsPoem))
     } finally { await context.close() }
@@ -203,7 +208,7 @@ for (const language of ['zh', 'en']) {
         await page.clock.fastForward(500)
         assert.equal(await page.evaluate(() => document.body.hasAttribute('data-ds-dark-theme')), mode === 'dark')
         const rows = await page.evaluate(measureRows)
-        assert.equal(rows.length, 12)
+        assert.equal(rows.length, featuredCount)
         for (const r of rows) {
           const at = `${language}/${mode} ${r.variant}`
           assert.equal(r.poemLang, language, `${at}: poem carries the DSH language`)

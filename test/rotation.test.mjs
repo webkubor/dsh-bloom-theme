@@ -8,8 +8,8 @@ const { outputFiles } = await build({
   stdin: {
     contents: `import { buildSwitcherEl, applyVariant } from './src/switcher.ts';
       import { SWITCHER_CSS } from './src/css/switcher.ts';
-      import { FEATURED_VARIANTS } from './src/palette.ts';
-      window.fixture = { buildSwitcherEl, applyVariant, SWITCHER_CSS, FEATURED_VARIANTS };`,
+      import { FEATURED_VARIANTS, PALETTE_GROUPS, VARIANTS } from './src/palette.ts';
+      window.fixture = { buildSwitcherEl, applyVariant, SWITCHER_CSS, FEATURED_VARIANTS, PALETTE_GROUPS, VARIANTS };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
   }, bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })
@@ -34,16 +34,34 @@ async function setup(t, saved = 'mist') {
 
 const current = page => page.locator('body').getAttribute('data-bloom-variant')
 test('legacy saved color stays visible until user selects a featured color', async t => {
-  const page = await setup(t, 'stone')
+  // 找一个「PALETTE 里有、但不在 FEATURED 里」的旧配色：v0.27.0 时代 sage/stone/amber
+  // 属于这类（存在 storage 里但菜单不列）。v0.28.0 把 15 套全量放出后可能一个都不剩，
+  // 这时这条断言就没有适用对象 —— 明确按「菜单就是完整的 15 行」断言，别硬凑。
+  const probe = await setup(t)
+  const legacyOnly = await probe.evaluate(() => {
+    const groups = window.fixture.PALETTE_GROUPS.flatMap(g => g.variants)
+    return window.fixture.VARIANTS.filter(v => !groups.includes(v))
+  })
+  const featured = await probe.evaluate(() => window.fixture.FEATURED_VARIANTS.length)
+  await probe.close()
+  const page = await setup(t, legacyOnly[0] ?? 'mist')
   await page.locator('.dsh-bloom-trigger').click()
-  assert.equal(await page.locator('.dsh-bloom-option').count(), 13)
-  assert.equal(await page.locator('[data-variant="stone"]').count(), 1)
+  if (!legacyOnly.length) {
+    // 现在没有旧配色了：菜单就应该是完整的 featured 行数
+    assert.equal(await page.locator('.dsh-bloom-option').count(), featured)
+    assert.equal(await page.locator('[data-variant="silverrose"]').count(), 1)
+    assert.equal(await page.locator('[data-variant="dawn"]').count(), 1)
+    return
+  }
+  // 旧配色不在 FEATURED 里 → 多出一行，且只多一行
+  assert.equal(await page.locator('.dsh-bloom-option').count(), featured + 1)
+  assert.equal(await page.locator(`[data-variant="${legacyOnly[0]}"]`).count(), 1)
   assert.equal(await page.locator('[data-variant="silverrose"]').count(), 1)
   assert.equal(await page.locator('[data-variant="dawn"]').count(), 1)
   await page.locator('.dsh-bloom-option[data-variant="dawn"]').click()
   await page.locator('.dsh-bloom-trigger').click()
-  assert.equal(await page.locator('.dsh-bloom-option').count(), 12)
-  assert.equal(await page.locator('[data-variant="stone"]').count(), 0)
+  assert.equal(await page.locator('.dsh-bloom-option').count(), featured)
+  assert.equal(await page.locator(`[data-variant="${legacyOnly[0]}"]`).count(), 0)
   assert.equal(await current(page), 'dawn')
 })
 

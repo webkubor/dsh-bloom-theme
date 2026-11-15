@@ -1,10 +1,14 @@
 export const SWITCHER_CSS = `
-/* Switcher lives in the session header action row, beside host actions. */
-.dsh-bloom-slot { display: inline-flex; flex: none; align-items: center; }
-.dsh-bloom-slot:dir(rtl) { direction: rtl; }
+/* Move only the empty Slot anchor into the host's existing leading clearance. */
+.dsh-bloom-slot { display: inline-block; flex: none; transform: translateX(max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px))); }
+.dsh-bloom-slot:dir(rtl) { transform: translateX(calc(-1 * max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px)))); }
 .dsh-bloom-overlay { pointer-events: none; }
 .dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }
 .dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 80px); position: fixed; pointer-events: auto; z-index: 80; }
+/* The trigger sits in the host header's leading seat, so the menu expands to the
+   right from the trigger's left edge (v0.27.0 behaviour). placeMenu() in
+   src/switcher.ts measures the real viewport and takes over whenever that
+   default would cross an edge, so the panel always stays fully on screen. */
 .dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
 .dsh-bloom-switcher {
   position: relative;
@@ -20,11 +24,10 @@ export const SWITCHER_CSS = `
 .dsh-bloom-trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border-radius: 999px;
+  gap: 6px;
+  height: 32px;
+  padding: 0 9px;
+  border-radius: 9px;
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,0.08));
   background: color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 30%);
   backdrop-filter: blur(14px) saturate(1.2);
@@ -41,8 +44,6 @@ export const SWITCHER_CSS = `
   outline: 2px solid var(--dsw-alias-brand-primary, #4a90e2);
   outline-offset: 2px;
 }
-.dsh-bloom-trigger__name,
-.dsh-bloom-trigger .dsh-bloom-chevron { display: none; }
 .dsh-bloom-trigger__name {
   font-weight: 500;
   color: var(--dsw-alias-label-primary, #222);
@@ -287,10 +288,12 @@ export const SWITCHER_CSS = `
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* 15 行放不下 → 列表自身滚动，而不是把整个面板撑出视口。
+     不加 padding-right：选项宽度要与 v0.27.0 一致（312px），
+     否则每行都窄 6px。macOS 的滚动条是 overlay 浮层，不占布局宽度。 */
   max-height: 252px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: 6px;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent) transparent;
 }
@@ -313,6 +316,9 @@ export const SWITCHER_CSS = `
   gap: 10px;
   width: 100%;
   height: 34px;
+  /* flex 容器里子项默认 flex-shrink: 1 —— 15 行放进 max-height 252px 的可滚动
+     列表时，固定 height 也会被压扁（实测 34px → 14.94px）。锁死不缩。 */
+  flex: none;
   padding: 0 12px;
   box-sizing: border-box;
 }

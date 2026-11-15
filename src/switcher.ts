@@ -310,8 +310,7 @@ export function closeMenu(root: HTMLElement) {
   const trigger = root.querySelector<HTMLElement>('.dsh-bloom-trigger')
   if (menu) {
     menu.hidden = true
-    menu.classList.remove('is-entering')
-  }
+    menu.classList.remove('is-entering')  }
   if (trigger) trigger.setAttribute('aria-expanded', 'false')
 }
 
@@ -449,6 +448,90 @@ function syncGlassRow(el: HTMLElement) {
 
 const switcherCleanups = new Map<HTMLElement, () => void>()
 
+/**
+ * 把菜单夹进视口 —— 触发器在宿主标题栏哪一端都行。
+ *
+ * 触发器坐在 conversation.header.leading（页头左侧），菜单 CSS 默认 left: 0 左对齐
+ * 展开；但窄视口或宿主把座位推到别处时，面板仍可能越界。纯 CSS 没法按实际位置判断，
+ * 所以这里量真实坐标后按视口夹取：
+ *   右边缘优先贴触发器右缘；左边放不下就翻到左边贴触发器左缘；
+ *   上下同理，下方不够就翻到上方；仍然放不下就压进视口并限高。
+ *
+ * 菜单是 absolute（包含块是 switcher 自身），所以要把视口坐标换算成相对
+ * switcher 的偏移，不改父级定位模型。只写 inline style，不动宿主 DOM。
+ */
+function placeMenu(el: HTMLElement) {
+  const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+  const trigger = el.querySelector<HTMLElement>('.dsh-bloom-trigger')
+  if (!menu || !trigger || menu.hidden) return
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const host = el.getBoundingClientRect()
+  const triggerRect = trigger.getBoundingClientRect()
+  const gap = 6
+  const margin = 8
+  // 必须用布局尺寸（offsetWidth/scrollHeight），不能用 getBoundingClientRect()：
+  // 面板正播入场动画（scale(0.96)），rect 量到的是变换后的尺寸，
+  // 会把夹取算窄 ~12px，面板右缘照样溢出视口。offsetWidth 不受 transform 影响。
+  const menuWidth = menu.offsetWidth
+  const contentHeight = menu.scrollHeight
+  // 上下：默认挂在触发器下方；下方放不下就翻到上方
+  const spaceBelow = vh - triggerRect.bottom - gap - margin
+  const spaceAbove = triggerRect.top - gap - margin
+  const openUp = spaceBelow < Math.min(contentHeight, 160) && spaceAbove > spaceBelow
+  // 上限留 1px 余量：视口高度带小数时（缩放/分数像素），bottom 可能比 vh 多零点几像素
+  const maxHeight = Math.max(160, Math.min(vh - 2 * margin - 1, openUp ? spaceAbove : spaceBelow))
+  // 左右：先贴触发器右缘，右边放不下就贴触发器左缘，最后夹进视口
+  const preferredLeft = triggerRect.right - menuWidth
+  const rightAligns = preferredLeft >= margin
+  const viewportLeft = Math.min(
+    Math.max(margin, rightAligns ? preferredLeft : triggerRect.left),
+    Math.max(margin, vw - menuWidth - margin),
+  )
+  // max-height 只作用于内容盒，而宿主页面未必全局 border-box ——
+  // 限高之后回读真实渲染总高（offsetHeight 含 padding/border）再夹 top。
+  //
+  // 包含块要分两种情况：slotted 时 .dsh-bloom-switcher 是 position: fixed，
+  // 它的包含块就是视口本身，menu 的 left/top 要按视口坐标写；
+  // 非 slotted 时 switcher 是 static/relative，包含块才是 switcher 自身，
+  // 要减掉 host 的偏移。写反了会让菜单整体偏移一个 host.left 的距离
+  // （极窄视口下直接把面板推出左边界）。
+  const hostIsFixed = getComputedStyle(el).position === 'fixed'
+  const originX = hostIsFixed ? 0 : host.left
+  const originY = hostIsFixed ? 0 : host.top
+  menu.style.left = `${viewportLeft - originX}px`
+  menu.style.top = '0px'
+  menu.style.right = 'auto'
+  menu.style.maxHeight = `${maxHeight}px`
+  const renderedHeight = menu.offsetHeight
+  // 上下：先按上方/下方挂，再夹回视口，保证 bottom 不越界
+  const preferredTop = openUp ? triggerRect.top - gap - renderedHeight : triggerRect.bottom + gap
+  let viewportTop = Math.min(
+    Math.max(margin, preferredTop),
+    Math.max(margin, vh - margin - renderedHeight),
+  )
+  menu.style.top = `${viewportTop - originY}px`
+  // 回读校正：不依赖对 padding/border 的任何假设 ——
+  // 限高、动画、亚像素都可能让实际底边比算出来的多出零点几像素，
+  // 直接量一次真实底边，超出就把 top 提上去，直到 bottom <= vh - margin。
+  for (let i = 0; i < 3; i++) {
+    const overflow = menu.getBoundingClientRect().bottom - (vh - margin)
+    if (overflow <= 0) break
+    viewportTop -= overflow
+    menu.style.top = `${viewportTop - originY}px`
+  }
+}
+
+/** 清掉 placeMenu 写下的定位状态，回到 CSS 默认对齐。 */
+function clearMenuPlacement(el: HTMLElement) {
+  const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+  if (!menu) return
+  menu.style.removeProperty('left')
+  menu.style.removeProperty('top')
+  menu.style.removeProperty('right')
+  menu.style.removeProperty('max-height')
+}
+
 /** Remove document/window listeners as well as detached switchers after SPA navigation. */
 function disposeSwitcher(el: HTMLElement) {
   switcherCleanups.get(el)?.()
@@ -497,6 +580,21 @@ export function buildSwitcherEl(initialVariant) {
     el.querySelectorAll<HTMLButtonElement>('[data-share-capture]').forEach(button => { button.disabled = false })
   }
   closeShareSessions.set(el, closeShare)
+  // 视口变化后重算菜单夹取：面板开着时 resize 必须跟着重排，
+  // 否则限高还停留在旧视口算出的值，底边会越界。
+  // 监听挂在 window 上并按帧节流；关闭菜单后立即停掉，不再空转。
+  let repositionFrame = 0
+  const reposition = () => {
+    if (repositionFrame) return
+    repositionFrame = requestAnimationFrame(() => {
+      repositionFrame = 0
+      const menu = el.querySelector<HTMLElement>('.dsh-bloom-menu')
+      if (menu && !menu.hidden) placeMenu(el)
+    })
+  }
+  const onViewportChange = () => reposition()
+  window.addEventListener('resize', onViewportChange)
+  window.addEventListener('scroll', onViewportChange, true)
   const shareStatus = (message: string) => {
     const status = el.querySelector<HTMLElement>('.dsh-bloom-share-status')
     if (status) status.textContent = message
@@ -571,8 +669,11 @@ export function buildSwitcherEl(initialVariant) {
     // 每次打开都重播入场：不这么做，第二次之后就是硬弹出来
     playEnter(menu)
     trigger.setAttribute('aria-expanded', 'true')
+    // 先同步行内容（会改变面板高度），再按真实视口夹一次位置：
+    // 触发器在标题栏哪一端、面板最终多高，夹取都要按最终状态算。
     syncAppearanceRow(el)
     syncGlassRow(el)
+    placeMenu(el)
       // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
     const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
       || menu.querySelector<HTMLElement>('.dsh-bloom-option')
@@ -835,6 +936,11 @@ export function buildSwitcherEl(initialVariant) {
     timers.clear()
     window.removeEventListener(LANG_CHANGE_EVENT, onLanguageChange)
     document.removeEventListener('click', onOutsideClick)
+    // 定位用的监听与内联样式一起回收：插件停用后页面必须干净
+    cancelAnimationFrame(repositionFrame)
+    window.removeEventListener('resize', onViewportChange)
+    window.removeEventListener('scroll', onViewportChange, true)
+    clearMenuPlacement(el)
   })
   return el
 }
@@ -871,6 +977,8 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
     el.style.left = `${box.left}px`
     el.style.top = `${box.top}px`
     el.style.setProperty('--bloom-menu-max-h', `${Math.max(160, window.innerHeight - box.bottom - 18)}px`)
+    // switcher 自己动了 → 菜单的视口夹取结果要跟着重算（标题栏宽度会随侧栏收起变化）
+    placeMenu(el)
   }
   position()
   // The anchor can move without resizing (sidebar collapse, sibling width), so track its own rect per frame.
@@ -880,7 +988,9 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
   const observer = new ResizeObserver(position)
   observer.observe(anchor)
   observer.observe(trigger)
-  window.addEventListener('resize', position)
+  // 视口尺寸变了 → 锚点位置要重算（position 的 key 里没有窗口宽度）
+  const onResize = () => { position() }
+  window.addEventListener('resize', onResize)
   window.addEventListener('scroll', position, true)
   refreshUpdateBadge()
   renderDshUpdate()
@@ -888,8 +998,9 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
   return () => {
     cancelAnimationFrame(frame)
     observer.disconnect()
-    window.removeEventListener('resize', position)
+    window.removeEventListener('resize', onResize)
     window.removeEventListener('scroll', position, true)
+    // disposeSwitcher 会连同定位监听与内联样式一起回收
     disposeSwitcher(el)
     el.remove()
     anchor.style.removeProperty('width')

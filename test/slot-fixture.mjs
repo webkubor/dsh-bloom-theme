@@ -7,7 +7,20 @@ const occupants = new Map()
 // Registration options per Slot kind, as reported by live Inspect (relayed by the lead; Inspect timed out here):
 //   single (conversation.header.leading): exactly one occupant, no registration fields beyond name.
 //   list   (shell.overlay): id required, order optional.
-const SLOT_KIND = { 'conversation.header.leading': 'single', 'shell.overlay': 'list' }
+//
+// ⚠️ 这张表必须跟 DSH 的 Slot 契约一起长。2026-11-14 实测：v0.28.0 把主题切换器
+// 挂到 `conversation.session.header.corner`，这个 slot 是真实存在的
+// （DSH 0.2.2-rc.1 的 dsh-client-ui-conversation 契约里：
+//   'conversation.session.header.corner': { kind: 'single', scope: 'session' }），
+// 但本表没登记它，inject 就直接 throw `Unexpected Slot` —— 三个测试套件全红。
+//
+// 判据来源必须写清「哪个文件哪一行」，否则下次还是靠人肉发现：
+//   node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/types/client/contract/slots.d.ts
+const SLOT_KIND = {
+  'conversation.header.leading': 'single',
+  'conversation.session.header.corner': 'single',
+  'shell.overlay': 'list',
+}
 const ALLOWED_KEYS = { single: ['name'], list: ['name', 'id', 'order'] }
 let injecting = null
 window.slotRegistrations = []

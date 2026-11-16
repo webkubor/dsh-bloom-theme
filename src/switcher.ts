@@ -235,10 +235,10 @@ export function buildSwitcherHTML(currentVariant) {
         ${rotationOptions}
       </select>
     </label>
-    <div class="dsh-bloom-rotation dsh-bloom-motion-row">${tr('动效')}
-      <span class="dsh-bloom-appearance__seg dsh-bloom-motion-seg">
-        <button type="button" class="dsh-bloom-appearance__btn" data-motion="on" role="radio" aria-checked="${readMotion()}" data-active="${readMotion()}">${tr('开启')}</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-motion="off" role="radio" aria-checked="${!readMotion()}" data-active="${!readMotion()}">${tr('停用')}</button>
+    <div class="dsh-bloom-rotation dsh-bloom-motion-row"><span class="dsh-bloom-rotation__label">${tr('动效')}</span>
+      <span class="dsh-bloom-motion-seg">
+        <button type="button" class="dsh-bloom-motion-btn" data-motion="on" role="radio" aria-checked="${readMotion()}" data-active="${readMotion()}">${tr('开启')}</button>
+        <button type="button" class="dsh-bloom-motion-btn" data-motion="off" role="radio" aria-checked="${!readMotion()}" data-active="${!readMotion()}">${tr('停用')}</button>
       </span>
     </div>
     <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">

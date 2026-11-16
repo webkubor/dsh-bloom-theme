@@ -280,32 +280,53 @@ export const SWITCHER_CSS = `
   outline-offset: 2px;
 }
 
+/* 「动效」开关：与上方「自动换色」的 select 同一视觉重量 —— 都是
+   padding 4px 级、radius 6px、一行高，不借用三等分大分段的
+   .dsh-bloom-appearance__btn（那个 padding 7px + line-height 1.7，
+   塞进窄容器会变成高方块，且 label 被挤成竖排）。 */
+.dsh-bloom-rotation__label { white-space: nowrap; }
 .dsh-bloom-motion-seg {
   display: inline-flex;
-  width: 110px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%);
+}
+.dsh-bloom-motion-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, inherit);
+  font: inherit;
+  padding: 4px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: center;
+  transition: background-color .14s ease, color .14s ease;
+}
+.dsh-bloom-motion-btn:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 90%);
+}
+.dsh-bloom-motion-btn[data-active="true"] {
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  color: var(--bloom-accent, #6b8f71);
+  font-weight: 600;
+  box-shadow: 0 1px 2px -1px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 80%);
+}
+.dsh-bloom-motion-btn:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: -2px;
 }
 .dsh-bloom-options {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  /* 15 行放不下 → 列表自身滚动，而不是把整个面板撑出视口。
-     不加 padding-right：选项宽度要与 v0.27.0 一致（312px），
-     否则每行都窄 6px。macOS 的滚动条是 overlay 浮层，不占布局宽度。 */
-  max-height: 252px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 30%, transparent) transparent;
-}
-.dsh-bloom-options::-webkit-scrollbar {
-  width: 4px;
-}
-.dsh-bloom-options::-webkit-scrollbar-track {
-  background: transparent;
-}
-.dsh-bloom-options::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 28%, transparent);
-  border-radius: 999px;
+  /* 15 个配色一起完整展开，不给列表加内层滚动条 —— 菜单本体已有
+     max-height + overflow-y: auto（见上面 slotted 规则），超出视口时
+     整个菜单一起滚动，配色区不会单独被切成小窗。
+     选项宽度保持与 v0.27.0 一致（312px），不加 padding-right。 */
 }
 .dsh-bloom-option {
   /* 稳妥的单行 Grid：button 不依赖 Chromium 的 subgrid，

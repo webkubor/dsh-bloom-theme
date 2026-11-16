@@ -274,23 +274,28 @@ export const SWITCHER_CSS = `
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,.15));
   border-radius: 6px;
   padding: 4px 6px;
+  /* 与「动效」开关同宽：两者右对齐，宽度不一致会让左边缘错开 */
+  width: 112px;
+  box-sizing: border-box;
 }
 .dsh-bloom-rotation__select:focus-visible {
   outline: 2px solid var(--bloom-accent, #34698c);
   outline-offset: 2px;
 }
 
-/* 「动效」开关：与上方「自动换色」的 select 同一视觉重量 —— 都是
-   padding 4px 级、radius 6px、一行高，不借用三等分大分段的
-   .dsh-bloom-appearance__btn（那个 padding 7px + line-height 1.7，
-   塞进窄容器会变成高方块，且 label 被挤成竖排）。 */
+/* 「动效」开关：与上方「自动换色」的 select 同一套控件语言 ——
+   同宽（112px）、同边框、同底色、同圆角、同内高，两者右对齐后
+   左右边缘严格对齐，不会看起来错开。选中项用主题色高亮表语义。 */
 .dsh-bloom-rotation__label { white-space: nowrap; }
 .dsh-bloom-motion-seg {
   display: inline-flex;
-  gap: 2px;
-  padding: 2px;
+  width: 112px;
+  height: 27px;                /* 与 select 的实际行高一致，避免上下错位 */
+  box-sizing: border-box;
+  border: 1px solid var(--bloom-hairline, rgba(0,0,0,.15));
   border-radius: 6px;
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%);
+  background: var(--dsw-alias-bg-layer-2, #fff);
+  overflow: hidden;
 }
 .dsh-bloom-motion-btn {
   appearance: none;
@@ -298,7 +303,8 @@ export const SWITCHER_CSS = `
   background: transparent;
   color: var(--dsw-alias-label-secondary, inherit);
   font: inherit;
-  padding: 4px 12px;
+  flex: 1;
+  padding: 4px 6px;
   border-radius: 5px;
   cursor: pointer;
   line-height: 1.2;
@@ -310,10 +316,9 @@ export const SWITCHER_CSS = `
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 90%);
 }
 .dsh-bloom-motion-btn[data-active="true"] {
-  background: var(--dsw-alias-bg-layer-1, #fff);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 86%);
   color: var(--bloom-accent, #6b8f71);
   font-weight: 600;
-  box-shadow: 0 1px 2px -1px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 80%);
 }
 .dsh-bloom-motion-btn:focus-visible {
   outline: 2px solid var(--bloom-accent, #6b8f71);

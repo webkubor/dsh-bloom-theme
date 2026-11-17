@@ -1,7 +1,8 @@
 /**
  * 顶栏配色切换器 —— 主题唯一的交互控件。
  *
- * 由官方 conversation.header.leading Slot 持有，不查找或改写宿主顶栏。
+ * 由官方 conversation.session.header.corner Slot 持有（#113：不占对话标题前的
+ * leading 座），不查找或改写宿主顶栏。
  * 键盘可完整操作（role=radiogroup + aria-checked + 方向键），窄屏隐藏中文名。
  */
 import { FEATURED_VARIANTS, isNewVariant, PALETTE, VARIANTS } from './palette.js'
@@ -451,9 +452,9 @@ const switcherCleanups = new Map<HTMLElement, () => void>()
 /**
  * 把菜单夹进视口 —— 触发器在宿主标题栏哪一端都行。
  *
- * 触发器坐在 conversation.header.leading（页头左侧），菜单 CSS 默认 left: 0 左对齐
- * 展开；但窄视口或宿主把座位推到别处时，面板仍可能越界。纯 CSS 没法按实际位置判断，
- * 所以这里量真实坐标后按视口夹取：
+ * 触发器坐在 conversation.session.header.corner（页头右侧角落），菜单 CSS 默认
+ * left: 0 只是占位展开；窄视口或宿主把座位推到别处时，面板仍可能越界。纯 CSS
+ * 没法按实际位置判断，所以这里量真实坐标后按视口夹取：
  *   右边缘优先贴触发器右缘；左边放不下就翻到左边贴触发器左缘；
  *   上下同理，下方不够就翻到上方；仍然放不下就压进视口并限高。
  *
@@ -491,15 +492,14 @@ function placeMenu(el: HTMLElement) {
   // max-height 只作用于内容盒，而宿主页面未必全局 border-box ——
   // 限高之后回读真实渲染总高（offsetHeight 含 padding/border）再夹 top。
   //
-  // 包含块要分两种情况：slotted 时 .dsh-bloom-switcher 是 position: fixed，
-  // 它的包含块就是视口本身，menu 的 left/top 要按视口坐标写；
-  // 非 slotted 时 switcher 是 static/relative，包含块才是 switcher 自身，
-  // 要减掉 host 的偏移。写反了会让菜单整体偏移一个 host.left 的距离
-  // （极窄视口下直接把面板推出左边界）。
-  const hostIsFixed = getComputedStyle(el).position === 'fixed'
-  const originX = hostIsFixed ? 0 : host.left
-  const originY = hostIsFixed ? 0 : host.top
-  menu.style.left = `${viewportLeft - originX}px`
+  // 菜单是 absolute，包含块是最近的定位祖先，也就是 switcher 自身 ——
+  // base 的 position: relative 与 slotted 的 position: fixed 都建立包含块，
+  // fixed 的只是 switcher 自己相对视口定位，不改变菜单的包含块。所以
+  // left/top 永远写 switcher 相对坐标：视口坐标 − host 的视口偏移。
+  // （switcher 自身无 padding/border，rect 原点即 padding box 原点。）
+  // 之前把 fixed 误当「菜单包含块是视口」写成 origin = 0，菜单整体再偏移
+  // 一个 host.left/top —— 窄视口实测右缘 592 > 380、短窗实测底边 725 > 700。
+  menu.style.left = `${viewportLeft - host.left}px`
   menu.style.top = '0px'
   menu.style.right = 'auto'
   menu.style.maxHeight = `${maxHeight}px`
@@ -510,7 +510,7 @@ function placeMenu(el: HTMLElement) {
     Math.max(margin, preferredTop),
     Math.max(margin, vh - margin - renderedHeight),
   )
-  menu.style.top = `${viewportTop - originY}px`
+  menu.style.top = `${viewportTop - host.top}px`
   // 回读校正：不依赖对 padding/border 的任何假设 ——
   // 限高、动画、亚像素都可能让实际底边比算出来的多出零点几像素，
   // 直接量一次真实底边，超出就把 top 提上去，直到 bottom <= vh - margin。
@@ -518,7 +518,7 @@ function placeMenu(el: HTMLElement) {
     const overflow = menu.getBoundingClientRect().bottom - (vh - margin)
     if (overflow <= 0) break
     viewportTop -= overflow
-    menu.style.top = `${viewportTop - originY}px`
+    menu.style.top = `${viewportTop - host.top}px`
   }
 }
 

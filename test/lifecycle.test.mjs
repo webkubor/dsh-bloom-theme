@@ -78,7 +78,7 @@ async function setupPage(t) {
         body: `<html><body style="margin:0">
 <div id="scroller" style="height:100vh;overflow:auto">
 <header style="position:relative;z-index:1;height:44px;overflow:hidden;contain:paint;display:flex;justify-content:center;align-items:center;margin-top:120px">
-<div data-fixture-leading style="display:flex"></div><div class="_headerUtilities"></div></header>
+<div data-fixture-header style="display:flex"></div><div class="_headerUtilities"></div></header>
 <main id="transcript" style="position:relative;z-index:5;height:2000px;background:rgb(250,250,250)">
 <div data-turn-process><span class="_label">深度求索中，用时 1分30秒</span></div></main>
 </div></body></html>`,
@@ -143,11 +143,11 @@ test('switcher and decorations render only through declared React Slots and surv
   const page = await setupPage(t)
   await page.evaluate(() => window.applyModule(window.mockLocale, window.mockTheme))
   const regs = await page.evaluate(() => window.slotRegistrations.map(r => r.name).sort())
-  assert.deepEqual(regs, ['conversation.header.leading', 'shell.overlay'])
+  assert.deepEqual(regs, ['conversation.session.header.corner', 'shell.overlay'])
   assert.deepEqual(await page.evaluate(() => window.slotViolations), [], 'registrations follow the official { name, id, order } shape')
   // Ownership: the header Slot holds only Bloom's empty anchor; the whole widget lives in Bloom's overlay container.
   assert.equal(await page.evaluate(() =>
-    document.querySelector('[data-fixture-slot="conversation.header.leading"] [data-bloom-slot="switcher"]')?.children.length), 0, 'anchor stays empty')
+    document.querySelector('[data-fixture-slot="conversation.session.header.corner"] [data-bloom-slot="switcher"]')?.children.length), 0, 'anchor stays empty')
   assert.equal(await page.evaluate(() =>
     document.querySelectorAll('[data-fixture-slot="shell.overlay"] [data-bloom-slot="decorations"] > .dsh-bloom-switcher').length), 1, 'widget mounted in own overlay container')
   assert.equal(await page.evaluate(() => document.querySelectorAll('header .dsh-bloom-switcher').length), 0, 'no widget inside the host header')
@@ -155,9 +155,9 @@ test('switcher and decorations render only through declared React Slots and surv
     !!document.querySelector('[data-fixture-slot="shell.overlay"] #dsh-bloom-sparkles')), true)
   assert.equal(await page.evaluate(() => document.querySelector('._headerUtilities').children.length), 0, 'host header untouched')
 
-  await page.evaluate(() => window.unmountFixtureSlot('conversation.header.leading'))
+  await page.evaluate(() => window.unmountFixtureSlot('conversation.session.header.corner'))
   assert.equal(await page.evaluate(() => document.querySelectorAll('.dsh-bloom-switcher').length), 0, 'React unmount removes switcher')
-  await page.evaluate(() => window.remountFixtureSlot('conversation.header.leading'))
+  await page.evaluate(() => window.remountFixtureSlot('conversation.session.header.corner'))
   assert.equal(await page.evaluate(() => document.querySelectorAll('.dsh-bloom-switcher').length), 1, 'remount yields exactly one')
 
   await page.click('.dsh-bloom-trigger')
@@ -287,7 +287,7 @@ test('switcher waits for the overlay and re-anchors when either Slot remounts', 
   await page.evaluate(() => window.remountFixtureSlot('shell.overlay'))
   assert.equal(await page.evaluate(() => document.querySelectorAll('[data-fixture-slot="shell.overlay"] .dsh-bloom-switcher').length), 1, 'overlay remount restores exactly one widget')
   assertTriggerOnAnchor(await anchorAndTrigger(page), 'after overlay remount')
-  await page.evaluate(() => { window.unmountFixtureSlot('conversation.header.leading'); window.remountFixtureSlot('conversation.header.leading') })
+  await page.evaluate(() => { window.unmountFixtureSlot('conversation.session.header.corner'); window.remountFixtureSlot('conversation.session.header.corner') })
   assert.equal(await page.evaluate(() => document.querySelectorAll('.dsh-bloom-switcher').length), 1, 'anchor remount keeps one widget')
   assertTriggerOnAnchor(await anchorAndTrigger(page), 'after anchor remount')
 })

@@ -94,10 +94,10 @@
 ## 三、运行时架构与生命周期
 
 ### [LES-09] 顶栏 overflow 裁剪与 shell.overlay 逃逸挂载
-- **现象**：通过官方 Slot `conversation.header.leading` 挂载配色切换器时，下拉菜单被宿主顶栏的 `contain: paint` 和 `overflow: hidden` 截断，无法展示。
+- **现象**：通过官方 Slot 挂载配色切换器时，下拉菜单被宿主顶栏的 `contain: paint` 和 `overflow: hidden` 截断，无法展示。
 - **根因**：宿主顶栏容器限制了高度并裁剪溢出。
 - **规范解法**：
-  1. `conversation.header.leading` 仅作为占位与定位锚点（Anchor）。
+  1. `conversation.session.header.corner` 仅作为占位与定位锚点（Anchor）（#113：不占对话标题前的 leading 座——用户嫌主题色选项放在对话标题名字前面碍眼；leading 座是历史实现，645a6ab 曾因菜单越界回退过，placeMenu 夹取补齐后回迁）。
   2. 菜单主体与全屏星辉层挂入顶层的 `shell.overlay` Slot。
   3. 通过 `ResizeObserver` 与 `requestAnimationFrame` 实时对齐锚点坐标，完美逃逸裁剪。
 - **索引**：`src/ui.ts`、`src/switcher.ts` `mountSwitcher()`。

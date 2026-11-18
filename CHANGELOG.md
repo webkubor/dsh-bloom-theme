@@ -13,6 +13,50 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.28.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.27.0...v0.28.0) (2026-11-18)
+
+
+### ✨ Features
+
+* **release:** v0.28.0 — 15 套配色全量可选、动效一键控制与性能重构 ([0966d6d](https://github.com/webkubor/dsh-bloom-theme/commit/0966d6dc2879b288c1d30059fdb04638986ef63a))
+* **starlight:** 为流星增加密度、速度与颜色配置 ([ac25b93](https://github.com/webkubor/dsh-bloom-theme/commit/ac25b93b833937372a7727bccfb2446caa2aa7c1))
+
+
+### 🐛 Bug Fixes
+
+* keep approval buttons out of the send-bead style ([a54f759](https://github.com/webkubor/dsh-bloom-theme/commit/a54f75948004bdb3364ff2787281eb18de5c58a7))
+* keep approval buttons out of the send-bead style ([6b4c651](https://github.com/webkubor/dsh-bloom-theme/commit/6b4c6519368ba18a972b3a68ce5ecd60090f5430))
+* prepare v0.28.0 release media and regressions ([924af04](https://github.com/webkubor/dsh-bloom-theme/commit/924af04539309ae0fc5b2493b2b84503fd48bf9e))
+* prepare v0.28.0 release media and regressions ([260e1f9](https://github.com/webkubor/dsh-bloom-theme/commit/260e1f99662ce47df78a75306fa0ee4b317f25b3))
+* **release:** restore unpublished 0.28.0 baseline ([c2e4dce](https://github.com/webkubor/dsh-bloom-theme/commit/c2e4dce8801d00909690b229924f5234267bb939))
+* **switcher:** 动效开关与自动换色下拉框严格同宽同高同位 ([2836230](https://github.com/webkubor/dsh-bloom-theme/commit/2836230105171e92a08b97ef1a7c463b61270097))
+* **switcher:** 菜单按视口夹取，触发器回到 v0.27.0 药丸与 leading 座位 ([645a6ab](https://github.com/webkubor/dsh-bloom-theme/commit/645a6ab6ee8abfb01ec7467b76b10e9b1b0f12c4))
+* **switcher:** 菜单视口夹取、恢复 v0.27.0 观感、动效开关真正生效 ([1f95fc7](https://github.com/webkubor/dsh-bloom-theme/commit/1f95fc7f5940a0ac1388f652728987f3890325d0))
+* **switcher:** 配色列表不再内层滚动、动效行与自动换色行协调 ([e7f5347](https://github.com/webkubor/dsh-bloom-theme/commit/e7f53477e42dba1caffef13f44e4f7abf15edd3c))
+* **test:** slot 契约对齐 v0.28.0 —— 主题切换器挂到 conversation.session.header.corner ([860b5a5](https://github.com/webkubor/dsh-bloom-theme/commit/860b5a523cd23a90b0b9a843c3cdd23faef4267b))
+* **test:** 持久化门禁改用花括号配对判定 try/catch —— 修掉安全代码被误判 ([c7d06f5](https://github.com/webkubor/dsh-bloom-theme/commit/c7d06f597b34bfa30af8b99554bd1bba998942fd))
+* 切换器迁至会话头角座，插件页遮罩与 dshmarket 搜索头适配 ([3d253cf](https://github.com/webkubor/dsh-bloom-theme/commit/3d253cf3ab6d90aff0adc513e5640c3c53ce368c))
+
+
+### 📝 Documentation
+
+* add English troubleshooting guide ([#123](https://github.com/webkubor/dsh-bloom-theme/issues/123)) ([5c561e6](https://github.com/webkubor/dsh-bloom-theme/commit/5c561e6aab60462216fe0719e7f3f60984474ee3))
+* renumber release steps ([2d42ec7](https://github.com/webkubor/dsh-bloom-theme/commit/2d42ec79282cafac0c35ccfbc2559ac55819553c))
+* troubleshoot styling after a host update ([#127](https://github.com/webkubor/dsh-bloom-theme/issues/127)) ([1244d21](https://github.com/webkubor/dsh-bloom-theme/commit/1244d211ae74ac73321b03ec9daed27681cf060d))
+* 守则与贡献指南改为会话头角座锚点（[#113](https://github.com/webkubor/dsh-bloom-theme/issues/113)） ([dfec43e](https://github.com/webkubor/dsh-bloom-theme/commit/dfec43ec9cd20b8ca80724ba5c576af0640125b6))
+* 新增面向用户的排障指南 ([#120](https://github.com/webkubor/dsh-bloom-theme/issues/120)) ([5179d23](https://github.com/webkubor/dsh-bloom-theme/commit/5179d23c647f6e042d2d1e772c8f6cb50af244f6))
+* 补充玻璃质感操作并修正诊断取值 ([#124](https://github.com/webkubor/dsh-bloom-theme/issues/124)) ([f8c012b](https://github.com/webkubor/dsh-bloom-theme/commit/f8c012bc2c32f43b0cfc3b6ce5edd088f5caa508))
+
+
+### 🛠️ CI / Build
+
+* add Scorecard PR maturity checks ([6473478](https://github.com/webkubor/dsh-bloom-theme/commit/6473478ccca15d4f929cae3999a9413f1211dff4))
+* add Scorecard project maturity to PRs ([a2a506b](https://github.com/webkubor/dsh-bloom-theme/commit/a2a506b43cae54040db1c5474c10950864eaa14a))
+* let patch releases reuse their minor line media ([8b7309a](https://github.com/webkubor/dsh-bloom-theme/commit/8b7309a89c59333f5c38ead811c119eb2cab1bc1))
+* let patch releases reuse their minor line media ([ef7482d](https://github.com/webkubor/dsh-bloom-theme/commit/ef7482d6f092ee66ca5f9fe89fa1c7814dfe58f6))
+* use type-aware Scorecard scoring ([ef95aaf](https://github.com/webkubor/dsh-bloom-theme/commit/ef95aaf9d9f5892e81a74d79293ab0f4774b340f))
+* use type-aware Scorecard scoring ([5604e40](https://github.com/webkubor/dsh-bloom-theme/commit/5604e40ef16428dc786d977ba1b41696322b2328))
+
 ## [0.27.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.26.0...v0.27.0) (2026-11-07)
 
 

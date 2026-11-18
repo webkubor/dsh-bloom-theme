@@ -400,24 +400,66 @@ body[data-ds-dark-theme] :is([class*="_tableScroll"], [class*="_tablePane"]) tbo
    自然态整条涂层更高，但透明段只盖住自身空白区，不影响可读性。
    用宿主语义属性 [data-plugin-bar] 定位（实测 0.2.2-rc.2 仅插件页头使用），
    不依赖 hash 类名；高度沿宿主自己的 --plugin-header-paint-height 变量，
-   不硬编码。 */
+   不硬编码。
+
+   渐隐必须用 mask-image 而不是渐变 background（#100）：三方插件
+   （dshmarket 的 hostStickyOffset → paintedCoverBottom）靠读取
+   ::before 的 computed background-color 是否不透明来识别「吸顶遮罩」，
+   再把自己的吸顶表头对齐到遮罩底边。background 渐变简写会把
+   background-color 重置为 transparent，识别失败后回退到页头静止高度，
+   滚动进 compact 态时市场导航栏就漂在半空。保持实底颜色 + 用遮罩
+   做渐隐，视觉完全等价（遮罩 alpha 与原 color-mix 透明度一一对应），
+   同时对外暴露的 background-color 仍是不透明 bg-base。 */
 body[data-bloom-variant] [data-plugin-bar]::before {
-  background: linear-gradient(
-    180deg,
-    var(--dsw-alias-bg-base) 0%,
-    color-mix(in oklch, var(--dsw-alias-bg-base), transparent 55%) 56%,
-    transparent 100%
-  );
+  background: var(--dsw-alias-bg-base);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.45) 56%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.45) 56%, transparent 100%);
 }
 /* 滚动进入 compact 态时涂层变矮（compact-height），渐隐同样按比例收敛：
    顶部一段保持较实，保证标题行在列表滚过时依旧可读。 */
 body[data-bloom-variant] [data-plugin-bar][data-compact]::before {
-  background: linear-gradient(
-    180deg,
-    var(--dsw-alias-bg-base) 0%,
-    color-mix(in oklch, var(--dsw-alias-bg-base), transparent 30%) 70%,
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.7) 70%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.7) 70%, transparent 100%);
+}
+
+/* ═══ dshmarket 吸顶搜索区：实底色带 → 毛玻璃（#136）══════════════
+   dshmarket 的吸顶搜索头（_head）、分类条（_cats）、全屏态吸顶头
+   （_stickyHead）都铺 background: var(--dsw-alias-bg-base) 实底，用来
+   遮住滚过的卡片。和 #113 同理：Bloom 下页面底是氛围层，实底就成了
+   一条与背景割裂的纯色带。
+
+   处理：改成半透明 bg-base + backdrop-filter 毛玻璃 —— 滚过的卡片
+   被模糊压暗，遮挡功能保留，氛围层能透出来；模糊半径沿用 Bloom 的
+   --bloom-glass-blur（matte 12px / 其余 24px），减透明度与高对比
+   偏好下退回宿主实底。
+
+   选择器约束：
+   - 以 dshmarket 自己的根属性 [data-dsh-market-root] 限定作用域，
+     不误伤其他插件；
+   - 类名用「以 _head 结尾 / 后跟空格」精确匹配，不能用 [class*="_head"]
+     —— market 里有 groupHead、opHead、themeCardHead 等十几个同前缀类名；
+   - 特异性 (0,3,1) 高于 market 自身 (0,3,0) 的吸顶规则，无需 !important。 */
+body[data-bloom-variant] [data-dsh-market-root] :is(
+  [class$="_head"], [class*="_head "],
+  [class$="_cats"], [class*="_cats "],
+  [class$="_stickyHead"], [class*="_stickyHead "]
+) {
+  /* 色带底色保留比例：足以压住滚过的卡片文字，又不至于盖死氛围层 */
+  --bloom-market-head-tint: 62%;
+  background: color-mix(in oklch, var(--dsw-alias-bg-base, #fff) var(--bloom-market-head-tint), transparent);
+  backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.2);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  body[data-bloom-variant] [data-dsh-market-root] :is(
+    [class$="_head"], [class*="_head "],
+    [class$="_cats"], [class*="_cats "],
+    [class$="_stickyHead"], [class*="_stickyHead "]
+  ) {
+    background: var(--dsw-alias-bg-base, #fff);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 `

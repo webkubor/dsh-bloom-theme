@@ -21,11 +21,11 @@
 
 <!-- demo-video -->
 
-https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
+https://github.com/user-attachments/assets/6e07c15e-1ada-4364-a41a-5b1f1cf2195c
 
-[▶ Watch the full-quality demo: palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+[▶ Watch the full-quality demo: palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.28.0.mp4)
 
-![Bloom controls and starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+![Bloom controls and starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.28.0.png)
 
 ### Why Bloom?
 
@@ -48,6 +48,14 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 ### Install
 
 Search **`dsh-bloom-theme`** in DeepSeek Harness "Plugins", install, and restart when prompted. Then click the theme button in the top bar and start matching.
+
+For local iteration, build the current worktree and install it into the default `desktop` profile with one command:
+
+```bash
+npm run install:desktop
+```
+
+Use `DSH_PROFILE=tui DSH_BIN=/path/to/dsh npm run install:desktop` to select another profile or dsh CLI path.
 
 Like Bloom? [Leave a ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) so more people find it, and share your palette.
 

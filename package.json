@@ -39,6 +39,7 @@
     "sync-version": "node scripts/sync-version.mjs",
     "dev": "npm run build && npm run build:watch",
     "package": "npm run build && npm pack",
+    "install:desktop": "npm run build && node scripts/install-desktop.mjs",
     "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && ui-craft && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs test/readme-package-name.test.mjs test/enrich-release.test.mjs",
     "check:contrast": "ui-craft",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs && node scripts/version-sync-gate.mjs",
@@ -49,7 +50,7 @@
     "test": "npm run check",
     "check:drift": "node scripts/dsh-drift.mjs",
     "test:i18n": "node --test test/i18n.test.mjs",
-    "test:browser": "node --test test/lifecycle.test.mjs test/i18n.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs test/adaptive-glass.test.mjs test/appearance-host-theme.test.mjs test/starlight.test.mjs test/liquid-layout.test.mjs test/liquid-lens.test.mjs test/inspect.test.mjs test/material-persistence.test.mjs test/diagnostics.test.mjs test/background-contrast.test.mjs test/fog.test.mjs test/button-bead.test.mjs test/surfaces-glass.test.mjs test/footer-layout.test.mjs test/share-capture.test.mjs test/share-ui.test.mjs test/feedback.test.mjs test/ambience-persistence.test.mjs test/meteor-color-mode.test.mjs test/dark-glow-continuity.test.mjs test/sidebar-clearance.test.mjs"
+    "test:browser": "node --test test/lifecycle.test.mjs test/i18n.test.mjs test/rotation.test.mjs test/palette-distinctness.test.mjs test/surface-regression.test.mjs test/update-install.test.mjs test/typing-telemetry.test.mjs test/adaptive-glass.test.mjs test/appearance-host-theme.test.mjs test/starlight.test.mjs test/liquid-layout.test.mjs test/liquid-lens.test.mjs test/inspect.test.mjs test/material-persistence.test.mjs test/diagnostics.test.mjs test/background-contrast.test.mjs test/fog.test.mjs test/button-bead.test.mjs test/surfaces-glass.test.mjs test/footer-layout.test.mjs test/share-capture.test.mjs test/share-ui.test.mjs test/feedback.test.mjs test/ambience-persistence.test.mjs test/meteor-color-mode.test.mjs test/dark-glow-continuity.test.mjs test/corner-seat.test.mjs test/plugin-bar-cover.test.mjs test/decor-layers.test.mjs"
   },
   "repository": {
     "type": "git",

@@ -221,7 +221,7 @@ test('extra edge starlight appears only in dark starry sky and covers all four s
   assert.deepEqual(result.sides, [18, 18, 18, 18])
   assert.deepEqual(result.modes, {corner: 0, diagonal: 0, galaxy: 72, off: 0})
   assert.equal(result.light, 'none')
-  assert.equal(result.meteors, 40)
+  assert.equal(result.meteors, 60)
 })
 
 test('starry-sky fireflies stay visibly present across animation phases', async t => {
@@ -244,7 +244,7 @@ test('starry-sky fireflies stay visibly present across animation phases', async 
   assert.ok(samples.clearPeaks >= 45, `too few clearly sized fireflies: ${samples.clearPeaks}`)
   assert.ok(samples.minGlow >= 3, `small fireflies lost their glow: ${samples.minGlow}`)
   assert.ok(samples.counts.every(count => count >= 18), `too few clearly lit fireflies across phases: ${samples.counts}`)
-  assert.equal(samples.meteors, 40)
+  assert.equal(samples.meteors, 60)
 })
 
 test('meteor shower shows only in dark galaxy, follows the palette and respects reduced motion', async t => {
@@ -260,12 +260,12 @@ test('meteor shower shows only in dark galaxy, follows the palette and respects 
   await page.evaluate(() => document.body.removeAttribute('data-ds-dark-theme')); const light = await shown()
   await page.evaluate(() => document.body.setAttribute('data-ds-dark-theme', ''))
   await page.emulateMedia({ reducedMotion: 'reduce' }); const reduced = await shown()
-  assert.equal(r.corner, 0); assert.equal(r.diagonal, 0); assert.ok(r.galaxy >= 20)
+  assert.equal(r.corner, 0); assert.equal(r.diagonal, 0); assert.ok(r.galaxy >= 40)
   assert.notEqual(colors.pink, colors.blue); assert.equal(colors.anim, 'bloom-meteor')
   assert.equal(light, 0); assert.equal(reduced, 0)
 })
 
-test('meteors keep the established shape: top-right to bottom-left, 40 streaks, unchanged count', async t => {
+test('meteors keep the established shape: top-right to bottom-left, 60 streaks, 40 visible by default', async t => {
   const page = await setup(t, true)
   await page.evaluate(() => document.body.setAttribute('data-bloom-ambience-dark', 'galaxy'))
   const r = await page.evaluate(() => {
@@ -275,6 +275,7 @@ test('meteors keep the established shape: top-right to bottom-left, 40 streaks, 
     const cs = getComputedStyle(ms[0])
     return {
       count: ms.length,
+      visible: ms.filter(m => getComputedStyle(m).display !== 'none').length,
       minAngle: Math.min(...angles),
       maxAngle: Math.max(...angles),
       minTravel: Math.min(...travels),
@@ -283,7 +284,8 @@ test('meteors keep the established shape: top-right to bottom-left, 40 streaks, 
       height: parseFloat(cs.height),
     }
   })
-  assert.equal(r.count, 40, 'meteor count is unchanged')
+  assert.equal(r.count, 60, 'meteor DOM count supports the dense preset')
+  assert.equal(r.visible, 40, 'standard density keeps the original 40 streaks visible')
   // -28deg to -44deg: the streak always falls towards the lower left.
   assert.ok(r.minAngle >= -44.5 && r.maxAngle <= -27.5, `angle range drifted: ${r.minAngle}..${r.maxAngle}`)
   // Long enough to actually reach the bottom-left corner of the screen.

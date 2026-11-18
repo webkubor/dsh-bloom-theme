@@ -5,14 +5,14 @@ import { flushSync } from 'react-dom'
 
 const occupants = new Map()
 // Registration options per Slot kind, as reported by live Inspect (relayed by the lead; Inspect timed out here):
-//   single (conversation.header.leading): exactly one occupant, no registration fields beyond name.
+//   single (conversation.header.leading / conversation.session.header.corner): exactly one occupant, no registration fields beyond name.
 //   list   (shell.overlay): id required, order optional.
 //
-// ⚠️ 这张表必须跟 DSH 的 Slot 契约一起长。2026-11-14 实测：v0.28.0 把主题切换器
-// 挂到 `conversation.session.header.corner`，这个 slot 是真实存在的
-// （DSH 0.2.2-rc.1 的 dsh-client-ui-conversation 契约里：
-//   'conversation.session.header.corner': { kind: 'single', scope: 'session' }），
-// 但本表没登记它，inject 就直接 throw `Unexpected Slot` —— 三个测试套件全红。
+// ⚠️ 这张表必须跟 DSH 的 Slot 契约一起长。2026-11-14 实测：切换器挂
+// `conversation.session.header.corner` 而本表没登记它，inject 就直接 throw
+// `Unexpected Slot` —— 三个测试套件全红。2026-11-17 #113 定案：切换器正式挂
+// corner 座（DSH 0.2.2-rc.1 契约：'conversation.session.header.corner':
+//   { kind: 'single', scope: 'session' }），leading 座保留在表里镜像契约全貌。
 //
 // 判据来源必须写清「哪个文件哪一行」，否则下次还是靠人肉发现：
 //   node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/types/client/contract/slots.d.ts
@@ -53,13 +53,14 @@ window.fixtureSlots = {
     if (occupants.has(name)) throw new Error(`Duplicate Slot registration: ${name}`)
     const host = document.createElement('div')
     host.dataset.fixtureSlot = name
-    // The leading Slot lives inside the page header (a fixture may mark it with [data-fixture-leading]);
+    // The header-area Slot (conversation.session.header.corner) lives inside the
+    // page header (a fixture may mark its seat with [data-fixture-header]);
     // shell.overlay is a viewport-sized layer above the shell that passes pointer events through, like the host's.
     if (name === 'shell.overlay') {
       host.style.cssText = 'position:fixed;inset:0;z-index:1000;pointer-events:none'
       document.body.append(host)
     } else {
-      (document.querySelector('[data-fixture-leading]') ?? document.querySelector('header')).append(host)
+      (document.querySelector('[data-fixture-header]') ?? document.querySelector('header')).append(host)
     }
     const root = createRoot(host)
     flushSync(() => root.render(React.createElement(Component)))

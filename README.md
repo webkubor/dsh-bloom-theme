@@ -21,11 +21,11 @@
 
 <!-- demo-video -->
 
-https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
+https://github.com/user-attachments/assets/6e07c15e-1ada-4364-a41a-5b1f1cf2195c
 
-[▶ 观看原画质演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+[▶ 观看原画质演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.28.0.mp4)
 
-![Bloom 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+![Bloom 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.28.0.png)
 
 ### 为什么选择 Bloom？
 
@@ -48,6 +48,14 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 ### 安装
 
 在 DeepSeek Harness 的「插件」里搜索 **`dsh-bloom-theme`** 并安装；按提示重启后，点顶栏的主题按钮就能开始搭配。
+
+本地迭代当前工作区时，一条命令即可构建并装入默认的 `desktop` profile：
+
+```bash
+npm run install:desktop
+```
+
+如需指定 profile 或 dsh CLI 路径：`DSH_PROFILE=tui DSH_BIN=/path/to/dsh npm run install:desktop`。
 
 喜欢 Bloom？[点一颗 ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) 让更多人看到它，也欢迎分享你的配色。
 

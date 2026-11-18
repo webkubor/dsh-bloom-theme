@@ -28,7 +28,7 @@ export interface BloomDiagnostics {
     rotationMinutes: number       // 自动换色周期（0 为关闭）
     bodyDataset: Record<string, string> // body 上的 data-bloom-* 属性状态
     slots: {
-      switcherAnchorMounted: boolean // conversation.header.leading 锚点挂载状态
+      switcherAnchorMounted: boolean // conversation.session.header.corner 锚点挂载状态
       overlayMounted: boolean        // shell.overlay 全局装饰层挂载状态
     }
   }

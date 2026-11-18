@@ -178,7 +178,12 @@ body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles 
 .dsh-bloom-sparkles > b.s-met { display: none; }
 @media (prefers-reduced-motion: no-preference) {
   body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > b.s-met { display: block; }
+  body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"]:not([data-bloom-meteor-density="dense"]) .dsh-bloom-sparkles > b.s-met:nth-of-type(n+41),
+  body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"][data-bloom-meteor-density="sparse"] .dsh-bloom-sparkles > b.s-met:nth-of-type(n+21) { display: none; }
+  body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > b.s-met:not(.dsh-bloom-meteor-hidden) { display: block; }
 }
+body[data-bloom-meteor-speed="slow"] { --bloom-meteor-pace: 1.6; }
+body[data-bloom-meteor-speed="fast"] { --bloom-meteor-pace: 0.6; }
 body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > b.s-met {
   position: absolute;
   border-radius: 999px;
@@ -190,6 +195,7 @@ body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles 
   animation: bloom-meteor linear infinite;
   will-change: transform, opacity;
 }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-sparkles > b.s-met.dsh-bloom-meteor-hidden { display: none; }
 .dsh-bloom-sparkles > b.s-met.m2 { --c: var(--meteor-color, var(--bloom-motion-2, var(--bloom-accent, #6b8f71))); }
 .dsh-bloom-sparkles > b.s-met.m3 { --c: var(--meteor-color, var(--bloom-motion-3, var(--bloom-accent, #6b8f71))); }
 

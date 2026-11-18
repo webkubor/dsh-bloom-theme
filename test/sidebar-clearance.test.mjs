@@ -27,6 +27,13 @@ const scenarios = [
   { name: 'narrow-drawer', width: 380, clearance: '84px', iconX: 12 },
   { name: 'missing-variable', width: 1000, clearance: null, iconX: -40, frameLeft: 280 },
 ]
+test('fixed containing block must not double-count host offset in menu placement', async () => {
+  const source = await import('node:fs/promises').then(({ readFile }) =>
+    readFile(new URL('../src/switcher.ts', import.meta.url), 'utf8'))
+  assert.doesNotMatch(source, /hostIsFixed\s*=\s*getComputedStyle\(el\)\.position/)
+  assert.match(source, /const originX\s*=\s*host\.left/)
+  assert.match(source, /const originY\s*=\s*host\.top/)
+})
 const browser = await chromium.launch({ executablePath: process.env.BLOOM_CHROMIUM_PATH || undefined, args: ['--no-sandbox'] })
 test.after(() => browser.close())
 for (const lang of ['zh', 'en']) for (const scenario of scenarios) {
@@ -75,10 +82,12 @@ for (const lang of ['zh', 'en']) for (const scenario of scenarios) {
     await page.click('.dsh-bloom-trigger')
     const menu = await page.evaluate(() => {
       const m = document.querySelector('.dsh-bloom-menu'), b = m.getBoundingClientRect(), h = document.querySelector('header').getBoundingClientRect()
+      const trigger = document.querySelector('.dsh-bloom-trigger').getBoundingClientRect()
       const x = b.left + b.width / 2, y = Math.min(b.bottom - 4, innerHeight - 4, h.bottom + 30)
-      return { hidden:m.hidden, bottom:b.bottom, headerBottom:h.bottom, x, y, hit:!!document.elementFromPoint(x,y)?.closest('.dsh-bloom-menu') }
+      return { hidden:m.hidden, bottom:b.bottom, headerBottom:h.bottom, x, y, hit:!!document.elementFromPoint(x,y)?.closest('.dsh-bloom-menu'), left:b.left, width:b.width, triggerLeft:trigger.left, viewportWidth:innerWidth }
     })
     assert.ok(!menu.hidden && menu.bottom > menu.headerBottom + 20 && menu.hit, `menu clipped: ${JSON.stringify(menu)}`)
+    if (menu.triggerLeft + menu.width <= menu.viewportWidth - 8) assert.ok(Math.abs(menu.left - menu.triggerLeft) <= 1, `menu should align to trigger left: ${JSON.stringify(menu)}`)
     if (scenario.name === 'collapsed') {
       // Negative control reproduces the pre-fix anchor with no clearance. Verify
       // overlap appears, so a passing test cannot simply miss the original bug.
@@ -127,10 +136,7 @@ for (const lang of ['zh', 'en']) for (const width of [1000, 380]) {
         const frame=document.querySelector('.frame'); frame.style.marginLeft=s.frameLeft+'px'; frame.style.setProperty('--dsh-frame-leading-clearance',s.clearance+'px')
         document.querySelector('.icon').style.left=s.iconX+'px'
       }, state)
-      await page.waitForFunction(() => {
-        const a=document.querySelector('[data-bloom-slot="switcher"]')?.getBoundingClientRect(), b=document.querySelector('.dsh-bloom-trigger')?.getBoundingClientRect()
-        return a && b && Math.abs(a.left-b.left)<1 && Math.abs(a.top-b.top)<1
-      })
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
       const g = await page.evaluate(() => {
         const rect=sel=>{const r=document.querySelector(sel).getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width}}
         const anchor=rect('[data-bloom-slot="switcher"]'), trigger=rect('.dsh-bloom-trigger'), icon=rect('.icon'), title=rect('.title-button')
@@ -139,7 +145,9 @@ for (const lang of ['zh', 'en']) for (const width of [1000, 380]) {
       })
       const overlaps=(a,b)=>a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
       const gap=g.title.left-g.trigger.right
-      if (overlaps(g.icon,g.trigger) || !g.iconHit || overlaps(g.title,g.trigger) || !g.titleHit || gap < -1 || gap > 8)
+      const anchorDrift=Math.max(Math.abs(g.anchor.left-g.trigger.left),Math.abs(g.anchor.top-g.trigger.top))
+      const widthDrift=Math.abs(g.anchor.width-g.trigger.width)
+      if (anchorDrift > 1 || widthDrift > 1 || overlaps(g.icon,g.trigger) || !g.iconHit || overlaps(g.title,g.trigger) || !g.titleHit || gap < -1 || gap > 8)
         outcomes.push({state, gap, ...g})
       if (g.iconHit) await page.locator('.icon').click()
       if (g.titleHit) await page.locator('.title-button').click()

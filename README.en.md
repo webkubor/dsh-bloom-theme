@@ -49,6 +49,14 @@ https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
 
 Search **`dsh-bloom-theme`** in DeepSeek Harness "Plugins", install, and restart when prompted. Then click the theme button in the top bar and start matching.
 
+For local iteration, build the current worktree and install it into the default `desktop` profile with one command:
+
+```bash
+npm run install:desktop
+```
+
+Use `DSH_PROFILE=tui DSH_BIN=/path/to/dsh npm run install:desktop` to select another profile or dsh CLI path.
+
 Like Bloom? [Leave a ⭐ Star](https://github.com/webkubor/dsh-bloom-theme) so more people find it, and share your palette.
 
 <sub>Demo recorded in a pre-release DSH Web build with a redacted example session; the panel still shows v0.26.0 while the new features are demonstrated. Screenshot and recording depend on host support; if the desktop picker cannot open, use your system capture tools.</sub>

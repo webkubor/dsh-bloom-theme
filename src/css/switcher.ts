@@ -1,3 +1,7 @@
+/**
+ * 顶栏主题切换器与外观菜单样式。
+ * 路由：DSH 会话页头部 conversation.header.leading / conversation.session.header.control-center。
+ */
 export const SWITCHER_CSS = `
 /* Move only the empty Slot anchor into the host's existing leading clearance. */
 .dsh-bloom-slot { display: inline-block; flex: none; transform: translateX(max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px))); }
@@ -9,7 +13,7 @@ export const SWITCHER_CSS = `
    right from the trigger's left edge (v0.27.0 behaviour). placeMenu() in
    src/switcher.ts measures the real viewport and takes over whenever that
    default would cross an edge, so the panel always stays fully on screen. */
-.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
+.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 16px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
 .dsh-bloom-switcher {
   position: relative;
   display: inline-flex;
@@ -164,6 +168,7 @@ export const SWITCHER_CSS = `
 .dsh-bloom-more-body[hidden] { display: none; }
 
 .dsh-bloom-menu {
+  box-sizing: border-box;
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -188,6 +193,13 @@ export const SWITCHER_CSS = `
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.dsh-bloom-menu > .dsh-bloom-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--dsw-alias-bg-layer-2, #fff);
+  box-shadow: 0 -8px 12px color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 28%);
 }
 .dsh-bloom-menu[hidden] { display: none; }
 /* 菜单入场：从右上角 scale+fade 打开。
@@ -569,13 +581,12 @@ body[data-ds-dark-theme] .dsh-bloom-ambience__btn[data-active="true"] {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* The color choice belongs to the meteor background only. */
-.dsh-bloom-meteor-color { display: none; align-items: center; gap: 6px; box-sizing: border-box; width: 100%; padding: 5px 14px; font-size: 12px; }
-body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-meteor-color { display: flex; }
-.dsh-bloom-meteor-color > span { margin-right: auto; color: var(--dsw-alias-label-secondary, inherit); }
-.dsh-bloom-meteor-color button { border: 0; border-radius: 7px; padding: 5px 10px; color: inherit; background: transparent; font: inherit; cursor: pointer; }
-.dsh-bloom-meteor-color button[data-active="true"] { color: var(--bloom-accent, inherit); background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 22%, #1a1a1c); }
-.dsh-bloom-meteor-color button:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: -2px; }
+.dsh-bloom-meteor-opt { display: none; align-items: center; gap: 6px; box-sizing: border-box; width: 100%; padding: 5px 14px; font-size: 12px; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-meteor-opt { display: flex; }
+.dsh-bloom-meteor-opt > span { margin-right: auto; color: var(--dsw-alias-label-secondary, inherit); }
+.dsh-bloom-meteor-opt button { border: 0; border-radius: 7px; padding: 5px 10px; color: inherit; background: transparent; font: inherit; cursor: pointer; }
+.dsh-bloom-meteor-opt button[data-active="true"] { color: var(--bloom-accent, inherit); background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 22%, #1a1a1c); }
+.dsh-bloom-meteor-opt button:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: -2px; }
 
 .dsh-bloom-version {
   display: flex;
@@ -936,15 +947,16 @@ body[data-ds-dark-theme] .dsh-bloom-dsh-hint {
 .dsh-bloom-foot__links { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
 .dsh-bloom-more { white-space: nowrap; }
 .dsh-bloom-foot__link { min-height: 28px; white-space: nowrap; }
+.dsh-bloom-share-wrap { display: inline-flex; }
 .dsh-bloom-share-panel[hidden] { display: none; }
 .dsh-bloom-share-panel {
   position: absolute;
-  right: 14px;
-  bottom: calc(100% + 4px);
+  right: 8px;
+  bottom: calc(100% + 12px);
   z-index: 2;
   box-sizing: border-box;
-  width: min(280px, calc(100% - 28px));
-  max-height: min(300px, calc(var(--bloom-menu-max-h, 100vh) - 56px));
+  width: min(280px, calc(100% - 16px));
+  max-height: min(300px, calc(100% - 8px));
   overflow-y: auto;
   padding: 5px;
   border: 1px solid var(--bloom-hairline, rgba(0,0,0,.16));

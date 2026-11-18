@@ -5,44 +5,90 @@
 
 import { STORAGE_KEY } from './meta.js'
 
-export type MeteorColorMode = 'colorful' | 'solid'
-const COLOR_MODE_KEY = `${STORAGE_KEY}-meteor-color-mode`
-let colorMode: MeteorColorMode = 'colorful'
-let pendingWrite = false
-let priorValue: string | null | undefined
-
-export function readMeteorColorMode(): MeteorColorMode {
-  try {
-    const stored = localStorage.getItem(COLOR_MODE_KEY)
-    if (pendingWrite && priorValue !== undefined && priorValue === stored) return colorMode
-    colorMode = stored === 'solid' ? 'solid' : 'colorful'
-    pendingWrite = false
-    priorValue = undefined
-  } catch { /* retain the session choice */ }
-  return colorMode
+interface ChoiceStore<T extends string> {
+  read(): T
+  write(value: T): boolean
 }
 
-export function writeMeteorColorMode(mode: MeteorColorMode): boolean {
-  if (mode !== 'colorful' && mode !== 'solid') return false
-  let previous: string | null | undefined
-  try { previous = localStorage.getItem(COLOR_MODE_KEY) } catch { /* private mode */ }
-  colorMode = mode
-  try {
-    localStorage.setItem(COLOR_MODE_KEY, mode)
-    pendingWrite = false
-    priorValue = undefined
-  } catch {
-    pendingWrite = true
-    priorValue = previous
+function createChoiceStore<T extends string>(suffix: string, values: readonly T[], fallback: T): ChoiceStore<T> {
+  const key = `${STORAGE_KEY}-${suffix}`
+  const isValue = (raw: unknown): raw is T => typeof raw === 'string' && (values as readonly string[]).includes(raw)
+  let current = fallback
+  let pendingWrite = false
+  let priorValue: string | null | undefined
+  return {
+    read() {
+      try {
+        const stored = localStorage.getItem(key)
+        if (pendingWrite && priorValue !== undefined && priorValue === stored) return current
+        current = isValue(stored) ? stored : fallback
+        pendingWrite = false
+        priorValue = undefined
+      } catch { /* retain the session choice */ }
+      return current
+    },
+    write(value) {
+      if (!isValue(value)) return false
+      let previous: string | null | undefined
+      try { previous = localStorage.getItem(key) } catch { /* private mode */ }
+      current = value
+      try {
+        localStorage.setItem(key, value)
+        pendingWrite = false
+        priorValue = undefined
+      } catch {
+        pendingWrite = true
+        priorValue = previous
+      }
+      return true
+    },
   }
-  return true
+}
+
+export type MeteorColorMode = 'colorful' | 'solid'
+export type MeteorDensity = 'sparse' | 'standard' | 'dense'
+export type MeteorSpeed = 'slow' | 'standard' | 'fast'
+
+export const METEOR_DENSITIES: readonly MeteorDensity[] = ['sparse', 'standard', 'dense']
+export const METEOR_SPEEDS: readonly MeteorSpeed[] = ['slow', 'standard', 'fast']
+export const METEOR_DENSITY_ATTR = 'data-bloom-meteor-density'
+export const METEOR_SPEED_ATTR = 'data-bloom-meteor-speed'
+
+const colorModeStore = createChoiceStore<MeteorColorMode>('meteor-color-mode', ['colorful', 'solid'], 'colorful')
+const densityStore = createChoiceStore<MeteorDensity>('meteor-density', METEOR_DENSITIES, 'standard')
+const speedStore = createChoiceStore<MeteorSpeed>('meteor-speed', METEOR_SPEEDS, 'standard')
+
+export const readMeteorColorMode = (): MeteorColorMode => colorModeStore.read()
+export const writeMeteorColorMode = (mode: MeteorColorMode): boolean => colorModeStore.write(mode)
+export const readMeteorDensity = (): MeteorDensity => densityStore.read()
+export const writeMeteorDensity = (density: MeteorDensity): boolean => densityStore.write(density)
+export const readMeteorSpeed = (): MeteorSpeed => speedStore.read()
+export const writeMeteorSpeed = (speed: MeteorSpeed): boolean => speedStore.write(speed)
+
+function applyChoiceAttr(doc: Document, attr: string, value: string): void {
+  if (!doc.body) return
+  if (value === 'standard') doc.body.removeAttribute(attr)
+  else doc.body.setAttribute(attr, value)
+}
+
+export function applyMeteorDensity(doc: Document, density: MeteorDensity): void {
+  applyChoiceAttr(doc, METEOR_DENSITY_ATTR, density)
+  doc.querySelectorAll<HTMLElement>('.s-met').forEach((meteor, index) => {
+    meteor.dataset.meteorIndex = String(index + 1)
+    const hidden = (density === 'sparse' && index >= 20) || (density === 'standard' && index >= 40)
+    meteor.classList.toggle('dsh-bloom-meteor-hidden', hidden)
+  })
+}
+
+export function applyMeteorSpeed(doc: Document, speed: MeteorSpeed): void {
+  applyChoiceAttr(doc, METEOR_SPEED_ATTR, speed)
 }
 
 const LAYER_ID = 'dsh-bloom-sparkles'
 const CORNER_COUNT = 64
 const CORNER_W = 360
 const CORNER_H = 220
-const METEOR_COUNT = 40
+const METEOR_MAX = 60
 const MOTION_VARS = ['--bloom-motion-1', '--bloom-motion-2', '--bloom-motion-3']
 
 function rand(seed: number): () => number {
@@ -62,6 +108,8 @@ function sampleMotionColor(doc: Document, streamIndex: number): string {
 }
 
 export function buildSparkles(doc: Document, seed = 7): HTMLElement {
+  applyMeteorDensity(doc, readMeteorDensity())
+  applyMeteorSpeed(doc, readMeteorSpeed())
   const layer = doc.createElement('div')
   layer.id = LAYER_ID
   layer.className = 'dsh-bloom-sparkles'
@@ -137,9 +185,14 @@ export function buildSparkles(doc: Document, seed = 7): HTMLElement {
     createParticle(doc, layer, edge, x, y, angle, distance, 's-galaxy-edge')
   }
 
-  // Meteor shower for the galaxy preset: original shape, direction and count.
+  // Meteor shower for the galaxy preset: original shape and direction; density picks how many show.
   const m = rand(seed * 6151 + 29)
-  for (let i = 0; i < METEOR_COUNT; i++) layer.appendChild(makeMeteor(doc, m, i))
+  for (let i = 0; i < METEOR_MAX; i++) layer.appendChild(makeMeteor(doc, m, i))
+  layer.querySelectorAll<HTMLElement>('.s-met').forEach((meteor, index) => {
+    meteor.dataset.meteorIndex = String(index + 1)
+    const hidden = (readMeteorDensity() === 'sparse' && index >= 20) || (readMeteorDensity() === 'standard' && index >= 40)
+    meteor.classList.toggle('dsh-bloom-meteor-hidden', hidden)
+  })
 
   // Per-meteor colour transition: in-flight meteors keep their old colour,
   // newly launched meteors pick up the new palette colour.
@@ -157,6 +210,7 @@ export function buildSparkles(doc: Document, seed = 7): HTMLElement {
 function makeMeteor(doc: Document, r: () => number, i: number): HTMLElement {
   const meteor = doc.createElement('b')
   meteor.className = `s-met m${(i % 3) + 1}`
+  meteor.dataset.meteorIndex = String(i + 1)
   // Original top/right start, original angle, original shape — only travel extended so it reaches bottom-left.
   const fromTop = r() < 0.62
   const left = fromTop ? 8 + r() * 100 : 70 + r() * 34
@@ -171,8 +225,8 @@ function makeMeteor(doc: Document, r: () => number, i: number): HTMLElement {
   st.setProperty('--rot', `${(-28 - r() * 16).toFixed(1)}deg`)
   st.setProperty('--travel', `${(920 + r() * 980).toFixed(0)}px`)
   st.setProperty('--peak', (0.75 + r() * 0.25).toFixed(2))
-  st.animationDuration = `${dur.toFixed(2)}s`
-  st.animationDelay = `${(-r() * dur).toFixed(2)}s`
+  st.animationDuration = `calc(${dur.toFixed(2)}s * var(--bloom-meteor-pace, 1))`
+  st.animationDelay = `calc(${(-r() * dur).toFixed(2)}s * var(--bloom-meteor-pace, 1))`
   const color = sampleMotionColor(doc, i % 3)
   if (color) st.setProperty('--meteor-color', color)
   return meteor

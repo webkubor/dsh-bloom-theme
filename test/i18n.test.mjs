@@ -148,7 +148,7 @@ for (const language of ['zh', 'en']) {
         const poem = row.querySelector('.dsh-bloom-option__en')
         return { left: poem.getBoundingClientRect().left - box.left,
           overflows: row.scrollWidth > row.clientWidth + 1,
-          titleContainsPoem: row.title.includes(poem.textContent) }
+          titleContainsPoem: row.title === '' && row.ariaLabel.includes(poem.textContent) }
       }))
       assert.equal(geometry.length, featuredCount)
       assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))

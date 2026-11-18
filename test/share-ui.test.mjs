@@ -33,14 +33,15 @@ async function setup(t){
   return page
 }
 
-test('meteor colour choice is visible only for the dark meteor background and persists',async t=>{
+test('meteor controls are visible only for the dark meteor background and persist',async t=>{
   const page=await setup(t)
-  const row=page.locator('.dsh-bloom-meteor-color')
-  assert.equal(await row.isHidden(),true)
+  const rows=page.locator('[data-meteor-row]')
+  assert.equal(await rows.count(),3)
+  assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='none')),true)
   await page.evaluate(()=>{document.body.setAttribute('data-ds-dark-theme','');document.body.setAttribute('data-bloom-ambience-dark','galaxy')})
-  assert.equal(await row.isVisible(),true)
+  assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='flex')),true)
   const layout=await page.evaluate(()=>{
-    const label=document.querySelector('.dsh-bloom-meteor-color > span').getBoundingClientRect()
+    const label=document.querySelector('[data-meteor-row="color"] > span').getBoundingClientRect()
     const color=document.querySelector('[data-meteor-color="colorful"]').getBoundingClientRect()
     const rotation=document.querySelector('.dsh-bloom-rotation'), select=rotation.querySelector('select').getBoundingClientRect()
     const material=document.querySelector('.dsh-bloom-glass__choices').getBoundingClientRect()
@@ -53,11 +54,16 @@ test('meteor colour choice is visible only for the dark meteor background and pe
   await page.locator('[data-meteor-color="solid"]').click()
   assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
   assert.equal(await page.locator('[data-meteor-color="colorful"]').getAttribute('aria-checked'),'false')
+  await page.locator('[data-meteor-density="sparse"]').click()
+  await page.locator('[data-meteor-speed="fast"]').click()
+  assert.deepEqual(await page.evaluate(()=>({density:document.body.dataset.bloomMeteorDensity,speed:document.body.dataset.bloomMeteorSpeed})),{density:'sparse',speed:'fast'})
   await page.evaluate(()=>{window.fixture.cleanupSwitcher();window.__root.remove();window.__root=window.fixture.buildSwitcherEl('mist');window.__root.dataset.slotted='true';window.__root.style.left='80px';window.__root.style.top='40px';document.body.append(window.__root)})
   await page.locator('.dsh-bloom-trigger').click()
   assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('[data-meteor-density="sparse"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('[data-meteor-speed="fast"]').getAttribute('aria-checked'),'true')
   await page.evaluate(()=>document.body.setAttribute('data-bloom-ambience-dark','corner'))
-  assert.equal(await row.isHidden(),true)
+  assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='none')),true)
 })
 
 test('footer keeps feedback and stars accessible and copies an actionable Agent prompt',async t=>{
@@ -88,6 +94,7 @@ test('actual share menu stays inside a narrow viewport',async t=>{
   await page.setViewportSize({width:360,height:600})
   await page.evaluate(()=>{window.__root.style.left='12px'})
   await page.locator('.dsh-bloom-share').click()
+  await page.locator('.dsh-bloom-share-panel').waitFor({state:'visible'})
   const bounds=await page.evaluate(()=>{
     const menu=document.querySelector('.dsh-bloom-menu').getBoundingClientRect()
     const panel=document.querySelector('.dsh-bloom-share-panel').getBoundingClientRect()

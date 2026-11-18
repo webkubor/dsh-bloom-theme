@@ -21,11 +21,11 @@
 
 <!-- demo-video -->
 
-https://github.com/user-attachments/assets/10b0b971-a94a-4b06-bd5e-e6df59a574eb
+https://github.com/user-attachments/assets/6e07c15e-1ada-4364-a41a-5b1f1cf2195c
 
-[▶ 观看原画质演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.27.0.mp4)
+[▶ 观看原画质演示：换色、切玻璃、看星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.28.0.mp4)
 
-![Bloom 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.27.0.png)
+![Bloom 操作面板与星空](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.28.0.png)
 
 ### 为什么选择 Bloom？
 

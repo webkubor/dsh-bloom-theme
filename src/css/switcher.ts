@@ -1,19 +1,21 @@
 /**
  * 顶栏主题切换器与外观菜单样式。
- * 路由：DSH 会话页头部 conversation.header.leading / conversation.session.header.control-center。
+ * 路由：DSH 会话页头部 conversation.session.header.corner。
  */
 export const SWITCHER_CSS = `
-/* Move only the empty Slot anchor into the host's existing leading clearance. */
-.dsh-bloom-slot { display: inline-block; flex: none; transform: translateX(max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px))); }
-.dsh-bloom-slot:dir(rtl) { transform: translateX(calc(-1 * max(0px, calc(var(--dsh-frame-leading-clearance, 0px) - 20px)))); }
+/* The Slot anchor is an empty shell; the host's corner seat positions it (#113).
+   The old leading-clearance translateX tuck served only the leading seat — at the
+   trailing corner it would push the widget rightward, so it is removed. */
+.dsh-bloom-slot { display: inline-block; flex: none; }
 .dsh-bloom-overlay { pointer-events: none; }
 .dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }
 .dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 80px); position: fixed; pointer-events: auto; z-index: 80; }
-/* The trigger sits in the host header's leading seat, so the menu expands to the
-   right from the trigger's left edge (v0.27.0 behaviour). placeMenu() in
-   src/switcher.ts measures the real viewport and takes over whenever that
-   default would cross an edge, so the panel always stays fully on screen. */
-.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 16px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
+/* The trigger sits in the host header's corner seat (trailing side). left: 0 is
+   only the pre-measure placeholder; placeMenu() in src/switcher.ts measures the
+   real viewport on open and right-aligns / clamps the panel, so it always stays
+   fully on screen — without that clamp the corner seat overflows the right edge
+   (the 860b5a5-era regression that forced the 645a6ab revert). */
+.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
 .dsh-bloom-switcher {
   position: relative;
   display: inline-flex;

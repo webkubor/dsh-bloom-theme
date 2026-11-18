@@ -634,8 +634,10 @@ window.__ModuleLoader__.load({
       })
       ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')
       bindBloomInspect(ctx)
-      ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({
-        name: 'conversation.header.leading',
+      // #113：切换器不占对话标题前的 leading 座，改挂会话头右侧角落座
+      // （860b5a5 原座；645a6ab 因菜单越界回退 leading，现 placeMenu 夹取已补齐）。
+      ctx.slots.inject('conversation.session.header.corner', () => ctx.slots.register({
+        name: 'conversation.session.header.corner',
       }, Switcher))
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({
         name: 'shell.overlay', id: 'dsh-bloom-theme.decorations', order: -100,

@@ -28,8 +28,8 @@ npm run test:browser     # 隔离夹具的浏览器回归
 ## 约定
 
 - **视觉基线（owner 2026-11-07）**：干净、通透、耐看，正文优先；浅色要有主题色层次与液态玻璃的折射光，不显示星点；星辉与主题色流星只在深色生效。
-- **UI 确认门（owner 2026-11-06）**：UI 改完先交真实效果并停下，用户明确同意后才开始版本准备和发布流程。
-- **桌面端优先**：迭代重心是 DSH 桌面端；Web UI 只保持可用、不主动适配（见 README「桌面端优先」一节）。
+- **Web 优先，Agent 自验收**（owner 2026-11-19）：迭代和验收默认使用隔离的 DSH Web 会话；Agent 必须自己逐帧目视截图、量测布局和交互，不把截图交给用户做阻塞式 UI 确认。公开素材只能来自隔离 Web 会话，禁止出现真实侧栏、会话名、工作区、消息、终端或凭据。
+- **Web 本地生效命令**：`npm run install:web` 构建并装入 `web` profile。插件由 Web 服务端注入，执行命令后重启该 Web 进程；浏览器刷新页面不能证明服务端插件已更新。
 - **配色改动必过对比度护栏**：调任何颜色后跑 ui-craft，不达标不许合入 —— 这是本项目的核心卖点，破了就是砸招牌。
 - **零运行时依赖**是承诺，新增 dependency 前先想清楚。
 - 版本与 CHANGELOG 由 release-please 的 Release PR 决定，Publish 工作流负责 npm 发布；不要手工 bump 版本或改历史 CHANGELOG。release-sync 只检查已登记的当前版本副本。
@@ -37,5 +37,5 @@ npm run test:browser     # 隔离夹具的浏览器回归
 - 按安装结果的 `application` / `nextStep` 完成重启并核对实际加载版本；本地 build、刷新页面或相同 Slot ID 都不能证明更新已应用。
 - UI 只用官方 Slot：会话页头角座 `conversation.session.header.corner` 提供本插件自己的定位锚点（#113：不占对话标题前的 leading 座），完整切换器、菜单与装饰挂在根 `shell.overlay`，避免宿主顶栏裁剪。定位只测量自己的锚点。先 Inspect 确认契约；Slot 由 apply 注册，副作用由上下文 effect/React effect 清理；禁止宿主 DOM 找位、手动重挂与悬浮拖拽兜底。
 - main push、定时巡检与默认手动工作流只准备 Release PR，不自动合并。完成真实桌面验收、当前 head 的 CI 与评审后，才允许显式启用发布合并；命令见贡献指南，不把准备候选版当作发布授权。
-- 桌面 UI 调试先读 [bloom-desktop-ui](./skills/bloom-desktop-ui/SKILL.md)，优先用真实菜单与原生窗口截图；通用失败复盘统一在 [lessons.md](./docs/lessons.md)。
+- Web UI 调试先读 [bloom-desktop-ui](./skills/bloom-desktop-ui/SKILL.md)（历史命名兼容），按 Web 优先流程逐帧验收；通用失败复盘统一在 [lessons.md](./docs/lessons.md)。
 - 完整开发、运行时验收与发布门禁见 [CONTRIBUTING.md](./CONTRIBUTING.md)。

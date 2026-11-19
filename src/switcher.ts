@@ -192,7 +192,7 @@ export function buildSwitcherHTML(currentVariant) {
   const options = shown.map((v) => {
     const on = v === currentVariant
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
-      ` aria-selected="${on}" data-active="${on}" aria-label="${variantName(v)} · ${variantPoem(v)}">` +
+      ` aria-selected="${on}" data-active="${on}">` +
       `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
       `<span class="dsh-bloom-option__name">${variantName(v)}${isNewVariant(v, PLUGIN_VERSION) ? `<span class="dsh-bloom-option__new">${tr('新')}</span>` : ''}</span>` +
       // 诗句紧跟名字、左对齐成一列（2026-11-06）：原来点线引导 + 诗句逐行染本色，
@@ -217,6 +217,7 @@ export function buildSwitcherHTML(currentVariant) {
       </span>
       <button type="button" class="dsh-bloom-close" aria-label="${tr('关闭')}">✕</button>
     </div>
+    <div class="dsh-bloom-menu__body">
     <div class="dsh-bloom-section">${tr('主题')}</div>
     <div class="dsh-bloom-options" role="listbox" aria-label="${tr('配色')}">${options}</div>
     <div class="dsh-bloom-section" data-mode-section hidden>${tr('模式')}</div>
@@ -293,6 +294,7 @@ export function buildSwitcherHTML(currentVariant) {
         </label>
       </div>
       </div>
+    </div>
     </div>
     <div class="dsh-bloom-foot">
       <button type="button" class="dsh-bloom-more" aria-expanded="false" title="${tr('版本与更新')}">

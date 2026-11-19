@@ -40,6 +40,7 @@
     "dev": "npm run build && npm run build:watch",
     "package": "npm run build && npm pack",
     "install:desktop": "npm run build && node scripts/install-desktop.mjs",
+    "install:web": "DSH_PROFILE=web npm run install:desktop",
     "check": "node scripts/check.mjs && node scripts/dsh-drift.mjs && ui-craft && node --test scripts/version.test.mjs && node --test scripts/persistence.test.mjs && node --test test/stale-package-name.test.mjs test/readme-package-name.test.mjs test/enrich-release.test.mjs",
     "check:contrast": "ui-craft",
     "prepublishOnly": "node scripts/sync-version.mjs && npm run build && npm run check && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs && node scripts/version-sync-gate.mjs",

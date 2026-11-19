@@ -15,7 +15,7 @@ export const SWITCHER_CSS = `
    real viewport on open and right-aligns / clamps the panel, so it always stays
    fully on screen — without that clamp the corner seat overflows the right edge
    (the 860b5a5-era regression that forced the 645a6ab revert). */
-.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
+.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow: hidden; }
 .dsh-bloom-switcher {
   position: relative;
   display: inline-flex;
@@ -192,13 +192,16 @@ export const SWITCHER_CSS = `
   box-shadow:
     inset 0 1px 0 rgba(var(--bloom-morandi), 0.14),
     var(--bloom-shadow);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 2px;
 }
+.dsh-bloom-menu__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .dsh-bloom-menu > .dsh-bloom-foot {
-  position: sticky;
-  bottom: 0;
   z-index: 1;
   background: var(--dsw-alias-bg-layer-2, #fff);
   box-shadow: 0 -8px 12px color-mix(in oklch, var(--dsw-alias-bg-layer-2, #fff), transparent 28%);

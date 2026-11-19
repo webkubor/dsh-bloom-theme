@@ -1,13 +1,31 @@
 ---
 name: bloom-desktop-ui
-description: Bloom 本机 UI 调试：通过 DSH 官方开发者工具与原生 Accessibility 操作真实菜单、截图、核验配色和材质；成功路径入 skill，失败原因入统一台账。
+description: Bloom UI 调试：默认用干净隔离的 DSH Web 会话逐帧截图、量测布局和核验配色材质；桌面端只作为兼容验收。成功路径入 skill，失败原因入统一台账。
 ---
 
-# Bloom 桌面 UI 调试
+# Bloom UI 调试
 
-先读 AGENTS.md、CONTRIBUTING.md、docs/lessons.md。复用有效 CS Run 和工作树；本机桌面先于 Web。未经用户确认 UI，不提交、推送或发布。
+先读 AGENTS.md、CONTRIBUTING.md、docs/lessons.md。复用有效 CS Run 和工作树；**Web 优先，桌面只做兼容验证**。Agent 自己完成视觉验收，不用阻塞式 UI 确认门替代验收。
 
-## 默认路径：真实菜单与窗口
+## Web 优先的三条硬约束
+
+1. **干净环境取材**：演示、截图、视频只能在隔离 `DSH_HOME` 的 Web 会话中制作；会话标题、正文、工作区名、侧栏记录必须是中性示例，公开素材不得出现真实面板、项目、会话、消息、终端、路径或凭据。私有验收截图也只存用户私有持久目录，不提交仓库。
+2. **逐帧目视验收**：布局修复不能以测试 exit 0 代替。至少逐帧查看正常菜单、打开/关闭、滚动到底、hover/focus、明暗两种模式和 1280/1024/390 三种宽度；截图中若出现宿主 tooltip、裁切、错位或 sticky 遮挡就继续修。录屏检查要抽帧网格看，不能只看封面。
+3. **引用前回读真实文件**：写 README、release note、PR/Issue、skill 或交接前，当场读取目标文件和发布 URL 的真实内容；不凭上一轮摘要、记忆或旧截图复述版本号、链接、Issue/PR 状态和素材内容。
+
+## Web 快速流程
+
+```sh
+npm run build
+DSH_HOME=/path/to/clean-dsh-home dsh plugin --profile web add "$PWD"
+DSH_HOME=/path/to/clean-dsh-home dsh --profile web --port 3081 --no-open
+```
+
+日常本地 Web 使用默认 `~/.dsh` 时只需一条命令：`npm run install:web`。Web 插件由服务端注入，安装后必须重启 Web 进程；刷新浏览器不能证明新版本生效。不要拿真实工作台录公开演示。
+
+Playwright 量测固定记录 viewport、菜单与 head/body/foot rect、body `scrollHeight/clientHeight`、`menu.style.left/top/right`、`offsetParent` 和祖先 `transform/contain/zoom`。宽度发生变化时重新开菜单，因为定位只在 resize/scroll 时更新。aria 文本若已被可见文本覆盖，不额外制造宿主 tooltip。
+
+## 桌面兼容路径：真实菜单与窗口
 
 原生菜单和截图无需另开浏览器，也不读取 Cookie 或凭据。不要改 body 属性冒充用户选择。
 
@@ -52,8 +70,8 @@ node scripts/ui/matrix.mjs /tmp/bloom-ui/full full --resume
 
 ## 修改、安装与核验
 
-1. 大区块（背景、侧栏、顶栏）→中区块（输入框、菜单、消息）→小区块（按钮、图标）。每步看真实截图。
-2. 先 build，通过官方 plugin_manager 安装本候选路径。按 application/nextStep 执行；若返回 already-installed 且要求 remove/install，顺序完成两步，不在卸载状态结束。
+1. Web 优先完成主体修复；需要兼容验证时，再按大区块（背景、侧栏、顶栏）→中区块（输入框、菜单、消息）→小区块（按钮、图标）检查桌面。每步看真实截图。
+2. 先 build；本地 Web 用 `npm run install:web` 并重启 Web 进程。桌面通过官方 plugin_manager 安装本候选路径。按 application/nextStep 执行；若返回 already-installed 且要求 remove/install，顺序完成两步，不在卸载状态结束。
 3. applied 证明管理操作完成；还要核对实际材质、菜单与选中状态。桌面不是普通浏览器，不要求用户用 ⌘R。
 4. 对宽表/长会话、菜单溢出、hover/focus/typing/pending 做额外核验。动画至少连续帧，不拿单帧证明流星运动。
 5. 检查降级：减少动效、减少透明度、高对比、强制颜色。折射像素测试只证明实现，不证明好看。

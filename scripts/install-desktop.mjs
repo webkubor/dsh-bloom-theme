@@ -7,6 +7,9 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const profileName = process.env.DSH_PROFILE ?? 'desktop'
+const profileRoot = process.env.DSH_HOME
+  ? join(process.env.DSH_HOME, 'profiles', profileName)
+  : join(homedir(), '.dsh/profiles', profileName)
 const candidates = [
   process.env.DSH_BIN,
   join(homedir(), '.local/bin/dsh'),
@@ -34,7 +37,6 @@ execFileSync(dshBin, ['plugin', '--profile', profileName, 'add', root], {
   stdio: 'inherit',
 })
 
-const profileRoot = join(homedir(), '.dsh/profiles', profileName)
 const installedRoot = join(profileRoot, 'node_modules/dsh-bloom-theme')
 const installedPackage = join(installedRoot, 'package.json')
 if (!existsSync(installedPackage)) {

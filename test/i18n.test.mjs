@@ -148,11 +148,11 @@ for (const language of ['zh', 'en']) {
         const poem = row.querySelector('.dsh-bloom-option__en')
         return { left: poem.getBoundingClientRect().left - box.left,
           overflows: row.scrollWidth > row.clientWidth + 1,
-          titleContainsPoem: row.title === '' && row.ariaLabel.includes(poem.textContent) }
+          noNativeTooltip: row.title === '' && row.ariaLabel === null && poem.textContent.length > 0 }
       }))
       assert.equal(geometry.length, featuredCount)
       assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))
-      assert.ok(geometry.every(row => !row.overflows && row.titleContainsPoem))
+      assert.ok(geometry.every(row => !row.overflows && row.noNativeTooltip))
     } finally { await context.close() }
   })
 }

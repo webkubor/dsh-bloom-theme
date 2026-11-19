@@ -41,6 +41,7 @@ import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appe
 import { initAmbience } from './ambience.js'
 import { initGlassMode } from './glass.js'
 import { createBloomComponents, type HostReact } from './ui.js'
+import { registerBloomSettings } from './settings.js'
 import { initTypingGlow } from './typing.js'
 import { checkUpdate, setVersionUpdatesActive } from './version.js'
 import { teardownBloom } from './teardown.js'
@@ -642,6 +643,8 @@ window.__ModuleLoader__.load({
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({
         name: 'shell.overlay', id: 'dsh-bloom-theme.decorations', order: -100,
       }, Decorations))
+      // 设置 › Bloom 外观：质感/背景/流星/自动换色/动效 从下拉迁到这里（#settings-migration）
+      registerBloomSettings(ctx as never, LOCALE_NS, React)
       ctx.effect?.(() => initTypingGlow(), 'dsh-bloom-theme: typing glow')
     }
 

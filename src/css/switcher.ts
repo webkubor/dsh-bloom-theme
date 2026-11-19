@@ -9,13 +9,13 @@ export const SWITCHER_CSS = `
 .dsh-bloom-slot { display: inline-block; flex: none; }
 .dsh-bloom-overlay { pointer-events: none; }
 .dsh-bloom-overlay #dsh-bloom-update-banner { pointer-events: auto; }
-.dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 80px); position: fixed; pointer-events: auto; z-index: 80; }
+.dsh-bloom-switcher[data-slotted="true"] { --bloom-menu-max-h: calc(100vh - 24px); position: fixed; pointer-events: auto; z-index: 80; }
 /* The trigger sits in the host header's corner seat (trailing side). left: 0 is
    only the pre-measure placeholder; placeMenu() in src/switcher.ts measures the
    real viewport on open and right-aligns / clamps the panel, so it always stays
    fully on screen — without that clamp the corner seat overflows the right edge
    (the 860b5a5-era regression that forced the 645a6ab revert). */
-.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 80px)); overflow-y: auto; overscroll-behavior: contain; }
+.dsh-bloom-switcher[data-slotted="true"] .dsh-bloom-menu { left: 0; right: auto; max-width: calc(100vw - 96px); max-height: var(--bloom-menu-max-h, calc(100vh - 24px)); overflow-y: auto; overscroll-behavior: contain; }
 .dsh-bloom-switcher {
   position: relative;
   display: inline-flex;
@@ -1033,4 +1033,22 @@ body[data-ds-dark-theme] .dsh-bloom-share-action__hint { color: var(--dsw-alias-
   .dsh-bloom-trigger__name { display: none; }
   .dsh-bloom-trigger { padding: 0 7px; gap: 4px; }
 }
+/* 设置入口提示行 —— 细节行迁去设置后，下拉里留一行指路 */
+.dsh-bloom-settings-hint {
+  padding: 6px 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-tertiary, #999);
+}
+
+/* 设置 › Bloom 外观 内容容器 */
+.dsh-bloom-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 420px;
+}
+.dsh-bloom-detail .dsh-bloom-more-body { grid-template-rows: 1fr; }
+.dsh-bloom-detail .dsh-bloom-more { display: none; }
+.dsh-bloom-detail .dsh-bloom-foot { border-top: 1px solid var(--dsw-alias-hairline, rgba(0,0,0,.08)); margin-top: 8px; padding: 8px 14px 2px; }
 `

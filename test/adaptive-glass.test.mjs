@@ -15,7 +15,8 @@ const { outputFiles } = await build({
       import { SURFACES_CSS } from './src/css/surfaces.ts';
       import { SWITCHER_CSS } from './src/css/switcher.ts';
       import { buildLiquidLens } from './src/liquid-lens.ts';
-      window.fixture = { css: [buildBloomCSS(), COMPONENT_CSS, GLASS_CSS, BACKGROUND_CSS, BUTTON_CSS, ADAPTIVE_CSS, SURFACES_CSS, SWITCHER_CSS], buildLiquidLens };`,
+      import { buildDetailEl } from './src/detail.ts';
+      window.fixture = { css: [buildBloomCSS(), COMPONENT_CSS, GLASS_CSS, BACKGROUND_CSS, BUTTON_CSS, ADAPTIVE_CSS, SURFACES_CSS, SWITCHER_CSS], buildLiquidLens, buildDetailEl };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
   }, bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })
@@ -43,7 +44,7 @@ async function setup(t, { dark = false, touch = false } = {}) {
   await page.goto('https://bloom.test/')
   await page.addScriptTag({ content: outputFiles[0].text })
   await page.evaluate(dark => {
-    document.body.append(window.fixture.buildLiquidLens(document))
+    document.body.append(window.fixture.buildLiquidLens(document), window.fixture.buildDetailEl())
     for (const css of window.fixture.css) { const s = document.createElement('style'); s.textContent = css; document.head.append(s) }
     if (dark) document.body.setAttribute('data-ds-dark-theme', '')
   }, dark)

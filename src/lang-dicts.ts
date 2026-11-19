@@ -85,6 +85,8 @@ export const DICT_EN: Record<string, string> = {
   "重新检查 DSH 最新版": "Re-check for the latest DSH",
   "关闭（此版本不再提醒）": "Dismiss (no reminders for this version)",
   "Bloom 外观设置": "Bloom appearance",
+  "Bloom 外观": "Bloom appearance",
+  "质感、背景、流星与动效在 设置 › Bloom 外观 中调整": "Texture, background, meteors and motion live in Settings › Bloom appearance",
   "点「检查更新」看详情": "Click \"Check updates\" for details",
   "✓ 已复制：{0}": "✓ Copied: {0}",
   "报问题 / 提建议": "Report an issue / suggest something",

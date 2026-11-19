@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 const { outputFiles } = await build({
   stdin: {
     contents: `import './test/slot-fixture.mjs'; import './src/client.ts';
+      import { buildDetailEl } from './src/detail.ts';
+      window.fixture = { buildDetailEl };
       const services = { slots: window.fixtureSlots };
       const pending = [];
       const strictCtx = (declared = []) => new Proxy({}, {
@@ -143,7 +145,7 @@ test('switcher and decorations render only through declared React Slots and surv
   const page = await setupPage(t)
   await page.evaluate(() => window.applyModule(window.mockLocale, window.mockTheme))
   const regs = await page.evaluate(() => window.slotRegistrations.map(r => r.name).sort())
-  assert.deepEqual(regs, ['conversation.session.header.corner', 'shell.overlay'])
+  assert.deepEqual(regs, ['conversation.session.header.corner', 'settings.section', 'settings.section.icon', 'shell.overlay'])
   assert.deepEqual(await page.evaluate(() => window.slotViolations), [], 'registrations follow the official { name, id, order } shape')
   // Ownership: the header Slot holds only Bloom's empty anchor; the whole widget lives in Bloom's overlay container.
   assert.equal(await page.evaluate(() =>
@@ -294,7 +296,7 @@ test('switcher waits for the overlay and re-anchors when either Slot remounts', 
 
 const activeInfo = page => page.evaluate(() => {
   const a = document.activeElement
-  return { inMenu: !!a?.closest('.dsh-bloom-menu'), isTrigger: !!a?.closest('.dsh-bloom-trigger'), tag: a?.tagName,
+  return { inMenu: !!a?.closest('.dsh-bloom-menu') || !!a?.closest('.dsh-bloom-detail'), isTrigger: !!a?.closest('.dsh-bloom-trigger'), tag: a?.tagName,
     glass: a?.dataset?.glass ?? null, select: a?.matches?.('.dsh-bloom-rotation__select') ?? false,
     label: (a?.getAttribute?.('aria-label') || a?.textContent || '').trim().slice(0, 24),
     menuHidden: document.querySelector('.dsh-bloom-menu').hidden }
@@ -304,12 +306,13 @@ test('keyboard alone reaches and operates glass and rotation controls; Tab close
   const page = await setupPage(t)
   await page.setViewportSize({ width: 1000, height: 900 })
   await page.evaluate(() => window.applyModule(window.mockLocale, window.mockTheme))
+  await page.evaluate(() => { const d = window.fixture.buildDetailEl(); document.querySelector('.dsh-bloom-menu').append(d) })
   await page.focus('.dsh-bloom-trigger')
   await page.keyboard.press('Enter')
   assert.equal(await page.evaluate(() => document.querySelector('.dsh-bloom-menu').hidden), false, 'Enter on trigger opens the menu')
 
   // Count the panel's visible focusable controls while it is open (palette rows use arrow keys, tabindex -1).
-  const expectedStops = await page.evaluate(() => [...document.querySelector('.dsh-bloom-menu').querySelectorAll('button:not([disabled]), select, a[href], [tabindex="0"]')]
+  const expectedStops = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-menu button:not([disabled]), .dsh-bloom-menu select, .dsh-bloom-menu a[href], .dsh-bloom-menu [tabindex="0"], .dsh-bloom-detail button:not([disabled]), .dsh-bloom-detail select, .dsh-bloom-detail a[href], .dsh-bloom-detail [tabindex="0"]')]
     .filter(n => n.tabIndex >= 0 && n.getClientRects().length > 0).map(n => `${n.tagName}:${(n.getAttribute('aria-label') || n.textContent || '').trim().slice(0, 24)}|${n.className}|vis=${getComputedStyle(n).visibility}`))
   const expected = expectedStops.length
   // Walk forward with Tab, recording every stop, until focus leaves the menu.
@@ -350,11 +353,11 @@ test('keyboard alone reaches and operates glass and rotation controls; Tab close
   while ((await activeInfo(page)).glass !== 'liquid') await page.keyboard.press('Tab')
   await page.keyboard.press('Enter')
   assert.equal(await page.evaluate(() => document.body.dataset.bloomGlass), 'liquid', 'Enter on a focused glass choice applies it')
-  assert.equal(await page.evaluate(() => document.querySelector('[data-glass="liquid"]').getAttribute('aria-pressed')), 'true')
+  assert.equal(await page.evaluate(() => document.querySelector('.dsh-bloom-detail [data-glass="liquid"]').getAttribute('aria-pressed')), 'true')
   assert.equal((await activeInfo(page)).menuHidden, false, 'activating a glass choice keeps the panel open')
 
   while (!(await activeInfo(page)).select) await page.keyboard.press('Tab')
-  const before = await page.evaluate(() => document.querySelector('.dsh-bloom-rotation__select').value)
+  const before = await page.evaluate(() => document.querySelector('.dsh-bloom-detail .dsh-bloom-rotation__select').value)
   // Arrow keys belong to the <select>, not the option list.
   await page.keyboard.press('ArrowDown')
   const after = await activeInfo(page)
@@ -362,10 +365,10 @@ test('keyboard alone reaches and operates glass and rotation controls; Tab close
   // Headless Chromium on macOS ignores every key sequence on a native <select> (verified on a bare page),
   // so the value change goes through selectOption, which fires the same change event a keyboard pick does.
   // Focus staying on the select above is the part the plugin controls.
-  const target = await page.evaluate(cur => [...document.querySelectorAll('.dsh-bloom-rotation__select option')].map(o => o.value).find(v => v !== cur), before)
-  await page.selectOption('.dsh-bloom-rotation__select', target)
+  const target = await page.evaluate(cur => [...document.querySelectorAll('.dsh-bloom-detail .dsh-bloom-rotation__select option')].map(o => o.value).find(v => v !== cur), before)
+  await page.selectOption('.dsh-bloom-detail .dsh-bloom-rotation__select', target)
   assert.ok((await activeInfo(page)).select && !(await activeInfo(page)).menuHidden, 'changing the interval keeps focus and the panel open')
-  const finalValue = await page.evaluate(() => document.querySelector('.dsh-bloom-rotation__select').value)
+  const finalValue = await page.evaluate(() => document.querySelector('.dsh-bloom-detail .dsh-bloom-rotation__select').value)
   assert.notEqual(finalValue, before, 'keyboard changed the rotation interval')
   assert.equal(await page.evaluate(() => localStorage.getItem('dsh-bloom-variant-rotation-minutes')), finalValue, 'rotation choice persisted')
   await page.keyboard.press('Escape')
@@ -476,6 +479,13 @@ test('teardown cancels and prevents timers or observers from executing or leakin
 test('material and per-scheme backgrounds remain independent through UI changes and reload', async t => {
   const page = await setupPage(t)
   await page.evaluate(() => window.applyModule(window.mockLocale))
+  // 细节行已迁到设置页：测试自挂一份到安全位置（避开 switcher 命中区）
+  await page.evaluate(() => {
+    const d = window.fixture.buildDetailEl()
+    // corner 座在右侧、菜单占 ~587–899px：detail 挂左侧安全区，别被菜单盖住
+    d.style.cssText = 'position:fixed;left:20px;top:120px;z-index:200'
+    document.body.append(d)
+  })
   const menu = page.locator('.dsh-bloom-menu')
   const open = async () => { if (await menu.isHidden()) await page.click('.dsh-bloom-trigger') }
   const state = () => page.evaluate(() => ({
@@ -485,17 +495,17 @@ test('material and per-scheme backgrounds remain independent through UI changes 
     darkBackground: document.body.dataset.bloomAmbienceDark,
   }))
   await open()
-  assert.deepEqual(await menu.locator('[data-glass]').allTextContents(), ['毛玻璃', '磨砂玻璃', '液态玻璃'])
+  assert.deepEqual(await page.locator('.dsh-bloom-detail [data-glass]').allTextContents(), ['毛玻璃', '磨砂玻璃', '液态玻璃'])
   await menu.locator('[data-mode="light"]').click()
-  await menu.locator('[data-glass="matte"]').click()
-  await menu.locator('[data-scheme="light"] [data-preset="wash"]').click()
+  await page.locator('.dsh-bloom-detail [data-glass="matte"]').click()
+  await page.locator('.dsh-bloom-detail [data-scheme="light"] [data-preset="wash"]').click()
   assert.deepEqual(await state(), { dark: false, material: 'matte', light: 'wash', darkBackground: 'corner' })
   await menu.locator('[data-mode="dark"]').click()
-  await menu.locator('[data-scheme="dark"] [data-preset="galaxy"]').click()
+  await page.locator('.dsh-bloom-detail [data-scheme="dark"] [data-preset="galaxy"]').click()
   assert.deepEqual(await state(), { dark: true, material: 'matte', light: 'wash', darkBackground: 'galaxy' })
   await menu.locator('[data-mode="light"]').click()
   assert.deepEqual(await state(), { dark: false, material: 'matte', light: 'wash', darkBackground: 'galaxy' })
-  await menu.locator('[data-glass="liquid"]').click()
+  await page.locator('.dsh-bloom-detail [data-glass="liquid"]').click()
   await menu.locator('[data-mode="dark"]').click()
   assert.deepEqual(await state(), { dark: true, material: 'liquid', light: 'wash', darkBackground: 'galaxy' })
   await page.reload()

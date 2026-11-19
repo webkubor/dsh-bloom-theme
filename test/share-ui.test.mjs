@@ -4,7 +4,7 @@ import { build } from 'esbuild'
 import { chromium } from 'playwright'
 import { fileURLToPath } from 'node:url'
 
-const {outputFiles}=await build({stdin:{contents:`import {buildSwitcherEl,cleanupSwitcher} from './src/switcher.ts'; import {bindLocale} from './src/lang.ts'; import {buildBloomCSS} from './src/tokens.ts'; import {COMPONENT_CSS} from './src/css/component.ts'; import {GLASS_CSS} from './src/css/glass.ts'; import {BACKGROUND_CSS} from './src/css/background.ts'; import {BUTTON_CSS} from './src/css/button.ts'; import {ADAPTIVE_CSS} from './src/css/adaptive.ts'; import {SURFACES_CSS} from './src/css/surfaces.ts'; import {SWITCHER_CSS} from './src/css/switcher.ts'; import {buildLiquidLens} from './src/liquid-lens.ts'; import {buildFogDefinitions} from './src/fog.ts'; window.fixture={buildSwitcherEl,cleanupSwitcher,bindLocale,css:[buildBloomCSS(),COMPONENT_CSS,GLASS_CSS,BACKGROUND_CSS,BUTTON_CSS,ADAPTIVE_CSS,SURFACES_CSS,SWITCHER_CSS],buildLiquidLens,buildFogDefinitions}`,resolveDir:fileURLToPath(new URL('..',import.meta.url))},bundle:true,write:false,format:'iife',platform:'browser'})
+const {outputFiles}=await build({stdin:{contents:`import {buildSwitcherEl,cleanupSwitcher} from './src/switcher.ts'; import {buildDetailEl} from './src/detail.ts'; import {bindLocale} from './src/lang.ts'; import {buildBloomCSS} from './src/tokens.ts'; import {COMPONENT_CSS} from './src/css/component.ts'; import {GLASS_CSS} from './src/css/glass.ts'; import {BACKGROUND_CSS} from './src/css/background.ts'; import {BUTTON_CSS} from './src/css/button.ts'; import {ADAPTIVE_CSS} from './src/css/adaptive.ts'; import {SURFACES_CSS} from './src/css/surfaces.ts'; import {SWITCHER_CSS} from './src/css/switcher.ts'; import {buildLiquidLens} from './src/liquid-lens.ts'; import {buildFogDefinitions} from './src/fog.ts'; window.fixture={buildSwitcherEl,cleanupSwitcher,buildDetailEl,bindLocale,css:[buildBloomCSS(),COMPONENT_CSS,GLASS_CSS,BACKGROUND_CSS,BUTTON_CSS,ADAPTIVE_CSS,SURFACES_CSS,SWITCHER_CSS],buildLiquidLens,buildFogDefinitions}`,resolveDir:fileURLToPath(new URL('..',import.meta.url))},bundle:true,write:false,format:'iife',platform:'browser'})
 async function setup(t){
   const browser=await chromium.launch({executablePath:process.env.BLOOM_CHROMIUM_PATH||undefined,args:['--no-sandbox']});t.after(()=>browser.close())
   const context=await browser.newContext({viewport:{width:1000,height:760},locale:'zh-CN'});const page=await context.newPage();page.setDefaultTimeout(5000)
@@ -28,40 +28,40 @@ async function setup(t){
     document.addEventListener('click',e=>{if(e.target instanceof Element && e.target.closest('.dsh-bloom-feedback'))e.preventDefault()},true)
   })
   await page.addScriptTag({content:outputFiles[0].text})
-  await page.evaluate(()=>{for(const css of window.fixture.css){const style=document.createElement('style');style.textContent=css;document.head.append(style)}document.body.append(window.fixture.buildLiquidLens(document),window.fixture.buildFogDefinitions(document));window.__root=window.fixture.buildSwitcherEl('mist');window.__root.dataset.slotted='true';window.__root.style.left='80px';window.__root.style.top='40px';document.body.append(window.__root)})
+  await page.evaluate(()=>{for(const css of window.fixture.css){const style=document.createElement('style');style.textContent=css;document.head.append(style)}document.body.append(window.fixture.buildLiquidLens(document),window.fixture.buildFogDefinitions(document));window.__root=window.fixture.buildSwitcherEl('mist');window.__root.dataset.slotted='true';window.__root.style.left='80px';window.__root.style.top='40px';const d=window.fixture.buildDetailEl();d.style.cssText='position:fixed;left:520px;top:40px';document.body.append(window.__root, d)})
   await page.locator('.dsh-bloom-trigger').click()
   return page
 }
 
 test('meteor controls are visible only for the dark meteor background and persist',async t=>{
   const page=await setup(t)
-  const rows=page.locator('[data-meteor-row]')
+  const rows=page.locator('.dsh-bloom-detail [data-meteor-row]')
   assert.equal(await rows.count(),3)
   assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='none')),true)
   await page.evaluate(()=>{document.body.setAttribute('data-ds-dark-theme','');document.body.setAttribute('data-bloom-ambience-dark','galaxy')})
   assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='flex')),true)
   const layout=await page.evaluate(()=>{
-    const label=document.querySelector('[data-meteor-row="color"] > span').getBoundingClientRect()
-    const color=document.querySelector('[data-meteor-color="colorful"]').getBoundingClientRect()
-    const rotation=document.querySelector('.dsh-bloom-rotation'), select=rotation.querySelector('select').getBoundingClientRect()
-    const material=document.querySelector('.dsh-bloom-glass__choices').getBoundingClientRect()
-    return {labelLeft:label.left,rotationLeft:rotation.getBoundingClientRect().left+parseFloat(getComputedStyle(rotation).paddingLeft),colorRight:color.right,selectRight:select.right,materialHeight:material.height,samples:document.querySelectorAll('.dsh-bloom-glass__sample,[data-glass-description]').length}
+    const label=document.querySelector('.dsh-bloom-detail [data-meteor-row="color"] > span').getBoundingClientRect()
+    const color=document.querySelector('.dsh-bloom-detail [data-meteor-color="colorful"]').getBoundingClientRect()
+    const rotation=document.querySelector('.dsh-bloom-detail .dsh-bloom-rotation'), select=rotation.querySelector('select').getBoundingClientRect()
+    const material=document.querySelector('.dsh-bloom-detail .dsh-bloom-glass__choices').getBoundingClientRect()
+    return {labelLeft:label.left,rotationLeft:rotation.getBoundingClientRect().left+parseFloat(getComputedStyle(rotation).paddingLeft),colorRight:color.right,selectRight:select.right,materialHeight:material.height,samples:document.querySelectorAll('.dsh-bloom-detail .dsh-bloom-glass__sample,[data-glass-description]').length}
   })
   assert.ok(Math.abs(layout.labelLeft-layout.rotationLeft)<1,JSON.stringify(layout))
   assert.ok(Math.abs(layout.colorRight-layout.selectRight)<1,JSON.stringify(layout))
   assert.ok(layout.materialHeight<55,JSON.stringify(layout))
   assert.equal(layout.samples,0)
-  await page.locator('[data-meteor-color="solid"]').click()
-  assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
-  assert.equal(await page.locator('[data-meteor-color="colorful"]').getAttribute('aria-checked'),'false')
-  await page.locator('[data-meteor-density="sparse"]').click()
-  await page.locator('[data-meteor-speed="fast"]').click()
+  await page.locator('.dsh-bloom-detail [data-meteor-color="solid"]').click()
+  assert.equal(await page.locator('.dsh-bloom-detail [data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('.dsh-bloom-detail [data-meteor-color="colorful"]').getAttribute('aria-checked'),'false')
+  await page.locator('.dsh-bloom-detail [data-meteor-density="sparse"]').click()
+  await page.locator('.dsh-bloom-detail [data-meteor-speed="fast"]').click()
   assert.deepEqual(await page.evaluate(()=>({density:document.body.dataset.bloomMeteorDensity,speed:document.body.dataset.bloomMeteorSpeed})),{density:'sparse',speed:'fast'})
   await page.evaluate(()=>{window.fixture.cleanupSwitcher();window.__root.remove();window.__root=window.fixture.buildSwitcherEl('mist');window.__root.dataset.slotted='true';window.__root.style.left='80px';window.__root.style.top='40px';document.body.append(window.__root)})
   await page.locator('.dsh-bloom-trigger').click()
-  assert.equal(await page.locator('[data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
-  assert.equal(await page.locator('[data-meteor-density="sparse"]').getAttribute('aria-checked'),'true')
-  assert.equal(await page.locator('[data-meteor-speed="fast"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('.dsh-bloom-detail [data-meteor-color="solid"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('.dsh-bloom-detail [data-meteor-density="sparse"]').getAttribute('aria-checked'),'true')
+  assert.equal(await page.locator('.dsh-bloom-detail [data-meteor-speed="fast"]').getAttribute('aria-checked'),'true')
   await page.evaluate(()=>document.body.setAttribute('data-bloom-ambience-dark','corner'))
   assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='none')),true)
 })

@@ -7,9 +7,10 @@ import { fileURLToPath } from 'node:url'
 const { outputFiles } = await build({
   stdin: {
     contents: `import { buildSwitcherEl, applyVariant } from './src/switcher.ts';
+      import { buildDetailEl } from './src/detail.ts';
       import { SWITCHER_CSS } from './src/css/switcher.ts';
       import { FEATURED_VARIANTS, PALETTE_GROUPS, VARIANTS } from './src/palette.ts';
-      window.fixture = { buildSwitcherEl, applyVariant, SWITCHER_CSS, FEATURED_VARIANTS, PALETTE_GROUPS, VARIANTS };`,
+      window.fixture = { buildSwitcherEl, applyVariant, buildDetailEl, SWITCHER_CSS, FEATURED_VARIANTS, PALETTE_GROUPS, VARIANTS };`,
     resolveDir: fileURLToPath(new URL('..', import.meta.url)),
   }, bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020',
 })
@@ -24,10 +25,14 @@ async function setup(t, saved = 'mist') {
   await page.clock.install()
   await page.addScriptTag({ content: outputFiles[0].text })
   await page.evaluate(variant => {
+    // applyVariant 走 document.startViewTransition，回调是异步渲染步 ——
+    // 新版 Chromium 下属性写入晚于首个断言（HEAD 上即为既有竞态）。
+    // 这组测试考的是旋转调度，不考过场动画：stub 成同步，断言即确定性。
+    document.startViewTransition = cb => { cb(); return { finished: Promise.resolve(), skipTransition() {} } }
     localStorage.setItem('dsh-bloom-variant', variant)
     const s = document.createElement('style'); s.textContent = window.fixture.SWITCHER_CSS; document.head.append(s)
     window.fixture.applyVariant(variant)
-    document.body.append(window.fixture.buildSwitcherEl(variant))
+    document.body.append(window.fixture.buildSwitcherEl(variant), window.fixture.buildDetailEl())
   }, saved)
   return page
 }
@@ -70,7 +75,7 @@ test('rotation starts off, changes after its interval, resets after manual selec
   await page.clock.fastForward(6 * 60_000)
   assert.equal(await current(page), 'mist')
   await page.locator('.dsh-bloom-trigger').click()
-  await page.locator('.dsh-bloom-rotation__select').selectOption('5')
+  await page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select').selectOption('5')
   await page.clock.fastForward(5 * 60_000 + 5)
   await page.waitForFunction(() => document.body.dataset.bloomVariant !== 'mist')
   const first = await current(page)
@@ -98,11 +103,11 @@ test('rotation starts off, changes after its interval, resets after manual selec
 test('denied storage writes do not prevent turning rotation off', async t => {
   const page = await setup(t)
   await page.locator('.dsh-bloom-trigger').click()
-  await page.locator('.dsh-bloom-rotation__select').selectOption('5')
+  await page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select').selectOption('5')
   await page.evaluate(() => {
     Storage.prototype.setItem = () => { throw new DOMException('Denied', 'QuotaExceededError') }
   })
-  await page.locator('.dsh-bloom-rotation__select').selectOption('0')
+  await page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select').selectOption('0')
   assert.equal(await page.evaluate(() => localStorage.getItem('dsh-bloom-variant-rotation-minutes')), '5')
   await page.clock.fastForward(16 * 60_000)
   assert.equal(await current(page), 'mist')
@@ -111,13 +116,13 @@ test('denied storage writes do not prevent turning rotation off', async t => {
     const e = document.querySelector('.dsh-bloom-switcher')
     e.replaceWith(window.fixture.buildSwitcherEl('mist'))
   })
-  assert.equal(await page.locator('.dsh-bloom-rotation__select').inputValue(), '0')
+  assert.equal(await page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select').inputValue(), '0')
 })
 
 test('rotation excludes the live palette when storage still contains an older choice', async t => {
   const page = await setup(t)
   await page.locator('.dsh-bloom-trigger').click()
-  await page.locator('.dsh-bloom-rotation__select').selectOption('5')
+  await page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select').selectOption('5')
   await page.evaluate(() => {
     Storage.prototype.setItem = () => { throw new DOMException('Denied', 'QuotaExceededError') }
     Math.random = () => 0
@@ -137,7 +142,7 @@ test('rotation excludes the live palette when storage still contains an older ch
 test('rebuilding a session header preserves the remaining rotation interval', async t => {
   const page = await setup(t)
   await page.locator('.dsh-bloom-trigger').click()
-  await page.locator('.dsh-bloom-rotation__select').selectOption('5')
+  await page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select').selectOption('5')
   await page.clock.fastForward(4 * 60_000)
   await page.evaluate(() => {
     document.querySelector('.dsh-bloom-switcher').replaceWith(window.fixture.buildSwitcherEl('mist'))
@@ -149,7 +154,7 @@ test('rebuilding a session header preserves the remaining rotation interval', as
 test('rotation select retains native Arrow and Home/End keyboard handling', async t => {
   const page = await setup(t)
   await page.locator('.dsh-bloom-trigger').click()
-  const control = page.locator('.dsh-bloom-rotation__select')
+  const control = page.locator('.dsh-bloom-detail .dsh-bloom-rotation__select')
   await control.focus()
   for (const key of ['ArrowDown', 'ArrowUp', 'End', 'Home']) {
     await control.press(key)

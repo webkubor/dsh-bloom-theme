@@ -6,31 +6,13 @@
  * 键盘可完整操作（role=radiogroup + aria-checked + 方向键），窄屏隐藏中文名。
  */
 import { FEATURED_VARIANTS, isNewVariant, PALETTE, VARIANTS } from './palette.js'
-import { readRotationMinutes, resetRotationTimer, ROTATION_MINUTES, setRotationMinutes, startRotation } from './rotation.js'
+import { resetRotationTimer, startRotation } from './rotation.js'
 import { applyMotion, injectCSS, readMotion, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
-import {
-  readGlassMode,
-  writeGlassMode,
-  effectiveGlassMode,
-  type GlassMode,
-} from './glass.js'
-import { AMBIENCE_PRESETS, readAmbience, writeAmbience, type Scheme } from './ambience.js'
-import {
-  applyMeteorDensity,
-  applyMeteorSpeed,
-  METEOR_DENSITIES,
-  METEOR_SPEEDS,
-  readMeteorColorMode,
-  readMeteorDensity,
-  readMeteorSpeed,
-  writeMeteorColorMode,
-  writeMeteorDensity,
-  writeMeteorSpeed,
-} from './starlight.js'
+import type { GlassMode } from './glass.js'
 import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
 import { copyDiagnostics, formatDiagnosticsMarkdown } from './diagnostics.js'
 import { buildFeedbackUrl } from './feedback.js'
@@ -164,22 +146,6 @@ async function shareInstall(btn: HTMLElement, schedule: (fn: () => void, delay: 
   return ok
 }
 
-const AMBIENCE_LABELS: Record<string, string> = {
-  diagonal: '对角漫染', galaxy: '漫天星辰', corner: '角落微光',
-  stream: '斜光流转', wash: '水彩晕染', clear: '清透留白', off: '不显示',
-}
-
-/** One segmented row per scheme; CSS shows the row matching the host scheme. */
-function ambienceRows(): string {
-  return (Object.keys(AMBIENCE_PRESETS) as Scheme[]).map((scheme) => {
-    const current = readAmbience(scheme)
-    const buttons = AMBIENCE_PRESETS[scheme].map((preset) =>
-      `<button type="button" class="dsh-bloom-ambience__btn" data-preset="${preset}" role="radio" aria-checked="${preset === current}" data-active="${preset === current}">${tr(AMBIENCE_LABELS[preset])}</button>`).join('')
-    const hint = scheme === 'dark' ? tr('深色背景') : tr('浅色背景')
-    return `<div class="dsh-bloom-ambience" data-scheme="${scheme}" role="radiogroup" aria-label="${hint}">${buttons}</div>`
-  }).join('')
-}
-
 let switcherSerial = 0
 export function buildSwitcherHTML(currentVariant) {
   const sharePanelId = `dsh-bloom-share-${++switcherSerial}`
@@ -187,8 +153,6 @@ export function buildSwitcherHTML(currentVariant) {
   // choice until its owner deliberately selects a featured replacement.
   const shown = FEATURED_VARIANTS.includes(currentVariant)
     ? FEATURED_VARIANTS : [currentVariant, ...FEATURED_VARIANTS]
-  const rotationOptions = ROTATION_MINUTES.map((m) =>
-    `<option value="${m}"${readRotationMinutes() === m ? ' selected' : ''}>${m ? tr('{0} 分钟', m) : tr('关闭自动换色')}</option>`).join('')
   const options = shown.map((v) => {
     const on = v === currentVariant
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
@@ -227,40 +191,7 @@ export function buildSwitcherHTML(currentVariant) {
         <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
       </div>
     </div>
-    <div class="dsh-bloom-section">${tr('质感')}</div>
-    <div class="dsh-bloom-glass" role="group" aria-label="${tr('质感')}">
-      <div class="dsh-bloom-glass__choices">
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="frosted">${tr('毛玻璃')}</button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="matte">${tr('磨砂玻璃')}</button>
-        <button type="button" class="dsh-bloom-glass__choice" data-glass="liquid">${tr('液态玻璃')}</button>
-      </div>
-      <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
-    </div>
-    <div class="dsh-bloom-section">${tr('背景')}</div>
-    ${ambienceRows()}
-    <div class="dsh-bloom-meteor-opt" data-meteor-row="color" role="radiogroup" aria-label="${tr('流星颜色')}">
-      <span>${tr('流星颜色')}</span>
-      ${(['solid', 'colorful'] as const).map(mode => `<button type="button" data-meteor-color="${mode}" role="radio" aria-checked="${readMeteorColorMode() === mode}" data-active="${readMeteorColorMode() === mode}">${tr(mode === 'solid' ? '纯色' : '彩色')}</button>`).join('')}
-    </div>
-    <div class="dsh-bloom-meteor-opt" data-meteor-row="density" role="radiogroup" aria-label="${tr('流星密度')}">
-      <span>${tr('流星密度')}</span>
-      ${METEOR_DENSITIES.map(density => `<button type="button" data-meteor-density="${density}" role="radio" aria-checked="${readMeteorDensity() === density}" data-active="${readMeteorDensity() === density}">${tr(density === 'sparse' ? '稀疏' : density === 'dense' ? '密集' : '标准')}</button>`).join('')}
-    </div>
-    <div class="dsh-bloom-meteor-opt" data-meteor-row="speed" role="radiogroup" aria-label="${tr('流星速度')}">
-      <span>${tr('流星速度')}</span>
-      ${METEOR_SPEEDS.map(speed => `<button type="button" data-meteor-speed="${speed}" role="radio" aria-checked="${readMeteorSpeed() === speed}" data-active="${readMeteorSpeed() === speed}">${tr(speed === 'slow' ? '慢' : speed === 'fast' ? '快' : '标准')}</button>`).join('')}
-    </div>
-    <label class="dsh-bloom-rotation">${tr('自动换色')}
-      <select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">
-        ${rotationOptions}
-      </select>
-    </label>
-    <div class="dsh-bloom-rotation dsh-bloom-motion-row"><span class="dsh-bloom-rotation__label">${tr('动效')}</span>
-      <span class="dsh-bloom-motion-seg">
-        <button type="button" class="dsh-bloom-motion-btn" data-motion="on" role="radio" aria-checked="${readMotion()}" data-active="${readMotion()}">${tr('开启')}</button>
-        <button type="button" class="dsh-bloom-motion-btn" data-motion="off" role="radio" aria-checked="${!readMotion()}" data-active="${!readMotion()}">${tr('停用')}</button>
-      </span>
-    </div>
+    <div class="dsh-bloom-settings-hint" role="note">${tr('质感、背景、流星与动效在 设置 › Bloom 外观 中调整')}</div>
     <div class="dsh-bloom-more-body" hidden data-open="false" data-instant="true">
       <div class="dsh-bloom-more-inner">
       ${changelogHTML()}
@@ -434,35 +365,6 @@ function syncAppearanceRow(el: HTMLElement) {
     const on = btn.dataset.mode === stored
     btn.dataset.active = String(on)
     btn.setAttribute('aria-pressed', String(on))
-  }
-}
-
-/**
- * 把玻璃档位行同步成当前状态。
- *
- * 三个要点：
- *   1. 选中态标实际生效的档位，auto 时也亮一格；状态文案说明每档改变了什么。
- *   2. 系统降级了但用户没动过时，要**说清楚**：不然用户看到界面变实底，
- *      以为插件坏了。提示语说明「系统已开启降低透明度」，并给出「仍要毛玻璃」的做法。
- *   3. 提示只在系统确实要求降透明、且用户没显式选过档位时出现。
- */
-function syncGlassRow(el: HTMLElement) {
-  const row = el.querySelector<HTMLElement>('.dsh-bloom-glass')
-  if (!row) return
-  const stored = readGlassMode()
-  const effective = effectiveGlassMode()
-  const shown = stored === 'auto' ? (effective === 'solid' ? 'liquid' : effective) : stored
-  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-glass__choice'))) {
-    const on = btn.dataset.glass === shown
-    btn.dataset.active = String(on)
-    btn.setAttribute('aria-pressed', String(on))
-  }
-  const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
-  if (!hint) return
-  const systemDowngraded = effective === 'solid'
-  hint.hidden = !systemDowngraded
-  if (systemDowngraded) {
-    hint.textContent = tr('系统设置已降低透明效果；已保留你的质感选择。')
   }
 }
 
@@ -691,7 +593,6 @@ export function buildSwitcherEl(initialVariant) {
     // 先同步行内容（会改变面板高度），再按真实视口夹一次位置：
     // 触发器在标题栏哪一端、面板最终多高，夹取都要按最终状态算。
     syncAppearanceRow(el)
-    syncGlassRow(el)
     placeMenu(el)
       // 打开时把焦点移到当前选中项，键盘用户立刻知道在哪
     const active = menu.querySelector<HTMLElement>('.dsh-bloom-option[data-active="true"]')
@@ -700,8 +601,6 @@ export function buildSwitcherEl(initialVariant) {
   }
 
   el.addEventListener('change', (e) => {
-    const control = (e.target as HTMLElement).closest<HTMLSelectElement>('.dsh-bloom-rotation__select')
-    if (control) { setRotationMinutes(Number(control.value)); return }
     const box = (e.target as HTMLElement).closest<HTMLInputElement>('.dsh-bloom-telemetry__box')
     if (box) {
       setTelemetryEnabled(box.checked)
@@ -714,76 +613,6 @@ export function buildSwitcherEl(initialVariant) {
     const tracked = target.closest<HTMLElement>('[data-track]')
     if (tracked?.dataset.track) track(tracked.dataset.track as PanelEvent)
     if (target.closest('.dsh-bloom-close')) { closeMenu(el); return }
-    const meteorBtn = target.closest<HTMLButtonElement>('[data-meteor-color]')
-    if (meteorBtn) {
-      const mode = meteorBtn.dataset.meteorColor
-      if (mode === 'solid' || mode === 'colorful') {
-        writeMeteorColorMode(mode)
-        el.querySelectorAll<HTMLButtonElement>('[data-meteor-color]').forEach(button => {
-          const active = button.dataset.meteorColor === mode
-          button.dataset.active = String(active)
-          button.setAttribute('aria-checked', String(active))
-        })
-      }
-      e.stopPropagation()
-      return
-    }
-    const densityBtn = target.closest<HTMLButtonElement>('[data-meteor-density]')
-    if (densityBtn) {
-      const density = densityBtn.dataset.meteorDensity
-      if (METEOR_DENSITIES.includes(density as typeof METEOR_DENSITIES[number])) {
-        writeMeteorDensity(density as typeof METEOR_DENSITIES[number])
-        applyMeteorDensity(document, density as typeof METEOR_DENSITIES[number])
-        el.querySelectorAll<HTMLButtonElement>('[data-meteor-density]').forEach(button => {
-          const active = button.dataset.meteorDensity === density
-          button.dataset.active = String(active)
-          button.setAttribute('aria-checked', String(active))
-        })
-      }
-      e.stopPropagation()
-      return
-    }
-    const speedBtn = target.closest<HTMLButtonElement>('[data-meteor-speed]')
-    if (speedBtn) {
-      const speed = speedBtn.dataset.meteorSpeed
-      if (METEOR_SPEEDS.includes(speed as typeof METEOR_SPEEDS[number])) {
-        writeMeteorSpeed(speed as typeof METEOR_SPEEDS[number])
-        applyMeteorSpeed(document, speed as typeof METEOR_SPEEDS[number])
-        el.querySelectorAll<HTMLButtonElement>('[data-meteor-speed]').forEach(button => {
-          const active = button.dataset.meteorSpeed === speed
-          button.dataset.active = String(active)
-          button.setAttribute('aria-checked', String(active))
-        })
-      }
-      e.stopPropagation()
-      return
-    }
-    const ambienceBtn = target.closest<HTMLElement>('.dsh-bloom-ambience__btn')
-    if (ambienceBtn) {
-      e.stopPropagation()
-      const row = ambienceBtn.closest<HTMLElement>('.dsh-bloom-ambience')
-      const scheme = row?.dataset.scheme as Scheme | undefined
-      if (row && scheme && writeAmbience(scheme, ambienceBtn.dataset.preset ?? '')) {
-        row.querySelectorAll<HTMLElement>('.dsh-bloom-ambience__btn').forEach((b) => {
-          const on = b === ambienceBtn
-          b.dataset.active = String(on)
-          b.setAttribute('aria-checked', String(on))
-        })
-      }
-      return
-    }
-    const motionBtn = target.closest<HTMLButtonElement>('[data-motion]')
-    if (motionBtn) {
-      e.stopPropagation()
-      const on = motionBtn.dataset.motion === 'on'
-      applyMotion(on)
-      el.querySelectorAll<HTMLButtonElement>('[data-motion]').forEach(b => {
-        const active = (b.dataset.motion === 'on') === on
-        b.dataset.active = String(active)
-        b.setAttribute('aria-checked', String(active))
-      })
-      return
-    }
     const diagnose = target.closest<HTMLElement>('.dsh-bloom-diagnose')
     if (diagnose) {
       e.stopPropagation()
@@ -854,13 +683,6 @@ export function buildSwitcherEl(initialVariant) {
       // 直接切 body 属性 + 持久化，零弹窗。同步完成，立刻刷新选中态。
       setMode(modeBtn.dataset.mode as AppearanceMode)
       syncAppearanceRow(el)
-      return
-    }
-    const glassBtn = target.closest<HTMLElement>('.dsh-bloom-glass__choice[data-glass]')
-    if (glassBtn) {
-      // 玻璃档位：写 localStorage + 落到 body 属性上，CSS 立刻生效。
-      writeGlassMode(glassBtn.dataset.glass as GlassMode)
-      syncGlassRow(el)
       return
     }
     const trigger = (e.target as HTMLElement).closest('.dsh-bloom-trigger')

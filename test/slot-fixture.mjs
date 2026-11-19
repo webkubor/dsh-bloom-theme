@@ -16,12 +16,17 @@ const occupants = new Map()
 //
 // 判据来源必须写清「哪个文件哪一行」，否则下次还是靠人肉发现：
 //   node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/types/client/contract/slots.d.ts
+//   node_modules/@deepseek-ai/dsh-client-ui-settings/lib/types/client/contract/slots.d.ts
+//     ('settings.section.icon': { kind: 'list'; scope: 'root'; inline: true } —— 导航图标，
+//      id 必须等于对应 settings.section 的 id；2026-11-19 settings 迁移加图标时补登。)
 const SLOT_KIND = {
   'conversation.header.leading': 'single',
   'conversation.session.header.corner': 'single',
   'shell.overlay': 'list',
+  'settings.section': 'list',
+  'settings.section.icon': 'list',
 }
-const ALLOWED_KEYS = { single: ['name'], list: ['name', 'id', 'order'] }
+const ALLOWED_KEYS = { single: ['name'], list: ['name', 'id', 'order', 'label', 'locale'] }
 let injecting = null
 window.slotRegistrations = []
 window.slotDisposers = []
@@ -50,6 +55,10 @@ window.fixtureSlots = {
       if (options.order !== undefined && !Number.isFinite(options.order)) window.slotViolations.push(`${name} (list): order must be a number`)
     }
     if (typeof Component !== 'function') throw new Error(`register(${name}) needs a React component`)
+    // 模拟 shell 渲染导航：label 是惰性函数，注册时求值一次 ——
+    // 闭包里读没在 inject 声明的服务会直接抛（strict ctx），这里必须炸出来，
+    // 而不是让菜单项静默消失（2026-11-19 settings.section 实测踩过）。
+    const labelText = typeof options.label === 'function' ? options.label() : (options.label ?? null)
     if (occupants.has(name)) throw new Error(`Duplicate Slot registration: ${name}`)
     const host = document.createElement('div')
     host.dataset.fixtureSlot = name
@@ -59,13 +68,18 @@ window.fixtureSlots = {
     if (name === 'shell.overlay') {
       host.style.cssText = 'position:fixed;inset:0;z-index:1000;pointer-events:none'
       document.body.append(host)
+    } else if (name === 'settings.section' || name === 'settings.section.icon') {
+      // 设置节内容与它的导航图标只在设置对话框里渲染 —— 夹具只登记不渲染，
+      // 避免第二份 .dsh-bloom-detail / 图标 span 污染几何断言与选择器（谁要测谁自挂 buildDetailEl）
+      window.slotRegistrations.push({ ...options, labelText })
+      return () => { const i = window.slotRegistrations.findIndex(r => r.id === options.id); if (i >= 0) window.slotRegistrations.splice(i, 1) }
     } else {
       (document.querySelector('[data-fixture-header]') ?? document.querySelector('header')).append(host)
     }
     const root = createRoot(host)
     flushSync(() => root.render(React.createElement(Component)))
     occupants.set(name, { root, host, Component })
-    window.slotRegistrations.push({ ...options })
+    window.slotRegistrations.push({ ...options, labelText })
     return () => {
       const current = occupants.get(name)
       if (!current) return

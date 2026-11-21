@@ -51,8 +51,41 @@ export interface HostThemeService {
   setTheme?: (id: string) => void
 }
 
+/**
+ * 「外观变了」的订阅回调。宿主 theme/change 会调它。
+ *
+ * 2026-11-21（owner：「深色浅色跟随系统，这太垃圾了」）：
+ * 之前插件只调 `setTheme()` 写偏好，却**从不订阅** `theme/change`。
+ * 后果是：用户在系统里切深浅时，宿主把 body 属性和 token 都换好了，
+ * 但插件这边 —— 面板里的 ☀/🌙/🖥 选中态、基于 `currentIsDark()` 的
+ * 氛围层选择、设置页里的深浅相关样式 —— 全部停留在旧值，
+ * 界面看起来「跟系统没关系」。订阅之后，系统切换会立刻传播到插件。
+ */
+export type AppearanceChangeListener = (isDark: boolean) => void
+
 /** 插件当前持有的宿主 theme 服务（由 client.ts 在 apply 时注入）。 */
 let hostTheme: HostThemeService | null = null
+
+/** 外观变化订阅者（面板、氛围层、设置页各自注册）。 */
+const changeListeners = new Set<AppearanceChangeListener>()
+
+/**
+ * 订阅外观变化（宿主 theme/change → 这里）。
+ *
+ * @returns 取消订阅函数。
+ */
+export function onAppearanceChange(listener: AppearanceChangeListener): () => void {
+  changeListeners.add(listener)
+  return () => { changeListeners.delete(listener) }
+}
+
+/** 把当前深浅广播给订阅者（宿主事件或本地应用后调用）。 */
+export function notifyAppearanceChange(): void {
+  const isDark = currentIsDark()
+  for (const listener of changeListeners) {
+    try { listener(isDark) } catch { /* 单个订阅者出错不影响其他 */ }
+  }
+}
 
 /**
  * 记住宿主的 theme 服务。
@@ -132,6 +165,9 @@ export function setMode(mode: AppearanceMode): void {
   if (hasHostTheme()) {
     try {
       hostTheme?.setTheme?.(mode)
+      // 宿主会广播 theme/change，广播里会带上新的深浅；这里也先本地通知一次，
+      // 让面板立刻响应（宿主要等到自己的 resolve 流程走完才广播）。
+      notifyAppearanceChange()
       return
     } catch {
       // 宿主 setTheme 失败（老版本签名不同）：落到旧路径，别让切换变成死键。
@@ -139,6 +175,7 @@ export function setMode(mode: AppearanceMode): void {
   }
   applyModeLegacy(mode)
   try { localStorage.setItem(LEGACY_MODE_KEY, mode) } catch {}
+  notifyAppearanceChange()
 }
 
 let legacyMq: MediaQueryList | null = null

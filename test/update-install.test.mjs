@@ -11,6 +11,7 @@ const { outputFiles } = await build({
     contents: `import './test/slot-fixture.mjs'; import './src/client.ts';
       const services = { slots: window.fixtureSlots }; const pending = [];
       window.remoteDisposers = []; window.layoutDisposers = [];
+      window.__events = window.__events ?? {};
       const strictCtx = (declared = []) => new Proxy({}, {
         get(_, key) {
           if (key === 'effect') return fn => {
@@ -22,6 +23,17 @@ const { outputFiles } = await build({
           if (key === 'inject') return (names, cb) => {
             const run = () => cb(strictCtx([...declared, ...names]));
             if (names.every(n => services[n] !== undefined)) run(); else pending.push({names, run});
+          };
+          // cordis 核心事件 API 不是 inject 出来的服务（宿主 dsh-client-ui-theme
+          // 自己就写 ctx.on('theme/change', sync)，exports.inject 里并无 'theme'）。
+          if (key === 'on') return (event, listener) => {
+            const bucket = window.__events?.[event] ?? (window.__events[event] = new Set());
+            bucket.add(listener);
+            return () => bucket.delete(listener);
+          };
+          if (key === 'off') return (event, listener) => { window.__events?.[event]?.delete(listener); return () => {} };
+          if (key === 'emit') return (event, payload) => {
+            for (const listener of window.__events?.[event] ?? []) listener(payload);
           };
           if (typeof key === 'symbol' || key === 'then') return undefined;
           if (!declared.includes(key)) throw new Error('cannot get property "' + String(key) + '" without inject');

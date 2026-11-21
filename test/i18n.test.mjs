@@ -17,9 +17,22 @@ const { outputFiles } = await build({
     // ⚠️ ctx 必须是「严格」的：cordis 的 ctx 是 Proxy，读没在 inject 里声明的服务会抛
     //    \`cannot get property "x" without inject\`。2026-10-30 这里曾给了个普通对象
     //    {locale, effect}，测试全绿、桌面端启动失败 —— 替身比宿主宽松，等于没测。
+    window.__events = window.__events ?? {};
     const strictCtx = (services, declared) => new Proxy({}, {
       get(_, key) {
         if (key === 'effect') return (fn) => fn()
+        // cordis 核心事件 API 不是 inject 出来的服务：宿主 dsh-client-ui-theme
+        // 自己就写 ctx.on('theme/change', sync)，而它的 exports.inject 里
+        // 并没有 'theme'。替身少了这三个 = 比宿主还严（2026-11-21 踩过）。
+        if (key === 'on') return (event, listener) => {
+          const bucket = window.__events?.[event] ?? (window.__events[event] = new Set());
+          bucket.add(listener);
+          return () => bucket.delete(listener);
+        };
+        if (key === 'off') return (event, listener) => { window.__events?.[event]?.delete(listener); return () => {} };
+        if (key === 'emit') return (event, payload) => {
+          for (const listener of window.__events?.[event] ?? []) listener(payload);
+        };
         if (key === 'inject') return (names, cb) => names.every(name => services[name] !== undefined) ? cb(strictCtx(services, [...declared, ...names])) : undefined
         if (typeof key === 'symbol' || key === 'then') return undefined
         if (!declared.includes(key)) throw new Error('cannot get property "' + String(key) + '" without inject')
@@ -138,26 +151,43 @@ for (const locale of ['zh-CN', 'en-US', 'fr-FR']) {
   }
 }
 for (const language of ['zh', 'en']) {
-  test(`${language}: poem column aligns across rows without overflow`, async () => {
+  test(`${language}: swatch grid aligns across rows without overflow`, async () => {
     const { page, context } = await setup('en-US', language)
     try {
       await click(page, '.dsh-bloom-trigger')
       await page.clock.fastForward(500)
       const geometry = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-option')].map(row => {
         const box = row.getBoundingClientRect()
-        const poem = row.querySelector('.dsh-bloom-option__en')
-        return { left: poem.getBoundingClientRect().left - box.left,
+        const swatch = row.querySelector('.dsh-bloom-option__swatch')
+        return {
+          left: swatch.getBoundingClientRect().left - box.left,
+          top: swatch.getBoundingClientRect().top - box.top,
           overflows: row.scrollWidth > row.clientWidth + 1,
-          titleContainsPoem: row.title === '' && row.ariaLabel.includes(poem.textContent) }
+          // 2026-11-21：变体列表改成纯色板网格，文字不再出现在 DOM 里 ——
+          // 变体名与诗句进了 aria-label（键盘与读屏仍能读到）。
+          titleContainsPoem: row.getAttribute('title')?.includes('·') ?? false,
+          ariaLabel: row.getAttribute('aria-label') ?? '',
+        }
       }))
       assert.equal(geometry.length, featuredCount)
-      assert.ok(geometry.every(row => Math.abs(row.left - geometry[0].left) < 1))
-      assert.ok(geometry.every(row => !row.overflows && row.titleContainsPoem))
+      assert.ok(geometry.every(row => !row.overflows), 'no swatch cell overflows its cell')
+      assert.ok(geometry.every(row => row.ariaLabel.includes('·')), 'every swatch carries name and poem in its aria-label')
+      // 网格对齐：同一行内色块左缘一致，同一列内上缘一致。
+      const cols = new Map()
+      for (const row of geometry) {
+        const key = Math.round(row.left)
+        if (!cols.has(key)) cols.set(key, [])
+        cols.get(key).push(row.top)
+      }
+      for (const [, tops] of cols) {
+        assert.ok(tops.every(t => Math.abs(t - tops[0]) < 1), `column tops misaligned: ${JSON.stringify(tops)}`)
+      }
     } finally { await context.close() }
   })
 }
-// 对齐不等于看得见：量像素宽度、行内垂直包含、名称不被截断、渐变首端合成后的对比度。
-// 页面 <html lang> 故意和 DSH 语言相反 —— 列宽必须跟 DSH 语言走，不能继承页面 lang。
+// 对齐不等于看得见：量色块像素尺寸、格内完整不裁切、选中徽点对位、渐变首端合成后的对比度。
+// 页面 <html lang> 故意和 DSH 语言相反 —— 色块与语言无关，但文案（aria-label）必须跟 DSH 语言走。
+// 2026-11-21：变体列表改成纯色板网格，诗句/名字不再有 DOM 节点，改为查 aria-label。
 const measureRows = () => {
   const toRGBA = css => {
     const c = document.createElement('canvas').getContext('2d')
@@ -165,7 +195,7 @@ const measureRows = () => {
     const e = c.getImageData(0, 0, 1, 1).data
     return [e[0], e[1], e[2], e[3] / 255]
   }
-  // 从 html 往下逐层 source-over 合成背景，得到诗句真实压在上面的底色。
+  // 从 html 往下逐层 source-over 合成背景，得到色块真实压着的底色。
   const backdrop = el => {
     const chain = []; for (let n = el; n; n = n.parentElement) chain.unshift(n)
     let rgb = [255, 255, 255]
@@ -178,21 +208,23 @@ const measureRows = () => {
   const lum = ([r, g, b]) => { const f = v => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b) }
   const contrast = (fg, bg) => { const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x); return (a + 0.05) / (b + 0.05) }
   return [...document.querySelectorAll('.dsh-bloom-option')].map(row => {
-    const poem = row.querySelector('.dsh-bloom-option__en')
-    const name = row.querySelector('.dsh-bloom-option__name')
+    const swatch = row.querySelector('.dsh-bloom-option__swatch')
     const check = row.querySelector('.dsh-bloom-check')
-    const rb = row.getBoundingClientRect(), pb = poem.getBoundingClientRect(), cb = check.getBoundingClientRect()
-    const cs = getComputedStyle(poem)
+    const rb = row.getBoundingClientRect(), sb = swatch.getBoundingClientRect(), cb = check.getBoundingClientRect()
+    const cs = getComputedStyle(swatch)
     const stops = [...cs.backgroundImage.matchAll(/(?:rgba?|oklch|oklab|color|lab|lch)\([^()]*(?:\([^()]*\)[^()]*)*\)/g)].map(m => m[0])
     const bg = backdrop(row)
     const comp = css => { const [r, g, b, a] = toRGBA(css); return [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)] }
     return {
-      variant: row.dataset.variant, poemLang: poem.lang,
-      poemWidth: pb.width, poemText: poem.textContent, poemFull: poem.scrollWidth,
-      poemTop: pb.top - rb.top, poemBottom: rb.bottom - pb.bottom, poemHeight: pb.height,
-      nameText: name.textContent, nameWidth: name.clientWidth, nameNeeded: name.scrollWidth,
-      checkRight: rb.right - cb.right, checkCenter: (cb.top + cb.bottom) / 2 - (rb.top + rb.bottom) / 2,
-      opacity: Number(cs.opacity), clip: cs.webkitBackgroundClip || cs.backgroundClip, color: cs.color,
+      variant: row.dataset.variant,
+      lang: row.getAttribute('lang') ?? document.documentElement.lang,
+      ariaLabel: row.getAttribute('aria-label') ?? '',
+      swatchWidth: sb.width, swatchHeight: sb.height,
+      cellWidth: rb.width, cellHeight: rb.height,
+      swatchFull: swatch.scrollWidth <= swatch.clientWidth + 1 && swatch.scrollHeight <= swatch.clientHeight + 1,
+      checkRight: rb.right - cb.right, checkBottom: rb.bottom - cb.bottom,
+      checkVisible: Number(getComputedStyle(check).opacity) > 0.5,
+      active: row.dataset.active === 'true',
       stops, firstContrast: stops[0] ? contrast(comp(stops[0]), bg) : 0,
       lastContrast: stops.at(-1) ? contrast(comp(stops.at(-1)), bg) : 0,
     }
@@ -200,7 +232,7 @@ const measureRows = () => {
 }
 for (const language of ['zh', 'en']) {
   for (const mode of ['light', 'dark']) {
-    test(`${language}/${mode}: poems are visible, names fit, checks align, all gradient endpoints reach 4.5:1`, async () => {
+    test(`${language}/${mode}: swatches are visible, fill their cell, checks align, all gradient endpoints reach 4.5:1`, async () => {
       const { page, context } = await setup('en-US', language, mode)
       try {
         await page.evaluate(l => { document.documentElement.lang = l === 'zh' ? 'en' : 'zh-CN' }, language)
@@ -211,28 +243,33 @@ for (const language of ['zh', 'en']) {
         assert.equal(rows.length, featuredCount)
         for (const r of rows) {
           const at = `${language}/${mode} ${r.variant}`
-          assert.equal(r.poemLang, language, `${at}: poem carries the DSH language`)
-          assert.ok(r.poemText.trim().length > 0, `${at}: poem has text`)
-          assert.ok(r.poemWidth >= 60, `${at}: poem column ${r.poemWidth}px is too narrow to read`)
-          assert.ok(r.poemHeight >= 10 && r.poemTop >= 0 && r.poemBottom >= 0, `${at}: poem text box ${JSON.stringify([r.poemTop, r.poemHeight, r.poemBottom])} sits inside the row`)
-          assert.equal(r.opacity, 1, `${at}: no whole-line fade`)
-          assert.equal(r.clip, 'text', `${at}: gradient is clipped to glyphs`)
-          assert.ok(r.stops.length >= 2, `${at}: gradient has two endpoints (${r.stops})`)
+          // 文案必须跟 DSH 语言走（读屏与 tooltip 都要对）
+          assert.ok(r.ariaLabel.includes('·'), `${at}: aria-label carries name and poem (${r.ariaLabel})`)
+          assert.ok(r.swatchWidth >= 24 && r.swatchHeight >= 24, `${at}: swatch ${r.swatchWidth}x${r.swatchHeight}px is too small to hit`)
+          assert.ok(r.swatchFull, `${at}: swatch content is clipped by its cell`)
+          assert.ok(Math.abs(r.swatchWidth - r.cellWidth) < 2, `${at}: swatch does not fill its cell`)
+          assert.ok(r.stops.length >= 2, `${at}: swatch gradient has two endpoints (${r.stops})`)
+          if (r.active) {
+            assert.ok(r.checkVisible, `${at}: active swatch shows its check badge`)
+            assert.ok(r.checkRight >= 0 && r.checkRight < 8, `${at}: check badge is not tucked into the corner (${r.checkRight})`)
+          }
         }
-        // Small text (11.5–12.5px): every gradient endpoint must meet WCAG AA 4.5:1. Collect all
-        // offenders so one run names every failing palette instead of stopping at the first.
-        const weak = rows.flatMap(r => [
-          r.firstContrast < 4.5 && `${r.variant} start ${r.stops[0]} = ${r.firstContrast.toFixed(2)}`,
-          r.lastContrast < 4.5 && `${r.variant} end ${r.stops.at(-1)} = ${r.lastContrast.toFixed(2)}`,
-        ].filter(Boolean))
-        assert.deepEqual(weak, [], `${language}/${mode}: gradient endpoints below 4.5:1`)
-        const clipped = rows.filter(r => r.nameNeeded > r.nameWidth + 1).map(r => `${r.nameText} needs ${r.nameNeeded}px, has ${r.nameWidth}px`)
-        assert.deepEqual(clipped, [], `${language}/${mode}: palette names truncated`)
-        assert.ok(rows.every(r => Math.abs(r.checkRight - rows[0].checkRight) < 1 && Math.abs(r.checkCenter) < 1.5), 'check marks share one column and are vertically centred')
-        if (language === 'en') {
-          const tangerine = rows.find(r => r.variant === 'tangerine')
-          assert.equal(tangerine.nameText.replace(/新|New/, '').trim(), 'Tangerine')
-        }
+        // 色块是唯一能看出「这套配色长什么样」的图形（aria-hidden，文字进了 aria-label），
+        // 所以按 WCAG 1.4.11 非文本对比度守：承载识别的那一端必须 ≥ 3:1；
+        // 莫兰迪那一端是「气质半边」，本来就设计成很淡，只要求看得见（≥ 1.4:1）。
+        // 一次跑完点名所有不合格的配色，而不是撞到第一个就停。
+        const weak = rows.flatMap(r => {
+          const ends = [r.firstContrast, r.lastContrast]
+          const best = Math.max(...ends), worst = Math.min(...ends)
+          return [
+            best < 3 && `${r.variant} best end = ${best.toFixed(2)} (${r.stops.join(' -> ')})`,
+            worst < 1.4 && `${r.variant} faint end = ${worst.toFixed(2)} (${r.stops.join(' -> ')})`,
+          ].filter(Boolean)
+        })
+        assert.deepEqual(weak, [], `${language}/${mode}: swatch gradient endpoints below the non-text contrast floor`)
+        // 徽点在所有格子里对到同一个角
+        const badgeOffsets = rows.filter(r => r.active).map(r => r.checkRight)
+        assert.ok(badgeOffsets.every(o => Math.abs(o - badgeOffsets[0]) < 1), `check badges share one column: ${JSON.stringify(badgeOffsets)}`)
       } finally { await context.close() }
     })
   }

@@ -37,7 +37,9 @@ import { BUTTON_CSS } from './css/button.js'
 import { ADAPTIVE_CSS } from './css/adaptive.js'
 import { SURFACES_CSS } from './css/surfaces.js'
 import { applyMotion, injectCSS, readMotion, readVariant, watchThinkTags } from './dom.js'
-import { initAppearanceSync, bindHostTheme, type HostThemeService } from './appearance.js'
+import { initAppearanceSync, bindHostTheme, notifyAppearanceChange, type HostThemeService } from './appearance.js'
+import { applyThemeTokens, type HostThemeTokenService } from './theme-tokens.js'
+import { onVariantChange } from './switcher.js'
 import { initAmbience } from './ambience.js'
 import { initGlassMode } from './glass.js'
 import { createBloomComponents, type HostReact } from './ui.js'
@@ -583,6 +585,28 @@ function attachLocale(ctx) {
  */
 function bindThemeToHost(ctx) {
   if (typeof ctx?.inject !== 'function') return
+  // 订阅宿主 theme/change（官方姿势：dsh-client-ui-settings-account 同款
+  // `ctx.on('theme/change', …)` —— 事件总线挂在根 ctx 上，不在 inject 的
+  // scope 上；scope 是各服务自己的局部作用域，没有事件能力）。
+  //
+  // 宿主在两种情况下广播这个事件：
+  //   1. 用户切换了偏好（light / dark / system）
+  //   2. **偏好是 system 时，操作系统切换了深浅**（prefers-color-scheme 变化）
+  //
+  // 2026-11-21 · owner：「深色浅色跟随系统，这太垃圾了」——之前插件只写
+  // 不读：面板里的选中态、氛围层的深浅分支都停在旧值，「跟随系统」看起来
+  // 完全没在工作。订阅之后，系统一切换，插件每一层都跟着走。
+  if (typeof ctx.on === 'function') {
+    if (typeof ctx.effect === 'function') {
+      ctx.effect(
+        () => ctx.on('theme/change', () => notifyAppearanceChange()),
+        'dsh-bloom-theme: theme change',
+      )
+    } else {
+      // 老宿主没有 effect 就裸订阅（disposer 交由宿主随 ctx 销毁回收）。
+      ctx.on('theme/change', () => notifyAppearanceChange())
+    }
+  }
   ctx.inject(['theme'], (scope) => {
     const service = scope?.theme
     if (!service || typeof service.setTheme !== 'function') return
@@ -592,6 +616,36 @@ function bindThemeToHost(ctx) {
       initAppearanceSync()
       return release
     }, 'dsh-bloom-theme: host theme')
+  })
+}
+
+/**
+ * 把 Bloom 的配色压进宿主的 token 层 —— 让侧栏/顶栏/主区一起跟着主题色走。
+ *
+ * 为什么是这条而不是 CSS 补丁：宿主的面材质有多层同优先级规则，
+ * 在 CSS 层叠色会被「后注入者赢」静默吞掉（实测改了变量 computed 不动），
+ * 那属于补丁层、不是根因。宿主 `ctx.theme.overrideTokens()` 是官方入口：
+ * 覆盖层叠在当前主题上，宿主 ThemePresenter 把结果写回 body 的行内 CSS 变量，
+ * 所有消费该 token 的宿主元素一起变色 —— 插件不碰任何宿主选择器。
+ *
+ * 换配色时重新压一次（同 source 会整体替换该层并叠到最上层）。
+ */
+function bindThemeTokens(ctx) {
+  if (typeof ctx?.inject !== 'function') return
+  ctx.inject(['theme'], (scope) => {
+    const service = scope?.theme as HostThemeTokenService | undefined
+    if (!service || typeof service.overrideTokens !== 'function') return
+    scope.effect?.(() => {
+      let dispose = applyThemeTokens(service, readVariant())
+      const unwatch = onVariantChange(() => {
+        dispose()
+        dispose = applyThemeTokens(service, readVariant())
+      })
+      return () => {
+        unwatch()
+        dispose()
+      }
+    }, 'dsh-bloom-theme: theme tokens')
   })
 }
 
@@ -618,6 +672,8 @@ window.__ModuleLoader__.load({
       bindLocaleToHost(ctx)
       // 深浅状态交给 DSH 的 theme 服务持有，面板只做入口。
       bindThemeToHost(ctx)
+      // 配色压进宿主 token 层：侧栏/顶栏/主区一起跟着主题色走。
+      bindThemeTokens(ctx)
       // 接上宿主的插件管理服务：横幅据此提供「应用内一键更新」。
       bindPluginManager(ctx)
       ctx.inject(['layout'], (scope) => {
@@ -635,10 +691,24 @@ window.__ModuleLoader__.load({
       })
       ctx.effect(() => installSkin(), 'dsh-bloom-theme: skin')
       bindBloomInspect(ctx)
-      // #113：切换器不占对话标题前的 leading 座，改挂会话头右侧角落座
-      // （860b5a5 原座；645a6ab 因菜单越界回退 leading，现 placeMenu 夹取已补齐）。
-      ctx.slots.inject('conversation.session.header.corner', () => ctx.slots.register({
-        name: 'conversation.session.header.corner',
+      // 切换器的座位（2026-11-21 修正）。
+      //
+      // #113 当初把它挂在 `conversation.session.header.corner`（页头最右角落），
+      // 但那个 seat 是 **single** slot —— 宿主的 client-ui-sidebar-right
+      // ExpandButton 已经占了它，插件再注册就会抛：
+      //   single slot "conversation.session.header.corner" already has a
+      //   registration at priority 0 (registered by WC)
+      // 官方契约也写明 single seat 是「一个控件」的独占位，插件不该 shadow
+      // 宿主自带 UI（replaceRisk: 'shadows-shipped-ui'）。
+      //
+      // 正确座位是 `conversation.session.header.utilities` —— **list** slot
+      //（additive）：页头右侧的官方 utilities 区，给一个自己的 id 就是
+      // 「在官方条目旁边加一个」，不会挤掉任何宿主 UI。
+      ctx.slots.inject('conversation.session.header.utilities', () => ctx.slots.register({
+        name: 'conversation.session.header.utilities',
+        id: 'dsh-bloom-theme.switcher',
+        order: 100,
+        label: 'Bloom',
       }, Switcher))
       ctx.slots.inject('shell.overlay', () => ctx.slots.register({
         name: 'shell.overlay', id: 'dsh-bloom-theme.decorations', order: -100,

@@ -11,12 +11,26 @@ const { outputFiles } = await build({
       window.fixture = { buildDetailEl };
       const services = { slots: window.fixtureSlots };
       const pending = [];
+      window.__events = window.__events ?? {};
       const strictCtx = (declared = []) => new Proxy({}, {
         get(_, key) {
           if (key === 'effect') return (fn) => {
             const dispose = fn();
             if (typeof dispose === 'function') window.__disposers.push(dispose);
             return dispose;
+          };
+          // cordis 核心事件 API（on/off/emit）**不是** inject 出来的服务：
+          // 宿主自己的 dsh-client-ui-theme 就是 ctx.on('theme/change', sync)
+          // 而它的 exports.inject 里没有 'theme'。替身不给这三个 = 比宿主还严，
+          // 测的是一个真实宿主里不存在的问题（2026-11-21 踩过）。
+          if (key === 'on') return (event, listener) => {
+            const bucket = window.__events?.[event] ?? (window.__events[event] = new Set());
+            bucket.add(listener);
+            return () => bucket.delete(listener);
+          };
+          if (key === 'off') return (event, listener) => { window.__events?.[event]?.delete(listener); return () => {} };
+          if (key === 'emit') return (event, payload) => {
+            for (const listener of window.__events?.[event] ?? []) listener(payload);
           };
           if (key === 'inject') return (names, cb) => {
             const run = () => cb(strictCtx([...declared, ...names]));
@@ -145,11 +159,11 @@ test('switcher and decorations render only through declared React Slots and surv
   const page = await setupPage(t)
   await page.evaluate(() => window.applyModule(window.mockLocale, window.mockTheme))
   const regs = await page.evaluate(() => window.slotRegistrations.map(r => r.name).sort())
-  assert.deepEqual(regs, ['conversation.session.header.corner', 'settings.section', 'settings.section.icon', 'shell.overlay'])
+  assert.deepEqual(regs, ['conversation.session.header.utilities', 'settings.section', 'settings.section.icon', 'shell.overlay'])
   assert.deepEqual(await page.evaluate(() => window.slotViolations), [], 'registrations follow the official { name, id, order } shape')
   // Ownership: the header Slot holds only Bloom's empty anchor; the whole widget lives in Bloom's overlay container.
   assert.equal(await page.evaluate(() =>
-    document.querySelector('[data-fixture-slot="conversation.session.header.corner"] [data-bloom-slot="switcher"]')?.children.length), 0, 'anchor stays empty')
+    document.querySelector('[data-fixture-slot="conversation.session.header.utilities"] [data-bloom-slot="switcher"]')?.children.length), 0, 'anchor stays empty')
   assert.equal(await page.evaluate(() =>
     document.querySelectorAll('[data-fixture-slot="shell.overlay"] [data-bloom-slot="decorations"] > .dsh-bloom-switcher').length), 1, 'widget mounted in own overlay container')
   assert.equal(await page.evaluate(() => document.querySelectorAll('header .dsh-bloom-switcher').length), 0, 'no widget inside the host header')
@@ -157,17 +171,23 @@ test('switcher and decorations render only through declared React Slots and surv
     !!document.querySelector('[data-fixture-slot="shell.overlay"] #dsh-bloom-sparkles')), true)
   assert.equal(await page.evaluate(() => document.querySelector('._headerUtilities').children.length), 0, 'host header untouched')
 
-  await page.evaluate(() => window.unmountFixtureSlot('conversation.session.header.corner'))
+  await page.evaluate(() => window.unmountFixtureSlot('conversation.session.header.utilities'))
   assert.equal(await page.evaluate(() => document.querySelectorAll('.dsh-bloom-switcher').length), 0, 'React unmount removes switcher')
-  await page.evaluate(() => window.remountFixtureSlot('conversation.session.header.corner'))
+  await page.evaluate(() => window.remountFixtureSlot('conversation.session.header.utilities'))
   assert.equal(await page.evaluate(() => document.querySelectorAll('.dsh-bloom-switcher').length), 1, 'remount yields exactly one')
 
   await page.click('.dsh-bloom-trigger')
   assert.equal(await page.locator('.dsh-bloom-menu').evaluate(el => el.hidden), false, 'remounted switcher is interactive')
-  const poems = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-option__en')].map(p => {
-    const r = p.getBoundingClientRect(); return { w: r.width, visible: getComputedStyle(p).display !== 'none' && r.width > 0 }
+  // 2026-11-21：变体列表改成纯色板网格 —— 文字（名字 + 诗句）进了 aria-label，
+  // DOM 里不再有 .dsh-bloom-option__en 节点。这里查色板本身：非零尺寸 + 渐变两端。
+  const swatches = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-option__swatch')].map(p => {
+    const r = p.getBoundingClientRect(); return { w: r.width, h: r.height, stops: getComputedStyle(p).backgroundImage }
   }))
-  assert.ok(poems.length > 0 && poems.every(p => p.visible), 'poetry visible with non-zero width after remount')
+  assert.ok(swatches.length > 0, 'swatch grid rendered after remount')
+  assert.ok(swatches.every(p => p.w > 0 && p.h > 0), 'every swatch has a real box after remount')
+  assert.ok(swatches.every(p => /gradient/.test(p.stops)), 'every swatch paints its palette gradient after remount')
+  const labels = await page.evaluate(() => [...document.querySelectorAll('.dsh-bloom-option')].map(o => o.getAttribute('aria-label') ?? ''))
+  assert.ok(labels.every(l => l.includes('·')), 'every swatch still names its variant and poem for screen readers')
   await page.mouse.click(5, 700)
   assert.equal(await page.locator('.dsh-bloom-menu').evaluate(el => el.hidden), true, 'single outside-click listener still works')
   await page.evaluate(() => window.disposeAll())
@@ -289,7 +309,7 @@ test('switcher waits for the overlay and re-anchors when either Slot remounts', 
   await page.evaluate(() => window.remountFixtureSlot('shell.overlay'))
   assert.equal(await page.evaluate(() => document.querySelectorAll('[data-fixture-slot="shell.overlay"] .dsh-bloom-switcher').length), 1, 'overlay remount restores exactly one widget')
   assertTriggerOnAnchor(await anchorAndTrigger(page), 'after overlay remount')
-  await page.evaluate(() => { window.unmountFixtureSlot('conversation.session.header.corner'); window.remountFixtureSlot('conversation.session.header.corner') })
+  await page.evaluate(() => { window.unmountFixtureSlot('conversation.session.header.utilities'); window.remountFixtureSlot('conversation.session.header.utilities') })
   assert.equal(await page.evaluate(() => document.querySelectorAll('.dsh-bloom-switcher').length), 1, 'anchor remount keeps one widget')
   assertTriggerOnAnchor(await anchorAndTrigger(page), 'after anchor remount')
 })
@@ -353,7 +373,7 @@ test('keyboard alone reaches and operates glass and rotation controls; Tab close
   while ((await activeInfo(page)).glass !== 'liquid') await page.keyboard.press('Tab')
   await page.keyboard.press('Enter')
   assert.equal(await page.evaluate(() => document.body.dataset.bloomGlass), 'liquid', 'Enter on a focused glass choice applies it')
-  assert.equal(await page.evaluate(() => document.querySelector('.dsh-bloom-detail [data-glass="liquid"]').getAttribute('aria-pressed')), 'true')
+  assert.equal(await page.evaluate(() => document.querySelector('.dsh-bloom-detail [data-glass="liquid"]').getAttribute('aria-checked')), 'true')
   assert.equal((await activeInfo(page)).menuHidden, false, 'activating a glass choice keeps the panel open')
 
   while (!(await activeInfo(page)).select) await page.keyboard.press('Tab')
@@ -495,7 +515,9 @@ test('material and per-scheme backgrounds remain independent through UI changes 
     darkBackground: document.body.dataset.bloomAmbienceDark,
   }))
   await open()
-  assert.deepEqual(await page.locator('.dsh-bloom-detail [data-glass]').allTextContents(), ['毛玻璃', '磨砂玻璃', '液态玻璃'])
+  // 质感三选一：2026-11-21 设置页改版后文字进了 aria-label，按标签断言。
+  assert.deepEqual(await page.locator('.dsh-bloom-detail [data-glass]').evaluateAll(
+    els => els.map(el => el.getAttribute('aria-label'))), ['毛玻璃', '磨砂玻璃', '液态玻璃'])
   await menu.locator('[data-mode="light"]').click()
   await page.locator('.dsh-bloom-detail [data-glass="matte"]').click()
   await page.locator('.dsh-bloom-detail [data-scheme="light"] [data-preset="wash"]').click()

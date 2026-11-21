@@ -125,7 +125,7 @@ ${s} div[class*="_composer"] div[class*="_card"]:has(:focus-visible) {
 }
 
 ${s} .dsh-bloom-trigger,
-${s} :is(.dsh-bloom-appearance__btn, .dsh-bloom-ambience__btn, .dsh-bloom-glass__choice)[data-active="true"] {
+${s} :is(.dsh-bloom-appearance__btn, .dsh-bloom-icon-choice)[data-active="true"] {
   background: ${dark ? PANE : 'linear-gradient(150deg, rgba(255,255,255,.8), rgba(255,255,255,.36))'};
   border-color: transparent;
   box-shadow: ${RIM}, 0 2px 6px -4px rgba(24,38,54,.2);

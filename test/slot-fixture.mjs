@@ -8,11 +8,14 @@ const occupants = new Map()
 //   single (conversation.header.leading / conversation.session.header.corner): exactly one occupant, no registration fields beyond name.
 //   list   (shell.overlay): id required, order optional.
 //
-// ⚠️ 这张表必须跟 DSH 的 Slot 契约一起长。2026-11-14 实测：切换器挂
-// `conversation.session.header.corner` 而本表没登记它，inject 就直接 throw
-// `Unexpected Slot` —— 三个测试套件全红。2026-11-17 #113 定案：切换器正式挂
-// corner 座（DSH 0.2.2-rc.1 契约：'conversation.session.header.corner':
-//   { kind: 'single', scope: 'session' }），leading 座保留在表里镜像契约全貌。
+// 2026-11-21：切换器从 `conversation.session.header.corner`（single，宿主
+// client-ui-sidebar-right 的 ExpandButton 已占用，注册必抛「already has a
+// registration at priority 0」）改挂 `conversation.session.header.utilities`
+// （**list**，additive）—— 页头右侧官方 utilities 区，给自己的 id 就是
+// 「加一个」，不 shadow 宿主 UI。契约来源：
+//   node_modules/@deepseek-ai/dsh-cordis-client-runner/src/client/slot-catalog.ts
+//     'conversation.session.header.utilities': { kind: 'list', scope: 'session' }
+//       registerOptions: id(required), order(optional), label(optional)
 //
 // 判据来源必须写清「哪个文件哪一行」，否则下次还是靠人肉发现：
 //   node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/types/client/contract/slots.d.ts
@@ -22,6 +25,7 @@ const occupants = new Map()
 const SLOT_KIND = {
   'conversation.header.leading': 'single',
   'conversation.session.header.corner': 'single',
+  'conversation.session.header.utilities': 'list',
   'shell.overlay': 'list',
   'settings.section': 'list',
   'settings.section.icon': 'list',

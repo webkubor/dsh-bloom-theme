@@ -7,6 +7,81 @@
  * 事件委托按容器绑定（不是绑死 switcher 根），同一套 HTML 在测试夹具或
  * 设置页里都能跑；状态同步函数从 switcher 复用，避免两处漂移。
  */
+
+/**
+ * 设置页图标集 —— 统一描边语言（1.4 线宽、currentColor、16px 视口）。
+ *
+ * 与顶栏切换器面板里的 chevron 是同一套语言（同一份设计决策：跨区域同源）。
+ * 所有图标都带 aria-hidden，文字信息由相邻的标题或 aria-label 提供。
+ */
+const ICON = {
+  glass: '<path d="M2.6 5.2h10.8M2.6 8h10.8M2.6 10.8h10.8M4.6 2.6v10.8M8 2.6v10.8M11.4 2.6v10.8" stroke="currentColor" stroke-width="1" opacity=".85"/>',
+  matte: '<rect x="2.4" y="3.4" width="11.2" height="9.2" rx="2" fill="currentColor" opacity=".22"/><rect x="2.4" y="3.4" width="11.2" height="9.2" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>',
+  liquid: '<path d="M8 2.2c2.2 2.6 3.6 4.4 3.6 6a3.6 3.6 0 1 1-7.2 0c0-1.6 1.4-3.4 3.6-6z" fill="currentColor" opacity=".85"/>',
+  background: '<rect x="2.2" y="3.2" width="11.6" height="9.6" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M2.2 10.2 5.4 7l2.6 2.4 2.2-1.8 3.6 3" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>',
+  meteor: '<path d="M13.4 2.6 6.8 9.2M11.2 4.8l2.6-2.6M9 7l-2.6 2.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="4.6" cy="11.4" r="1.6" fill="currentColor"/>',
+  solid: '<circle cx="8" cy="8" r="4.2" fill="currentColor"/>',
+  colorful: '<circle cx="6" cy="8" r="3" fill="currentColor" opacity=".85"/><circle cx="10" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.2"/>',
+  sparse: '<circle cx="4.4" cy="8" r="1.3" fill="currentColor"/><circle cx="11.6" cy="8" r="1.3" fill="currentColor"/>',
+  dense: '<circle cx="4" cy="5.4" r="1.2" fill="currentColor"/><circle cx="8" cy="5.4" r="1.2" fill="currentColor"/><circle cx="12" cy="5.4" r="1.2" fill="currentColor"/><circle cx="6" cy="10.4" r="1.2" fill="currentColor"/><circle cx="10" cy="10.4" r="1.2" fill="currentColor"/>',
+  standard: '<circle cx="4.4" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="11.6" cy="8" r="1.3" fill="currentColor"/>',
+  slow: '<path d="M3.4 8h6.2M9.6 5.4 12.6 8l-3 2.6" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  fast: '<path d="M2.6 8h8.2M9.2 5 12.6 8l-3.4 3M12.4 4.4v7.2" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  rotation: '<path d="M13 8a5 5 0 1 1-1.6-3.7" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M12.4 2.4v3h-3" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  motion: '<path d="M2 8h3l2-4 2.2 8L11.4 8H14" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  motionOff: '<path d="M2.6 8h2.2l1.6-3.2 1.9 6.4L10 8h1.6" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/><path d="M12.6 3.4 3.4 12.6" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/>',
+  /* 氛围预设：每个预设一个专属图形，靠形状区分（颜色由氛围层自己渲染） */
+  ambDiagonal: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M2.4 13.6 13.6 2.4v11.2z" fill="currentColor" opacity=".38"/>',
+  ambGalaxy: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="5" cy="5.4" r=".9" fill="currentColor"/><circle cx="9.6" cy="4.4" r=".7" fill="currentColor" opacity=".8"/><circle cx="11" cy="9" r=".9" fill="currentColor"/><circle cx="6.4" cy="10.4" r=".7" fill="currentColor" opacity=".8"/>',
+  ambCorner: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M13.6 12.8a4 4 0 0 0-4-4" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/>',
+  ambStream: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M2.4 9.6c2.4-2.6 4.4 2.6 6.8 0s4.4 2.6 4.4 2.6" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>',
+  ambWash: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="6.6" r="2.4" fill="currentColor" opacity=".32"/><circle cx="9.8" cy="9.4" r="2.8" fill="currentColor" opacity=".24"/>',
+  ambClear: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 8.2 7.3 10l3.4-3.6" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  ambOff: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/>',
+} as const
+
+/** 描边图标 HTML（统一 16×16 视口、1.4 线宽）。 */
+function icon(name: keyof typeof ICON, cls = 'dsh-bloom-row__icon'): string {
+  return `<svg class="${cls}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name]}</svg>`
+}
+
+/**
+ * 一张设置卡片 —— 左图标 + 标题 + 右侧控件。
+ *
+ * 控件右对齐是设置类界面的通用秩序：标题列固定宽度，控件列吸右，
+ * 宽面板下不会「内容全堆在左边，右边空一大片」。
+ */
+function row(iconName: keyof typeof ICON, label: string, control: string, extra = ''): string {
+  return `<div class="dsh-bloom-row"${extra}>
+    <span class="dsh-bloom-row__lead">${icon(iconName)}<span class="dsh-bloom-row__label">${label}</span></span>
+    <span class="dsh-bloom-row__control">${control}</span>
+  </div>`
+}
+
+/** 分组标题（组内是卡片，组间靠留白分隔）。extra 供条件显示的组使用。 */
+function groupTitle(label: string, extra = ''): string {
+  return `<div class="dsh-bloom-group"${extra}>${label}</div>`
+}
+
+/**
+ * 细节行 HTML —— 质感 / 背景 / 流星 / 自动换色 / 动效。
+ *
+ * ## 重新设计（2026-11-21 · owner「关于设置皮肤的操作界面，你需要重新设计，太丑了」）
+ *
+ * 原设计的问题（对照 owner 实拍）：
+ *   1. **全是文字按钮** —— 质感三选一、流星颜色/密度/速度、动效，全是裸文字
+ *      按钮堆叠；「能用图标交互布局解决的，就不要通过文字的形式去解决」。
+ *   2. **大片留白** —— 内容挤在设置面板左上角，右侧与下方整片空白。
+ *   3. **层级不清** —— 「质感 / 背景」是组标题，但组内控件与组标题长得一样，
+ *      分不清哪行属于哪组。
+ *
+ * 新设计：
+ *   · 每个配置项收敛成**一张卡片**：左图标 + 标题 + 右侧控件，控件右对齐
+ *     （设置面板是宽栏，标题在上、控件靠右，是设置类界面的通用秩序）。
+ *   · 文字型选项改用**图标 + 悬停提示**：质感三档、流星颜色/密度/速度、
+ *     动效开关，全部图标化，文字只留给 tooltip 与 aria-label。
+ *   · 组与组之间用留白分组，不再靠「小标题 + 换行」硬隔。
+ */
 import { readRotationMinutes, setRotationMinutes, ROTATION_MINUTES } from './rotation.js'
 import { applyMotion, readMotion } from './dom.js'
 import {
@@ -42,15 +117,10 @@ export const AMBIENCE_LABELS: Record<string, string> = {
   stream: '斜光流转', wash: '水彩晕染', clear: '清透留白', off: '不显示',
 }
 
-/** One segmented row per scheme; CSS shows the row matching the host scheme. */
-export function ambienceRows(): string {
-  return (Object.keys(AMBIENCE_PRESETS) as Scheme[]).map((scheme) => {
-    const current = readAmbience(scheme)
-    const buttons = AMBIENCE_PRESETS[scheme].map((preset) =>
-      `<button type="button" class="dsh-bloom-ambience__btn" data-preset="${preset}" role="radio" aria-checked="${preset === current}" data-active="${preset === current}">${tr(AMBIENCE_LABELS[preset])}</button>`).join('')
-    const hint = scheme === 'dark' ? tr('深色背景') : tr('浅色背景')
-    return `<div class="dsh-bloom-ambience" data-scheme="${scheme}" role="radiogroup" aria-label="${hint}">${buttons}</div>`
-  }).join('')
+/** 每个氛围预设一个专属图标（形状区分，颜色由氛围层自己渲染）。 */
+const AMBIENCE_ICONS: Record<string, keyof typeof ICON> = {
+  diagonal: 'ambDiagonal', galaxy: 'ambGalaxy', corner: 'ambCorner',
+  stream: 'ambStream', wash: 'ambWash', clear: 'ambClear', off: 'ambOff',
 }
 
 /** 创建已绑定事件的细节行容器（设置页 / 测试夹具共用）。 */
@@ -66,37 +136,65 @@ export function buildDetailEl(): HTMLElement {
 export function buildDetailRowsHTML(): string {
   const rotationOptions = ROTATION_MINUTES.map((m) =>
     `<option value="${m}"${readRotationMinutes() === m ? ' selected' : ''}>${m === 0 ? tr('关闭自动换色') : tr('每 {0} 分钟', m)}</option>`).join('')
-  return `<div class="dsh-bloom-section">${tr('质感')}</div>
-    <div class="dsh-bloom-glass" role="group" aria-label="${tr('质感')}">
-      <div class="dsh-bloom-glass__choices">
-        ${GLASS_MODES.map((mode) => `<button type="button" class="dsh-bloom-glass__choice" data-glass="${mode}">${tr(mode === 'frosted' ? '毛玻璃' : mode === 'matte' ? '磨砂玻璃' : '液态玻璃')}</button>`).join('')}
-      </div>
-      <p class="dsh-bloom-glass__hint" data-glass-hint hidden></p>
+
+  /* 质感：图标三选一（文字只进 title / aria-label）。
+     与面板其余单选行保持同一套 radiogroup 语义：role=radio + aria-checked。 */
+  const glassChoices = GLASS_MODES.map((mode) => {
+    const ic = mode === 'frosted' ? 'glass' : mode === 'matte' ? 'matte' : 'liquid'
+    const label = tr(mode === 'frosted' ? '毛玻璃' : mode === 'matte' ? '磨砂玻璃' : '液态玻璃')
+    const on = mode === readGlassMode()
+    return `<button type="button" class="dsh-bloom-icon-choice" data-glass="${mode}" role="radio" aria-checked="${on}" data-active="${on}" title="${label}" aria-label="${label}">${icon(ic, 'dsh-bloom-icon-choice__icon')}</button>`
+  }).join('')
+
+  /* 背景氛围：两行（浅色 / 深色），每行四个图标，每个预设一个专属图形。 */
+  const ambience = (Object.keys(AMBIENCE_PRESETS) as Scheme[]).map((scheme) => {
+    const current = readAmbience(scheme)
+    const buttons = AMBIENCE_PRESETS[scheme].map((preset) => {
+      const label = tr(AMBIENCE_LABELS[preset])
+      return `<button type="button" class="dsh-bloom-icon-choice" data-preset="${preset}" role="radio" aria-checked="${preset === current}" data-active="${preset === current}" title="${label}" aria-label="${label}">${icon(AMBIENCE_ICONS[preset], 'dsh-bloom-icon-choice__icon')}</button>`
+    }).join('')
+    const hint = scheme === 'dark' ? tr('深色背景') : tr('浅色背景')
+    return `<div class="dsh-bloom-ambience" data-scheme="${scheme}" role="radiogroup" aria-label="${hint}">${buttons}</div>`
+  }).join('')
+
+  const meteorColor = readMeteorColorMode()
+  const meteorDensity = readMeteorDensity()
+  const meteorSpeed = readMeteorSpeed()
+  const motionOn = readMotion()
+
+  return `${groupTitle(tr('质感'))}
+    <div class="dsh-bloom-group__body">
+      ${row('glass', tr('材质'), `<span class="dsh-bloom-icon-seg" role="radiogroup" aria-label="${tr('质感')}">${glassChoices}</span>`)}
+      <p class="dsh-bloom-hint" data-glass-hint hidden></p>
     </div>
-    <div class="dsh-bloom-section">${tr('背景')}</div>
-    ${ambienceRows()}
-    <div class="dsh-bloom-meteor-opt" data-meteor-row="color" role="radiogroup" aria-label="${tr('流星颜色')}">
-      <span>${tr('流星颜色')}</span>
-      ${(['solid', 'colorful'] as const).map(mode => `<button type="button" data-meteor-color="${mode}" role="radio" aria-checked="${readMeteorColorMode() === mode}" data-active="${readMeteorColorMode() === mode}">${tr(mode === 'solid' ? '纯色' : '彩色')}</button>`).join('')}
+    ${groupTitle(tr('背景'))}
+    <div class="dsh-bloom-group__body">
+      ${row('background', tr('氛围'), `<span class="dsh-bloom-ambience-wrap">${ambience}</span>`)}
     </div>
-    <div class="dsh-bloom-meteor-opt" data-meteor-row="density" role="radiogroup" aria-label="${tr('流星密度')}">
-      <span>${tr('流星密度')}</span>
-      ${METEOR_DENSITIES.map(density => `<button type="button" data-meteor-density="${density}" role="radio" aria-checked="${readMeteorDensity() === density}" data-active="${readMeteorDensity() === density}">${tr(density === 'sparse' ? '稀疏' : density === 'dense' ? '密集' : '标准')}</button>`).join('')}
+    ${groupTitle(tr('流星'), ' data-meteor-group')}
+    <div class="dsh-bloom-group__body" data-meteor-group>
+      ${row('meteor', tr('颜色'), `<span class="dsh-bloom-icon-seg" role="radiogroup" aria-label="${tr('流星颜色')}">
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-color="solid" role="radio" aria-checked="${meteorColor === 'solid'}" data-active="${meteorColor === 'solid'}" title="${tr('纯色')}" aria-label="${tr('纯色')}">${icon('solid', 'dsh-bloom-icon-choice__icon')}</button>
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-color="colorful" role="radio" aria-checked="${meteorColor === 'colorful'}" data-active="${meteorColor === 'colorful'}" title="${tr('彩色')}" aria-label="${tr('彩色')}">${icon('colorful', 'dsh-bloom-icon-choice__icon')}</button>
+      </span>`, ' data-meteor-row="color"')}
+      ${row('meteor', tr('密度'), `<span class="dsh-bloom-icon-seg" role="radiogroup" aria-label="${tr('流星密度')}">
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-density="sparse" role="radio" aria-checked="${meteorDensity === 'sparse'}" data-active="${meteorDensity === 'sparse'}" title="${tr('稀疏')}" aria-label="${tr('稀疏')}">${icon('sparse', 'dsh-bloom-icon-choice__icon')}</button>
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-density="standard" role="radio" aria-checked="${meteorDensity === 'standard'}" data-active="${meteorDensity === 'standard'}" title="${tr('标准')}" aria-label="${tr('标准')}">${icon('standard', 'dsh-bloom-icon-choice__icon')}</button>
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-density="dense" role="radio" aria-checked="${meteorDensity === 'dense'}" data-active="${meteorDensity === 'dense'}" title="${tr('密集')}" aria-label="${tr('密集')}">${icon('dense', 'dsh-bloom-icon-choice__icon')}</button>
+      </span>`, ' data-meteor-row="density"')}
+      ${row('meteor', tr('速度'), `<span class="dsh-bloom-icon-seg" role="radiogroup" aria-label="${tr('流星速度')}">
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-speed="slow" role="radio" aria-checked="${meteorSpeed === 'slow'}" data-active="${meteorSpeed === 'slow'}" title="${tr('慢')}" aria-label="${tr('慢')}">${icon('slow', 'dsh-bloom-icon-choice__icon')}</button>
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-speed="standard" role="radio" aria-checked="${meteorSpeed === 'standard'}" data-active="${meteorSpeed === 'standard'}" title="${tr('标准')}" aria-label="${tr('标准')}">${icon('standard', 'dsh-bloom-icon-choice__icon')}</button>
+        <button type="button" class="dsh-bloom-icon-choice" data-meteor-speed="fast" role="radio" aria-checked="${meteorSpeed === 'fast'}" data-active="${meteorSpeed === 'fast'}" title="${tr('快')}" aria-label="${tr('快')}">${icon('fast', 'dsh-bloom-icon-choice__icon')}</button>
+      </span>`, ' data-meteor-row="speed"')}
     </div>
-    <div class="dsh-bloom-meteor-opt" data-meteor-row="speed" role="radiogroup" aria-label="${tr('流星速度')}">
-      <span>${tr('流星速度')}</span>
-      ${METEOR_SPEEDS.map(speed => `<button type="button" data-meteor-speed="${speed}" role="radio" aria-checked="${readMeteorSpeed() === speed}" data-active="${readMeteorSpeed() === speed}">${tr(speed === 'slow' ? '慢' : speed === 'fast' ? '快' : '标准')}</button>`).join('')}
-    </div>
-    <label class="dsh-bloom-rotation">${tr('自动换色')}
-      <select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">
-        ${rotationOptions}
-      </select>
-    </label>
-    <div class="dsh-bloom-rotation dsh-bloom-motion-row"><span class="dsh-bloom-rotation__label">${tr('动效')}</span>
-      <span class="dsh-bloom-motion-seg">
-        <button type="button" class="dsh-bloom-motion-btn" data-motion="on" role="radio" aria-checked="${readMotion()}" data-active="${readMotion()}">${tr('开启')}</button>
-        <button type="button" class="dsh-bloom-motion-btn" data-motion="off" role="radio" aria-checked="${!readMotion()}" data-active="${!readMotion()}">${tr('停用')}</button>
-      </span>
+    ${groupTitle(tr('动效'))}
+    <div class="dsh-bloom-group__body">
+      ${row('motion', tr('动效'), `<span class="dsh-bloom-icon-seg" role="radiogroup" aria-label="${tr('动效')}">
+        <button type="button" class="dsh-bloom-icon-choice" data-motion="on" role="radio" aria-checked="${motionOn}" data-active="${motionOn}" title="${tr('开启')}" aria-label="${tr('开启')}">${icon('motion', 'dsh-bloom-icon-choice__icon')}</button>
+        <button type="button" class="dsh-bloom-icon-choice" data-motion="off" role="radio" aria-checked="${!motionOn}" data-active="${!motionOn}" title="${tr('停用')}" aria-label="${tr('停用')}">${icon('motionOff', 'dsh-bloom-icon-choice__icon')}</button>
+      </span>`)}
+      ${row('rotation', tr('自动换色'), `<select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">${rotationOptions}</select>`)}
     </div>`
 }
 
@@ -226,13 +324,13 @@ export function bindDetailEvents(el: HTMLElement): () => void {
       e.stopPropagation()
       return
     }
-    const ambienceBtn = target.closest<HTMLElement>('.dsh-bloom-ambience__btn')
+    const ambienceBtn = target.closest<HTMLElement>('.dsh-bloom-icon-choice[data-preset]')
     if (ambienceBtn) {
       e.stopPropagation()
       const row = ambienceBtn.closest<HTMLElement>('.dsh-bloom-ambience')
       const scheme = row?.dataset.scheme as Scheme | undefined
       if (row && scheme && writeAmbience(scheme, ambienceBtn.dataset.preset ?? '')) {
-        row.querySelectorAll<HTMLElement>('.dsh-bloom-ambience__btn').forEach((b) => {
+        row.querySelectorAll<HTMLElement>('.dsh-bloom-icon-choice[data-preset]').forEach((b) => {
           const on = b === ambienceBtn
           b.dataset.active = String(on)
           b.setAttribute('aria-checked', String(on))
@@ -252,7 +350,7 @@ export function bindDetailEvents(el: HTMLElement): () => void {
       })
       return
     }
-    const glassBtn = target.closest<HTMLElement>('.dsh-bloom-glass__choice[data-glass]')
+    const glassBtn = target.closest<HTMLElement>('.dsh-bloom-icon-choice[data-glass]')
     if (glassBtn) {
       const mode = glassBtn.dataset.glass as GlassMaterial
       if ((GLASS_MODES as readonly string[]).includes(mode)) {
@@ -282,17 +380,20 @@ export function bindDetailEvents(el: HTMLElement): () => void {
  *   3. 提示只在系统确实要求降透明、且用户没显式选过档位时出现。
  */
 export function syncGlassRow(el: HTMLElement) {
-  const row = el.querySelector<HTMLElement>('.dsh-bloom-glass')
-  if (!row) return
+  // 面板里有多个 .dsh-bloom-icon-seg（质感 / 流星颜色 / 密度 / 速度 / 动效），
+  // 质感段是**第一个含 data-glass 按钮**的段，不靠顺序猜。
+  const seg = Array.from(el.querySelectorAll<HTMLElement>('.dsh-bloom-icon-seg'))
+    .find((node) => node.querySelector('[data-glass]'))
+  if (!seg) return
   const stored = readGlassMode()
   const effective = effectiveGlassMode()
   const shown = stored === 'auto' ? (effective === 'solid' ? 'liquid' : effective) : stored
-  for (const btn of Array.from(row.querySelectorAll<HTMLElement>('.dsh-bloom-glass__choice'))) {
+  for (const btn of Array.from(seg.querySelectorAll<HTMLElement>('.dsh-bloom-icon-choice[data-glass]'))) {
     const on = btn.dataset.glass === shown
     btn.dataset.active = String(on)
-    btn.setAttribute('aria-pressed', String(on))
+    btn.setAttribute('aria-checked', String(on))
   }
-  const hint = row.querySelector<HTMLElement>('[data-glass-hint]')
+  const hint = el.querySelector<HTMLElement>('[data-glass-hint]')
   if (!hint) return
   const systemDowngraded = effective === 'solid'
   hint.hidden = !systemDowngraded

@@ -93,8 +93,11 @@ try {
     // 真实 web 宿主声明了 settings.section（Agent 预设就在用）与 settings.section.icon
     // （dsh-client-ui-settings contract/slots.ts: 供插件定制导航图标，id 必须等于 section id），
     // 这里显式声明，保证校验环境与宿主一致。
+    // conversation.session.header.utilities 是 list 槽（宿主 slot-catalog.ts:2249），
+    // 会话标题右侧的实用入口区；本插件的切换器挂在它旁边（官方 ExpandButton 占的是
+    // conversation.session.header.corner 那个 single 槽，不能重复注册）。
     const declaredSlots = new Set([
-      'settings.section', 'settings.section.icon', 'conversation.session.header.corner', 'shell.overlay',
+      'settings.section', 'settings.section.icon', 'conversation.session.header.utilities', 'shell.overlay',
       'conversation.chat.assistant-actions', 'contextMenu.content', 'contextMenu.icon',
     ])
     for (const name of allServiceNames) {

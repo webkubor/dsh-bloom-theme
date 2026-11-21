@@ -110,13 +110,20 @@ body[data-bloom-variant] [class*="_sidebarCol"]::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* 玻璃层也带一点 accent tint —— 和上面的底色呼应 */
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #fff) 88%);
+  /* ── 底色改用宿主 token（2026-11-21 · owner「侧栏不跟主题色走」）──────
+   * 原来这里自己算 color-mix(accent, bg-layer-1 88%) ——
+   * 那是**第二个真源**：宿主 token 层被 Bloom 覆盖成带主题色的底色后，
+   * 这层仍按自己的配方画，把宿主的颜色整个挡住（实测侧栏 computed
+   * background 仍是插件自己算的那个值，跟主题色脱钩）。
+   * 现在直接用宿主的 --dsw-specific-sidebar-fill —— 颜色归宿主 token 层
+   * （theme-tokens.ts 通过 ctx.theme.overrideTokens 覆盖），本层只负责
+   * 玻璃材质（模糊、饱和度）。职责分清，token 一变玻璃层自动跟随。 */
+  background-color: var(--dsw-specific-sidebar-fill, #fff);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.3);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"] {
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 92%);
+  background-color: var(--dsw-specific-sidebar-fill, #101010);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.10),
     inset 0 0 0 1px rgba(255,255,255,0.05),
@@ -125,7 +132,7 @@ body[data-ds-dark-theme] [class*="_sidebarCol"] {
     0 16px 48px -18px rgba(0,0,0,0.5);
 }
 body[data-ds-dark-theme] [class*="_sidebarCol"]::before {
-  background-color: color-mix(in oklch, var(--bloom-accent, #6b8f71), var(--dsw-alias-bg-layer-1, #101010) 82%);
+  background-color: var(--dsw-specific-sidebar-fill, #101010);
 }
 
 /* v0.6.2: 「对话 / 轨迹」tab 字号上限保护 —— 用户在窄屏 / 浏览器 zoom>100% 下
@@ -173,6 +180,8 @@ body[data-bloom-variant] div[class*="_composer"] div[class*="_card"]::before {
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
+  /* 底色用宿主 token（theme-tokens.ts 已把 --dsw-alias-bg-layer-1 覆盖成
+     带主题色的底），玻璃层只负责材质 —— 跟侧栏同一个道理。 */
   background-color: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff), transparent 84%);
   backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);
   -webkit-backdrop-filter: blur(var(--bloom-glass-blur, 24px)) saturate(1.35);

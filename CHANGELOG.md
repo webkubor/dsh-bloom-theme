@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.29.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.28.0...v0.29.0) (2026-11-21)
+
+
+### ✨ Features
+
+* **settings:** 细节配置迁入「设置 › Bloom 外观」，下拉瘦身 ([#140](https://github.com/webkubor/dsh-bloom-theme/issues/140)) ([44f5013](https://github.com/webkubor/dsh-bloom-theme/commit/44f501385235e5e1b3f6a28eadb20839f9344878))
+
 ## [0.28.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.27.0...v0.28.0) (2026-11-18)
 
 

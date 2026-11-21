@@ -13,7 +13,7 @@ import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from
 import { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, readStoredMode, setMode, onAppearanceChange, type AppearanceMode } from './appearance.js'
 import type { GlassMode } from './glass.js'
-import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
+import { tr, variantName, variantPoem, variantGlyph, getLang, LANG_CHANGE_EVENT } from './lang.js'
 import { copyDiagnostics, formatDiagnosticsMarkdown } from './diagnostics.js'
 import { buildFeedbackUrl } from './feedback.js'
 import { createShareCapture } from './share-capture.js'
@@ -197,10 +197,21 @@ export function buildSwitcherHTML(currentVariant) {
     // 文字占满整列。现在变体只留一个色块，名字与诗进 aria-label / tooltip
     // （tooltip 与 aria-label 二选一即可，这里两者都给，键盘与鼠标都能读到）；
     // 当前变体的名字已经在面板头部（Appearance [● Mist]）显示，不必重复。
+    //
+    // 2026-11-21 二轮（owner：「颜色块也可以做得好看一点」「是不是可以有一两个字，
+    // 比如国风的字」「横版色块浮动上去是不是应该有这个颜色的描述」）：
+    //   ① 色块加国风单字印记（黛/朱/桃/天…）—— 一眼分辨是哪种配色
+    //   ② hover 描述：不是浮在色块上的小气泡，而是网格下方一行共用字幕
+    //      （hover/focus 某格 → 那行显示该配色的名字与诗）。
+    //      为什么不用气泡：面板自身 overflow-y:auto（见 CSS 注释），任何
+    //      超出面板宽度的浮层都会被裁掉；40px 的格子也放不下「Tangerine +
+    //      最是橙黄橘绿时」。共用字幕位置恒定、宽度够、不会被裁。
+    // 单字是 aria-hidden 的装饰；名字与诗仍由 aria-label 承担语义。
+    const label = `${variantName(v)} · ${variantPoem(v)}`
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
-      ` aria-selected="${on}" data-active="${on}" aria-label="${variantName(v)} · ${variantPoem(v)}"` +
-      ` title="${variantName(v)} · ${variantPoem(v)}">` +
-      `<span class="dsh-bloom-option__swatch" style="${swatchStyle(v)}" aria-hidden="true"></span>` +
+      ` aria-selected="${on}" data-active="${on}" aria-label="${label}" title="${label}">` +
+      `<span class="dsh-bloom-option__swatch" style="${swatchStyle(v)}" aria-hidden="true">` +
+      `<span class="dsh-bloom-option__glyph">${variantGlyph(v)}</span></span>` +
       `<span class="dsh-bloom-check" aria-hidden="true">✓</span>` +
       `${isNewVariant(v, PLUGIN_VERSION) ? `<span class="dsh-bloom-option__new" aria-hidden="true"></span>` : ''}</button>`
   }).join('')
@@ -223,6 +234,7 @@ export function buildSwitcherHTML(currentVariant) {
     </div>
     <div class="dsh-bloom-section">${tr('主题')}</div>
     <div class="dsh-bloom-options" role="listbox" aria-label="${tr('配色')}">${options}</div>
+    <div class="dsh-bloom-caption" data-caption role="status" aria-live="polite"><span class="dsh-bloom-caption__name" data-caption-name>${variantName(currentVariant)}</span><span class="dsh-bloom-caption__poem" data-caption-poem>${variantPoem(currentVariant)}</span></div>
     <div class="dsh-bloom-section" data-mode-section hidden>${tr('模式')}</div>
     <div class="dsh-bloom-appearance" role="group" aria-label="${tr('深浅模式')}" hidden>
       <div class="dsh-bloom-appearance__seg">
@@ -661,6 +673,26 @@ export function buildSwitcherEl(initialVariant) {
     if (box) {
       setTelemetryEnabled(box.checked)
     }
+  })
+
+  // 配色网格下方的共用字幕：hover / 键盘 focus 某个色块时显示它的名字与诗。
+  // 2026-11-21（owner「横版色块浮动上去是不是应该有这个颜色的描述」）：
+  // 原来做成色块内浮层，但 40px 的格子放不下名字，文字被截成 "Tan…"；
+  // 改成网格下方一行字幕后，位置恒定、宽度够、不与色块抢视线。
+  const syncCaption = (variant: string | undefined) => {
+    if (!variant) return
+    const name = el.querySelector<HTMLElement>('[data-caption-name]')
+    const poem = el.querySelector<HTMLElement>('[data-caption-poem]')
+    if (name) name.textContent = variantName(variant)
+    if (poem) poem.textContent = variantPoem(variant)
+  }
+  el.addEventListener('pointerover', (e) => {
+    const opt = (e.target as HTMLElement).closest<HTMLElement>('.dsh-bloom-option')
+    syncCaption(opt?.dataset.variant)
+  })
+  el.addEventListener('focusin', (e) => {
+    const opt = (e.target as HTMLElement).closest<HTMLElement>('.dsh-bloom-option')
+    syncCaption(opt?.dataset.variant)
   })
 
   el.addEventListener('click', (e) => {

@@ -367,23 +367,78 @@ export const SWITCHER_CSS = `
   grid-template-columns: none;
 }
 /* 色块：整格铺满，圆角方块（斜向渐变 morandi → accent）。
-   深色下换成 accentD —— 浅色用的 accentL 太深，在深底上糊掉。 */
+   深色下换成 accentD —— 浅色用的 accentL 太深，在深底上糊掉。
+   2026-11-21（owner「颜色块也可以做得好看一点」「有点单薄」）：二段渐变改成
+   三段（莫兰迪 → 主色 → 压深主色），体积感交给 inset 高光/暗角和外投影，
+   不叠白色渐变层 —— 那层会把色块最浅的一端洗成纸白（对比度掉到 1.02:1）。 */
 .dsh-bloom-option__swatch {
+  position: relative;
   width: 100%;
   height: 100%;
   border-radius: 9px;
-  background: linear-gradient(135deg, var(--bloom-swatch-a, #aab6c4) 0%, var(--bloom-swatch-b, #6b8f71) 100%);
+  background: linear-gradient(150deg,
+    var(--bloom-swatch-a, #aab6c4) 0%,
+    var(--bloom-swatch-b, #6b8f71) 52%,
+    color-mix(in oklch, var(--bloom-swatch-b, #6b8f71) 84%, black) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.06),
-    0 1px 2px -1px rgba(0,0,0,.18);
+    inset 0 1px 0 rgba(255,255,255,.34),
+    inset 0 -2px 5px -1px rgba(0,0,0,.26),
+    inset 0 0 0 1px rgba(0,0,0,.08),
+    0 2px 6px -2px rgba(0,0,0,.28);
   transition: transform var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
+  overflow: hidden;
 }
 body[data-ds-dark-theme] .dsh-bloom-option__swatch {
-  background: linear-gradient(135deg, var(--bloom-swatch-a, #aab6c4) 0%, var(--bloom-swatch-bd, #6b8f71) 100%);
+  background: linear-gradient(150deg,
+    var(--bloom-swatch-a, #aab6c4) 0%,
+    var(--bloom-swatch-bd, #6b8f71) 52%,
+    color-mix(in oklch, var(--bloom-swatch-bd, #6b8f71) 82%, black) 100%);
   box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -2px 5px -1px rgba(0,0,0,.42),
     inset 0 0 0 1px rgba(255,255,255,.10),
-    0 1px 2px -1px rgba(0,0,0,.4);
+    0 2px 6px -2px rgba(0,0,0,.45);
 }
+/* 色块上的国风单字（黛/朱/桃/天…）—— owner 2026-11-21「是不是可以有一两个字，
+   比如国风的字，用两个字代表颜色」。压在色块正中，白色 + 轻微投影，
+   深浅两套色块上都读得出。 */
+.dsh-bloom-option__glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgba(255,255,255,.94);
+  text-shadow: 0 1px 2px rgba(0,0,0,.32);
+  pointer-events: none;
+  user-select: none;
+}
+.dsh-bloom-option__glyph { transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1)); }
+/* 共用配色字幕：网格下方一行「名字 · 诗」，hover/focus 某个色块时更新。
+   2026-11-21（owner「横版色块浮动上去是不是应该有这个颜色的描述」）：
+   原先是色块内浮层，但 40px 格子放不下名字，文字缩成 "Tan…"；
+   这行字幕位置恒定、宽度=面板内宽，永不被 overflow-y:auto 裁切。 */
+.dsh-bloom-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 20px;
+  margin: 2px 12px 4px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 55%, transparent);
+  color: var(--dsw-alias-label-primary, #222);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow: hidden;
+}
+.dsh-bloom-caption__name { font-weight: 600; white-space: nowrap; }
+.dsh-bloom-caption__poem { color: var(--dsw-alias-label-secondary, #777); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsh-bloom-caption:empty { display: none; }
 .dsh-bloom-option {
   border: 0;
   border-radius: 9px;
@@ -687,6 +742,36 @@ body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-group__bo
   outline: 2px solid var(--bloom-accent, #6b8f71);
   outline-offset: -1px;
 }
+
+/* 「关于 Bloom」组：版本号与外链。
+   2026-11-21（owner「配置项可以多一点，比如更新日志、GitHub 链接等介绍」）。
+   外链做成宿主设置页常见的次级文字链：常态低调，hover 才提亮到主题色。 */
+.dsh-bloom-about__ver {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-secondary, #777);
+}
+.dsh-bloom-about__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary, #777);
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 2px 4px;
+  transition: color var(--bloom-dur-fast) var(--bloom-ease), background-color var(--bloom-dur-fast) var(--bloom-ease);
+}
+.dsh-bloom-about__link:hover {
+  color: var(--bloom-accent, #6b8f71);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 10%, transparent);
+}
+.dsh-bloom-about__link:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: 1px;
+}
+.dsh-bloom-about__ext { font-size: 10px; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .dsh-bloom-about__link { transition: none; } }
 
 .dsh-bloom-version {
   display: flex;
@@ -1149,4 +1234,16 @@ body[data-ds-dark-theme] .dsh-bloom-share-action__hint { color: var(--dsw-alias-
 .dsh-bloom-detail .dsh-bloom-more-body { grid-template-rows: 1fr; }
 .dsh-bloom-detail .dsh-bloom-more { display: none; }
 .dsh-bloom-detail .dsh-bloom-foot { border-top: 1px solid var(--dsw-alias-hairline, rgba(0,0,0,.08)); margin-top: 8px; padding: 8px 14px 2px; }
+
+/* 设置左导航的 Bloom 图标 —— 之前这个槽位只渲染了一个空 span（全仓没有对应
+   CSS 规则），所以 owner 看到的是「设置页左边没有图标」。这里补上五瓣花的形状
+   与颜色：跟随导航文字色 currentColor，激活时再借 --bloom-accent 提亮。 */
+.dsh-bloom-settings-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+.dsh-bloom-settings-icon__svg { display: block; width: 100%; height: 100%; }
 `

@@ -38,6 +38,12 @@ const ICON = {
   ambWash: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="6.6" r="2.4" fill="currentColor" opacity=".32"/><circle cx="9.8" cy="9.4" r="2.8" fill="currentColor" opacity=".24"/>',
   ambClear: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 8.2 7.3 10l3.4-3.6" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
   ambOff: '<rect x="2.4" y="2.4" width="11.2" height="11.2" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/>',
+  /* 「关于 Bloom」组：版本、更新日志、仓库、反馈 —— owner 2026-11-21
+     「配置项可以多一点，比如更新日志、GitHub 链接等介绍」。 */
+  about: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 7.2v4M8 4.9v.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+  changelog: '<rect x="3" y="2.6" width="10" height="10.8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.6 5.8h4.8M5.6 8h4.8M5.6 10.2h3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
+  repo: '<path d="M4.6 5.4v7.2M4.6 5.4a1.4 1.4 0 1 0 0-.1M4.6 5.4h4.2a1.4 1.4 0 0 1 1.4 1.4v5.8M6 8.6h2.8" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>',
+  feedback: '<path d="M2.8 5.4a1.8 1.8 0 0 1 1.8-1.8h6.8a1.8 1.8 0 0 1 1.8 1.8v3.8a1.8 1.8 0 0 1-1.8 1.8H7.4L4.6 13V11H4.6a1.8 1.8 0 0 1-1.8-1.8z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
 } as const
 
 /** 描边图标 HTML（统一 16×16 视口、1.4 线宽）。 */
@@ -195,6 +201,31 @@ export function buildDetailRowsHTML(): string {
         <button type="button" class="dsh-bloom-icon-choice" data-motion="off" role="radio" aria-checked="${!motionOn}" data-active="${!motionOn}" title="${tr('停用')}" aria-label="${tr('停用')}">${icon('motionOff', 'dsh-bloom-icon-choice__icon')}</button>
       </span>`)}
       ${row('rotation', tr('自动换色'), `<select class="dsh-bloom-rotation__select" aria-label="${tr('自动换色')}">${rotationOptions}</select>`)}
+    </div>
+    ${buildAboutHTML()}`
+}
+
+/**
+ * 「关于 Bloom」组 —— 版本、更新日志、仓库、反馈。
+ *
+ * 2026-11-21（owner「配置项可以多一点，比如更新日志、GitHub 链接等介绍，
+ * 否则显得配置项有点少」）：设置页原先只有外观相关行，读起来像半张卡。
+ * 这里补一组纯信息行，把版本与外链放在最自然的位置。
+ *
+ * 外链一律 target=_blank + rel=noopener noreferrer（宿主设置页可能跑在
+ * 受限的 webview 里，noopener 防止新页反向控制本页）。
+ */
+const REPO_URL = 'https://github.com/webkubor/dsh-bloom-theme'
+
+function buildAboutHTML(): string {
+  const link = (href: string, label: string) =>
+    `<a class="dsh-bloom-about__link" href="${href}" target="_blank" rel="noopener noreferrer">${label}<span class="dsh-bloom-about__ext" aria-hidden="true">↗</span></a>`
+  return `${groupTitle(tr('关于 Bloom'))}
+    <div class="dsh-bloom-group__body">
+      ${row('about', tr('版本'), `<span class="dsh-bloom-about__ver">v${PLUGIN_VERSION}</span>`)}
+      ${row('changelog', tr('更新日志'), link(`${REPO_URL}/releases`, tr('查看更新日志')))}
+      ${row('repo', tr('源码仓库'), link(REPO_URL, 'GitHub'))}
+      ${row('feedback', tr('反馈问题'), link(`${REPO_URL}/issues/new`, tr('提交问题')))}
     </div>`
 }
 

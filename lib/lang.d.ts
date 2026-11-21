@@ -37,3 +37,10 @@ export declare function tr(input: string | TemplateStringsArray, ...vals: (strin
 export declare const variantName: (v: any) => any;
 /** 右侧诗句：中文用原句，英文用 poemEn，漏写才退回原句。 */
 export declare const variantPoem: (v: any) => any;
+/**
+ * 色块上的单字印记（国风雅字）。
+ *
+ * 英文界面也用这个汉字：它是装饰性的识别符，不随语言失效，而且英文读者
+ * 看的是「色块 + 诗」的组合，单字反而让 15 个色块彼此可区分。
+ */
+export declare const variantGlyph: (v: any) => any;

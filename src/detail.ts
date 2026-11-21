@@ -114,8 +114,7 @@ import {
   type MeteorSpeed,
 } from './starlight.js'
 import { tr } from './lang.js'
-import { changelogHTML, ICON_CHAT, ICON_DIAGNOSE, ICON_SHARE, ICON_STAR } from './markup.js'
-import { telemetryEnabled, setTelemetryEnabled, track, type PanelEvent } from './track.js'
+import { setTelemetryEnabled, track, type PanelEvent } from './track.js'
 import { PLUGIN_VERSION } from './meta.js'
 
 export const AMBIENCE_LABELS: Record<string, string> = {
@@ -229,67 +228,6 @@ function buildAboutHTML(): string {
     </div>`
 }
 
-/**
- * 版本与更新、诊断、遥测、分享 —— 原下拉菜单「更多」折叠区 + 底栏。
- * 更新徽标（↑ v9.x）挂在 .dsh-bloom-version__update 上，refreshUpdateBadge 会找它。
- */
-export function buildMoreHTML(sharePanelId: string): string {
-  return `<div class="dsh-bloom-more-body">
-      <div class="dsh-bloom-more-inner">
-      ${changelogHTML()}
-      <div class="dsh-bloom-version" role="separator">
-        <span class="dsh-bloom-version__update" hidden></span>
-      </div>
-      <div class="dsh-bloom-dsh-update" role="separator">
-        <div class="dsh-bloom-dsh-row">
-          <span class="dsh-bloom-dsh-label">DSH</span>
-          <span class="dsh-bloom-dsh-ver" data-dsh-current>—</span>
-          <span class="dsh-bloom-dsh-platform" data-dsh-platform hidden></span>
-          <span class="dsh-bloom-dsh-state" data-dsh-state></span>
-          <span class="dsh-bloom-dsh-spacer"></span>
-          <button type="button" class="dsh-bloom-dsh-btn" data-act="refresh" title="${tr('重新检查 DSH 最新版')}">↻</button>
-          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-dsh-btn--primary" data-act="copy" title="${tr('检查到可用版本后，把升级命令直接填进下方输入框')}">${tr('填入')}</button>
-        </div>
-        <div class="dsh-bloom-dsh-row dsh-bloom-dsh-row--latest">
-          <span class="dsh-bloom-dsh-label">${tr('最新')}</span>
-          <span class="dsh-bloom-dsh-ver" data-dsh-latest>${tr('检查中…')}</span>
-        </div>
-        <div class="dsh-bloom-dsh-hint" data-dsh-hint hidden></div>
-        <div class="dsh-bloom-dsh-row">
-          <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-diagnose" title="${tr('复制排错诊断信息（在 GitHub 提交 Issue 时粘贴）')}">${ICON_DIAGNOSE}<span>${tr('复制诊断')}</span></button>
-          <a class="dsh-bloom-foot__link" data-track="vote" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener noreferrer">${tr('配色投票')}</a>
-        </div>
-        <label class="dsh-bloom-telemetry" title="${tr('只上报按钮点击的事件名和版本，不含对话内容')}">
-          <input type="checkbox" class="dsh-bloom-telemetry__box" data-telemetry${telemetryEnabled() ? ' checked' : ''}>
-          <span class="dsh-bloom-telemetry__box-ui" aria-hidden="true"></span>
-          <span class="dsh-bloom-telemetry__text">${tr('发送匿名使用统计')}</span>
-        </label>
-      </div>
-      </div>
-    </div>
-    <div class="dsh-bloom-foot">
-      <button type="button" class="dsh-bloom-more" aria-expanded="true" title="${tr('版本与更新')}">
-        <span class="dsh-bloom-more__name">Bloom</span><span class="dsh-bloom-more__ver">v${PLUGIN_VERSION}</span>
-      </button>
-      <span class="dsh-bloom-foot__links">
-        <a class="dsh-bloom-foot__link dsh-bloom-feedback" data-track="feedback" href="https://github.com/webkubor/dsh-bloom-theme/issues/new" target="_blank" rel="noopener noreferrer" title="${tr('填写反馈，自动附上基础诊断')}">${ICON_CHAT}<span>${tr('反馈')}</span></a>
-        <a class="dsh-bloom-foot__link dsh-bloom-star" href="https://github.com/webkubor/dsh-bloom-theme" target="_blank" rel="noopener noreferrer" title="${tr('喜欢 Bloom？欢迎去 GitHub 点个 Star')}">${ICON_STAR}<span>${tr('点个星')}</span></a>
-        <span class="dsh-bloom-share-wrap">
-          <button type="button" class="dsh-bloom-foot__link dsh-bloom-share" aria-expanded="false" aria-controls="${sharePanelId}">${ICON_SHARE}<span>${tr('分享')}</span></button>
-          <span id="${sharePanelId}" class="dsh-bloom-share-panel" role="group" aria-label="${tr('分享 Bloom')}" hidden>
-            <span class="dsh-bloom-share-intro">${tr('喜欢 Bloom？欢迎分享，也欢迎到仓库点个 Star。')}</span>
-            <button type="button" class="dsh-bloom-share-action dsh-bloom-share-install"><span class="dsh-bloom-share-action__title">${tr('复制安装提示词')}</span><span class="dsh-bloom-share-action__hint">${tr('发给 Agent，帮你安装')}</span></button>
-            <button type="button" class="dsh-bloom-share-action" data-share-capture="screenshot"><span class="dsh-bloom-share-action__title">${tr('截图分享')}</span><span class="dsh-bloom-share-action__hint">${tr('选择要展示的屏幕、窗口或标签页')}</span></button>
-            <button type="button" class="dsh-bloom-share-action" data-share-capture="record"><span class="dsh-bloom-share-action__title">${tr('录制 5 秒')}</span><span class="dsh-bloom-share-action__hint">${tr('记录动态界面，不录制声音')}</span></button>
-            <textarea class="dsh-bloom-share-manual" aria-label="${tr('安装提示词')}" readonly hidden></textarea>
-            <span class="dsh-bloom-share-status" role="status" aria-live="polite"></span>
-            <button type="button" class="dsh-bloom-share-cancel" hidden>${tr('取消')}</button>
-            <span class="dsh-bloom-share-result" hidden><button type="button" class="dsh-bloom-share-system" hidden>${tr('分享文件')}</button><a class="dsh-bloom-share-save" download>${tr('保存文件')}</a></span>
-          </span>
-        </span>
-      </span>
-    </div>`
-}
 
 /**
  * 细节行事件委托 —— 绑在容器上，设置页与测试夹具共用。

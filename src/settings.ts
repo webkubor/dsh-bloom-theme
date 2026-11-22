@@ -11,6 +11,7 @@
  */
 import { buildDetailRowsHTML, bindDetailEvents } from './detail.js'
 import { LANG_CHANGE_EVENT, tr } from './lang.js'
+import { bloomIconSVG } from './bloom-icon.js'
 import type { HostReact } from './ui.js'
 
 /** 设置节 id —— settings.section 与 settings.section.icon 共用它。 */
@@ -49,28 +50,31 @@ export function registerBloomSettings(
     name: 'settings.section',
     id: BLOOM_SECTION_ID,
     order: 50,
-    label: () => tr('Bloom 外观'),
+    // 导航文字要短：owner 2026-11-21「英文字母为什么搞那么长？短一点、能看出是插件就行」。
+    // 「Bloom」既是插件名，两端用户都认得，也不会在窄导航里被截成省略号。
+    label: () => tr('Bloom'),
     locale: ns,
   }, createBloomSettings(React)))
 
   // 侧栏图标：注册 id 必须等于 section id，否则永不渲染。
-  // 用 Bloom 自己的色点 —— 十二套配色都不同，色点比任何字形图标都更像这个插件。
+  // 用 Bloom 自己的五瓣花（与 icon.svg 同形）——十二套配色都不同，图形比任何字形缩写都更像这个插件。
   ctx.slots.inject('settings.section.icon', () => ctx.slots.register({
     name: 'settings.section.icon',
     id: BLOOM_SECTION_ID,
     order: 50,
-    label: () => tr('Bloom 外观'),
+    label: () => tr('Bloom'),
     locale: ns,
   }, createBloomIcon(React)))
 }
 
-/** 侧栏图标：当前配色的渐变色点。React 由宿主 loader 提供，跟 createBloomSettings 同源传入。 */
+/** 侧栏图标：Bloom 五瓣花。React 由宿主 loader 提供，跟 createBloomSettings 同源传入。 */
 export function createBloomIcon(React: HostReact) {
   return function BloomIcon({ size = 16 }: { size?: number }) {
     return React.createElement('span', {
       className: 'dsh-bloom-settings-icon',
       style: { width: `${size}px`, height: `${size}px` },
       'aria-hidden': 'true',
+      dangerouslySetInnerHTML: { __html: bloomIconSVG() },
     })
   }
 }

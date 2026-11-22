@@ -46,6 +46,25 @@ export interface HostThemeService {
     setTheme?: (id: string) => void;
 }
 /**
+ * 「外观变了」的订阅回调。宿主 theme/change 会调它。
+ *
+ * 2026-11-21（owner：「深色浅色跟随系统，这太垃圾了」）：
+ * 之前插件只调 `setTheme()` 写偏好，却**从不订阅** `theme/change`。
+ * 后果是：用户在系统里切深浅时，宿主把 body 属性和 token 都换好了，
+ * 但插件这边 —— 面板里的 ☀/🌙/🖥 选中态、基于 `currentIsDark()` 的
+ * 氛围层选择、设置页里的深浅相关样式 —— 全部停留在旧值，
+ * 界面看起来「跟系统没关系」。订阅之后，系统切换会立刻传播到插件。
+ */
+export type AppearanceChangeListener = (isDark: boolean) => void;
+/**
+ * 订阅外观变化（宿主 theme/change → 这里）。
+ *
+ * @returns 取消订阅函数。
+ */
+export declare function onAppearanceChange(listener: AppearanceChangeListener): () => void;
+/** 把当前深浅广播给订阅者（宿主事件或本地应用后调用）。 */
+export declare function notifyAppearanceChange(): void;
+/**
  * 记住宿主的 theme 服务。
  *
  * @returns 一个函数，把服务清回 null —— 宿主卸载该服务时用。

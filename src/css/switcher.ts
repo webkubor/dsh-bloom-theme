@@ -339,35 +339,109 @@ export const SWITCHER_CSS = `
   outline-offset: -2px;
 }
 .dsh-bloom-options {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  /* 色板网格：6 列 —— 15 个配色一屏放下，面板高度从 744px 降到 ~230px。
+     变体名与诗句留在 aria-label / title（悬停可见）。 */
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
   /* 15 个配色一起完整展开，不给列表加内层滚动条 —— 菜单本体已有
      max-height + overflow-y: auto（见上面 slotted 规则），超出视口时
-     整个菜单一起滚动，配色区不会单独被切成小窗。
-     选项宽度保持与 v0.27.0 一致（312px），不加 padding-right。 */
+     整个菜单一起滚动，配色区不会单独被切成小窗。 */
+  padding: 0 12px;
 }
 .dsh-bloom-option {
-  /* 稳妥的单行 Grid：button 不依赖 Chromium 的 subgrid，
-     各列尺寸严格固定，诗句自适应占满中间，右侧勾选绝不折行。 */
-  display: grid;
-  grid-template-columns: 14px 44px minmax(0, 1fr) 14px;
+  /* 纯色板：一个圆角色块，无文字。 */
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   width: 100%;
-  height: 34px;
-  /* flex 容器里子项默认 flex-shrink: 1 —— 15 行放进 max-height 252px 的可滚动
-     列表时，固定 height 也会被压扁（实测 34px → 14.94px）。锁死不缩。 */
+  aspect-ratio: 1;
   flex: none;
-  padding: 0 12px;
   box-sizing: border-box;
+  /* 按钮的 UA 默认内边距（1px 6px）会把色块挤小一圈 —— 清掉，
+     让色块正好铺满整格，格与格之间只留 gap 的 6px。 */
+  padding: 0;
 }
 .dsh-bloom-menu[lang="en"] .dsh-bloom-option {
-  grid-template-columns: 14px 5.75em minmax(0, 1fr) 14px;
+  grid-template-columns: none;
 }
+/* 色块：整格铺满，圆角方块（斜向渐变 morandi → accent）。
+   深色下换成 accentD —— 浅色用的 accentL 太深，在深底上糊掉。
+   2026-11-21（owner「颜色块也可以做得好看一点」「有点单薄」）：二段渐变改成
+   三段（莫兰迪 → 主色 → 压深主色），体积感交给 inset 高光/暗角和外投影，
+   不叠白色渐变层 —— 那层会把色块最浅的一端洗成纸白（对比度掉到 1.02:1）。 */
+.dsh-bloom-option__swatch {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  background: linear-gradient(150deg,
+    var(--bloom-swatch-a, #aab6c4) 0%,
+    var(--bloom-swatch-b, #6b8f71) 52%,
+    color-mix(in oklch, var(--bloom-swatch-b, #6b8f71) 84%, black) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    inset 0 -2px 5px -1px rgba(0,0,0,.26),
+    inset 0 0 0 1px rgba(0,0,0,.08),
+    0 2px 6px -2px rgba(0,0,0,.28);
+  transition: transform var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
+  overflow: hidden;
+}
+body[data-ds-dark-theme] .dsh-bloom-option__swatch {
+  background: linear-gradient(150deg,
+    var(--bloom-swatch-a, #aab6c4) 0%,
+    var(--bloom-swatch-bd, #6b8f71) 52%,
+    color-mix(in oklch, var(--bloom-swatch-bd, #6b8f71) 82%, black) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -2px 5px -1px rgba(0,0,0,.42),
+    inset 0 0 0 1px rgba(255,255,255,.10),
+    0 2px 6px -2px rgba(0,0,0,.45);
+}
+/* 色块上的国风单字（黛/朱/桃/天…）—— owner 2026-11-21「是不是可以有一两个字，
+   比如国风的字，用两个字代表颜色」。压在色块正中，白色 + 轻微投影，
+   深浅两套色块上都读得出。 */
+.dsh-bloom-option__glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgba(255,255,255,.94);
+  text-shadow: 0 1px 2px rgba(0,0,0,.32);
+  pointer-events: none;
+  user-select: none;
+}
+.dsh-bloom-option__glyph { transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1)); }
+/* 共用配色字幕：网格下方一行「名字 · 诗」，hover/focus 某个色块时更新。
+   2026-11-21（owner「横版色块浮动上去是不是应该有这个颜色的描述」）：
+   原先是色块内浮层，但 40px 格子放不下名字，文字缩成 "Tan…"；
+   这行字幕位置恒定、宽度=面板内宽，永不被 overflow-y:auto 裁切。 */
+.dsh-bloom-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 20px;
+  margin: 2px 12px 4px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 55%, transparent);
+  color: var(--dsw-alias-label-primary, #222);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow: hidden;
+}
+.dsh-bloom-caption__name { font-weight: 600; white-space: nowrap; }
+.dsh-bloom-caption__poem { color: var(--dsw-alias-label-secondary, #777); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsh-bloom-caption:empty { display: none; }
 .dsh-bloom-option {
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   color: var(--dsw-alias-label-primary, #222);
   font: inherit;
@@ -376,6 +450,8 @@ export const SWITCHER_CSS = `
   transition: background 0.15s;
 }
 .dsh-bloom-option:hover { background: rgba(var(--bloom-morandi), 0.14); }
+/* 悬停时色块微微浮起 —— 触觉反馈，不动布局 */
+.dsh-bloom-option:hover .dsh-bloom-option__swatch { transform: scale(1.08); }
 /* [LES-30] */
 .dsh-bloom-option:focus-visible {
   --dsw-focus-ring-color: color-mix(in oklch, var(--bloom-accent, #34698c) 62%, transparent);
@@ -383,83 +459,50 @@ export const SWITCHER_CSS = `
   outline-offset: -2px;
   background: rgba(var(--bloom-morandi), 0.14);
 }
-/* 选中态：淡底 + 一道柔的内描边。之前只有 background，在玻璃面板上整行像被涂了
- * 一块颜色，和相邻行之间没有「这一行被选中」的边界感。 */
+/* 选中态：色块外一圈柔的内描边 + 抬升。当前变体的名字已经在面板头部
+   显示，这里只需要「这一格被选中」的边界感。 */
 .dsh-bloom-option[data-active="true"] {
-  background: rgba(var(--bloom-morandi), 0.2);
+  background: rgba(var(--bloom-morandi), 0.12);
+}
+.dsh-bloom-option[data-active="true"] .dsh-bloom-option__swatch {
   box-shadow:
-    inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #34698c) 26%, transparent),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    inset 0 0 0 1.5px color-mix(in oklch, var(--bloom-accent, #34698c) 70%, transparent),
+    0 0 0 2px color-mix(in oklch, var(--bloom-accent, #34698c) 22%, transparent),
+    0 2px 6px -2px rgba(0,0,0,.28);
 }
 .dsh-bloom-option[data-active="true"]:focus-visible {
   --dsw-focus-ring-color: color-mix(in oklch, var(--bloom-accent, #34698c) 78%, transparent);
   box-shadow: none;
 }
-/* 「新」小标签（本版新上的配色）：只占一个字宽，贴在名字后面。
-   用 accent 色不抢行焦点；悬停整行时不变化，它是个状态不是按钮。 */
+/* 选中勾：色块右下角的小圆点（不用 ✓ 文字，字形在不同字号下不稳定） */
+.dsh-bloom-check {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--bloom-accent, #34698c);
+  color: #fff;
+  font-size: 8px;
+  line-height: 13px;
+  text-align: center;
+  opacity: 0;
+  transform: scale(.6);
+  transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1)), transform var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
+  box-shadow: 0 1px 3px -1px rgba(0,0,0,.4);
+}
+.dsh-bloom-option[data-active="true"] .dsh-bloom-check { opacity: 1; transform: scale(1); }
+/* 「新」标记：本版新上的配色 —— 色块右上角一个小圆点（文字太重，不占地方） */
 .dsh-bloom-option__new {
-  display: inline-block;
-  vertical-align: 2px;
-  margin-left: 5px;
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.5;
-  padding: 0 3px;
-  border-radius: 3px;
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 16%, transparent);
-  color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 78%, var(--dsw-alias-label-primary, #222));
-}
-.dsh-bloom-option__name {
-  font-weight: 500;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* 保留每一行诗句对应配色的渐变；起笔使用可读的次级正文色。
-   不再整行叠透明度，避免原本达标的 accent 与背景再次混合后变淡。 */
-.dsh-bloom-option__en {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  font-family: 'Songti SC', 'STSong', 'Source Han Serif SC', 'Noto Serif SC', serif;
-  background-image: linear-gradient(100deg, var(--dsw-alias-label-secondary, #666) 0%, color-mix(in oklab, var(--bloom-poem-b) 45%, var(--dsw-alias-label-secondary, #666)) 70%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  opacity: 1;
-  transition: opacity var(--bloom-dur-fast, 130ms) var(--bloom-ease, cubic-bezier(0.2,0.8,0.2,1));
-}
-/* 西文诗句：收一档字号、去字距、斜体，完整句在行 title 里。 */
-.dsh-bloom-option__en:not(:lang(zh)) {
-  font-size: 11.5px;
-  letter-spacing: 0.01em;
-  font-family: 'Iowan Old Style', 'Palatino', Georgia, serif;
-  font-style: italic;
-}
-body[data-ds-dark-theme] .dsh-bloom-option__en {
-  background-image: linear-gradient(100deg, var(--dsw-alias-label-secondary, #bbb) 0%, color-mix(in oklab, var(--bloom-poem-bd) 45%, var(--dsw-alias-label-primary, #eee)) 70%);
-  opacity: 1;
-}
-.dsh-bloom-option:hover .dsh-bloom-option__en,
-.dsh-bloom-option[data-active="true"] .dsh-bloom-option__en {
-  opacity: 1;
-}
-/* 选中那一行让渐变缓缓流过，跟「深度求索中…」同一种语言 —— 只给一行，
-   十行一起流会变成灯箱。 */
-.dsh-bloom-option[data-active="true"] .dsh-bloom-option__en {
-  background-size: 220% 100%;
-  animation: dsh-bloom-poem-flow 4.2s ease-in-out infinite;
-}
-@keyframes dsh-bloom-poem-flow {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .dsh-bloom-option[data-active="true"] .dsh-bloom-option__en { animation: none; }
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bloom-accent, #6b8f71);
+  box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 70%, transparent);
 }
 .dsh-bloom-check {
   width: 12px;
@@ -483,17 +526,9 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
 }
 .dsh-bloom-appearance[hidden] { display: none; }
 
-/* 紧凑质感分段与模式控件保持一致。 */
-.dsh-bloom-glass { padding: 0 14px 2px; font-size: 12px; color: var(--dsw-alias-label-secondary, #777); }
-.dsh-bloom-glass__hint { margin: 7px 2px 2px; font-size: 11px; line-height: 1.55; color: var(--dsw-alias-label-tertiary, #999); }
-.dsh-bloom-glass__hint[hidden] { display: none; }
-.dsh-bloom-glass__choices { display: flex; width: 100%; box-sizing: border-box; padding: 3px; border-radius: 9px; background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 94%); }
-.dsh-bloom-glass__choice { appearance: none; flex: 1; min-width: 0; min-height: 34px; border: 0; border-radius: 7px; padding: 7px 4px; background: transparent; color: inherit; font: inherit; line-height: 1.7; white-space: nowrap; cursor: pointer; transition: background-color .14s ease, color .14s ease; }
-.dsh-bloom-glass__choice:hover { background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%); }
-.dsh-bloom-glass__choice[data-active="true"] { background: var(--dsw-alias-bg-layer-1, #fff); color: var(--bloom-accent, #6b8f71); font-weight: 600; box-shadow: 0 1px 3px -1px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 70%); }
-.dsh-bloom-glass__choice:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: -2px; }
-@media (prefers-reduced-motion: reduce) { .dsh-bloom-glass__choice { transition: none; } }
-@media (forced-colors: active) { .dsh-bloom-glass__choice[data-active="true"] { outline: 2px solid Highlight; outline-offset: -2px; } }
+/* 质感提示：系统把透明效果降级时，说明「保留了你的选择」。 */
+.dsh-bloom-hint { margin: 7px 2px 2px; font-size: 11px; line-height: 1.55; color: var(--dsw-alias-label-tertiary, #999); }
+.dsh-bloom-hint[hidden] { display: none; }
 .dsh-bloom-appearance__seg {
   display: flex;
   width: 100%;                 /* 撑满面板宽度，里面三个按钮才能真正三等分
@@ -512,17 +547,34 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   color: inherit;
   font: inherit;
   flex: 1;                     /* 三等分 */
-  padding: 7px 4px;
+  padding: 0;
   cursor: pointer;
-  line-height: 1.7;
-  white-space: nowrap;         /* 「浅色」被折成两行就是少了这一条 */
+  line-height: 0;              /* 图标没有文字行高 */
+  white-space: nowrap;
   text-align: center;
   transition: background-color .14s ease, color .14s ease;
+  /* 图标按钮的点击区：视觉是 16px 图标，但可点区域要够大（桌面指针 28px 起） */
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .dsh-bloom-appearance__btn[hidden] { display: none; }
 .dsh-bloom-appearance__btn { border-radius: 7px; }
+/* 模式图标：与面板里的 chevron 同一种描边语言（1.4 线宽、currentColor）。
+   16px 视口，实际渲染 15px —— 三个图标一排，视觉重量和上方的色点一致。 */
+.dsh-bloom-appearance__icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  color: var(--dsw-alias-label-tertiary, #999);
+  transition: color .14s ease;
+}
 .dsh-bloom-appearance__btn:hover {
   background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 92%);
+}
+.dsh-bloom-appearance__btn:hover .dsh-bloom-appearance__icon {
+  color: var(--dsw-alias-label-secondary, #777);
 }
 /* 选中态用主题强调色，和上方变体的选中打勾是同一套视觉权重 */
 .dsh-bloom-appearance__btn[data-active="true"] {
@@ -530,6 +582,9 @@ body[data-ds-dark-theme] .dsh-bloom-option__en {
   color: var(--bloom-accent, #6b8f71);
   font-weight: 600;
   box-shadow: 0 1px 3px -1px color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 70%);
+}
+.dsh-bloom-appearance__btn[data-active="true"] .dsh-bloom-appearance__icon {
+  color: var(--bloom-accent, #6b8f71);
 }
 .dsh-bloom-appearance__btn:focus-visible {
   outline: 2px solid var(--bloom-accent, #6b8f71);
@@ -549,46 +604,174 @@ body:not([data-ds-dark-theme]) .dsh-bloom-ambience[data-scheme="dark"] { display
   margin-top: 6px;
   box-sizing: border-box;
 }
-.dsh-bloom-ambience__btn {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  flex: 1;
-  padding: 5px 2px;
-  cursor: pointer;
-  line-height: 1.5;
-  white-space: nowrap;
-  text-align: center;
-  font-size: 11.5px;
-  border-radius: 7px;
-  transition: background-color var(--bloom-dur-fast) var(--bloom-ease), color var(--bloom-dur-fast) var(--bloom-ease);
+
+/* ═══ 设置页「Bloom 外观」重新设计（2026-11-21）══════════════════════════
+ * owner：设置皮肤的操作界面太丑，要重新设计；能用图标交互布局解决的，
+ * 不要通过文字的形式来解决。
+ *
+ * 新结构（detail.ts 的 row() / groupTitle() 产出）：
+ *   .dsh-bloom-group        组标题（小字、弱化）
+ *   .dsh-bloom-group__body  组内容
+ *   .dsh-bloom-row          一张卡片：左图标+标题 | 右控件
+ *   .dsh-bloom-icon-choice  图标选项按钮（文字只进 title / aria-label）
+ *
+ * 秩序：卡片左对齐、控件右对齐 —— 宽面板下不会「内容全堆在左边」。
+ */
+.dsh-bloom-group {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--dsw-alias-label-tertiary, #999);
+  padding: 0 2px;
+  margin: 18px 0 6px;
 }
-.dsh-bloom-ambience__btn:focus-visible {
+.dsh-bloom-group:first-child { margin-top: 0; }
+.dsh-bloom-group__body { display: flex; flex-direction: column; gap: 4px; }
+
+.dsh-bloom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  /* 卡片本身几乎透明，只靠一条极淡的描边分隔 —— 干净、通透（视觉基线） */
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklch, var(--dsw-alias-label-primary, #222) 7%, transparent);
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 46%, transparent);
+  transition: border-color var(--bloom-dur-fast) var(--bloom-ease), background-color var(--bloom-dur-fast) var(--bloom-ease);
+}
+.dsh-bloom-row:hover {
+  border-color: color-mix(in oklch, var(--bloom-accent, #6b8f71) 26%, transparent);
+  background: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 62%, transparent);
+}
+.dsh-bloom-row__lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.dsh-bloom-row__label {
+  font-size: 12.5px;
+  color: var(--dsw-alias-label-primary, #222);
+  white-space: nowrap;
+}
+.dsh-bloom-row__control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+/* 图标选项按钮：视觉 28px 方块，可点区域 30px（触控 44px 由 adaptive 的
+   coarse-pointer 媒体查询补）。选中态是主题色描边 + 浅底。 */
+.dsh-bloom-icon-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: color-mix(in oklch, var(--dsw-alias-label-primary, #222) 5%, transparent);
+}
+.dsh-bloom-icon-choice {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  min-width: 30px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary, #999);
+  cursor: pointer;
+  transition: background-color var(--bloom-dur-fast) var(--bloom-ease), color var(--bloom-dur-fast) var(--bloom-ease), box-shadow var(--bloom-dur-fast) var(--bloom-ease);
+}
+.dsh-bloom-icon-choice:hover {
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 12%, transparent);
+  color: var(--dsw-alias-label-secondary, #777);
+}
+.dsh-bloom-icon-choice[data-active="true"] {
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  color: var(--bloom-accent, #6b8f71);
+  box-shadow:
+    0 1px 3px -1px rgba(0,0,0,.18),
+    inset 0 0 0 1px color-mix(in oklch, var(--bloom-accent, #6b8f71) 38%, transparent);
+}
+.dsh-bloom-icon-choice:focus-visible {
   outline: 2px solid var(--bloom-accent, #6b8f71);
   outline-offset: -2px;
 }
-.dsh-bloom-ambience__btn:hover {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71), transparent 90%);
+.dsh-bloom-icon-choice__icon { width: 15px; height: 15px; display: block; }
+@media (prefers-reduced-motion: reduce) { .dsh-bloom-icon-choice { transition: none; } }
+
+/* 氛围两行（浅色 / 深色）：每行三个图标，上下排 */
+.dsh-bloom-ambience-wrap { display: inline-flex; flex-direction: column; gap: 2px; }
+.dsh-bloom-ambience { display: inline-flex; gap: 2px; }
+
+/* 流星三行（颜色 / 密度 / 速度）只在「深色 + 漫天星辰」背景下才有意义 ——
+   其他背景里流星根本不在画面上，摆出来就是三张看不懂的卡片。
+   2026-11-21 重做设置页时一度丢了这条隐藏规则（连同 data-meteor-row 属性），
+   导致流星控件在任何背景下都常驻；这里按旧规则补回。 */
+.dsh-bloom-row[data-meteor-row] { display: none; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-row[data-meteor-row] { display: flex; }
+/* 组标题与组容器跟着一起隐藏，否则「流星」标题下会留一块空白 */
+.dsh-bloom-group[data-meteor-group],
+.dsh-bloom-group__body[data-meteor-group] { display: none; }
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-group[data-meteor-group],
+body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-group__body[data-meteor-group] { display: block; }
+
+/* 自动换色下拉：跟卡片右对齐 */
+.dsh-bloom-row .dsh-bloom-rotation__select {
+  appearance: none;
+  min-height: 28px;
+  padding: 4px 26px 4px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklch, var(--dsw-alias-label-primary, #222) 10%, transparent);
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%) calc(100% - 13px) 12px / 5px 5px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%) calc(100% - 9px) 12px / 5px 5px no-repeat,
+    color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 70%, transparent);
+  color: var(--dsw-alias-label-primary, #222);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
 }
-.dsh-bloom-ambience__btn[data-active="true"] {
-  background: var(--dsw-alias-bg-layer-2, #ffffff);
-  color: var(--bloom-accent, inherit);
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-body[data-ds-dark-theme] .dsh-bloom-ambience__btn[data-active="true"] {
-  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 22%, #1a1a1c);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+.dsh-bloom-row .dsh-bloom-rotation__select:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: -1px;
 }
 
-.dsh-bloom-meteor-opt { display: none; align-items: center; gap: 6px; box-sizing: border-box; width: 100%; padding: 5px 14px; font-size: 12px; }
-body[data-ds-dark-theme][data-bloom-ambience-dark="galaxy"] .dsh-bloom-meteor-opt { display: flex; }
-.dsh-bloom-meteor-opt > span { margin-right: auto; color: var(--dsw-alias-label-secondary, inherit); }
-.dsh-bloom-meteor-opt button { border: 0; border-radius: 7px; padding: 5px 10px; color: inherit; background: transparent; font: inherit; cursor: pointer; }
-.dsh-bloom-meteor-opt button[data-active="true"] { color: var(--bloom-accent, inherit); background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 22%, #1a1a1c); }
-.dsh-bloom-meteor-opt button:focus-visible { outline: 2px solid var(--bloom-accent, #6b8f71); outline-offset: -2px; }
+/* 「关于 Bloom」组：版本号与外链。
+   2026-11-21（owner「配置项可以多一点，比如更新日志、GitHub 链接等介绍」）。
+   外链做成宿主设置页常见的次级文字链：常态低调，hover 才提亮到主题色。 */
+.dsh-bloom-about__ver {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-secondary, #777);
+}
+.dsh-bloom-about__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary, #777);
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 2px 4px;
+  transition: color var(--bloom-dur-fast) var(--bloom-ease), background-color var(--bloom-dur-fast) var(--bloom-ease);
+}
+.dsh-bloom-about__link:hover {
+  color: var(--bloom-accent, #6b8f71);
+  background: color-mix(in oklch, var(--bloom-accent, #6b8f71) 10%, transparent);
+}
+.dsh-bloom-about__link:focus-visible {
+  outline: 2px solid var(--bloom-accent, #6b8f71);
+  outline-offset: 1px;
+}
+.dsh-bloom-about__ext { font-size: 10px; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .dsh-bloom-about__link { transition: none; } }
 
 .dsh-bloom-version {
   display: flex;
@@ -1051,4 +1234,16 @@ body[data-ds-dark-theme] .dsh-bloom-share-action__hint { color: var(--dsw-alias-
 .dsh-bloom-detail .dsh-bloom-more-body { grid-template-rows: 1fr; }
 .dsh-bloom-detail .dsh-bloom-more { display: none; }
 .dsh-bloom-detail .dsh-bloom-foot { border-top: 1px solid var(--dsw-alias-hairline, rgba(0,0,0,.08)); margin-top: 8px; padding: 8px 14px 2px; }
+
+/* 设置左导航的 Bloom 图标 —— 之前这个槽位只渲染了一个空 span（全仓没有对应
+   CSS 规则），所以 owner 看到的是「设置页左边没有图标」。这里补上五瓣花的形状
+   与颜色：跟随导航文字色 currentColor，激活时再借 --bloom-accent 提亮。 */
+.dsh-bloom-settings-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--dsw-alias-label-secondary, #6b7280);
+}
+.dsh-bloom-settings-icon__svg { display: block; width: 100%; height: 100%; }
 `

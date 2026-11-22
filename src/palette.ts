@@ -267,21 +267,25 @@ export const VARIANT_LABELS = {
   // poem 是配色右侧那一列：原来放英文名（Mist/Cinnabar…），对中文用户没有信息量
   // （owner：「后面的英文没啥意义，不如一句诗词呢」）。换成该色的出处诗句后，
   // 中国风就从名字渗进了界面本身。en 保留给英文 locale。
-  mist:     { zh: '黛蓝', en: 'Mist',      poem: '山色有无中', poemEn: 'Hills half there, half gone' },   // hue 240 · 王维《汉江临泛》
-  cinnabar: { zh: '朱砂', en: 'Cinnabar',  poem: '日出江花红胜火', poemEn: 'Blooms redder than fire' },   // hue 25  · 白居易《忆江南》
-  petal:    { zh: '桃夭', en: 'Petal',     poem: '灼灼其华', poemEn: 'Its blossoms ablaze' },     // hue 350 ·《诗经·周南·桃夭》
-  ripple:   { zh: '天青', en: 'Ripple',    poem: '雨过天青云破处', poemEn: 'After rain, sky breaks blue' },   // hue 195 · 宋徽宗品汝窑语
-  sage:     { zh: '竹青', en: 'Sage',      poem: '绿竹猗猗', poemEn: 'Bamboo green, growing tall' },     // hue 115 ·《诗经·卫风·淇奥》
-  stone:    { zh: '赭石', en: 'Stone',     poem: '秋山敛余照', poemEn: 'Hills gather the last light' },   // hue 29  · 王维《木兰柴》
-  lapis:    { zh: '青金', en: 'Lapis',     poem: '碧海青天夜夜心', poemEn: 'Sea, sky, a heart each night' },   // hue 258 · 李商隐《嫦娥》
-  amber:    { zh: '琥珀', en: 'Amber',     poem: '玉碗盛来琥珀光', poemEn: 'A jade bowl of amber light' },   // hue 70  · 李白《客中行》
-  aurora:   { zh: '落霞', en: 'Afterglow', poem: '落霞与孤鹜齐飞', poemEn: 'Sunset and a lonely flight' },   // hue 72  · 王勃《滕王阁序》
-  lavender: { zh: '青莲', en: 'Lavender',  poem: '清水出芙蓉', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
-  mint:     { zh: '草色', en: 'Mint',      poem: '草色遥看近却无', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
-  tangerine:{ zh: '橙黄', en: 'Tangerine', poem: '最是橙黄橘绿时', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
-  silverrose:{ zh: '银红', en: 'Silver Rose', poem: '银烛秋光冷画屏', poemEn: 'Silver candle, autumn glow' }, // hue 320 · 杜牧《秋夕》
-  dawn:      { zh: '粉霞', en: 'Dawn', poem: '晓看红湿处', poemEn: 'At dawn, blossoms glow' }, // hue 8  · 杜甫《春夜喜雨》
-  osmanthus: { zh: '轻黄', en: 'Osmanthus', poem: '暗淡轻黄体性柔', poemEn: 'Pale gold, gentle by nature' }, // hue 98 · 李清照《鹧鸪天·桂花》
+  //
+  // glyph 是色块上的单字印记（owner 2026-11-21「是不是可以有一两个字，比如国风的字，
+  // 用两个字代表颜色」）。取该色的雅字，英文界面也用这个单字 —— 汉字本身就是
+  // 视觉符号，不随语言失效。只放一个字，太长的字在 40px 方块里会糊。
+  mist:     { zh: '黛蓝', en: 'Mist',      glyph: '黛', poem: '山色有无中', poemEn: 'Hills half there, half gone' },   // hue 240 · 王维《汉江临泛》
+  cinnabar: { zh: '朱砂', en: 'Cinnabar',  glyph: '朱', poem: '日出江花红胜火', poemEn: 'Blooms redder than fire' },   // hue 25  · 白居易《忆江南》
+  petal:    { zh: '桃夭', en: 'Petal',     glyph: '桃', poem: '灼灼其华', poemEn: 'Its blossoms ablaze' },     // hue 350 ·《诗经·周南·桃夭》
+  ripple:   { zh: '天青', en: 'Ripple',    glyph: '天', poem: '雨过天青云破处', poemEn: 'After rain, sky breaks blue' },   // hue 195 · 宋徽宗品汝窑语
+  sage:     { zh: '竹青', en: 'Sage',      glyph: '竹', poem: '绿竹猗猗', poemEn: 'Bamboo green, growing tall' },     // hue 115 ·《诗经·卫风·淇奥》
+  stone:    { zh: '赭石', en: 'Stone',     glyph: '赭', poem: '秋山敛余照', poemEn: 'Hills gather the last light' },   // hue 29  · 王维《木兰柴》
+  lapis:    { zh: '青金', en: 'Lapis',     glyph: '金', poem: '碧海青天夜夜心', poemEn: 'Sea, sky, a heart each night' },   // hue 258 · 李商隐《嫦娥》
+  amber:    { zh: '琥珀', en: 'Amber',     glyph: '琥', poem: '玉碗盛来琥珀光', poemEn: 'A jade bowl of amber light' },   // hue 70  · 李白《客中行》
+  aurora:   { zh: '落霞', en: 'Afterglow', glyph: '霞', poem: '落霞与孤鹜齐飞', poemEn: 'Sunset and a lonely flight' },   // hue 72  · 王勃《滕王阁序》
+  lavender: { zh: '青莲', en: 'Lavender',  glyph: '莲', poem: '清水出芙蓉', poemEn: 'A lotus from clear water' },   // hue 295 · 李白《经乱离后天恩流夜郎》
+  mint:     { zh: '草色', en: 'Mint',      glyph: '草', poem: '草色遥看近却无', poemEn: 'Green from afar, gone up close' },   // hue 160 · 韩愈《早春呈水部张十八员外》
+  tangerine:{ zh: '橙黄', en: 'Tangerine', glyph: '橙', poem: '最是橙黄橘绿时', poemEn: 'Best when oranges turn gold' },   // hue 47  · 苏轼《赠刘景文》
+  silverrose:{ zh: '银红', en: 'Silver Rose', glyph: '银', poem: '银烛秋光冷画屏', poemEn: 'Silver candle, autumn glow' }, // hue 320 · 杜牧《秋夕》
+  dawn:      { zh: '粉霞', en: 'Dawn', glyph: '晓', poem: '晓看红湿处', poemEn: 'At dawn, blossoms glow' }, // hue 8  · 杜甫《春夜喜雨》
+  osmanthus: { zh: '轻黄', en: 'Osmanthus', glyph: '桂', poem: '暗淡轻黄体性柔', poemEn: 'Pale gold, gentle by nature' }, // hue 98 · 李清照《鹧鸪天·桂花》
 }
 
 /** oklch 混透明度的简写（在 oklch 空间里混合，色相/彩度不漂移） */

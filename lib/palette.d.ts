@@ -273,90 +273,105 @@ export declare const VARIANT_LABELS: {
     mist: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     cinnabar: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     petal: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     ripple: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     sage: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     stone: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     lapis: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     amber: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     aurora: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     lavender: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     mint: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     tangerine: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     silverrose: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     dawn: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };
     osmanthus: {
         zh: string;
         en: string;
+        glyph: string;
         poem: string;
         poemEn: string;
     };

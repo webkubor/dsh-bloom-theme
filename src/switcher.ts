@@ -11,9 +11,9 @@ import { applyMotion, injectCSS, readMotion, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
 import { SWITCHER_CSS } from './css/switcher.js'
-import { currentIsDark, readStoredMode, setMode, type AppearanceMode } from './appearance.js'
+import { currentIsDark, readStoredMode, setMode, onAppearanceChange, type AppearanceMode } from './appearance.js'
 import type { GlassMode } from './glass.js'
-import { tr, variantName, variantPoem, getLang, LANG_CHANGE_EVENT } from './lang.js'
+import { tr, variantName, variantPoem, variantGlyph, getLang, LANG_CHANGE_EVENT } from './lang.js'
 import { copyDiagnostics, formatDiagnosticsMarkdown } from './diagnostics.js'
 import { buildFeedbackUrl } from './feedback.js'
 import { createShareCapture } from './share-capture.js'
@@ -52,6 +52,16 @@ export const poemStyle = (v: string) =>
 export const dotStyle = (v) =>
   `background:linear-gradient(135deg, rgb(${PALETTE[v].morandi}) 0%, ${PALETTE[v].accentL} 100%)`
 
+/**
+ * 色块样式 —— 主题行的新视觉身份（2026-11-21 · owner「不要文字型」）。
+ *
+ * 一个 18px 的圆角方块，斜向渐变（morandi → accentL）——跟顶栏触发器上的
+ * 小圆点同一对颜色，但方块比圆点更能读出「这是一套配色」。
+ * 深浅两套：accentL 是浅色下的强调色，accentD 是深色下的。
+ */
+export const swatchStyle = (v) =>
+  `--bloom-swatch-a:rgb(${PALETTE[v].morandi});--bloom-swatch-b:${PALETTE[v].accentL};--bloom-swatch-bd:${PALETTE[v].accentD}`
+
 /** 诗句渐变：和色点同一对颜色，深浅两套各给一个变量，由 CSS 按 body 的深色标记挑。 */
 
 /**
@@ -64,6 +74,28 @@ export const dotStyle = (v) =>
  * v0.5.0：移除「氛围」区（壁纸 / 主题包已删），只留 4 个变体切换。
  *         玻璃为主视觉、默认常开，见 GLASS_CSS。
  */
+/**
+ * 配色变化订阅 —— theme-tokens 层用它重压宿主 token 覆盖层。
+ *
+ * 换配色时宿主 token 层必须跟着重压（覆盖层里的颜色是按变体算的）。
+ * 这里是唯一能拿到「换配色了」的时机：applyVariant 是换配色的唯一入口，
+ * 不另起 MutationObserver（那属于打补丁，也会多一次无谓的观察开销）。
+ */
+const variantListeners = new Set<(variant: string) => void>()
+
+/** 订阅配色变化。返回退订函数。 */
+export function onVariantChange(fn: (variant: string) => void): () => void {
+  variantListeners.add(fn)
+  return () => { variantListeners.delete(fn) }
+}
+
+/** 通知订阅者配色已变。 */
+function notifyVariantChange(variant: string): void {
+  for (const fn of variantListeners) {
+    try { fn(variant) } catch {}
+  }
+}
+
 export function applyVariant(variant) {
   if (!VARIANTS.includes(variant)) variant = 'mist'
   // 应用变体本身的所有副作用（写 body 属性 / 同步下拉胶囊 / 写 localStorage）。
@@ -74,6 +106,8 @@ export function applyVariant(variant) {
     document.body.dataset.bloomVariant = variant
     try { window.localStorage.setItem(STORAGE_KEY, variant) } catch {}
     resetRotationTimer()
+    // 宿主 token 覆盖层里的颜色按变体算 —— 换配色后必须重压。
+    notifyVariantChange(variant)
     const root = document.querySelector<HTMLElement>('.dsh-bloom-switcher')
     if (!root) return
     root.querySelectorAll<HTMLElement>('.dsh-bloom-option').forEach((el) => {
@@ -155,14 +189,31 @@ export function buildSwitcherHTML(currentVariant) {
     ? FEATURED_VARIANTS : [currentVariant, ...FEATURED_VARIANTS]
   const options = shown.map((v) => {
     const on = v === currentVariant
+    // 主题行改成「纯色板」网格（2026-11-21 · owner：
+    // 「下拉框的主面板不应该用这种文字型的；能用图标交互布局解决的，
+    // 就不要通过文字的形式去解决，太重了」）。
+    //
+    // 原来每行是「色块 + 名字 + 整句英文诗」——15 个变体把面板撑到 744px 高，
+    // 文字占满整列。现在变体只留一个色块，名字与诗进 aria-label / tooltip
+    // （tooltip 与 aria-label 二选一即可，这里两者都给，键盘与鼠标都能读到）；
+    // 当前变体的名字已经在面板头部（Appearance [● Mist]）显示，不必重复。
+    //
+    // 2026-11-21 二轮（owner：「颜色块也可以做得好看一点」「是不是可以有一两个字，
+    // 比如国风的字」「横版色块浮动上去是不是应该有这个颜色的描述」）：
+    //   ① 色块加国风单字印记（黛/朱/桃/天…）—— 一眼分辨是哪种配色
+    //   ② hover 描述：不是浮在色块上的小气泡，而是网格下方一行共用字幕
+    //      （hover/focus 某格 → 那行显示该配色的名字与诗）。
+    //      为什么不用气泡：面板自身 overflow-y:auto（见 CSS 注释），任何
+    //      超出面板宽度的浮层都会被裁掉；40px 的格子也放不下「Tangerine +
+    //      最是橙黄橘绿时」。共用字幕位置恒定、宽度够、不会被裁。
+    // 单字是 aria-hidden 的装饰；名字与诗仍由 aria-label 承担语义。
+    const label = `${variantName(v)} · ${variantPoem(v)}`
     return `<button type="button" class="dsh-bloom-option" role="option" data-variant="${v}"` +
-      ` aria-selected="${on}" data-active="${on}" aria-label="${variantName(v)} · ${variantPoem(v)}">` +
-      `<span class="dsh-bloom-dot" style="${dotStyle(v)}"></span>` +
-      `<span class="dsh-bloom-option__name">${variantName(v)}${isNewVariant(v, PLUGIN_VERSION) ? `<span class="dsh-bloom-option__new">${tr('新')}</span>` : ''}</span>` +
-      // 诗句紧跟名字、左对齐成一列（2026-11-06）：原来点线引导 + 诗句逐行染本色，
-      // 十二行十二种颜色加一排虚点，整列又花又散。颜色身份只交给左边色点。
-      `<span class="dsh-bloom-option__en" lang="${getLang()}" style="${poemStyle(v)}">${variantPoem(v)}</span>` +
-      `<span class="dsh-bloom-check" aria-hidden="true">✓</span></button>`
+      ` aria-selected="${on}" data-active="${on}" aria-label="${label}" title="${label}">` +
+      `<span class="dsh-bloom-option__swatch" style="${swatchStyle(v)}" aria-hidden="true">` +
+      `<span class="dsh-bloom-option__glyph">${variantGlyph(v)}</span></span>` +
+      `<span class="dsh-bloom-check" aria-hidden="true">✓</span>` +
+      `${isNewVariant(v, PLUGIN_VERSION) ? `<span class="dsh-bloom-option__new" aria-hidden="true"></span>` : ''}</button>`
   }).join('')
   return `<div class="dsh-bloom-switcher" data-plugin="${PLUGIN_ID}">
   <button type="button" class="dsh-bloom-trigger" aria-label="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}" aria-haspopup="dialog" aria-expanded="false" title="${tr('Bloom 主题 · v{0}', PLUGIN_VERSION)}">
@@ -183,12 +234,29 @@ export function buildSwitcherHTML(currentVariant) {
     </div>
     <div class="dsh-bloom-section">${tr('主题')}</div>
     <div class="dsh-bloom-options" role="listbox" aria-label="${tr('配色')}">${options}</div>
+    <div class="dsh-bloom-caption" data-caption role="status" aria-live="polite"><span class="dsh-bloom-caption__name" data-caption-name>${variantName(currentVariant)}</span><span class="dsh-bloom-caption__poem" data-caption-poem>${variantPoem(currentVariant)}</span></div>
     <div class="dsh-bloom-section" data-mode-section hidden>${tr('模式')}</div>
     <div class="dsh-bloom-appearance" role="group" aria-label="${tr('深浅模式')}" hidden>
       <div class="dsh-bloom-appearance__seg">
-        <button type="button" class="dsh-bloom-appearance__btn" data-mode="light">${tr('浅色')}</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-mode="dark">${tr('深色')}</button>
-        <button type="button" class="dsh-bloom-appearance__btn" data-mode="system">${tr('跟随系统')}</button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="light" aria-label="${tr('浅色')}" title="${tr('浅色')}">
+          <svg class="dsh-bloom-appearance__icon" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="3.1" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+              <path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1"/>
+            </g>
+          </svg>
+        </button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="dark" aria-label="${tr('深色')}" title="${tr('深色')}">
+          <svg class="dsh-bloom-appearance__icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M13.4 10.1A5.9 5.9 0 0 1 5.9 2.6a5.9 5.9 0 1 0 7.5 7.5z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button type="button" class="dsh-bloom-appearance__btn" data-mode="system" aria-label="${tr('跟随系统')}" title="${tr('跟随系统')}">
+          <svg class="dsh-bloom-appearance__icon" viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="1.6" y="2.6" width="12.8" height="8.6" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M5.6 13.4h4.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
     </div>
     <div class="dsh-bloom-settings-hint" role="note">${tr('质感、背景、流星与动效在 设置 › Bloom 外观 中调整')}</div>
@@ -607,6 +675,26 @@ export function buildSwitcherEl(initialVariant) {
     }
   })
 
+  // 配色网格下方的共用字幕：hover / 键盘 focus 某个色块时显示它的名字与诗。
+  // 2026-11-21（owner「横版色块浮动上去是不是应该有这个颜色的描述」）：
+  // 原来做成色块内浮层，但 40px 的格子放不下名字，文字被截成 "Tan…"；
+  // 改成网格下方一行字幕后，位置恒定、宽度够、不与色块抢视线。
+  const syncCaption = (variant: string | undefined) => {
+    if (!variant) return
+    const name = el.querySelector<HTMLElement>('[data-caption-name]')
+    const poem = el.querySelector<HTMLElement>('[data-caption-poem]')
+    if (name) name.textContent = variantName(variant)
+    if (poem) poem.textContent = variantPoem(variant)
+  }
+  el.addEventListener('pointerover', (e) => {
+    const opt = (e.target as HTMLElement).closest<HTMLElement>('.dsh-bloom-option')
+    syncCaption(opt?.dataset.variant)
+  })
+  el.addEventListener('focusin', (e) => {
+    const opt = (e.target as HTMLElement).closest<HTMLElement>('.dsh-bloom-option')
+    syncCaption(opt?.dataset.variant)
+  })
+
   el.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
     // 埋点：链接用 data-track 声明；按钮在各自分支里打。sendBeacon 不阻塞跳转。
@@ -728,6 +816,21 @@ export function buildSwitcherEl(initialVariant) {
       }
     }
 
+    // Tab 边界：焦点走出面板边界时收起并把焦点还给触发器。
+    // ⚠️ 必须放在「表单控件提前 return」之前 —— 自动换色是 <select>，
+    //    若 Tab 也被提前 return 吞掉，焦点走到最后一个停靠点就再也出不去了。
+    if (e.key === 'Tab' && !menu.hidden) {
+      const stops = Array.from(menu.querySelectorAll<HTMLElement>('button:not([disabled]), select, a[href], [tabindex="0"]'))
+        .filter((node) => node.tabIndex >= 0 && node.getClientRects().length > 0)
+      const edge = e.shiftKey ? stops[0] : stops[stops.length - 1]
+      if (edge && document.activeElement === edge) {
+        e.preventDefault()
+        closeMenu(el)
+        trigger?.focus()
+      }
+      return
+    }
+
     // 面板内的表单控件里，键盘交给控件本身（只保留 Escape 收起）
     // ⚠️ 自动换色是 <select>：方向键 / Home / End 必须留给下拉框，
     // 否则用户用键盘调整间隔时焦点会被配色列表抢走。
@@ -778,18 +881,6 @@ export function buildSwitcherEl(initialVariant) {
           trigger?.focus()
         }
         break
-      case 'Tab': {
-        // Keep all controls reachable. Only close when Tab leaves the dialog boundary.
-        const stops = Array.from(menu.querySelectorAll<HTMLElement>('button:not([disabled]), select, a[href], [tabindex="0"]'))
-          .filter((node) => node.tabIndex >= 0 && node.getClientRects().length > 0)
-        const edge = e.shiftKey ? stops[0] : stops[stops.length - 1]
-        if (document.activeElement === edge) {
-          e.preventDefault()
-          closeMenu(el)
-          trigger?.focus()
-        }
-        break
-      }
     }
   })
 
@@ -804,6 +895,15 @@ export function buildSwitcherEl(initialVariant) {
     if (!el.contains(e.target as Node)) closeMenu(el)
   }
   document.addEventListener('click', onOutsideClick)
+
+  // 外观变化（宿主 theme/change，或本地 setMode）→ 刷新模式行选中态与氛围层。
+  // 2026-11-21 · owner：「深色浅色跟随系统，这太垃圾了」——
+  // 之前面板只在打开时同步一次，系统切换深浅后面板里的 ☀/🌙/🖥 还是旧的。
+  const offAppearance = onAppearanceChange(() => {
+    if (disposed) return
+    syncAppearanceRow(el)
+  })
+
   switcherCleanups.set(el, () => {
     disposed = true
     closeShare()
@@ -813,6 +913,7 @@ export function buildSwitcherEl(initialVariant) {
     timers.clear()
     window.removeEventListener(LANG_CHANGE_EVENT, onLanguageChange)
     document.removeEventListener('click', onOutsideClick)
+    offAppearance()
     // 定位用的监听与内联样式一起回收：插件停用后页面必须干净
     cancelAnimationFrame(repositionFrame)
     window.removeEventListener('resize', onViewportChange)

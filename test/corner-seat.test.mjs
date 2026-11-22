@@ -14,9 +14,19 @@ import { fileURLToPath } from 'node:url'
 const { outputFiles } = await build({ stdin: { resolveDir: fileURLToPath(new URL('..', import.meta.url)), contents: `
   import './test/slot-fixture.mjs'; import './src/client.ts';
   const services = { slots: window.fixtureSlots, locale: window.fixtureLocale }, disposers = [];
+  window.__events = window.__events ?? {};
   const strict = declared => new Proxy({}, { get(_, key) {
     if (key === 'effect') return fn => { const d = fn(); if (typeof d === 'function') disposers.push(d); return d };
     if (key === 'inject') return (names, cb) => { if (names.every(n => services[n])) return cb(strict([...declared, ...names])) };
+    // cordis 核心事件 API（on/off/emit）不是 inject 出来的服务：宿主
+    // dsh-client-ui-theme 自己就写 ctx.on('theme/change', sync)，而它的
+    // exports.inject 里并没有 'theme'。替身少了这三个 = 比宿主还严。
+    if (key === 'on') return (event, listener) => {
+      const bucket = window.__events[event] ?? (window.__events[event] = new Set());
+      bucket.add(listener); return () => bucket.delete(listener);
+    };
+    if (key === 'off') return (event, listener) => { window.__events[event]?.delete(listener); return () => {} };
+    if (key === 'emit') return (event, payload) => { for (const l of window.__events[event] ?? []) l(payload) };
     if (typeof key === 'symbol' || key === 'then') return undefined;
     if (!declared.includes(key)) throw Error('undeclared service ' + String(key));
     return services[key];

@@ -41,14 +41,29 @@ test('meteor controls are visible only for the dark meteor background and persis
   await page.evaluate(()=>{document.body.setAttribute('data-ds-dark-theme','');document.body.setAttribute('data-bloom-ambience-dark','galaxy')})
   assert.equal(await rows.evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).display==='flex')),true)
   const layout=await page.evaluate(()=>{
-    const label=document.querySelector('.dsh-bloom-detail [data-meteor-row="color"] > span').getBoundingClientRect()
+    // 2026-11-21 设置页改版：行结构从「裸 label + 控件」改为
+    // `.dsh-bloom-row` 卡片（左侧 .dsh-bloom-row__lead 标题 / 右侧
+    // .dsh-bloom-row__control 控件），材质改为 .dsh-bloom-icon-seg 图标段。
+    const rowEl=document.querySelector('.dsh-bloom-detail .dsh-bloom-row')
+    const label=document.querySelector('.dsh-bloom-detail [data-meteor-row="color"] .dsh-bloom-row__lead').getBoundingClientRect()
     const color=document.querySelector('.dsh-bloom-detail [data-meteor-color="colorful"]').getBoundingClientRect()
-    const rotation=document.querySelector('.dsh-bloom-detail .dsh-bloom-rotation'), select=rotation.querySelector('select').getBoundingClientRect()
-    const material=document.querySelector('.dsh-bloom-detail .dsh-bloom-glass__choices').getBoundingClientRect()
-    return {labelLeft:label.left,rotationLeft:rotation.getBoundingClientRect().left+parseFloat(getComputedStyle(rotation).paddingLeft),colorRight:color.right,selectRight:select.right,materialHeight:material.height,samples:document.querySelectorAll('.dsh-bloom-detail .dsh-bloom-glass__sample,[data-glass-description]').length}
+    const rotation=document.querySelector('.dsh-bloom-detail .dsh-bloom-rotation__select')
+    const select=rotation.getBoundingClientRect()
+    const material=document.querySelector('.dsh-bloom-detail [data-glass]').getBoundingClientRect()
+    return {
+      labelLeft:label.left,
+      rotationLeft:rotation.getBoundingClientRect().left,
+      colorRight:color.right,
+      selectRight:select.right,
+      materialHeight:material.height,
+      // 图标化后没有「材质样品块」了：图标选择器本身就是控件。
+      samples:document.querySelectorAll('.dsh-bloom-detail [data-glass-description]').length,
+      rowLeft:rowEl.getBoundingClientRect().left,
+    }
   })
-  assert.ok(Math.abs(layout.labelLeft-layout.rotationLeft)<1,JSON.stringify(layout))
-  assert.ok(Math.abs(layout.colorRight-layout.selectRight)<1,JSON.stringify(layout))
+  // 控件一律右对齐：流星色块的右缘与「自动换色」下拉的右缘贴齐。
+  // 容差 3px：图标按钮有 1px inset 描边 + 2px 外框，与下拉框的边框盒差 2px。
+  assert.ok(Math.abs(layout.colorRight-layout.selectRight)<3,JSON.stringify(layout))
   assert.ok(layout.materialHeight<55,JSON.stringify(layout))
   assert.equal(layout.samples,0)
   await page.locator('.dsh-bloom-detail [data-meteor-color="solid"]').click()

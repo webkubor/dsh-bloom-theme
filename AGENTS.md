@@ -35,7 +35,7 @@ npm run test:browser     # 隔离夹具的浏览器回归
 - 版本与 CHANGELOG 由 release-please 的 Release PR 决定，Publish 工作流负责 npm 发布；不要手工 bump 版本或改历史 CHANGELOG。release-sync 只检查已登记的当前版本副本。
 - 安装、升级和恢复正式版使用宿主插件管理界面或官方 `plugin_manager`；先列已有 bundle，再安装本仓绝对路径或精确发布版本。禁止复制或改写 profile 的 `node_modules` / 依赖清单。
 - 按安装结果的 `application` / `nextStep` 完成重启并核对实际加载版本；本地 build、刷新页面或相同 Slot ID 都不能证明更新已应用。
-- UI 只用官方 Slot：会话页头角座 `conversation.session.header.corner` 提供本插件自己的定位锚点（#113：不占对话标题前的 leading 座），完整切换器、菜单与装饰挂在根 `shell.overlay`，避免宿主顶栏裁剪。定位只测量自己的锚点。先 Inspect 确认契约；Slot 由 apply 注册，副作用由上下文 effect/React effect 清理；禁止宿主 DOM 找位、手动重挂与悬浮拖拽兜底。
+- UI 只用官方 Slot：`conversation.session.header.utilities` 提供 Bloom 顶栏定位锚点，完整切换器、菜单与装饰挂在根 `shell.overlay`，避免宿主顶栏裁剪。定位只测量自己的锚点。先 Inspect 确认契约；Slot 由 apply 注册，副作用由上下文 effect/React effect 清理；禁止宿主 DOM 找位、手动重挂与悬浮拖拽兜底。
 - main push、定时巡检与默认手动工作流只准备 Release PR。完成真实 DSH Web 验收、当前 head 的 CI 与评审后，按贡献指南放行已核对的版本。
 - 日常 UI 验收先读 [bloom-web-ui](./skills/bloom-web-ui/SKILL.md)。通用失败复盘统一在 [lessons.md](./docs/lessons.md)。
 - 完整开发、运行时验收与发布门禁见 [CONTRIBUTING.md](./CONTRIBUTING.md)。

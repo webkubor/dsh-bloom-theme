@@ -22,6 +22,10 @@ on:
         description: '已完成 DSH Web 验收的版本号，例如 0.29.0'
         type: string
         required: false
+      release_head:
+        description: '通过 Web 验收、CI 和评审的 Release PR head SHA'
+        type: string
+        required: false
   schedule:
     # 每天 UTC 01:30（北京时间 09:30）兜底巡检未合并的 release PR
     - cron: '30 1 * * *'
@@ -66,13 +70,15 @@ jobs:
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
+          RELEASE_HEAD: ${{ inputs.release_head }}
         with:
           # PR_PAT：合并后触发的 tag / Release / publish 工作流需要非 GITHUB_TOKEN 身份。
           github-token: ${{ secrets.PR_PAT }}
           script: |
             const version = process.env.RELEASE_VERSION
-            if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
-              core.setFailed('放行 Release PR 时必须提供已验收的 release_version')
+            const checkedHead = process.env.RELEASE_HEAD
+            if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version) || !/^[0-9a-f]{40}$/.test(checkedHead)) {
+              core.setFailed('放行 Release PR 时必须提供已验收的 release_version 和 release_head')
               return
             }
             const expectedTitle = `chore(main): release ${version}`
@@ -88,7 +94,7 @@ jobs:
               per_page: 100
             })
             const releasePrs = prs.filter((pr) =>
-              pr.head.ref.startsWith('release-please--') && pr.base.ref === 'main' && pr.title === expectedTitle
+              pr.head.ref.startsWith('release-please--') && pr.base.ref === 'main' && pr.title === expectedTitle && pr.head.sha === checkedHead
             )
             if (releasePrs.length !== 1) {
               core.setFailed(`版本 ${version} 应匹配一张 Release PR，实际找到 ${releasePrs.length} 张`)
@@ -127,7 +133,7 @@ jobs:
                   repo: context.repo.repo,
                   pull_number: pr.number
                 })
-                if (res.data.title !== expectedTitle || res.data.head.sha !== pr.head.sha) {
+                if (res.data.title !== expectedTitle || res.data.head.sha !== checkedHead) {
                   core.setFailed(`#${pr.number} 的版本或 head 已变化，需要重新验收`)
                   return
                 }

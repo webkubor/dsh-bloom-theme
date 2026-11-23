@@ -23,9 +23,9 @@
 
 https://github.com/user-attachments/assets/1aa807f5-e65d-4e9f-aef4-d46b71a04a62
 
-[观看 Bloom 0.29.0 的 DSH Web 实机演示](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4806ef2b54707e959234413b15b94b1d15523be1/assets/showcase/v0.29.0/bloom-demo-v0.29.0.mp4)
+[观看 Bloom 0.29.0 的 DSH Web 实机演示](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.29.0/bloom-demo-v0.29.0.mp4)
 
-![Bloom 0.29.0 的材质、背景和动效设置](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4806ef2b54707e959234413b15b94b1d15523be1/assets/showcase/v0.29.0/bloom-preview-v0.29.0.png)
+![Bloom 0.29.0 的材质、背景和动效设置](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.29.0/bloom-preview-v0.29.0.png)
 
 ### 为什么选择 Bloom？
 

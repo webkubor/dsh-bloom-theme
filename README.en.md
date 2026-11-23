@@ -21,11 +21,11 @@
 
 <!-- demo-video -->
 
-https://github.com/user-attachments/assets/6e07c15e-1ada-4364-a41a-5b1f1cf2195c
+https://github.com/user-attachments/assets/1aa807f5-e65d-4e9f-aef4-d46b71a04a62
 
-[▶ Watch the full-quality demo: palettes, glass, starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-demo-v0.28.0.mp4)
+[Watch Bloom 0.29.0 in DSH Web](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4806ef2b54707e959234413b15b94b1d15523be1/assets/showcase/v0.29.0/bloom-demo-v0.29.0.mp4)
 
-![Bloom controls and starry sky](https://img.webkubor.online/projects/dsh-bloom-theme/bloom-preview-v0.28.0.png)
+![Material, background, and motion settings in Bloom 0.29.0](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/4806ef2b54707e959234413b15b94b1d15523be1/assets/showcase/v0.29.0/bloom-preview-v0.29.0.png)
 
 ### Why Bloom?
 

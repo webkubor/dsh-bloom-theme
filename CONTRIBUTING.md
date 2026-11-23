@@ -25,7 +25,7 @@ npm run dev          # 首次完整构建后监听浏览器源码，只更新本
 
 ## 官方扩展点
 
-浏览器插件通过 `dsh.client.inject` 声明能力，用 `window.__ModuleLoader__.load()` 注册。会话页头角座 `conversation.session.header.corner` Slot 提供本插件自己的顶栏定位锚点（不占对话标题前的 leading 座，见 #113）；完整切换器与其菜单、星光和更新提示都挂载在根 `shell.overlay` Slot，避免被宿主顶栏裁剪。定位只测量自己的锚点，不通过宿主选择器寻找位置。Slot 由 apply 通过 `ctx.slots.inject` 注册，副作用由上下文 effect/React effect 清理。
+浏览器插件通过 `dsh.client.inject` 声明能力，用 `window.__ModuleLoader__.load()` 注册。`conversation.session.header.utilities` Slot 提供 Bloom 的顶栏定位锚点。完整切换器与其菜单、星光和更新提示都挂载在根 `shell.overlay` Slot，避免被宿主顶栏裁剪。定位只测量自己的锚点。Slot 由 apply 通过 `ctx.slots.inject` 注册，副作用由上下文 effect/React effect 清理。
 
 更改能力或挂载位置前，先用 `cordis_inspect_list`，再用 Provider 声明的查询读取确切 Service 契约、Slot 树与 props。Inspect 方法是只读发现接口，不是插件可调用的业务 Service。不要扫描宿主 DOM 来寻找工具栏，不要手动重挂节点、追加第二个应用根或恢复悬浮拖拽兜底。
 
@@ -81,16 +81,17 @@ README、Release 或公开讨论使用的截图，必须先在当前页面注入
 
 ## 发布流程
 
-1. 在独立 worktree 完成源码、双语 README 和构建产物，运行上述验证及真实宿主验收。
+1. 在独立 worktree 完成源码、双语 README 和构建产物，按 [DSH Web 验收](./skills/bloom-web-ui/SKILL.md) 验证打包后的实际运行效果。
 2. 使用 `feat:` / `fix:` / `docs:` / `ci:` 等 Conventional Commits 提交，通过仓库交付流程合入 main。
 3. Release Please 工作流在 main push、每日定时巡检或手动触发时创建或更新 Release PR；以该 PR 的提议为下一版本真源，不手工 bump 版本或 CHANGELOG。
 4. 发布媒体：`release-media.json` 描述 README 和 Release 使用的展示图与演示视频。新的次版本或主版本必须录制本版素材；补丁版本（如 0.27.1）可沿用同一次版本已发布的素材，Release 中按素材自身版本标注（如“Bloom 0.27.0 showcase”），不冒充新素材。
 5. Release Artifact Rebuild 工作流在 Release PR 上同步版本并重新构建产物；核对完整 diff 和当前 head SHA 的 CI 结果。
 6. main push、每日定时巡检及默认的手动触发只准备 Release PR。`auto_merge_release` 默认 `false`，因此不会自动启用合并。候选版到此仍未正式发布。
-7. 完成实际桌面安装验收、所发布 head SHA 的 CI 和独立代码评审，逐项处理所有评审发现，再运行 `npm run preflight`。发布负责人确认以上验收后，才可在本仓库显式执行：
+7. 核对 npm `latest`、候选精确版本和 Git 标签。完成真实 DSH Web 安装验收、所发布 head SHA 的 CI 和独立代码评审，逐项处理所有评审发现，再运行 `npm run preflight`。发布负责人确认目标版本与验收证据后，才可在本仓库显式执行：
 
    ```bash
-   gh workflow run release-please.yml -f auto_merge_release=true
+   gh workflow run release-please.yml -f auto_merge_release=true \
+     -f release_version="$verified_version" -f release_head="$verified_release_head"
    ```
 
    该命令允许工作流在 GitHub 判定 Release PR 为 `clean` 后，使用刚核验的 head SHA 合并并触发正式发布；准备候选版时不要执行。工作流不自动解决评审线程；状态不满足、head 变化或合并被拒绝时只记录警告，交给负责人检查。

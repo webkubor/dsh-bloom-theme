@@ -155,6 +155,25 @@ test('apply mounts DOM elements and styles, teardown cleanly removes them all', 
   assert.equal(postSparkles, null, 'sparkles removed on teardown')
 })
 
+test('Bloom settings are styled before the conversation header mounts', async (t) => {
+  const page = await setupPage(t)
+  const result = await page.evaluate(() => {
+    const register = window.fixtureSlots.register.bind(window.fixtureSlots)
+    window.fixtureSlots.register = (options, component) => register(
+      options, options.name === 'conversation.session.header.utilities' ? () => null : component,
+    )
+    window.applyModule(window.mockLocale, window.mockTheme)
+    const detail = window.fixture.buildDetailEl()
+    document.body.append(detail)
+    const row = detail.querySelector('.dsh-bloom-row')
+    const icon = row.querySelector('svg')
+    return { switcher: !!document.querySelector('.dsh-bloom-switcher'), rowLayout: getComputedStyle(row).display, iconWidth: icon.getBoundingClientRect().width }
+  })
+  assert.equal(result.switcher, false)
+  assert.equal(result.rowLayout, 'flex')
+  assert.ok(result.iconWidth > 0 && result.iconWidth <= 24, `unexpected settings icon width: ${result.iconWidth}`)
+})
+
 test('switcher and decorations render only through declared React Slots and survive remount', async (t) => {
   const page = await setupPage(t)
   await page.evaluate(() => window.applyModule(window.mockLocale, window.mockTheme))

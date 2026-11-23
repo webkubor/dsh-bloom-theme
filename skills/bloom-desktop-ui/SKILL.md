@@ -1,11 +1,11 @@
 ---
 name: bloom-desktop-ui
-description: Bloom 本机 UI 调试：通过 DSH 官方开发者工具与原生 Accessibility 操作真实菜单、截图、核验配色和材质；成功路径入 skill，失败原因入统一台账。
+description: 在明确需要复现 DSH 桌面端专属问题时，使用原生 Accessibility 和官方开发者工具诊断 Bloom。常规验收和发布使用 bloom-web-ui。
 ---
 
 # Bloom 桌面 UI 调试
 
-先读 AGENTS.md、CONTRIBUTING.md、docs/lessons.md。复用有效 CS Run 和工作树；本机桌面先于 Web。未经用户确认 UI，不提交、推送或发布。
+常规 UI 与发布验收使用 [bloom-web-ui](../bloom-web-ui/SKILL.md)。仅处理明确的桌面端问题时加载本技能。先读 AGENTS.md、CONTRIBUTING.md、docs/lessons.md，并复用有效 CS Run 和工作树。
 
 ## 默认路径：真实菜单与窗口
 

@@ -39,7 +39,7 @@ import { SURFACES_CSS } from './css/surfaces.js'
 import { applyMotion, injectCSS, readMotion, readVariant, watchThinkTags } from './dom.js'
 import { initAppearanceSync, bindHostTheme, notifyAppearanceChange, type HostThemeService } from './appearance.js'
 import { applyThemeTokens, type HostThemeTokenService } from './theme-tokens.js'
-import { onVariantChange } from './switcher.js'
+import { onVariantChange, SWITCHER_CSS } from './switcher.js'
 import { initAmbience } from './ambience.js'
 import { initGlassMode } from './glass.js'
 import { createBloomComponents, type HostReact } from './ui.js'
@@ -97,6 +97,8 @@ function installSkin(): () => void {
     injectCSS(COMPONENT_CSS, 'components.css')
     injectCSS(GLASS_CSS + BACKGROUND_CSS + BUTTON_CSS, 'glass.css')
     injectCSS(ADAPTIVE_CSS + SURFACES_CSS, 'adaptive.css')
+    // Settings can open before the conversation header mounts its switcher.
+    injectCSS(SWITCHER_CSS, 'switcher.css')
     document.body.dataset.bloomVariant = variant
     applyMotion(readMotion())
     initAppearanceSync()

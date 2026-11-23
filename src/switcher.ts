@@ -7,10 +7,10 @@
  */
 import { FEATURED_VARIANTS, isNewVariant, PALETTE, VARIANTS } from './palette.js'
 import { resetRotationTimer, startRotation } from './rotation.js'
-import { applyMotion, injectCSS, readMotion, readVariant } from './dom.js'
+import { applyMotion, readMotion, readVariant } from './dom.js'
 import { PLUGIN_ID, PLUGIN_VERSION, STORAGE_KEY } from './meta.js'
 import { checkUpdate, refreshUpdateBadge, renderDshUpdate, checkDshLatest } from './version.js'
-import { SWITCHER_CSS } from './css/switcher.js'
+export { SWITCHER_CSS } from './css/switcher.js'
 import { currentIsDark, readStoredMode, setMode, onAppearanceChange, type AppearanceMode } from './appearance.js'
 import type { GlassMode } from './glass.js'
 import { tr, variantName, variantPoem, variantGlyph, getLang, LANG_CHANGE_EVENT } from './lang.js'
@@ -925,7 +925,6 @@ export function buildSwitcherEl(initialVariant) {
 
 /** Mount only into the container provided by our React Slot component. */
 export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => void {
-  injectCSS(SWITCHER_CSS, 'switcher.css')
   const el = buildSwitcherEl(readVariant())
   el.dataset.slotted = 'true'
   host.append(el)

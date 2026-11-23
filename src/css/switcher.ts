@@ -650,6 +650,7 @@ body:not([data-ds-dark-theme]) .dsh-bloom-ambience[data-scheme="dark"] { display
   gap: 9px;
   min-width: 0;
 }
+.dsh-bloom-row__icon { width: 16px; height: 16px; flex: none; }
 .dsh-bloom-row__label {
   font-size: 12.5px;
   color: var(--dsw-alias-label-primary, #222);

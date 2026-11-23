@@ -23,9 +23,9 @@
 
 https://github.com/user-attachments/assets/1aa807f5-e65d-4e9f-aef4-d46b71a04a62
 
-[Watch Bloom 0.29.0 in DSH Web](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.29.0/bloom-demo-v0.29.0.mp4)
+[Watch Bloom 0.30.0 in DSH Web](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.30.0/bloom-demo-v0.30.0.mp4)
 
-![Material, background, and motion settings in Bloom 0.29.0](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.29.0/bloom-preview-v0.29.0.png)
+![Material, background, and motion settings in Bloom 0.30.0](https://raw.githubusercontent.com/webkubor/dsh-bloom-theme/main/assets/showcase/v0.30.0/bloom-preview-v0.30.0.png)
 
 ### Why Bloom?
 

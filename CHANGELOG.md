@@ -13,6 +13,13 @@
 
      今后 CHANGELOG 只由 release-please 生成，不再手写（见 CONTRIBUTING 发版流程）。 -->
 
+## [0.30.1](https://github.com/webkubor/dsh-bloom-theme/compare/v0.30.0...v0.30.1) (2026-11-25)
+
+
+### 🐛 Bug Fixes
+
+* send anonymous panel events directly to Core ([#147](https://github.com/webkubor/dsh-bloom-theme/issues/147)) ([ec41a6b](https://github.com/webkubor/dsh-bloom-theme/commit/ec41a6bf85503723e3d11f06f04f97d81b57fafc))
+
 ## [0.30.0](https://github.com/webkubor/dsh-bloom-theme/compare/v0.29.0...v0.30.0) (2026-11-23)
 
 

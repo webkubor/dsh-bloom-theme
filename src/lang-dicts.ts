@@ -155,7 +155,7 @@ export const DICT_EN: Record<string, string> = {
   "关闭": "Close",
   "分享": "Share",
   "新": "New",
-  "只上报按钮点击的事件名和版本，不含对话内容": "Only button names and version — never your conversations",
+  "只上报按钮事件和界面语言，不含对话内容": "Only button events and interface language — never your conversations",
   "发送匿名使用统计": "Send anonymous usage stats",
   "本版更新": "What's new",
   "反馈": "Feedback",

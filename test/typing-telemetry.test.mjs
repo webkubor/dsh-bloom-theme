@@ -66,10 +66,10 @@ test('typing outside the composer does not trigger the glow', async t => {
   assert.equal(await page.locator('body').getAttribute('data-bloom-typing'), null)
 })
 
-test('telemetry posts only event name, version and language', async t => {
+test('telemetry posts the Core schema with only event name and language', async t => {
   const page = await setup(t)
   const sent = []
-  await page.route('https://www.webkubor.online/api/event', route => {
+  await page.route('https://api.webkubor.online/v1/analytics/events', route => {
     sent.push(route.request().postData())
     route.fulfill({ status: 201, contentType: 'application/json', body: '{"ok":true}' })
   })
@@ -79,14 +79,15 @@ test('telemetry posts only event name, version and language', async t => {
   const body = JSON.parse(sent[0])
   assert.equal(body.project, 'bloom')
   assert.equal(body.event, 'share')
-  assert.ok(body.params.v)
-  assert.equal(Object.keys(body.params).sort().join(','), 'lang,v')
+  assert.match(body.event_id, /^[0-9a-f-]{36}$/)
+  assert.deepEqual(body.properties, { lang: 'en' })
+  assert.deepEqual(Object.keys(body).sort(), ['event', 'event_id', 'project', 'properties'])
 })
 
 test('telemetry can be turned off and then sends nothing', async t => {
   const page = await setup(t)
   const sent = []
-  await page.route('https://www.webkubor.online/api/event', route => {
+  await page.route('https://api.webkubor.online/v1/analytics/events', route => {
     sent.push(route.request().postData())
     route.fulfill({ status: 201, contentType: 'application/json', body: '{"ok":true}' })
   })
@@ -99,4 +100,54 @@ test('telemetry can be turned off and then sends nothing', async t => {
   await page.evaluate(() => window.fixture.track('share'))
   await page.waitForTimeout(200)
   assert.equal(sent.length, 0)
+})
+
+test('Core requests omit credentials and referrers, bound time and use unique IDs', async t => {
+  const page = await setup(t)
+  const requests = await page.evaluate(() => {
+    const sent = []
+    window.fetch = (url, options) => {
+      sent.push({ url, credentials: options.credentials, referrerPolicy: options.referrerPolicy,
+        contentType: options.headers['content-type'], signal: options.signal instanceof AbortSignal,
+        body: JSON.parse(options.body) })
+      return Promise.resolve(new Response())
+    }
+    window.fixture.track('share')
+    window.fixture.track('feedback')
+    window.fixture.track('unregistered-event')
+    return sent
+  })
+  assert.equal(requests.length, 2)
+  assert.notEqual(requests[0].body.event_id, requests[1].body.event_id)
+  for (const request of requests) {
+    assert.equal(request.credentials, 'omit')
+    assert.equal(request.referrerPolicy, 'no-referrer')
+    assert.equal(request.contentType, 'application/json')
+    assert.equal(request.signal, true)
+    assert.deepEqual(request.body.properties, { lang: 'en' })
+  }
+})
+
+for (const preference of ['doNotTrack', 'globalPrivacyControl']) {
+  test(`browser ${preference} prevents telemetry even after enabling the panel preference`, async t => {
+    const page = await setup(t)
+    assert.equal(await page.evaluate(preference => {
+      let sent = 0
+      window.fetch = () => { sent++; return Promise.resolve(new Response()) }
+      Object.defineProperty(navigator, preference, { value: preference === 'doNotTrack' ? '1' : true })
+      window.fixture.setTelemetryEnabled(true)
+      window.fixture.track('share')
+      return sent
+    }, preference), 0)
+  })
+}
+
+test('network failure and unavailable UUID never interrupt the UI action', async t => {
+  const page = await setup(t)
+  await page.evaluate(() => {
+    window.fetch = () => Promise.reject(new Error('offline'))
+    window.fixture.track('share')
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined })
+    window.fixture.track('share')
+  })
 })

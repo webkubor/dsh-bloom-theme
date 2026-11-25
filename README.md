@@ -62,3 +62,5 @@ npm run install:desktop
 <sub>演示录自 DSH Web 的发行前功能构建，录制时面板仍显示 v0.26.0；使用脱敏示例会话。截图和录屏功能依宿主支持；当前桌面端若无法打开选择器，请使用系统截图或录屏工具。</sub>
 
 [问题反馈](https://github.com/webkubor/dsh-bloom-theme/issues) · [排障指南](docs/troubleshooting.md) · [更新记录](CHANGELOG.md) · [MIT License](LICENSE) · 配色灵感：[typora-Bloom-theme](https://github.com/webkubor/typora-Bloom-theme)
+
+匿名按钮统计直接发送至 Core，只含事件名和界面语言；不发送版本、对话内容或用户标识。可在面板关闭统计，并遵守浏览器 DNT 设置。

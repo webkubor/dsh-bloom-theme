@@ -285,7 +285,7 @@ export function buildSwitcherHTML(currentVariant) {
           <button type="button" class="dsh-bloom-dsh-btn dsh-bloom-diagnose" title="${tr('复制排错诊断信息（在 GitHub 提交 Issue 时粘贴）')}">${ICON_DIAGNOSE}<span>${tr('复制诊断')}</span></button>
           <a class="dsh-bloom-foot__link" data-track="vote" href="https://github.com/webkubor/dsh-bloom-theme/discussions/26" target="_blank" rel="noopener noreferrer">${tr('配色投票')}</a>
         </div>
-        <label class="dsh-bloom-telemetry" title="${tr('只上报按钮点击的事件名和版本，不含对话内容')}">
+        <label class="dsh-bloom-telemetry" title="${tr('只上报按钮事件和界面语言，不含对话内容')}">
           <input type="checkbox" class="dsh-bloom-telemetry__box" data-telemetry${telemetryEnabled() ? ' checked' : ''}>
           <span class="dsh-bloom-telemetry__box-ui" aria-hidden="true"></span>
           <span class="dsh-bloom-telemetry__text">${tr('发送匿名使用统计')}</span>
@@ -697,7 +697,7 @@ export function buildSwitcherEl(initialVariant) {
 
   el.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
-    // 埋点：链接用 data-track 声明；按钮在各自分支里打。sendBeacon 不阻塞跳转。
+    // 埋点：链接用 data-track 声明；按钮在各自分支里打。统计请求不阻塞跳转。
     const tracked = target.closest<HTMLElement>('[data-track]')
     if (tracked?.dataset.track) track(tracked.dataset.track as PanelEvent)
     if (target.closest('.dsh-bloom-close')) { closeMenu(el); return }

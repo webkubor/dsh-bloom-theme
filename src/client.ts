@@ -52,40 +52,17 @@ import { bindBloomInspect } from './inspect.js'
 import { tr, LANG_CHANGE_EVENT, bindLocale, DICTS, LOCALE_NS } from './lang.js'
 
 /**
- * 鼠标跟随光斑（v0.15 唯一的亮点）。
+ * 鼠标跟随光斑（v0.15）已移除（2026-11）。
  *
- * 性能：mousemove 每秒可能触发 60+ 次，每次写两个 CSS var（CPU 几乎为零，
- * GPU 用 background-position 插值，文本不重绘）。
- * 退出时（变体切换到非 aurora/cinnabar / 切走标签页）解绑监听 —— 不留幽灵。
+ * 它每帧把 --bloom-cursor-x/y 写到 documentElement 上。写在根上等于让整棵
+ * 样式树的继承自定义属性全部失效 —— 实测（16k 节点 / dpr1.5）一次写入后的
+ * 重算+重绘约 800ms，帧率掉到个位数；同样两个变量写在子元素上则完全免费
+ * （147fps 对 1fps）。而仓里已经没有任何 CSS 消费这两个变量，等于纯付成本、
+ * 零视觉收益，所以整段删除。只有 aurora / cinnabar 会走这条路径，因此此前
+ * 表现为「只有朱砂掉帧」。
+ *
+ * 以后要做跟随光斑：用独立的 fixed 小层改 transform，不要写根变量。
  */
-function watchCursorGlow() {
-  if (window.__dshBloomCursorBound__) return
-  window.__dshBloomCursorBound__ = true
-
-  let raf = 0
-  const write = (x, y) => {
-    if (raf) return
-    raf = requestAnimationFrame(() => {
-      raf = 0
-      const root = document.documentElement
-      root.style.setProperty('--bloom-cursor-x', `${x * 100}%`)
-      root.style.setProperty('--bloom-cursor-y', `${y * 100}%`)
-    })
-  }
-
-  const onMove = (e) => {
-    const v = document.body?.dataset.bloomVariant
-    if (v !== 'aurora' && v !== 'cinnabar') return
-    write(e.clientX / window.innerWidth, e.clientY / window.innerHeight)
-  }
-  window.addEventListener('pointermove', onMove, { passive: true })
-  window.__dshBloomCursorOff__ = () => {
-    window.removeEventListener('pointermove', onMove)
-    if (raf) cancelAnimationFrame(raf)
-    window.__dshBloomCursorBound__ = false
-    window.__dshBloomCursorOff__ = undefined
-  }
-}
 
 function installSkin(): () => void {
   let disposed = false
@@ -107,7 +84,6 @@ function installSkin(): () => void {
     setVersionUpdatesActive(true)
     void checkUpdate(controller.signal)
     watchThinkTags()
-    watchCursorGlow()
     window.__BLOOM_DEBUG__ = { dump: collectDiagnostics, copy: () => copyDiagnostics() }
   }
   if (document.body) boot()

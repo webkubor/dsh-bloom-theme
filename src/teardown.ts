@@ -28,7 +28,6 @@ export function teardownBloom(): void {
   window.__dshBloomThinkOff__?.()
   window.__dshBloomThinkObserver__?.disconnect()
   window.__dshBloomThinkObserver__ = undefined
-  window.__dshBloomCursorOff__?.()
   window.__dshBloomGlassOff__?.()
   window.__dshBloomGlassOff__ = undefined
   stopRotation()
@@ -41,7 +40,5 @@ export function teardownBloom(): void {
   const body = document.body
   if (body) for (const a of BODY_ATTRS) body.removeAttribute(a)
   for (const a of NODE_ATTRS) document.querySelectorAll(`[${a}]`).forEach((n) => n.removeAttribute(a))
-  const root = document.documentElement
-  root.style.removeProperty('--bloom-cursor-x')
-  root.style.removeProperty('--bloom-cursor-y')
+
 }

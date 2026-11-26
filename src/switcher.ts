@@ -958,22 +958,30 @@ export function mountSwitcher(host: HTMLElement, anchor: HTMLElement): () => voi
     placeMenu(el)
   }
   position()
-  // The anchor can move without resizing (sidebar collapse, sibling width), so track its own rect per frame.
+  // 只在「可能移动」之后跑一帧，不再自己驱动自己。
+  // 性能（2026-11 实测）：原来每帧都跑 position()，即每帧两次强制同步布局 +
+  // 一次全文档 querySelectorAll('dialog[open], ...')。单这一项只值 +1~5fps
+  // （真正贵的是样式重算），但它把开销钉死在每一帧上，改成事件驱动 + 低频巡检。
   let frame = 0
-  const track = () => { position(); frame = requestAnimationFrame(track) }
-  frame = requestAnimationFrame(track)
-  const observer = new ResizeObserver(position)
+  const schedule = () => {
+    if (frame) return
+    frame = requestAnimationFrame(() => { frame = 0; position() })
+  }
+  // 宿主布局变化未必触发下面三个事件，低频巡检兜底（4 次/秒，成本可忽略）
+  const poll = window.setInterval(schedule, 250)
+  const observer = new ResizeObserver(schedule)
   observer.observe(anchor)
   observer.observe(trigger)
   // 视口尺寸变了 → 锚点位置要重算（position 的 key 里没有窗口宽度）
-  const onResize = () => { position() }
+  const onResize = () => { schedule() }
   window.addEventListener('resize', onResize)
-  window.addEventListener('scroll', position, true)
+  window.addEventListener('scroll', schedule, true)
   refreshUpdateBadge()
   renderDshUpdate()
   void checkDshLatest()
   return () => {
     cancelAnimationFrame(frame)
+    window.clearInterval(poll)
     observer.disconnect()
     window.removeEventListener('resize', onResize)
     window.removeEventListener('scroll', position, true)

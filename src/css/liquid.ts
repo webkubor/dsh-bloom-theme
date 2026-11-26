@@ -1,6 +1,15 @@
 const ACC = 'var(--bloom-accent, #6b8f71)'
 const FLOAT = '0 2px 4px -2px rgba(24,38,54,.14), 0 12px 28px -20px rgba(24,38,54,.22)'
-const BLUR = 'blur(3px) url("#dsh-bloom-liquid-lens") saturate(1.2)'
+/*
+ * 性能（2026-11 实测，DSH 桌面端 / Win / dpr1.5）：这里原本是
+ *   blur(3px) url("#dsh-bloom-liquid-lens") saturate(1.2)
+ * 把 SVG feDisplacementMap 当 backdrop-filter 用。它每帧都要把背后已合成
+ * 的内容取回、跑一遍滤镜图再合成 —— 只有 4 条规则，但页面上每个大面板都中招。
+ * 实测（14.9k 节点）：带 url() 20 fps -> 换成纯 blur 98 fps -> 完全不要 119 fps。
+ * 位移量只有 0.016，肉眼几乎看不出差别，所以统一退回纯模糊。
+ * 不要再把 SVG 滤镜塞回 backdrop-filter。
+ */
+const BLUR = 'blur(3px) saturate(1.2)'
 
 export function liquidSurfaces(s: string, dark = false): string {
   const base = 'var(--dsw-alias-bg-layer-1, #17202b)'

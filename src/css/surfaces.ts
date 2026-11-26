@@ -15,7 +15,8 @@ const grain = (light: boolean) => {
 
 export const SURFACES_CSS = `
 ${ROOT} {
-  --bloom-surface-filter: blur(3px) url("#dsh-bloom-liquid-lens") saturate(1.2);
+  /* 纯模糊：同 liquid.ts 的性能说明，SVG 位移图不要进 backdrop-filter */
+  --bloom-surface-filter: blur(3px) saturate(1.2);
   --bloom-surface-fill: color-mix(in oklch, var(--dsw-alias-bg-layer-1, #fff) 25%, transparent);
   --bloom-surface-edge: inset 0 0 0 1px color-mix(in oklch, var(--dsw-alias-label-primary, #222) 12%, transparent);
   --bloom-surface-image: radial-gradient(120% 85% at 12% -28%, rgba(255,255,255,.28), transparent 65%), linear-gradient(150deg, rgba(255,255,255,.10), transparent 32%, transparent 75%, rgba(255,255,255,.06));

@@ -6,3 +6,8 @@ node_modules
 *.tgz
 .claude/
 .agents/
+
+# 本地浏览器探针与运行期临时文件（调试用，不属于产物）
+.cdp.mjs
+.pw-probe.mjs
+_tmp_*

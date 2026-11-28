@@ -86,8 +86,7 @@ export function bloomTokens(p, dark) {
   /* 鼠标跟随光斑的归一化坐标（0..1） —— client.ts 的 watchCursorGlow 每帧写。
      静态值取中心 50% 是合理的「无光斑时退到画面正中」fallback，不写就静默吃掉，
      aurora/cinnabar 的 radial-gradient 会立刻漂到 0%/0% 角上。 */
-  --bloom-cursor-x: 50%;
-  --bloom-cursor-y: 50%;
+  /* 光标 token 已移除：写在根上的继承自定义属性会让整棵样式树失效，见 client.ts。 */
   --bloom-hairline: rgba(${m}, ${dark ? 0.3 : 0.3});
   --bloom-hairline-strong: rgba(${m}, ${dark ? 0.55 : 0.5});
   --bloom-glow: rgba(${m}, ${dark ? 0.34 : 0.2});
